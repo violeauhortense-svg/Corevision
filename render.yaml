@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: corevision-api
+    env: docker
+    plan: standard
+    region: frankfurt
+    numInstances: 1
+
+    # Envs - À remplir depuis Render dashboard
+    envVars:
+      - key: PORT
+        value: "3000"
+      - key: DATA_DIR
+        value: "/data"
+      - key: UPLOADS_DIR
+        value: "/uploads"
+      - key: JWT_SECRET
+        value: ${JWT_SECRET}
+      - key: SUPABASE_URL
+        value: ${SUPABASE_URL}
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        value: ${SUPABASE_SERVICE_ROLE_KEY}
+      - key: BREVO_API_KEY
+        value: ${BREVO_API_KEY}
+      - key: API_BASE_URL
+        value: ${API_BASE_URL}
+
+    # Health check
+    healthCheckPath: /make-server-cac859af/health
+
+    # Auto-deploy on push
+    autoDeploy: true
