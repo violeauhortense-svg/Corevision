@@ -1,0 +1,108 @@
+Dans l’onglet « commande corevision », quand tu as une commande, tu as un onglet Audit tu intègre ce module ici.
+Le module doit analyser la situation d’un client et générer automatiquement un audit patrimonial structuré.
+Le module doit se connecter aux bases existantes :
+•	regles_fiscales
+•	montages_patrimoniaux
+•	module optimisation_remuneration
+•	base profil_client
+•	et tout autre module que tu juge nécessaire
+Le module doit comporter les étapes suivantes :
+________________________________________
+1️⃣ Collecte des données client
+Toutes les données clients sont dans la fiche client que tu retrouveras dans la fiche client, dans les onglets foyer, revenus et imposition, patrimoine et objectifs
+________________________________________
+2️⃣ Analyse civile
+Créer un moteur d’analyse qui évalue :
+•	régime matrimonial
+•	organisation de la propriété des actifs
+•	protection du conjoint
+•	organisation successorale
+•	risques d’indivision
+Le moteur doit interroger les bases :
+regles_fiscales
+montages_patrimoniaux
+et générer une analyse civile structurée.
+________________________________________
+3️⃣ Analyse fiscale
+Analyser la fiscalité actuelle du client :
+•	fiscalité des revenus
+•	fiscalité des dividendes
+•	fiscalité immobilière
+•	fiscalité du patrimoine
+•	IFI éventuel
+Le module doit utiliser les règles dans regles_fiscales pour identifier :
+•	optimisation fiscale possible
+•	risques fiscaux
+•	incohérences patrimoniales
+________________________________________
+4️⃣ Analyse sociale
+Connecter le module optimisation_remuneration.
+Le module doit analyser :
+•	statut social
+•	cotisations sociales
+•	protection sociale
+•	retraite
+et proposer une optimisation entre :
+•	salaire
+•	dividendes
+•	arbitrage rémunération.
+________________________________________
+5️⃣ Analyse patrimoniale globale
+Créer un diagnostic global :
+•	répartition du patrimoine
+•	diversification
+•	liquidité
+•	horizon patrimonial
+Afficher la répartition du patrimoine sous forme de graphiques.
+________________________________________
+6️⃣ Recherche d’optimisations patrimoniales
+Le module doit interroger la base montages_patrimoniaux et identifier les stratégies pertinentes.
+Exemples :
+•	création holding
+•	apport de titres
+•	pacte Dutreil
+•	SCI familiale
+•	structuration patrimoniale
+Chaque stratégie doit être affichée avec :
+•	objectif
+•	conditions
+•	avantages
+•	risques
+•	fiscalité.
+________________________________________
+7️⃣ Simulation patrimoniale
+Pour chaque stratégie proposée :
+calculer :
+•	impact fiscal
+•	impact trésorerie
+•	horizon patrimonial
+•	gain estimé
+Afficher les simulations sous forme de tableaux comparatifs.
+________________________________________
+8️⃣ Génération de l’audit patrimonial
+Créer un rapport structuré contenant :
+1 Synthèse client
+2 Analyse civile
+3 Analyse fiscale
+4 Analyse sociale
+5 Analyse patrimoniale globale
+6 Optimisations patrimoniales proposées
+7 Simulations comparatives
+8 Préconisations
+Le rapport doit être exportable en :
+•	PDF
+•	document client
+________________________________________
+9️⃣ Interface administrateur
+Créer une interface permettant :
+•	valider les analyses générées par l’IA
+•	modifier les recommandations
+•	ajouter ou supprimer des stratégies
+•	consulter l’historique des audits
+________________________________________
+Design de l’interface :
+•	style LegalTech professionnel
+•	dashboard clair
+•	navigation par étapes
+•	visualisation graphique du patrimoine
+•	tableaux d’analyse détaillés

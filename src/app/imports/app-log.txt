@@ -1,0 +1,264 @@
+[Hydrated]
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 🔗 API Base URL: https://cevzlqdencncriisrobf.supabase.co/functions/v1/make-server-cac859af
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 🔧 Mode localStorage forcé: true
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 === DÉBUT APP.TSX ===
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.search: 
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.pathname: /
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.hash: 
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔍 Query param "page": null
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔍 Query param "token": null
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔍 Est route publique? false
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 === FIN DÉTECTION ===
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🎯 Route matchée: * (catch-all)
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔗 URL: https://jaw-karate-78155897.figma.site/
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔒 isAuthenticated: false
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔄 App.tsx - Auth state changed: SIGNED_IN
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔑 App.tsx - Nouvelle session: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 ✅ Access token présent: true
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 === DÉBUT APP.TSX ===
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.search: 
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.pathname: /
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.hash: 
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔍 Query param "page": null
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔍 Query param "token": null
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔍 Est route publique? false
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 === FIN DÉTECTION ===
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🎯 Route matchée: * (catch-all)
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔗 URL: https://jaw-karate-78155897.figma.site/
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔒 isAuthenticated: true
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 ✅ Dashboard - Clients chargés depuis localStorage: Array(1)
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔐 App.tsx - Session récupérée: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔑 App.tsx - Access token présent: true
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 👤 App.tsx - User ID: a33395fb-b6d8-4bdc-ad89-e24a6335a839
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📧 App.tsx - Email: violeau.hortense@gmail.com
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 === DÉBUT APP.TSX ===
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.search: 
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.pathname: /
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.hash: 
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔍 Query param "page": null
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔍 Query param "token": null
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔍 Est route publique? false
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 === FIN DÉTECTION ===
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🎯 Route matchée: * (catch-all)
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔗 URL: https://jaw-karate-78155897.figma.site/
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔒 isAuthenticated: true
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔄 App.tsx - Auth state changed: INITIAL_SESSION
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔑 App.tsx - Nouvelle session: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 ✅ Access token présent: true
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 === DÉBUT APP.TSX ===
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.search: 
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.pathname: /
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.hash: 
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔍 Query param "page": null
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔍 Query param "token": null
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔍 Est route publique? false
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 === FIN DÉTECTION ===
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🎯 Route matchée: * (catch-all)
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔗 URL: https://jaw-karate-78155897.figma.site/
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔒 isAuthenticated: true
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 === DÉBUT APP.TSX ===
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.search: 
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.pathname: /
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.hash: 
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔍 Query param "page": null
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔍 Query param "token": null
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔍 Est route publique? false
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 === FIN DÉTECTION ===
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🎯 Route matchée: * (catch-all)
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔗 URL: https://jaw-karate-78155897.figma.site/
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔒 isAuthenticated: true
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1442 ✅ Clients chargés depuis localStorage: Array(1)
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 📡 API: getById appelé pour client: cca595ee-4785-488d-8cfa-217b93d9309e
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 💾 Mode localStorage: Pas de session valide, récupération locale directe
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 🔍 Recherche dans localStorage avec la clé: client_detail_a33395fb-b6d8-4bdc-ad89-e24a6335a839_cca595ee-4785-488d-8cfa-217b93d9309e
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 ✅ Client récupéré depuis localStorage (client_detail)
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 📦 Données client_detail: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1442 💾 Sauvegarde initiale des données complètes...
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1442 📦 Données client à sauvegarder: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 💾 Mode localStorage: Sauvegarde des modifications
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 📦 Données à sauvegarder: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 🔄 Fusion avec données existantes: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 💾 Sauvegarde de: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 🔑 Clé: client_detail_a33395fb-b6d8-4bdc-ad89-e24a6335a839_cca595ee-4785-488d-8cfa-217b93d9309e
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 ✅ Données complètes sauvegardées dans client_detail
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 ✅ Liste des clients mise à jour
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1442 ✅ Sauvegarde initiale terminée
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 📡 API: getById appelé pour client: cca595ee-4785-488d-8cfa-217b93d9309e
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 💾 Mode localStorage: Pas de session valide, récupération locale directe
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 🔍 Recherche dans localStorage avec la clé: client_detail_a33395fb-b6d8-4bdc-ad89-e24a6335a839_cca595ee-4785-488d-8cfa-217b93d9309e
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 ✅ Client récupéré depuis localStorage (client_detail)
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 📦 Données client_detail: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1268 ✅ Client data chargé: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:91 Uncaught (in promise) TypeError: (void 0) is not a function
+    at l (22f663a16e50e7669133e104dab89d1aef18b5e5.js:91:152263)
+    at 22f663a16e50e7669133e104dab89d1aef18b5e5.js:91:152212
+    at cp (sites-runtime.192d8ae04a62bf0fa76f998f531f1f4f20fbaafc5c3b1bab442867d5ac9f0593.js:8:24249)
+    at Ja (sites-runtime.192d8ae04a62bf0fa76f998f531f1f4f20fbaafc5c3b1bab442867d5ac9f0593.js:8:42323)
+    at sites-runtime.192d8ae04a62bf0fa76f998f531f1f4f20fbaafc5c3b1bab442867d5ac9f0593.js:8:40660
+    at gy (sites-runtime.192d8ae04a62bf0fa76f998f531f1f4f20fbaafc5c3b1bab442867d5ac9f0593.js:1:9206)
+    at MessagePort.fy (sites-runtime.192d8ae04a62bf0fa76f998f531f1f4f20fbaafc5c3b1bab442867d5ac9f0593.js:1:9600)Comprendre cette erreur
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 === DÉBUT APP.TSX ===
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.search: 
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.pathname: /
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.hash: 
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔍 Query param "page": null
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔍 Query param "token": null
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔍 Est route publique? false
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 === FIN DÉTECTION ===
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🎯 Route matchée: * (catch-all)
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔗 URL: https://jaw-karate-78155897.figma.site/
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔒 isAuthenticated: true
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 ✅ Dashboard - Clients chargés depuis localStorage: Array(1)
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 === DÉBUT APP.TSX ===
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.search: 
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.pathname: /
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.hash: 
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔍 Query param "page": null
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔍 Query param "token": null
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔍 Est route publique? false
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 === FIN DÉTECTION ===
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🎯 Route matchée: * (catch-all)
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔗 URL: https://jaw-karate-78155897.figma.site/
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔒 isAuthenticated: true
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1442 ✅ Clients chargés depuis localStorage: Array(1)
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1442 🗑️ Client cca595ee-4785-488d-8cfa-217b93d9309e et ses données associées supprimés
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1442 ✅ Client 260fe025-f5d0-4dda-9902-fd679f125ec5 créé avec 3 tâches
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 📡 API: getById appelé pour client: 260fe025-f5d0-4dda-9902-fd679f125ec5
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 💾 Mode localStorage: Pas de session valide, récupération locale directe
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 🔍 Recherche dans localStorage avec la clé: client_detail_a33395fb-b6d8-4bdc-ad89-e24a6335a839_260fe025-f5d0-4dda-9902-fd679f125ec5
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 ⚠️ Aucune donnée trouvée dans client_detail pour: client_detail_a33395fb-b6d8-4bdc-ad89-e24a6335a839_260fe025-f5d0-4dda-9902-fd679f125ec5
+getById @ 22f663a16e50e7669133e104dab89d1aef18b5e5.js:53Comprendre cet avertissement
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 🔍 Fallback: Recherche dans la liste clients: clients_a33395fb-b6d8-4bdc-ad89-e24a6335a839
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 📋 Liste des clients trouvée, nombre de clients: 1
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 📋 Contenu complet de la liste: Array(1)
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 ✅ Client trouvé dans la liste basique: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 📧 Email du client: contact@cvh-patrimoine.com
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 📞 Téléphone du client: 0769355546
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 👤 Prénom: hortense
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 👤 Nom: violeau
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 📦 Structure complète créée: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1442 💾 Sauvegarde initiale des données complètes...
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1442 📦 Données client à sauvegarder: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 💾 Mode localStorage: Sauvegarde des modifications
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 📦 Données à sauvegarder: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 💾 Sauvegarde de: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 🔑 Clé: client_detail_a33395fb-b6d8-4bdc-ad89-e24a6335a839_260fe025-f5d0-4dda-9902-fd679f125ec5
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 ✅ Données complètes sauvegardées dans client_detail
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 ✅ Liste des clients mise à jour
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1442 ✅ Sauvegarde initiale terminée
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 📡 API: getById appelé pour client: 260fe025-f5d0-4dda-9902-fd679f125ec5
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 💾 Mode localStorage: Pas de session valide, récupération locale directe
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 🔍 Recherche dans localStorage avec la clé: client_detail_a33395fb-b6d8-4bdc-ad89-e24a6335a839_260fe025-f5d0-4dda-9902-fd679f125ec5
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 ✅ Client récupéré depuis localStorage (client_detail)
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 📦 Données client_detail: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1268 ✅ Client data chargé: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1268 🔄 Migration tâche "Enregistrement du prospect" vers stage R0 (trouvé dans templates)
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1268 🔄 Migration tâche "Contacter le client pour une première rencontre" vers stage R0 (trouvé dans templates)
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1268 🔄 Migration tâche "Email de confirmation de RDV" vers stage R0 (trouvé dans templates)
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 🔄 Mise à jour de la tâche: task-260fe025-f5d0-4dda-9902-fd679f125ec5-0
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 📝 Données à sauvegarder: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 ✅ Tâche sauvegardée dans localStorage: client_tasks_a33395fb-b6d8-4bdc-ad89-e24a6335a839_260fe025-f5d0-4dda-9902-fd679f125ec5
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 💾 Tâche mise à jour: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 🔍 Vérification de la sauvegarde: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 🔄 Mise à jour de la tâche: task-260fe025-f5d0-4dda-9902-fd679f125ec5-1
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 📝 Données à sauvegarder: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 ✅ Tâche sauvegardée dans localStorage: client_tasks_a33395fb-b6d8-4bdc-ad89-e24a6335a839_260fe025-f5d0-4dda-9902-fd679f125ec5
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 💾 Tâche mise à jour: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 🔍 Vérification de la sauvegarde: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 🔄 Mise à jour de la tâche: task-260fe025-f5d0-4dda-9902-fd679f125ec5-2
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 📝 Données à sauvegarder: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 ✅ Tâche sauvegardée dans localStorage: client_tasks_a33395fb-b6d8-4bdc-ad89-e24a6335a839_260fe025-f5d0-4dda-9902-fd679f125ec5
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 💾 Tâche mise à jour: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 🔍 Vérification de la sauvegarde: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1268 ✅ Migration des tâches terminée
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1268 🔍 DEBUG TaskTab - Données client brutes: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1268 🔍 DEBUG TaskTab - Email trouvé: contact@cvh-patrimoine.com
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1268 🔍 DEBUG TaskTab - Données mappées: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 ✅ MeetingConfirmationEmailModal v3.1 - Vérification email
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 📧 DEBUG clientData reçu: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 📧 DEBUG email client: contact@cvh-patrimoine.com
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:542 🔐 Génération du lien DER pour client: 260fe025-f5d0-4dda-9902-fd679f125ec5
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 📡 API: getById appelé pour client: 260fe025-f5d0-4dda-9902-fd679f125ec5
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 ✅ Session Supabase trouvée, chargement du profil...
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 💾 Mode localStorage: Pas de session valide, récupération locale directe
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 🔍 Recherche dans localStorage avec la clé: client_detail_a33395fb-b6d8-4bdc-ad89-e24a6335a839_260fe025-f5d0-4dda-9902-fd679f125ec5
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 ✅ Client récupéré depuis localStorage (client_detail)
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 📦 Données client_detail: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:360 🔐 Génération du lien DER pour le client: undefined undefined
+cevzlqdencncriisrobf.supabase.co/functions/v1/make-server-cac859af/profile:1  Failed to load resource: the server responded with a status of 401 ()Comprendre cette erreur
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 ❌ Erreur chargement profil: 401
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:360 ✅ Données DER client stockées dans localStorage
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:542 ✅ 1 lien DER généré (client seul)
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 ✅ MeetingConfirmationEmailModal v3.1 - Vérification email
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 📧 DEBUG clientData reçu: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 📧 DEBUG email client: contact@cvh-patrimoine.com
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 ✅ MeetingConfirmationEmailModal v3.1 - Vérification email
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 📧 DEBUG clientData reçu: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 📧 DEBUG email client: contact@cvh-patrimoine.com
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 ✅ MeetingConfirmationEmailModal v3.1 - Vérification email
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 📧 DEBUG clientData reçu: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 📧 DEBUG email client: contact@cvh-patrimoine.com
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 ✅ MeetingConfirmationEmailModal v3.1 - Vérification email
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 📧 DEBUG clientData reçu: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 📧 DEBUG email client: contact@cvh-patrimoine.com
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 ✅ MeetingConfirmationEmailModal v3.1 - Vérification email
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 📧 DEBUG clientData reçu: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 📧 DEBUG email client: contact@cvh-patrimoine.com
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 ✅ MeetingConfirmationEmailModal v3.1 - Vérification email
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 📧 DEBUG clientData reçu: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 📧 DEBUG email client: contact@cvh-patrimoine.com
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 ✅ MeetingConfirmationEmailModal v3.1 - Vérification email
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 📧 DEBUG clientData reçu: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 📧 DEBUG email client: contact@cvh-patrimoine.com
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 ✅ MeetingConfirmationEmailModal v3.1 - Vérification email
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 📧 DEBUG clientData reçu: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 📧 DEBUG email client: contact@cvh-patrimoine.com
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 ✅ MeetingConfirmationEmailModal v3.1 - Vérification email
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 📧 DEBUG clientData reçu: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 📧 DEBUG email client: contact@cvh-patrimoine.com
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 📡 API: getById appelé pour client: 260fe025-f5d0-4dda-9902-fd679f125ec5
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 ✅ MeetingConfirmationEmailModal v3.1 - Vérification email
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 📧 DEBUG clientData reçu: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 📧 DEBUG email client: contact@cvh-patrimoine.com
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 💾 Mode localStorage: Pas de session valide, récupération locale directe
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 🔍 Recherche dans localStorage avec la clé: client_detail_a33395fb-b6d8-4bdc-ad89-e24a6335a839_260fe025-f5d0-4dda-9902-fd679f125ec5
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 ✅ Client récupéré depuis localStorage (client_detail)
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:53 📦 Données client_detail: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:542 📧 Envoi de l'email de confirmation...
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:542 👤 Client: contact@cvh-patrimoine.com
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:542 ✅ Email client envoyé avec succès !
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:542 📝 Mise à jour de la tâche avec historique d'envoi: task-260fe025-f5d0-4dda-9902-fd679f125ec5-2
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 🔍 Recherche tâches dans: client_tasks_a33395fb-b6d8-4bdc-ad89-e24a6335a839_260fe025-f5d0-4dda-9902-fd679f125ec5
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 ✅ Tâches trouvées dans: client_tasks_a33395fb-b6d8-4bdc-ad89-e24a6335a839_260fe025-f5d0-4dda-9902-fd679f125ec5
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 📝 Tâche trouvée: Email de confirmation de RDV
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 ✅ Tâche mise à jour avec statut DER: email_sent
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:542 ✅ Tâche mise à jour avec historique d'envoi
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:542 📝 Création des demandes de documents...
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:542 ❌ Erreur envoi email: TypeError: (void 0) is not a function
+    at ae (22f663a16e50e7669133e104dab89d1aef18b5e5.js:542:3767)
+ae @ 22f663a16e50e7669133e104dab89d1aef18b5e5.js:542Comprendre cette erreur
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 ✅ MeetingConfirmationEmailModal v3.1 - Vérification email
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 📧 DEBUG clientData reçu: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:503 📧 DEBUG email client: contact@cvh-patrimoine.com
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔄 App.tsx - Auth state changed: SIGNED_IN
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔑 App.tsx - Nouvelle session: Object
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 ✅ Access token présent: true
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 === DÉBUT APP.TSX ===
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.search: 
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.pathname: /
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 📍 window.location.hash: 
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔍 Query param "page": null
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔍 Query param "token": null
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔍 Est route publique? false
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 === FIN DÉTECTION ===
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🎯 Route matchée: * (catch-all)
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔗 URL: https://jaw-karate-78155897.figma.site/
+22f663a16e50e7669133e104dab89d1aef18b5e5.js:1510 🔒 isAuthenticated: true

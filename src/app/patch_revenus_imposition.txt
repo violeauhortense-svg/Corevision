@@ -1,0 +1,16 @@
+PATCH NOTES - Revenus Imposition Form
+
+PROBLÈME 1: Les fonctions calculerImpotRevenu, calculerPrelevementsSociaux, et calculerIFI sont ASYNC
+mais ne sont PAS awaited dans les useMemo.
+
+PROBLÈME 2: Les revenus fonciers ne sont pas stable (pas de solution pour stabiliser)
+
+SOLUTION:
+- Remplacer useMemo par useEffect avec async/await
+- Ajouter une solution de stabilisation des revenus fonciers
+
+À FAIRE:
+1. Remplacer calculIRStable (useMemo) par useEffect
+2. Remplacer calculPSStable (useMemo) par useEffect  
+3. Remplacer calculIFIStable (useMemo) par useEffect
+4. Ajouter stabilisation revenus fonciers

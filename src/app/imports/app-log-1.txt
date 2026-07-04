@@ -1,0 +1,68 @@
+https://jaw-karate-78155897.figma.site/
+f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52710 🔒 isAuthenticated: true
+f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52603 === DÉBUT APP.TSX ===
+f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52603 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52603 📍 window.location.search: 
+f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52603 📍 window.location.pathname: /
+f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52603 📍 window.location.hash: 
+f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52605 🔍 Query param "page": null
+f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52605 🔍 Query param "token": null
+f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52607 🔍 Est route publique? false
+f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52607 === FIN DÉTECTION ===
+f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52708 🎯 Route matchée: * (catch-all)
+f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52709 🔗 URL: https://jaw-karate-78155897.figma.site/
+f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52710 🔒 isAuthenticated: true
+f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52001 ✅ Documents chargés: Array(0)
+f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52031 📤 Upload du document: Cours complet - environnement économiique du conseil patrimonial Pédagogique
+cevzlqdencncriisrobf.supabase.co/functions/v1/make-server-cac859af/knowledge-base/ingest:1  Failed to load resource: the server responded with a status of 546 ()Comprendre cette erreur
+f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52044 ❌ Erreur indexation: 546 Object
+j @ f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52044Comprendre cette erreur
+f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52053 ❌ Erreur indexation: Error: Failed to upload PDF
+    at j (f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52044:68)
+j @ f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52053Comprendre cette erreur
+f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52108 Ajout au journal: Object
+f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52031 📤 Upload du document: Cours complet - environnement économiique du conseil patrimonial Pédagogique
+f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52032  POST https://cevzlqdencncriisrobf.supabase.co/functions/v1/make-server-cac859af/knowledge-base/ingest 546
+j @ f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52032
+await in j
+oD @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+sD @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+aD @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+nE @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+RC @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+(anonyme) @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+cS @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:8
+ZE @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+wy @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+Vv @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+ED @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5Comprendre cette erreur
+f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52044 ❌ Erreur indexation: 546 {code: 'WORKER_LIMIT', message: 'Function failed due to not having enough compute resources (please check logs)'}
+j @ f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52044
+await in j
+oD @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+sD @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+aD @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+nE @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+RC @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+(anonyme) @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+cS @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:8
+ZE @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+wy @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+Vv @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+ED @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5Comprendre cette erreur
+f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52053 ❌ Erreur indexation: Error: Failed to upload PDF
+    at j (f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52044:68)
+j @ f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52053
+await in j
+oD @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+sD @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+aD @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+nE @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+RC @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+(anonyme) @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+cS @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:8
+ZE @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+wy @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+Vv @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+ED @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5Comprendre cette erreur
+f1538f7cfaaabe6d7cec979faa549bc90354e83c.js:52108 Ajout au journal: {name: 'Cours complet - environnement économiique du conseil patrimonial', status: 'error', message: '❌ Erreur: Failed to upload PDF', timestamp: '2026-03-07T17:53:48.287Z'}

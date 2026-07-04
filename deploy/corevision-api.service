@@ -1,0 +1,40 @@
+[Unit]
+Description=Corevision API Server (Deno + Hono)
+After=network.target ollama.service
+Wants=ollama.service
+
+[Service]
+Type=simple
+User=corevision
+Group=corevision
+WorkingDirectory=/opt/corevision-api/server
+
+# Variables d'environnement
+EnvironmentFile=/opt/corevision-api/.env
+
+# Commande de démarrage
+ExecStart=/usr/local/bin/deno run \
+  --allow-net \
+  --allow-read=/opt/corevision \
+  --allow-write=/opt/corevision \
+  --allow-env \
+  index.tsx
+
+# Redémarrage automatique
+Restart=always
+RestartSec=5
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+# Logs
+StandardOutput=append:/var/log/corevision/api.log
+StandardError=append:/var/log/corevision/api-error.log
+
+# Sécurité
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/opt/corevision
+
+[Install]
+WantedBy=multi-user.target

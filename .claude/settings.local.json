@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Claude_Preview__preview_start",
+      "PowerShell(powershell -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\conta\\\\OneDrive\\\\Documents\\\\Sauvegardes\\\\Corevision\\\\backup.ps1\")",
+      "Bash(grep -oE \"localStorage\\\\.\\(setItem|getItem|removeItem\\)\\\\\\(['\\\\\"][a-zA-Z0-9_-]*\\\\${[^}]+}[a-zA-Z0-9_-]*['\\\\\"]\" \"C:\\\\Users\\\\conta\\\\OneDrive\\\\Documents\\\\Claude\\\\Projects\\\\Corevision-main\\\\src\\\\app\\\\services\\\\api.ts\")",
+      "Bash(xargs grep *)",
+      "Bash(grep -E \"Key\\\\s*=.*\\\\`|clientDetailKey|clientsKey|tasksKey|ordersKey\" \"C:\\\\Users\\\\conta\\\\OneDrive\\\\Documents\\\\Claude\\\\Projects\\\\Corevision-main\\\\src\\\\app\\\\services\\\\api.ts\")",
+      "Bash(grep -E \"Key\\\\s*=.*\\\\`|client_tasks_|corevision_|devis_\" \"C:\\\\Users\\\\conta\\\\OneDrive\\\\Documents\\\\Claude\\\\Projects\\\\Corevision-main\\\\src\\\\app\\\\services\\\\api.ts\")",
+      "Bash(find \"C:\\\\Users\\\\conta\\\\OneDrive\\\\Documents\\\\Claude\\\\Projects\\\\Corevision-main\\\\src\\\\app\\\\components\\\\client-detail\" -name \"AuditTab*.tsx\" -exec wc -l {} +)",
+      "Bash(xargs wc *)",
+      "Bash(grep -l \"calculService\\\\|fiscalCalculator\" \"C:\\\\Users\\\\conta\\\\OneDrive\\\\Documents\\\\Claude\\\\Projects\\\\Corevision-main\\\\src\\\\app\\\\hooks\\\\\\\\\"*.ts)",
+      "PowerShell(cd \"C:\\\\Users\\\\conta\\\\OneDrive\\\\Documents\\\\Claude\\\\Projects\\\\Corevision-main\" ; vercel --prod 2>&1 | Where-Object { $_ -match \"ready|Production:|Error\" })",
+      "PowerShell(scp -i \"C:\\\\Users\\\\conta\\\\.ssh\\\\id_ed25519\" -o StrictHostKeyChecking=no \"C:\\\\Users\\\\conta\\\\OneDrive\\\\Documents\\\\Claude\\\\Projects\\\\Corevision-main\\\\src\\\\app\\\\supabase\\\\functions\\\\server\\\\task_routes.tsx\" \"ubuntu@54.38.176.9:/opt/corevision-api/src/app/supabase/functions/server/task_routes.tsx\")",
+      "PowerShell(ssh -i \"C:\\\\Users\\\\conta\\\\.ssh\\\\id_ed25519\" -o StrictHostKeyChecking=no ubuntu@54.38.176.9 \"find /opt/corevision-api -name 'task_routes.tsx' 2>/dev/null; echo '---'; ls /opt/corevision-api/\")",
+      "PowerShell(scp -i \"C:\\\\Users\\\\conta\\\\.ssh\\\\id_ed25519\" -o StrictHostKeyChecking=no \"C:\\\\Users\\\\conta\\\\OneDrive\\\\Documents\\\\Claude\\\\Projects\\\\Corevision-main\\\\src\\\\app\\\\supabase\\\\functions\\\\server\\\\task_routes.tsx\" \"ubuntu@54.38.176.9:/opt/corevision-api/server/task_routes.tsx\")",
+      "PowerShell(ssh -i \"C:\\\\Users\\\\conta\\\\.ssh\\\\id_ed25519\" -o StrictHostKeyChecking=no ubuntu@54.38.176.9 \"sudo systemctl restart corevision-api && sudo systemctl status corevision-api --no-pager | tail -5\")",
+      "PowerShell(cd \"C:\\\\Users\\\\conta\\\\OneDrive\\\\Documents\\\\Claude\\\\Projects\\\\Corevision-main\" ; vercel --prod 2>&1 | Where-Object { $_ -match \"ready|Production:|READY|Error\" })",
+      "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
+      "Bash(npx tsc *)",
+      "Bash(npm run *)"
+    ]
+  }
+}

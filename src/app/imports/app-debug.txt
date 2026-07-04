@@ -1,0 +1,65 @@
+sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:127 [Hydrated]
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:13535 🔗 API Base URL: https://cevzlqdencncriisrobf.supabase.co/functions/v1/make-server-cac859af
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:13536 🔧 Mode localStorage forcé: true
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52583 🛠️ Utilitaires de diagnostic chargés:
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52583   - await debugClientDocuments(clientId)
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52583   - await forceDocumentsUpdate(clientId)
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52583   - listClientKeys()
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52583   - await getCurrentUserId()
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52583   - await verifyClientDataConsistency(clientId)
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52586 === DÉBUT APP.TSX ===
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52586 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52586 📍 window.location.search: 
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52586 📍 window.location.pathname: /
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52586 📍 window.location.hash: 
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52588 🔍 Query param "page": null
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52588 🔍 Query param "token": null
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52590 🔍 Est route publique? false
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52590 === FIN DÉTECTION ===
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52691 🎯 Route matchée: * (catch-all)
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52692 🔗 URL: https://jaw-karate-78155897.figma.site/
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52693 🔒 isAuthenticated: false
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52650 🔐 App.tsx - Session récupérée: Object
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52650 🔑 App.tsx - Access token présent: true
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52650 👤 App.tsx - User ID: a33395fb-b6d8-4bdc-ad89-e24a6335a839
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52650 📧 App.tsx - Email: violeau.hortense@gmail.com
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52586 === DÉBUT APP.TSX ===
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52586 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52586 📍 window.location.search: 
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52586 📍 window.location.pathname: /
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52586 📍 window.location.hash: 
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52588 🔍 Query param "page": null
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52588 🔍 Query param "token": null
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52590 🔍 Est route publique? false
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52590 === FIN DÉTECTION ===
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52691 🎯 Route matchée: * (catch-all)
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52692 🔗 URL: https://jaw-karate-78155897.figma.site/
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52693 🔒 isAuthenticated: true
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:13287 ✅ Dashboard - Clients chargés depuis localStorage: Array(1)
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52655 🔄 App.tsx - Auth state changed: INITIAL_SESSION
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52655 🔑 App.tsx - Nouvelle session: Object
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52655 ✅ Access token présent: true
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52586 === DÉBUT APP.TSX ===
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52586 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52586 📍 window.location.search: 
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52586 📍 window.location.pathname: /
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52586 📍 window.location.hash: 
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52588 🔍 Query param "page": null
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52588 🔍 Query param "token": null
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52590 🔍 Est route publique? false
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52590 === FIN DÉTECTION ===
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52691 🎯 Route matchée: * (catch-all)
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52692 🔗 URL: https://jaw-karate-78155897.figma.site/
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52693 🔒 isAuthenticated: true
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52586 === DÉBUT APP.TSX ===
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52586 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52586 📍 window.location.search: 
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52586 📍 window.location.pathname: /
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52586 📍 window.location.hash: 
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52588 🔍 Query param "page": null
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52588 🔍 Query param "token": null
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52590 🔍 Est route publique? false
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52590 === FIN DÉTECTION ===
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52691 🎯 Route matchée: * (catch-all)
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52692 🔗 URL: https://jaw-karate-78155897.figma.site/
+9b84e6a2c39d92d2c6a0c9fcd6805bfd5f83c16d.js:52693 🔒 isAuthenticated: true

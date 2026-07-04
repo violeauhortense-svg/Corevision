@@ -1,0 +1,225 @@
+Object
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15705 💾 Sauvegarde de: Object
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15705 🔑 Clé: client_detail_a33395fb-b6d8-4bdc-ad89-e24a6335a839_client_1773648767269_pqpjlgmhf
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15705 ✅ Données complètes sauvegardées dans client_detail
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15717 ✅ Liste des clients mise à jour
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:46879 ✅ Sauvegarde initiale terminée
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:16987 🔵 RevenusImpositionForm - Rendu du composant
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:17040 📊 Calcul nombre de parts: Object
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:17064 💰 Calcul revenus salariés/TNS: Object
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:17068 🏠 Calcul revenu foncier: Object
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:16987 🔵 RevenusImpositionForm - Rendu du composant
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:17040 📊 Calcul nombre de parts: Object
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:17064 💰 Calcul revenus salariés/TNS: Object
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:17068 🏠 Calcul revenu foncier: Object
+sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:8 ReferenceError: Cannot access 'oe' before initialization
+    at cj (https://jaw-karate-78155897.figma.site/_components/v2/a20bb6bb372f875e652d01b09b6eef801488ae5b.js:17091:230)
+    at rS (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:6:16997)
+    at O1 (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:8:43968)
+    at k1 (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:8:39726)
+    at BM (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:8:39654)
+    at qd (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:8:39508)
+    at kv (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:8:35876)
+    at _E (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:8:36679)
+    at Ri (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:6:3274)
+    at https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:8:34209
+
+React stack:
+    at cj (https://jaw-karate-78155897.figma.site/_components/v2/a20bb6bb372f875e652d01b09b6eef801488ae5b.js:16975:12)
+    at div
+    at uj (https://jaw-karate-78155897.figma.site/_components/v2/a20bb6bb372f875e652d01b09b6eef801488ae5b.js:18052:12)
+    at div
+    at div
+    at div
+    at IW (https://jaw-karate-78155897.figma.site/_components/v2/a20bb6bb372f875e652d01b09b6eef801488ae5b.js:46679:25)
+    at qW (https://jaw-karate-78155897.figma.site/_components/v2/a20bb6bb372f875e652d01b09b6eef801488ae5b.js:47564:24)
+    at main
+    at div
+    at KO (https://jaw-karate-78155897.figma.site/_components/v2/a20bb6bb372f875e652d01b09b6eef801488ae5b.js:885:29)
+    at aP (https://jaw-karate-78155897.figma.site/_components/v2/a20bb6bb372f875e652d01b09b6eef801488ae5b.js:1097:13)
+    at nP (https://jaw-karate-78155897.figma.site/_components/v2/a20bb6bb372f875e652d01b09b6eef801488ae5b.js:1049:13)
+    at OP (https://jaw-karate-78155897.figma.site/_components/v2/a20bb6bb372f875e652d01b09b6eef801488ae5b.js:1504:13)
+    at eK (https://jaw-karate-78155897.figma.site/_components/v2/a20bb6bb372f875e652d01b09b6eef801488ae5b.js:56109:18)
+    at gs (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:77:141)
+    at Bj (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:78:36328)
+    at fr (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:134507)
+    at div
+    at https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:78:34746
+    at dT (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:158244)
+    at zf (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:159540)
+    at mr (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:165317)
+    at Xt (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:139517)
+    at LL (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:78:35221)
+    at gN (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:139807)
+    at https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:124:2313
+    at gs (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:77:141)
+    at https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:124:4980
+    at YN (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:171893)
+    at https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:139375
+    at https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:139375
+    at eL (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:176333)
+    at https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:178755
+    at https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:154488
+    at gN (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:139807)
+    at https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:124:2313
+    at gs (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:77:141)
+    at iT (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:140528)
+    at cT (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:151534)
+    at u_ (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:124:1690)
+    at gN (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:139807)
+    at https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:124:2313
+    at Zx (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:5372)
+    at DU (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:127:2833)
+    at div
+    at div
+    at OL (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:78:33845)
+    at Y1 (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:8:72680)
+    at XS (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:65:13874)
+    at gs (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:77:141)
+    at pI (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:65:12626)
+    at d_ (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:127:53)Caused by: Error: React component stack where the error occurred
+    at cj (a20bb6bb372f875e652d01b09b6eef801488ae5b.js:16975:12)
+    at /div
+    at uj (a20bb6bb372f875e652d01b09b6eef801488ae5b.js:18052:12)
+    at /div
+    at /div
+    at /div
+    at IW (a20bb6bb372f875e652d01b09b6eef801488ae5b.js:46679:25)
+    at qW (a20bb6bb372f875e652d01b09b6eef801488ae5b.js:47564:24)
+    at /main
+    at /div
+    at KO (a20bb6bb372f875e652d01b09b6eef801488ae5b.js:885:29)
+    at aP (a20bb6bb372f875e652d01b09b6eef801488ae5b.js:1097:13)
+    at nP (a20bb6bb372f875e652d01b09b6eef801488ae5b.js:1049:13)
+    at OP (a20bb6bb372f875e652d01b09b6eef801488ae5b.js:1504:13)
+    at eK (a20bb6bb372f875e652d01b09b6eef801488ae5b.js:56109:18)
+    at gs (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:77:141)
+    at Bj (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:78:36328)
+    at fr (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:134507)
+    at /div
+    at sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:78:34746
+    at dT (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:158244)
+    at zf (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:159540)
+    at mr (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:165317)
+    at Xt (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:139517)
+    at LL (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:78:35221)
+    at gN (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:139807)
+    at sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:124:2313
+    at gs (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:77:141)
+    at sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:124:4980
+    at YN (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:171893)
+    at sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:139375
+    at sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:139375
+    at eL (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:176333)
+    at sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:178755
+    at sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:154488
+    at gN (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:139807)
+    at sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:124:2313
+    at gs (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:77:141)
+    at iT (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:140528)
+    at cT (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:151534)
+    at u_ (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:124:1690)
+    at gN (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:139807)
+    at sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:124:2313
+    at Zx (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:5372)
+    at DU (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:127:2833)
+    at /div
+    at /div
+    at OL (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:78:33845)
+    at Y1 (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:8:72680)
+    at XS (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:65:13874)
+    at gs (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:77:141)
+    at pI (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:65:12626)
+    at d_ (sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:127:53)
+hv @ sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:8Comprendre cette erreur
+sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:65 New error in code-component (0:7) ReferenceError: Cannot access 'oe' before initialization
+    at cj (https://jaw-karate-78155897.figma.site/_components/v2/a20bb6bb372f875e652d01b09b6eef801488ae5b.js:17091:230)
+    at rS (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:6:16997)
+    at O1 (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:8:43968)
+    at k1 (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:8:39726)
+    at BM (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:8:39654)
+    at qd (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:8:39508)
+    at kv (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:8:35876)
+    at _E (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:8:36679)
+    at Ri (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:6:3274)
+    at https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:8:34209
+
+React stack:
+    at cj (https://jaw-karate-78155897.figma.site/_components/v2/a20bb6bb372f875e652d01b09b6eef801488ae5b.js:16975:12)
+    at div
+    at uj (https://jaw-karate-78155897.figma.site/_components/v2/a20bb6bb372f875e652d01b09b6eef801488ae5b.js:18052:12)
+    at div
+    at div
+    at div
+    at IW (https://jaw-karate-78155897.figma.site/_components/v2/a20bb6bb372f875e652d01b09b6eef801488ae5b.js:46679:25)
+    at qW (https://jaw-karate-78155897.figma.site/_components/v2/a20bb6bb372f875e652d01b09b6eef801488ae5b.js:47564:24)
+    at main
+    at div
+    at KO (https://jaw-karate-78155897.figma.site/_components/v2/a20bb6bb372f875e652d01b09b6eef801488ae5b.js:885:29)
+    at aP (https://jaw-karate-78155897.figma.site/_components/v2/a20bb6bb372f875e652d01b09b6eef801488ae5b.js:1097:13)
+    at nP (https://jaw-karate-78155897.figma.site/_components/v2/a20bb6bb372f875e652d01b09b6eef801488ae5b.js:1049:13)
+    at OP (https://jaw-karate-78155897.figma.site/_components/v2/a20bb6bb372f875e652d01b09b6eef801488ae5b.js:1504:13)
+    at eK (https://jaw-karate-78155897.figma.site/_components/v2/a20bb6bb372f875e652d01b09b6eef801488ae5b.js:56109:18)
+    at gs (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:77:141)
+    at Bj (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:78:36328)
+    at fr (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:134507)
+    at div
+    at https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:78:34746
+    at dT (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:158244)
+    at zf (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:159540)
+    at mr (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:165317)
+    at Xt (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:139517)
+    at LL (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:78:35221)
+    at gN (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:139807)
+    at https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:124:2313
+    at gs (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:77:141)
+    at https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:124:4980
+    at YN (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:171893)
+    at https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:139375
+    at https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:139375
+    at eL (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:176333)
+    at https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:178755
+    at https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:154488
+    at gN (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:139807)
+    at https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:124:2313
+    at gs (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:77:141)
+    at iT (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:140528)
+    at cT (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:151534)
+    at u_ (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:124:1690)
+    at gN (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:139807)
+    at https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:124:2313
+    at Zx (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:75:5372)
+    at DU (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:127:2833)
+    at div
+    at div
+    at OL (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:78:33845)
+    at Y1 (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:8:72680)
+    at XS (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:65:13874)
+    at gs (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:77:141)
+    at pI (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:65:12626)
+    at d_ (https://jaw-karate-78155897.figma.site/_runtimes/sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:127:53)
+(anonyme) @ sites-runtime.343174caaaed17c584f4bbef3b4ac09803029223cd1847b05e791508001770d2.js:65Comprendre cette erreur
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15043 📡 2 commande(s) chargée(s) depuis le serveur
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15048 💾 0 commande(s) locale(s) trouvée(s)
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15056 ✅ 2 commande(s) unique(s) après déduplication
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15067 🔍 DEBUG getPendingCount - Total commandes: 2
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15071 🔍 DEBUG getPendingCount - Commandes pending/in_progress: 2
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15071 🔍 DEBUG getPendingCount - Statuts: Array(2)
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15043 📡 2 commande(s) chargée(s) depuis le serveur
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15048 💾 0 commande(s) locale(s) trouvée(s)
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15056 ✅ 2 commande(s) unique(s) après déduplication
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15067 🔍 DEBUG getPendingCount - Total commandes: 2
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15071 🔍 DEBUG getPendingCount - Commandes pending/in_progress: 2
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15071 🔍 DEBUG getPendingCount - Statuts: Array(2)
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15043 📡 2 commande(s) chargée(s) depuis le serveur
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15048 💾 0 commande(s) locale(s) trouvée(s)
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15056 ✅ 2 commande(s) unique(s) après déduplication
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15067 🔍 DEBUG getPendingCount - Total commandes: 2
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15071 🔍 DEBUG getPendingCount - Commandes pending/in_progress: 2
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15071 🔍 DEBUG getPendingCount - Statuts: Array(2)
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15043 📡 2 commande(s) chargée(s) depuis le serveur
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15048 💾 0 commande(s) locale(s) trouvée(s)
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15056 ✅ 2 commande(s) unique(s) après déduplication
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15067 🔍 DEBUG getPendingCount - Total commandes: 2
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15071 🔍 DEBUG getPendingCount - Commandes pending/in_progress: 2
+a20bb6bb372f875e652d01b09b6eef801488ae5b.js:15071 🔍 DEBUG getPendingCount - Statuts: (2) ['pending', 'pending']

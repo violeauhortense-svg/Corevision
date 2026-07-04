@@ -1,0 +1,268 @@
+sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:127 [Hydrated]
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:13539 🔗 API Base URL: https://cevzlqdencncriisrobf.supabase.co/functions/v1/make-server-cac859af
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:13540 🔧 Mode localStorage forcé: true
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52588 🛠️ Utilitaires de diagnostic chargés:
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52588   - await debugClientDocuments(clientId)
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52588   - await forceDocumentsUpdate(clientId)
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52588   - listClientKeys()
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52588   - await getCurrentUserId()
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52588   - await verifyClientDataConsistency(clientId)
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 === DÉBUT APP.TSX ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.search: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.pathname: /
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.hash: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "page": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "token": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 🔍 Est route publique? false
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 === FIN DÉTECTION ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52696 🎯 Route matchée: * (catch-all)
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52697 🔗 URL: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52698 🔒 isAuthenticated: false
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52660 🔄 App.tsx - Auth state changed: SIGNED_IN
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52660 🔑 App.tsx - Nouvelle session: Object
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52660 ✅ Access token présent: true
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 === DÉBUT APP.TSX ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.search: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.pathname: /
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.hash: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "page": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "token": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 🔍 Est route publique? false
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 === FIN DÉTECTION ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52696 🎯 Route matchée: * (catch-all)
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52697 🔗 URL: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52698 🔒 isAuthenticated: true
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:13291 ✅ Dashboard - Clients chargés depuis localStorage: Array(1)
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52655 🔐 App.tsx - Session récupérée: Object
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52655 🔑 App.tsx - Access token présent: true
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52655 👤 App.tsx - User ID: a33395fb-b6d8-4bdc-ad89-e24a6335a839
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52655 📧 App.tsx - Email: violeau.hortense@gmail.com
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 === DÉBUT APP.TSX ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.search: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.pathname: /
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.hash: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "page": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "token": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 🔍 Est route publique? false
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 === FIN DÉTECTION ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52696 🎯 Route matchée: * (catch-all)
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52697 🔗 URL: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52698 🔒 isAuthenticated: true
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52660 🔄 App.tsx - Auth state changed: INITIAL_SESSION
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52660 🔑 App.tsx - Nouvelle session: Object
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52660 ✅ Access token présent: true
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 === DÉBUT APP.TSX ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.search: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.pathname: /
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.hash: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "page": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "token": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 🔍 Est route publique? false
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 === FIN DÉTECTION ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52696 🎯 Route matchée: * (catch-all)
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52697 🔗 URL: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52698 🔒 isAuthenticated: true
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 === DÉBUT APP.TSX ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.search: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.pathname: /
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.hash: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "page": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "token": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 🔍 Est route publique? false
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 === FIN DÉTECTION ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52696 🎯 Route matchée: * (catch-all)
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52697 🔗 URL: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52698 🔒 isAuthenticated: true
+documents:1  Failed to load resource: the server responded with a status of 401 ()Comprendre cette erreur
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:51998 ❌ Erreur récupération documents: 401 Object
+A @ e70c7198774c08c2751ca59fbe654f132333d0a0.js:51998Comprendre cette erreur
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52003 Erreur chargement documents: Error: Failed to fetch documents: 401
+    at A (e70c7198774c08c2751ca59fbe654f132333d0a0.js:51998:79)
+A @ e70c7198774c08c2751ca59fbe654f132333d0a0.js:52003Comprendre cette erreur
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52660 🔄 App.tsx - Auth state changed: SIGNED_IN
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52660 🔑 App.tsx - Nouvelle session: Object
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52660 ✅ Access token présent: true
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 === DÉBUT APP.TSX ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.search: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.pathname: /
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.hash: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "page": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "token": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 🔍 Est route publique? false
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 === FIN DÉTECTION ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52696 🎯 Route matchée: * (catch-all)
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52697 🔗 URL: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52698 🔒 isAuthenticated: true
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52660 🔄 App.tsx - Auth state changed: SIGNED_IN
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52660 🔑 App.tsx - Nouvelle session: Object
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52660 ✅ Access token présent: true
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 === DÉBUT APP.TSX ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.search: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.pathname: /
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.hash: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "page": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "token": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 🔍 Est route publique? false
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 === FIN DÉTECTION ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52696 🎯 Route matchée: * (catch-all)
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52697 🔗 URL: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52698 🔒 isAuthenticated: true
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 === DÉBUT APP.TSX ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.search: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.pathname: /
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.hash: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "page": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "token": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 🔍 Est route publique? false
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 === FIN DÉTECTION ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52696 🎯 Route matchée: * (catch-all)
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52697 🔗 URL: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52698 🔒 isAuthenticated: true
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 === DÉBUT APP.TSX ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.search: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.pathname: /
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.hash: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "page": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "token": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 🔍 Est route publique? false
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 === FIN DÉTECTION ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52696 🎯 Route matchée: * (catch-all)
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52697 🔗 URL: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52698 🔒 isAuthenticated: true
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:51702 📋 0 commande(s) chargée(s) depuis le serveur
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:51709 💾 0 commande(s) locale(s) trouvée(s)
+cevzlqdencncriisrobf.supabase.co/functions/v1/make-server-cac859af/knowledge-base/documents:1  Failed to load resource: the server responded with a status of 401 ()Comprendre cette erreur
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:51998 ❌ Erreur récupération documents: 401 Object
+A @ e70c7198774c08c2751ca59fbe654f132333d0a0.js:51998Comprendre cette erreur
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52003 Erreur chargement documents: Error: Failed to fetch documents: 401
+    at A (e70c7198774c08c2751ca59fbe654f132333d0a0.js:51998:79)
+A @ e70c7198774c08c2751ca59fbe654f132333d0a0.js:52003Comprendre cette erreur
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52660 🔄 App.tsx - Auth state changed: SIGNED_IN
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52660 🔑 App.tsx - Nouvelle session: Object
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52660 ✅ Access token présent: true
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 === DÉBUT APP.TSX ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.search: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.pathname: /
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.hash: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "page": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "token": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 🔍 Est route publique? false
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 === FIN DÉTECTION ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52696 🎯 Route matchée: * (catch-all)
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52697 🔗 URL: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52698 🔒 isAuthenticated: true
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52660 🔄 App.tsx - Auth state changed: SIGNED_IN
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52660 🔑 App.tsx - Nouvelle session: Object
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52660 ✅ Access token présent: true
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 === DÉBUT APP.TSX ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.search: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.pathname: /
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.hash: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "page": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "token": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 🔍 Est route publique? false
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 === FIN DÉTECTION ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52696 🎯 Route matchée: * (catch-all)
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52697 🔗 URL: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52698 🔒 isAuthenticated: true
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52660 🔄 App.tsx - Auth state changed: SIGNED_IN
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52660 🔑 App.tsx - Nouvelle session: Object
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52660 ✅ Access token présent: true
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 === DÉBUT APP.TSX ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.search: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.pathname: /
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.hash: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "page": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "token": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 🔍 Est route publique? false
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 === FIN DÉTECTION ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52696 🎯 Route matchée: * (catch-all)
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52697 🔗 URL: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52698 🔒 isAuthenticated: true
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 === DÉBUT APP.TSX ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.search: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.pathname: /
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.hash: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "page": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "token": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 🔍 Est route publique? false
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 === FIN DÉTECTION ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52696 🎯 Route matchée: * (catch-all)
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52697 🔗 URL: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52698 🔒 isAuthenticated: true
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 === DÉBUT APP.TSX ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.search: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.pathname: /
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.hash: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "page": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "token": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 🔍 Est route publique? false
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 === FIN DÉTECTION ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52696 🎯 Route matchée: * (catch-all)
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52697 🔗 URL: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52698 🔒 isAuthenticated: true
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:51988  GET https://cevzlqdencncriisrobf.supabase.co/functions/v1/make-server-cac859af/knowledge-base/documents 401 (Unauthorized)
+A @ e70c7198774c08c2751ca59fbe654f132333d0a0.js:51988
+await in A
+(anonyme) @ e70c7198774c08c2751ca59fbe654f132333d0a0.js:51984
+sp @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:8
+qa @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:8
+BM @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:8
+Is @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:8
+NE @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:8
+Ri @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:6
+(anonyme) @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:8Comprendre cette erreur
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:51702 📋 0 commande(s) chargée(s) depuis le serveur
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:51709 💾 0 commande(s) locale(s) trouvée(s)
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:51998 ❌ Erreur récupération documents: 401 {code: 401, message: 'Invalid JWT'}
+A @ e70c7198774c08c2751ca59fbe654f132333d0a0.js:51998
+await in A
+(anonyme) @ e70c7198774c08c2751ca59fbe654f132333d0a0.js:51984
+sp @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:8
+qa @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:8
+BM @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:8
+Is @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:8
+NE @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:8
+Ri @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:6
+(anonyme) @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:8Comprendre cette erreur
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52003 Erreur chargement documents: Error: Failed to fetch documents: 401
+    at A (e70c7198774c08c2751ca59fbe654f132333d0a0.js:51998:79)
+A @ e70c7198774c08c2751ca59fbe654f132333d0a0.js:52003
+await in A
+(anonyme) @ e70c7198774c08c2751ca59fbe654f132333d0a0.js:51984
+sp @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:8
+qa @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:8
+BM @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:8
+Is @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:8
+NE @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:8
+Ri @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:6
+(anonyme) @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:8Comprendre cette erreur
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52660 🔄 App.tsx - Auth state changed: SIGNED_IN
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52660 🔑 App.tsx - Nouvelle session: {access_token: 'eyJhbGciOiJFUzI1NiIsImtpZCI6IjEyYmU2OThmLWQxMTMtND…r4hcixPf56POebfzMaqfMQBBDQhKXeey6nF7L5BnGHDpKe6Yg', token_type: 'bearer', expires_in: 3600, expires_at: 1772905827, refresh_token: 's3owazluwd44', …}
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52660 ✅ Access token présent: true
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 === DÉBUT APP.TSX ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.href: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.search: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.pathname: /
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52591 📍 window.location.hash: 
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "page": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52593 🔍 Query param "token": null
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 🔍 Est route publique? false
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52595 === FIN DÉTECTION ===
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52696 🎯 Route matchée: * (catch-all)
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52697 🔗 URL: https://jaw-karate-78155897.figma.site/
+e70c7198774c08c2751ca59fbe654f132333d0a0.js:52698 🔒 isAuthenticated: true

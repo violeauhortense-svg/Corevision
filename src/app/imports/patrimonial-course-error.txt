@@ -1,0 +1,45 @@
+📤 Upload du document: Cours complet - environnement économiique du conseil patrimonial Pédagogique
+53a55ba90f9279db4cfbf55a8e2e457f4d83bc1e.js:52032  POST https://cevzlqdencncriisrobf.supabase.co/functions/v1/make-server-cac859af/knowledge-base/ingest 500 (Internal Server Error)
+j @ 53a55ba90f9279db4cfbf55a8e2e457f4d83bc1e.js:52032
+await in j
+oD @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+sD @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+aD @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+nE @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+RC @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+(anonyme) @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+cS @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:8
+ZE @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+wy @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+Vv @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+ED @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5Comprendre cette erreur
+53a55ba90f9279db4cfbf55a8e2e457f4d83bc1e.js:52044 ❌ Erreur indexation: 500 {error: 'Failed to upload PDF', details: 'Invalid key: 1772905850900-Cours complet - environnement économiique du conseil patrimonial.pdf'}
+j @ 53a55ba90f9279db4cfbf55a8e2e457f4d83bc1e.js:52044
+await in j
+oD @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+sD @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+aD @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+nE @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+RC @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+(anonyme) @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+cS @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:8
+ZE @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+wy @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+Vv @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+ED @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5Comprendre cette erreur
+53a55ba90f9279db4cfbf55a8e2e457f4d83bc1e.js:52053 ❌ Erreur indexation: Error: Invalid key: 1772905850900-Cours complet - environnement économiique du conseil patrimonial.pdf
+    at j (53a55ba90f9279db4cfbf55a8e2e457f4d83bc1e.js:52044:68)
+j @ 53a55ba90f9279db4cfbf55a8e2e457f4d83bc1e.js:52053
+await in j
+oD @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+sD @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+aD @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+nE @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+RC @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+(anonyme) @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+cS @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:8
+ZE @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+wy @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+Vv @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5
+ED @ sites-runtime.8b70425d68a4452fce0c06e84ff8b403fb8604776241f07610414337ec6491c4.js:5Comprendre cette erreur
+53a55ba90f9279db4cfbf55a8e2e457f4d83bc1e.js:52108 Ajout au journal: {name: 'Cours complet - environnement économiique du conseil patrimonial', status: 'error', message: '❌ Erreur: Invalid key: 1772905850900-Cours complet…ironnement économiique du conseil patrimonial.pdf', timestamp: '2026-03-07T17:50:50.845Z'}
