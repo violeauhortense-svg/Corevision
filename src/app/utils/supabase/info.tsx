@@ -2,3 +2,5 @@
 export const apiBaseUrl = "https://corevision-fnid.onrender.com"
 export const projectId = "self-hosted"
 export const publicAnonKey = "local-auth"
+
+console.log(`✅ API Base URL loaded: ${apiBaseUrl}`);
