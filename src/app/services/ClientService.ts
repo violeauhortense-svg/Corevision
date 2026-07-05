@@ -166,6 +166,9 @@ class ClientServiceClass {
         telephone: clientData.telephone || '',
         statut: clientData.statut || 'R0 - Prospect',
         patrimoine: clientData.patrimoine || 0,
+        statusOuvert: clientData.statusOuvert || 'Prospect',
+        cspSigne: clientData.cspSigne || false,
+        taches: clientData.taches || {},
       });
 
       // L'API peut renvoyer { client } ou directement l'objet
