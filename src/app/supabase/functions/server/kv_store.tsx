@@ -1,108 +1,192 @@
-// KV Store - Deno KV (persiste automatiquement sur Render)
-// Aucun package externe nécessaire
+// KV Store - PostgreSQL (replaces Deno KV)
+// Persists data in PostgreSQL on Render
 
-let _kv: Deno.Kv | null = null;
-let _kvReady = false;
+import { Pool } from "https://deno.land/x/postgres@v0.17.0/mod.ts";
 
-// Initialise KV au startup (pas de await, ça va se faire en arrière-plan)
-async function initializeKv(): Promise<void> {
+const DATABASE_URL = Deno.env.get("DATABASE_URL");
+
+if (!DATABASE_URL) {
+  console.error("❌ DATABASE_URL env var not set! Set it in Render dashboard.");
+  console.error("Format: postgresql://user:password@host:port/dbname");
+}
+
+let _pool: Pool | null = null;
+let _dbReady = false;
+
+async function initializeDb(): Promise<void> {
   try {
-    console.log("🔄 Initializing Deno KV...");
+    if (!DATABASE_URL) {
+      throw new Error("DATABASE_URL not configured");
+    }
+
+    console.log("🔄 Initializing PostgreSQL connection pool...");
     const startTime = Date.now();
-    _kv = await Deno.openKv();
+
+    _pool = new Pool(DATABASE_URL, 10, true);
+    const conn = await _pool.connect();
+
+    // Create table if doesn't exist
+    await conn.queryArray(`
+      CREATE TABLE IF NOT EXISTS kv_store (
+        key TEXT PRIMARY KEY,
+        value JSONB NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_key_prefix ON kv_store (key);
+    `);
+
+    conn.release();
+    _dbReady = true;
+
     const duration = Date.now() - startTime;
-    _kvReady = true;
-    console.log(`✅ Deno KV initialized successfully (${duration}ms)`);
+    console.log(`✅ PostgreSQL initialized successfully (${duration}ms)`);
   } catch (err) {
-    console.error("❌ CRITICAL: Deno KV init failed:", err);
+    console.error("❌ CRITICAL: PostgreSQL init failed:", err);
     console.error("Stack:", (err as Error).stack);
-    console.error("Render may not support Deno KV - consider using PostgreSQL");
-    _kvReady = false;
+    _dbReady = false;
   }
 }
 
-// Lance l'init au démarrage
-initializeKv();
+// Launch init at startup
+initializeDb();
 
-// Optionnel: log l'état après 10 secondes
+// Log status after 5s
 setTimeout(() => {
-  if (_kvReady) {
-    console.log("✅ KV is ready for requests");
+  if (_dbReady) {
+    console.log("✅ PostgreSQL is ready for requests");
   } else {
-    console.error("⚠️ KV still not ready after 10s - requests will timeout");
+    console.error("⚠️ PostgreSQL still not ready after 5s - requests will fail");
   }
-}, 10000);
+}, 5000);
 
-async function getKv(): Promise<Deno.Kv> {
-  // Attendre que KV soit prêt (augmenté de 5s à 30s)
-  let attempts = 0;
-  const maxAttempts = 300; // 30 secondes
-  while (!_kvReady && attempts < maxAttempts) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    attempts++;
+async function getPool(): Promise<Pool> {
+  if (!_dbReady || !_pool) {
+    let attempts = 0;
+    const maxAttempts = 50;
+    while (!_dbReady && attempts < maxAttempts) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+    }
+
+    if (!_dbReady) {
+      const duration = attempts * 100;
+      console.error(`❌ DB timeout after ${duration}ms`);
+      throw new Error(`PostgreSQL non disponible (timeout d'initialisation après ${duration}ms)`);
+    }
   }
 
-  if (!_kvReady) {
-    const duration = attempts * 100;
-    console.error(`❌ KV timeout after ${duration}ms (max wait: 30s)`);
-    throw new Error(`Deno KV non disponible (timeout d'initialisation après ${duration}ms)`);
+  if (!_pool) {
+    throw new Error("PostgreSQL pool not initialized");
   }
 
-  if (!_kv) {
-    throw new Error("Deno KV non disponible (instance null)");
-  }
-  return _kv;
+  return _pool;
 }
 
 export const set = async (key: string, value: any): Promise<void> => {
-  const kv = await getKv();
-  await kv.set([key], value);
+  const pool = await getPool();
+  const conn = await pool.connect();
+  try {
+    await conn.queryArray(
+      `INSERT INTO kv_store (key, value, updated_at)
+       VALUES ($1, $2, NOW())
+       ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = NOW()`,
+      [key, JSON.stringify(value)]
+    );
+  } finally {
+    conn.release();
+  }
 };
 
 export const get = async (key: string): Promise<any> => {
-  const kv = await getKv();
-  const entry = await kv.get([key]);
-  return entry.value;
+  const pool = await getPool();
+  const conn = await pool.connect();
+  try {
+    const result = await conn.queryArray(
+      "SELECT value FROM kv_store WHERE key = $1",
+      [key]
+    );
+    if (result.rows.length === 0) return null;
+    return JSON.parse(result.rows[0][0] as string);
+  } finally {
+    conn.release();
+  }
 };
 
 export const del = async (key: string): Promise<void> => {
-  const kv = await getKv();
-  await kv.delete([key]);
+  const pool = await getPool();
+  const conn = await pool.connect();
+  try {
+    await conn.queryArray("DELETE FROM kv_store WHERE key = $1", [key]);
+  } finally {
+    conn.release();
+  }
 };
 
 export const mset = async (keys: string[], values: any[]): Promise<void> => {
-  const kv = await getKv();
-  const entries: Array<[string[], any]> = keys.map((key, i) => [[key], values[i]]);
-
-  const tx = kv.atomic();
-  for (const [k, v] of entries) {
-    tx.set(k, v);
+  const pool = await getPool();
+  const conn = await pool.connect();
+  try {
+    for (let i = 0; i < keys.length; i++) {
+      await conn.queryArray(
+        `INSERT INTO kv_store (key, value, updated_at)
+         VALUES ($1, $2, NOW())
+         ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = NOW()`,
+        [keys[i], JSON.stringify(values[i])]
+      );
+    }
+  } finally {
+    conn.release();
   }
-  await tx.commit();
 };
 
 export const mget = async (keys: string[]): Promise<any[]> => {
-  const kv = await getKv();
-  const results = await Promise.all(keys.map(k => kv.get([k])));
-  return results.map(r => r.value);
+  const pool = await getPool();
+  const conn = await pool.connect();
+  try {
+    const result = await conn.queryArray(
+      `SELECT value FROM kv_store WHERE key = ANY($1)`,
+      [keys]
+    );
+    return result.rows.map(row => JSON.parse(row[0] as string));
+  } finally {
+    conn.release();
+  }
 };
 
 export const mdel = async (keys: string[]): Promise<void> => {
-  const kv = await getKv();
-  const tx = kv.atomic();
-  for (const key of keys) {
-    tx.delete([key]);
+  const pool = await getPool();
+  const conn = await pool.connect();
+  try {
+    await conn.queryArray(
+      "DELETE FROM kv_store WHERE key = ANY($1)",
+      [keys]
+    );
+  } finally {
+    conn.release();
   }
-  await tx.commit();
 };
 
 export const getByPrefix = async (prefix: string): Promise<any[]> => {
-  const kv = await getKv();
-  const results: any[] = [];
-
-  for await (const entry of kv.list({ prefix: [prefix] })) {
-    results.push(entry.value);
+  const pool = await getPool();
+  const conn = await pool.connect();
+  try {
+    const result = await conn.queryArray(
+      "SELECT value FROM kv_store WHERE key LIKE $1",
+      [`${prefix}%`]
+    );
+    return result.rows.map(row => JSON.parse(row[0] as string));
+  } finally {
+    conn.release();
   }
-
-  return results;
 };
+
+// Graceful shutdown
+if (typeof Deno !== "undefined" && "unload" in Deno) {
+  (Deno as any).unload = async () => {
+    if (_pool) {
+      await _pool.end();
+      console.log("✅ PostgreSQL pool closed");
+    }
+  };
+}
