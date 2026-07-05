@@ -8,6 +8,7 @@
 
 import { clientAPI } from './api';
 import { cleanupClientData } from '../utils/cleanupClientData';
+import type { Task } from '../types/client';
 
 // ============================================
 // TYPES
@@ -35,6 +36,15 @@ export interface Client {
   date_creation?: string;
   createdAt: string;
   updatedAt?: string;
+
+  // 🆕 NOUVEAUX CHAMPS POUR DASHBOARD & PIPELINE (2026-07-05)
+  statusOuvert?: 'Prospect' | 'Découverte' | 'Simulation' | 'Lettre Mission' | 'Rapport/Audit' | 'Suivi MEP' | 'Suivi CSP' | 'Arbitrage';
+  dateNextRdv?: string; // Date du prochain RDV (utilisée pour "RDV Aujourd'hui" et "RDV Cette semaine")
+  tauxCA?: number; // Chiffre d'affaires (somme de tous les tauxCA)
+  cspSigne?: boolean; // CSP signé ? (pour restrictions Suivi CSP/Arbitrage)
+  taches?: Record<string, Task[]>; // Tâches groupées par statut { 'Prospect': [...], 'Découverte': [...], etc. }
+  mailsATraiter?: number; // Nombre de mails avec statut 'À traiter'
+  categoriesDossier?: string[]; // Catégories assignées (Chiffrage, Arbitrage, etc.)
 }
 
 // ============================================

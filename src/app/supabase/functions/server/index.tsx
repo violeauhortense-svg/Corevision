@@ -35,6 +35,7 @@ import { setupMoteurPatrimonialIARoutes } from "./moteur_patrimonial_ia_routes.t
 import { setupSimulateurPatrimonialRoutes } from "./simulateur_patrimonial_routes.tsx";
 import { setupReglesFiscalesRoutes } from "./regles_fiscales_routes.tsx";
 import { setupAuditPatrimonialRoutes } from "./audit_patrimonial_routes.tsx";
+import { setupDashboardRoutes } from "./dashboard_routes.tsx";
 
 // ============================================
 // VERSION: 2026-02-27-DER-FIX-V6
@@ -260,6 +261,8 @@ app.get("/make-server-cac859af/files/*", async (c) => {
   }
 });
 
+setupDashboardRoutes(app);
+console.log('✅ Dashboard routes loaded');
 setupClientRoutes(app);
 console.log('✅ Client routes loaded');
 setupTaskRoutes(app);
