@@ -33,7 +33,12 @@ export function TasksTab({ clientId }: TasksTabProps) {
 
   const loadClient = async () => {
     try {
-      const data = await ClientService.getInstance().getClient(clientId);
+      const { client: data, error } = await ClientService.getClientById(clientId);
+      if (error || !data) {
+        toast.error(error || 'Client introuvable');
+        setLoading(false);
+        return;
+      }
       setClient(data);
       setArbitrageClosureDate(data.arbitrageClosureDate || '');
       setArbitrageTreasuryN1(String(data.arbitrageTreasuryN1 || ''));
