@@ -25,39 +25,42 @@ async function initializeDb(): Promise<void> {
 
     const startTime = Date.now();
 
-    // Create pool with timeout
+    // Just create pool (don't connect yet - lazy init)
     _pool = new Pool(DATABASE_URL, 10, true);
+    console.log("✅ Pool created");
 
-    console.log("🔗 Attempting to connect to database...");
-    const conn = await Promise.race([
-      _pool.connect(),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Connection timeout (30s)")), 30000)
-      )
-    ]) as any;
+    // Try to create table asynchronously (don't block init)
+    (async () => {
+      try {
+        const conn = await Promise.race([
+          _pool!.connect(),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Connection timeout (30s)")), 30000)
+          )
+        ]) as any;
 
-    console.log("✅ Connected! Creating table...");
+        await conn.queryArray(`
+          CREATE TABLE IF NOT EXISTS kv_store (
+            key TEXT PRIMARY KEY,
+            value JSONB NOT NULL,
+            created_at TIMESTAMP DEFAULT NOW(),
+            updated_at TIMESTAMP DEFAULT NOW()
+          );
+          CREATE INDEX IF NOT EXISTS idx_key_prefix ON kv_store (key);
+        `);
+        conn.release();
+        console.log("✅ Table created/verified");
+      } catch (err) {
+        console.error("⚠️ Could not create table:", (err as Error).message);
+      }
+    })();
 
-    // Create table if doesn't exist
-    await conn.queryArray(`
-      CREATE TABLE IF NOT EXISTS kv_store (
-        key TEXT PRIMARY KEY,
-        value JSONB NOT NULL,
-        created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW()
-      );
-      CREATE INDEX IF NOT EXISTS idx_key_prefix ON kv_store (key);
-    `);
-
-    conn.release();
     _dbReady = true;
-
     const duration = Date.now() - startTime;
-    console.log(`✅ PostgreSQL initialized successfully (${duration}ms)`);
+    console.log(`✅ PostgreSQL pool ready (${duration}ms)`);
   } catch (err) {
     console.error("❌ CRITICAL: PostgreSQL init failed:", err);
     console.error("Error message:", (err as Error).message);
-    console.error("Stack:", (err as Error).stack);
     _dbReady = false;
   }
 }
