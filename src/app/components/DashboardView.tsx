@@ -20,12 +20,6 @@ export function DashboardView({ session }: DashboardViewProps) {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadMetrics();
-    const interval = setInterval(loadMetrics, 30000); // Refresh toutes les 30s
-    return () => clearInterval(interval);
-  }, []);
-
   const loadMetrics = async () => {
     try {
       const token = session?.access_token || localStorage.getItem('auth_token');
@@ -45,6 +39,12 @@ export function DashboardView({ session }: DashboardViewProps) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadMetrics();
+    const interval = setInterval(loadMetrics, 30000); // Refresh toutes les 30s
+    return () => clearInterval(interval);
+  }, []);
 
   if (loading) {
     return (
