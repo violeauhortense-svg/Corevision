@@ -217,13 +217,21 @@ export function setupDashboardRoutes(app: Hono) {
 
       const status = client.statusOuvert || 'Prospect';
       const taches = client.taches?.[status] || [];
-      const task = taches.find((t: any) => t.id === taskId);
 
-      console.log(`🔍 Recherche tâche ${taskId} dans statut "${status}"`);
-      console.log(`📋 Tâches disponibles:`, taches.map((t: any) => t.id));
-      console.log(`🎯 Tâche trouvée:`, task ? `✅ ${task.id}` : '❌ Introuvable');
+      // Chercher la tâche par ID d'abord
+      let task = taches.find((t: any) => t.id === taskId);
+
+      // Fallback : chercher par index si l'ID est un nombre ou format index
+      if (!task) {
+        const idx = parseInt(taskId.split('-').pop() || '-1');
+        if (idx >= 0 && idx < taches.length) {
+          task = taches[idx];
+          console.log(`✅ Tâche trouvée par INDEX ${idx} (ID recherché: ${taskId})`);
+        }
+      }
 
       if (!task) {
+        console.log(`❌ Tâche NOT found - ID: ${taskId}, statut: ${status}, tâches disponibles: ${taches.length}`);
         return c.json({ error: 'Tâche introuvable' }, 404);
       }
 
