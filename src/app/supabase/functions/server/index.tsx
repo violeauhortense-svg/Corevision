@@ -141,6 +141,8 @@ app.post("/make-server-cac859af/auth/signup", async (c) => {
     const body = await c.req.json();
     const { email, password, nom, prenom, specialite, certifications } = body;
 
+    console.log(`🔐 Signup attempt: ${email}`);
+
     const user = await createUser(email, password, {
       nom: nom || '',
       prenom: prenom || '',
@@ -148,10 +150,12 @@ app.post("/make-server-cac859af/auth/signup", async (c) => {
       certifications: certifications || 'CIF, AMF',
     });
 
+    console.log(`✅ User created: ${email}`);
     return c.json({ user });
   } catch (error) {
-    console.error('Signup error:', error);
-    return c.json({ error: (error as Error).message }, 400);
+    const msg = (error as Error).message;
+    console.error(`❌ Signup error for ${c.req.header('x-email')}: ${msg}`, error);
+    return c.json({ error: msg, details: String(error) }, 400);
   }
 });
 
