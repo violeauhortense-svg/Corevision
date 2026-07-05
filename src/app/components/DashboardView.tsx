@@ -60,8 +60,8 @@ export function DashboardView({ session }: DashboardViewProps) {
   return (
     <div className="w-full p-8 max-w-7xl mx-auto">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900">Tableau de bord</h2>
-        <p className="text-gray-600 mt-2">Vue d'ensemble de votre pipeline client</p>
+        <h2 className="text-3xl font-bold text-gray-900">✅ NOUVEAU DASHBOARD - JUILLET 2026</h2>
+        <p className="text-gray-600 mt-2">Vue d'ensemble de votre pipeline client (8-statuts)</p>
       </div>
 
       {/* 6 CARDS DE MÉTRIQUES */}
