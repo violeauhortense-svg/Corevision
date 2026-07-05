@@ -3,8 +3,65 @@
 // ============================================
 
 // Fonction pour obtenir les templates de tâches selon le statut
+// Support NOUVEAU pipeline 8 statuts (Prospect → Arbitrage)
 export function getTasksForStatus(statut: string): string[] {
   switch (statut) {
+    // 🆕 NOUVEAUX STATUTS (8 statuts)
+    case 'Prospect':
+      return [
+        'Origine du prospect',
+        'Contacter le client pour convenir d\'un RDV',
+        'Demande d\'informations au comptable',
+        'Interne',
+      ];
+    case 'Découverte':
+      return [
+        'Collecte des documents',
+        'Conformité 1',
+        'Remplissage des informations dans bilan',
+        'RDV découverte (validation infos et objectifs)',
+      ];
+    case 'Simulation':
+      return [
+        'Simulation chiffrée (réalisation)',
+        'Validation GL de la simulation',
+        'RDV Présentation simulation chiffré',
+        'Confirmation client pour poursuivre',
+        'Conformité 2',
+      ];
+    case 'Lettre Mission':
+      return [
+        'Réception des documents de vigilance',
+        'Envoi lettre de mission pour signature',
+        'Acceptation LM des clients (LM signé)',
+        'Écriture du rapport/audit',
+      ];
+    case 'Rapport/Audit':
+      return [
+        'Validation du rapport par GL',
+        'Incorporation des recommandations',
+        'Envoi du rapport au client pour signature',
+      ];
+    case 'Suivi MEP':
+      return [
+        'Confirmation des recommandations à mettre en place',
+        'Envoi au service juridique pour DPJ',
+      ];
+    case 'Suivi CSP':
+      return [
+        'Prendre contact avec le client (annuel)',
+        'Nouvelles recommandations',
+        'Compte rendu par mail + O2S',
+      ];
+    case 'Arbitrage':
+      return [
+        'Pièces comptables reçues',
+        'Demander besoin trésorerie année en cours',
+        'Remplir fichier excel (IR, cotisations sociales)',
+        'Prévenir comptable',
+        'Note O2S',
+      ];
+    // 🔄 ANCIENS STATUTS (rétrocompat)
     case 'R0 - Prospect':
       return [
         'Origine du prospect',

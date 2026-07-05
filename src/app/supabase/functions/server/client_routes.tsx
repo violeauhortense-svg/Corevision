@@ -29,7 +29,7 @@ export function setupClientRoutes(app: Hono) {
   // Get client by ID
   app.get("/make-server-cac859af/clients/:id", async (c) => {
     const { user, error } = await verifyAuth(c.req.header('Authorization'));
-    
+
     if (error || !user) {
       return c.json({ error: error || 'Unauthorized' }, 401);
     }
@@ -37,11 +37,28 @@ export function setupClientRoutes(app: Hono) {
     try {
       const clientId = c.req.param('id');
       const client = await kv.get(`client:${user.id}:${clientId}`);
-      
+
       if (!client) {
         return c.json({ error: 'Client not found' }, 404);
       }
-      
+
+      // Charger et regrouper les tâches par statut
+      const tasksByStatus: Record<string, any[]> = {};
+      const STATUSES = ['Prospect', 'Découverte', 'Simulation', 'Lettre Mission', 'Rapport/Audit', 'Suivi MEP', 'Suivi CSP', 'Arbitrage'];
+
+      for (const status of STATUSES) {
+        tasksByStatus[status] = [];
+      }
+
+      // Chercher toutes les tâches de ce client (brute-force: impossible sans query)
+      // Pour l'instant, retourner le client avec les tâches qu'on a déjà stockées
+      if (client.taches && Object.keys(client.taches).length > 0) {
+        // Les tâches sont déjà groupées dans le client
+        return c.json({ client });
+      }
+
+      // Fallback: retourner avec tâches vides
+      client.taches = tasksByStatus;
       return c.json({ client });
     } catch (err) {
       console.error('Error fetching client:', err);
@@ -59,7 +76,7 @@ export function setupClientRoutes(app: Hono) {
 
     try {
       const body = await c.req.json();
-      const { nom, prenom, email, telephone, statut, patrimoine } = body;
+      const { nom, prenom, email, telephone, statut, patrimoine, statusOuvert, cspSigne, taches } = body;
 
       const clientId = crypto.randomUUID();
       const client = {
@@ -70,6 +87,9 @@ export function setupClientRoutes(app: Hono) {
         telephone,
         statut: statut || 'R0',
         patrimoine: patrimoine || 0,
+        statusOuvert: statusOuvert || 'Prospect',
+        cspSigne: cspSigne || false,
+        taches: taches || {},
         conseiller_id: user.id,
         date_creation: new Date().toISOString().split('T')[0],
       };
@@ -77,36 +97,46 @@ export function setupClientRoutes(app: Hono) {
       await kv.set(`client:${user.id}:${clientId}`, client);
       console.log(`✅ Client ${clientId} créé pour l'utilisateur ${user.id}`);
 
-      // Créer les tâches initiales
-      const taskTemplates = getTasksForStatus(statut || 'R0');
+      // Créer les tâches initiales avec le nouveau statut
+      const newStatus = statusOuvert || 'Prospect';
+      const taskTemplates = getTasksForStatus(newStatus);
       const tasks = [];
-      
+      const tasksByStatus: Record<string, any[]> = {};
+      tasksByStatus[newStatus] = [];
+
       for (let i = 0; i < taskTemplates.length; i++) {
         const taskId = `task-${clientId}-${i}`;
         const isFirstTask = i === 0 && taskTemplates[i] === 'Origine du prospect';
-        
+
         const task = {
           id: taskId,
           title: taskTemplates[i],
           completed: isFirstTask, // Première tâche automatiquement complétée
+          status: 'pending',
           createdAt: new Date().toISOString(),
           clientId: clientId,
           clientName: `${prenom} ${nom}`,
           client_id: clientId,
           conseiller_id: user.id,
+          statusPipeline: newStatus, // Nouveau champ pour le pipeline
           // Champs spécifiques pour la tâche "Origine du prospect"
           ...(isFirstTask && {
             prospectOrigin: '',
             referrerName: '',
           }),
         };
-        
+
         await kv.set(`task:${user.id}:${clientId}:${taskId}`, task);
         tasks.push(task);
+        tasksByStatus[newStatus].push(task);
       }
-      
-      console.log(`✅ ${tasks.length} tâches créées pour le client ${clientId}`);
-      
+
+      // Mettre à jour le client avec les tâches groupées par statut
+      client.taches = tasksByStatus;
+      await kv.set(`client:${user.id}:${clientId}`, client);
+
+      console.log(`✅ ${tasks.length} tâches créées pour le client ${clientId} dans le statut "${newStatus}"`);
+
       return c.json({ client, tasks }, 201);
     } catch (err) {
       console.error('Error creating client:', err);
