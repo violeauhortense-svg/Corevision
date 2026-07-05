@@ -15,7 +15,7 @@ import { PatrimoineTab } from './PatrimoineTab';
 import { ObjectifsTab } from './ObjectifsTab';
 import { PreAnalyseTab } from './PreAnalyseTab';
 import { AuditTab } from './AuditTab';
-import { TasksTab } from './TaskTabNew';
+import { TasksTab } from '../TasksTab';
 import { DocumentsTab } from './DocumentsTab';
 import { HistoriqueTab } from './HistoriqueTab';
 import { ContactsProfessionnelsTab } from './ContactsProfessionnelsTab';

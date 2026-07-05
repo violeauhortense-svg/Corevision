@@ -45,6 +45,8 @@ export interface Client {
   taches?: Record<string, Task[]>; // Tâches groupées par statut { 'Prospect': [...], 'Découverte': [...], etc. }
   mailsATraiter?: number; // Nombre de mails avec statut 'À traiter'
   categoriesDossier?: string[]; // Catégories assignées (Chiffrage, Arbitrage, etc.)
+  arbitrageClosureDate?: string; // Date de clôture de l'exercice SEL (statut Arbitrage)
+  arbitrageTreasuryN1?: number; // Besoin trésorerie N-1 en euros (statut Arbitrage)
 }
 
 // ============================================
