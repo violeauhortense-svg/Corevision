@@ -15,15 +15,11 @@ services:
       - key: UPLOADS_DIR
         value: "/uploads"
       - key: JWT_SECRET
-        value: ${JWT_SECRET}
-      - key: SUPABASE_URL
-        value: ${SUPABASE_URL}
-      - key: SUPABASE_SERVICE_ROLE_KEY
-        value: ${SUPABASE_SERVICE_ROLE_KEY}
-      - key: BREVO_API_KEY
-        value: ${BREVO_API_KEY}
+        value: "change-me-in-production-min-32-chars!!"
       - key: API_BASE_URL
-        value: ${API_BASE_URL}
+        value: "https://corevision-fnid.onrender.com"
+      - key: NODE_ENV
+        value: "production"
 
     # Health check
     healthCheckPath: /make-server-cac859af/health
