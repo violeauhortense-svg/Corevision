@@ -221,17 +221,18 @@ export function setupDashboardRoutes(app: Hono) {
       // Chercher la tâche par ID d'abord
       let task = taches.find((t: any) => t.id === taskId);
 
-      // Fallback : chercher par index si l'ID est un nombre ou format index
+      // Fallback : chercher par INDEX (taskId est un index comme "0", "1", "2")
       if (!task) {
-        const idx = parseInt(taskId.split('-').pop() || '-1');
-        if (idx >= 0 && idx < taches.length) {
+        const idx = parseInt(taskId, 10);
+        if (!isNaN(idx) && idx >= 0 && idx < taches.length) {
           task = taches[idx];
-          console.log(`✅ Tâche trouvée par INDEX ${idx} (ID recherché: ${taskId})`);
+          console.log(`✅ Tâche trouvée par INDEX ${idx}`);
         }
       }
 
       if (!task) {
-        console.log(`❌ Tâche NOT found - ID: ${taskId}, statut: ${status}, tâches disponibles: ${taches.length}`);
+        console.log(`❌ Tâche NOT found - taskId: ${taskId}, statut: ${status}, tâches: ${taches.length}`);
+        console.log(`📋 Tâches IDs:`, taches.map((t: any) => t.id).join(', '));
         return c.json({ error: 'Tâche introuvable' }, 404);
       }
 
