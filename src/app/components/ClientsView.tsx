@@ -46,7 +46,7 @@ export function ClientsView({ session, selectedClientId: initialClientId, openTa
     prenom: '',
     email: '',
     telephone: '',
-    statut: 'R0 - Prospect',
+    statut: 'Prospect',
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -92,7 +92,7 @@ export function ClientsView({ session, selectedClientId: initialClientId, openTa
           prenom: '',
           email: '',
           telephone: '',
-          statut: 'R0 - Prospect',
+          statut: 'Prospect',
         });
         // Rafraîchir pour être sûr d'avoir les dernières données
         await refresh();
@@ -346,12 +346,14 @@ export function ClientsView({ session, selectedClientId: initialClientId, openTa
                   onChange={(e) => setFormData({ ...formData, statut: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="R0 - Prospect">R0 - Prospect</option>
-                  <option value="R0-R1 - Découverte">R0-R1 - Découverte</option>
-                  <option value="R1 - Audit patrimonial">R1 - Audit patrimonial</option>
-                  <option value="R1-R2 - Stratégie définie">R1-R2 - Stratégie définie</option>
-                  <option value="R2 - Recommandation proposée">R2 - Recommandation proposée</option>
-                  <option value="Rsuivi - Suivi patrimonial">Rsuivi - Suivi patrimonial</option>
+                  <option value="Prospect">Prospect</option>
+                  <option value="Découverte">Découverte</option>
+                  <option value="Simulation">Simulation chiffrée</option>
+                  <option value="Lettre Mission">Lettre de mission</option>
+                  <option value="Rapport/Audit">Rapport/Audit</option>
+                  <option value="Suivi MEP">Suivi MEP</option>
+                  <option value="Suivi CSP">Suivi CSP</option>
+                  <option value="Arbitrage">Arbitrage de rémunération</option>
                 </select>
               </div>
               
