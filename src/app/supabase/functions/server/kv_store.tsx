@@ -16,14 +16,27 @@ let _dbReady = false;
 async function initializeDb(): Promise<void> {
   try {
     if (!DATABASE_URL) {
+      console.error("❌ DATABASE_URL env var NOT FOUND");
       throw new Error("DATABASE_URL not configured");
     }
 
     console.log("🔄 Initializing PostgreSQL connection pool...");
+    console.log(`📍 Database host: ${DATABASE_URL.split('@')[1]?.split(':')[0] || 'unknown'}`);
+
     const startTime = Date.now();
 
+    // Create pool with timeout
     _pool = new Pool(DATABASE_URL, 10, true);
-    const conn = await _pool.connect();
+
+    console.log("🔗 Attempting to connect to database...");
+    const conn = await Promise.race([
+      _pool.connect(),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Connection timeout (30s)")), 30000)
+      )
+    ]) as any;
+
+    console.log("✅ Connected! Creating table...");
 
     // Create table if doesn't exist
     await conn.queryArray(`
@@ -43,6 +56,7 @@ async function initializeDb(): Promise<void> {
     console.log(`✅ PostgreSQL initialized successfully (${duration}ms)`);
   } catch (err) {
     console.error("❌ CRITICAL: PostgreSQL init failed:", err);
+    console.error("Error message:", (err as Error).message);
     console.error("Stack:", (err as Error).stack);
     _dbReady = false;
   }
@@ -63,7 +77,7 @@ setTimeout(() => {
 async function getPool(): Promise<Pool> {
   if (!_dbReady || !_pool) {
     let attempts = 0;
-    const maxAttempts = 50;
+    const maxAttempts = 300; // 30 seconds instead of 5
     while (!_dbReady && attempts < maxAttempts) {
       await new Promise(resolve => setTimeout(resolve, 100));
       attempts++;
