@@ -138,10 +138,12 @@ app.delete("/make-server-cac859af/reset-user-data", async (c) => {
 
 app.post("/make-server-cac859af/auth/signup", async (c) => {
   try {
+    console.log("🔐 Signup endpoint called");
     const body = await c.req.json();
     const { email, password, nom, prenom, specialite, certifications } = body;
 
     console.log(`🔐 Signup attempt: ${email}`);
+    console.log(`📧 Creating user with email: ${email}, nom: ${nom}, prenom: ${prenom}`);
 
     const user = await createUser(email, password, {
       nom: nom || '',
@@ -154,7 +156,8 @@ app.post("/make-server-cac859af/auth/signup", async (c) => {
     return c.json({ user });
   } catch (error) {
     const msg = (error as Error).message;
-    console.error(`❌ Signup error for ${c.req.header('x-email')}: ${msg}`, error);
+    console.error(`❌ SIGNUP FAILED: ${msg}`);
+    console.error(`Stack:`, (error as Error).stack);
     return c.json({ error: msg, details: String(error) }, 400);
   }
 });
