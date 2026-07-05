@@ -3,6 +3,8 @@ import { MetricsCard } from './MetricsCard';
 import { KanbanBoard } from './KanbanBoard';
 import { apiBaseUrl } from '../utils/supabase/info';
 
+// Force rebuild - Cache bust
+
 interface Metrics {
   rdvAujourdHui: number;
   rdvCetteSemaine: number;
