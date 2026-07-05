@@ -136,6 +136,7 @@ export function setupClientRoutes(app: Hono) {
       await kv.set(`client:${user.id}:${clientId}`, client);
 
       console.log(`✅ ${tasks.length} tâches créées pour le client ${clientId} dans le statut "${newStatus}"`);
+      console.log(`📋 Tâches sauvegardées:`, JSON.stringify(client.taches, null, 2));
 
       return c.json({ client, tasks }, 201);
     } catch (err) {

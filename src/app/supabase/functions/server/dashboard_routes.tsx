@@ -219,6 +219,10 @@ export function setupDashboardRoutes(app: Hono) {
       const taches = client.taches?.[status] || [];
       const task = taches.find((t: any) => t.id === taskId);
 
+      console.log(`🔍 Recherche tâche ${taskId} dans statut "${status}"`);
+      console.log(`📋 Tâches disponibles:`, taches.map((t: any) => t.id));
+      console.log(`🎯 Tâche trouvée:`, task ? `✅ ${task.id}` : '❌ Introuvable');
+
       if (!task) {
         return c.json({ error: 'Tâche introuvable' }, 404);
       }
