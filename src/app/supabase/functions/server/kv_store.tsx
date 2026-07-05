@@ -8,12 +8,15 @@ let _kvReady = false;
 async function initializeKv(): Promise<void> {
   try {
     console.log("🔄 Initializing Deno KV...");
+    const startTime = Date.now();
     _kv = await Deno.openKv();
+    const duration = Date.now() - startTime;
     _kvReady = true;
-    console.log("✅ Deno KV initialized and persisting on Render");
+    console.log(`✅ Deno KV initialized successfully (${duration}ms)`);
   } catch (err) {
-    console.error("❌ CRITICAL: Erreur Deno KV:", err);
+    console.error("❌ CRITICAL: Deno KV init failed:", err);
     console.error("Stack:", (err as Error).stack);
+    console.error("Render may not support Deno KV - consider using PostgreSQL");
     _kvReady = false;
   }
 }
@@ -21,17 +24,28 @@ async function initializeKv(): Promise<void> {
 // Lance l'init au démarrage
 initializeKv();
 
+// Optionnel: log l'état après 10 secondes
+setTimeout(() => {
+  if (_kvReady) {
+    console.log("✅ KV is ready for requests");
+  } else {
+    console.error("⚠️ KV still not ready after 10s - requests will timeout");
+  }
+}, 10000);
+
 async function getKv(): Promise<Deno.Kv> {
-  // Attendre que KV soit prêt
+  // Attendre que KV soit prêt (augmenté de 5s à 30s)
   let attempts = 0;
-  while (!_kvReady && attempts < 50) {
+  const maxAttempts = 300; // 30 secondes
+  while (!_kvReady && attempts < maxAttempts) {
     await new Promise(resolve => setTimeout(resolve, 100));
     attempts++;
   }
 
   if (!_kvReady) {
-    console.error(`❌ KV timeout after ${attempts * 100}ms`);
-    throw new Error("Deno KV non disponible (timeout d'initialisation)");
+    const duration = attempts * 100;
+    console.error(`❌ KV timeout after ${duration}ms (max wait: 30s)`);
+    throw new Error(`Deno KV non disponible (timeout d'initialisation après ${duration}ms)`);
   }
 
   if (!_kv) {
