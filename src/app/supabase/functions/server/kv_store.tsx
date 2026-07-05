@@ -2,11 +2,33 @@
 // Aucun package externe nécessaire
 
 let _kv: Deno.Kv | null = null;
+let _kvReady = false;
+
+// Initialise KV au startup (pas de await, ça va se faire en arrière-plan)
+async function initializeKv(): Promise<void> {
+  try {
+    _kv = await Deno.openKv();
+    _kvReady = true;
+    console.log("✅ Deno KV initialized and persisting on Render");
+  } catch (err) {
+    console.error("❌ Erreur Deno KV:", err);
+    _kvReady = false;
+  }
+}
+
+// Lance l'init au démarrage
+initializeKv();
 
 async function getKv(): Promise<Deno.Kv> {
+  // Attendre que KV soit prêt
+  let attempts = 0;
+  while (!_kvReady && attempts < 50) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    attempts++;
+  }
+
   if (!_kv) {
-    _kv = await Deno.openKv();
-    console.log("✅ Deno KV opened and persisting on Render");
+    throw new Error("Deno KV non disponible");
   }
   return _kv;
 }
