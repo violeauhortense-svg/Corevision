@@ -86,12 +86,32 @@ app.get("/make-server-cac859af/health", (c) => {
 
 app.get("/make-server-cac859af/test", (c) => {
   console.log(`🧪 Test endpoint called`);
-  return c.json({ 
+  return c.json({
     message: "Server is running correctly!",
     version: SERVER_VERSION,
     timestamp: new Date().toISOString(),
     success: true
   });
+});
+
+// DEBUG: List all users (temporary)
+app.get("/make-server-cac859af/debug/users", async (c) => {
+  try {
+    const users = await kv.getByPrefix("user:email:");
+    console.log(`📋 Found ${users.length} users`);
+    return c.json({
+      count: users.length,
+      users: users.map(u => ({
+        id: u.id,
+        email: u.email,
+        nom: u.nom,
+        prenom: u.prenom,
+        created: u.created
+      }))
+    });
+  } catch (err) {
+    return c.json({ error: String(err) }, 500);
+  }
 });
 
 // Reset endpoint
