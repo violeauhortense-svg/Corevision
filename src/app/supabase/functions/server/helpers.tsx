@@ -2,6 +2,60 @@
 // HELPER FUNCTIONS
 // ============================================
 
+// Tâches avec IDs pour les 8 nouveaux statuts
+const TASK_IDS_MAP: Record<string, Array<{ id: string; title: string }>> = {
+  'Prospect': [
+    { id: 'p1', title: 'Origine du prospect' },
+    { id: 'p2', title: 'Contacter le client pour convenir d\'un RDV' },
+    { id: 'p3', title: 'Demande d\'informations au comptable' },
+    { id: 'p4', title: 'Interne' },
+  ],
+  'Découverte': [
+    { id: 'd1', title: 'Collecte des documents' },
+    { id: 'd2', title: 'Conformité 1' },
+    { id: 'd3', title: 'Remplissage des informations dans bilan' },
+    { id: 'd4', title: 'RDV découverte (validation infos et objectifs)' },
+  ],
+  'Simulation': [
+    { id: 's1', title: 'Simulation chiffrée (réalisation)' },
+    { id: 's2', title: 'Validation GL de la simulation' },
+    { id: 's3', title: 'RDV Présentation simulation chiffré' },
+    { id: 's4', title: 'Confirmation client pour poursuivre' },
+    { id: 's5', title: 'Conformité 2' },
+  ],
+  'Lettre Mission': [
+    { id: 'lm1', title: 'Réception des documents de vigilance' },
+    { id: 'lm2', title: 'Envoi lettre de mission pour signature' },
+    { id: 'lm3', title: 'Acceptation LM des clients (LM signé)' },
+    { id: 'lm4', title: 'Écriture du rapport/audit' },
+  ],
+  'Rapport/Audit': [
+    { id: 'ra1', title: 'Validation du rapport par GL' },
+    { id: 'ra2', title: 'Incorporation des recommandations' },
+    { id: 'ra3', title: 'Envoi du rapport au client pour signature' },
+  ],
+  'Suivi MEP': [
+    { id: 'mep1', title: 'Confirmation des recommandations à mettre en place' },
+    { id: 'mep2', title: 'Envoi au service juridique pour DPJ' },
+  ],
+  'Suivi CSP': [
+    { id: 'csp1', title: 'Prendre contact avec le client (annuel)' },
+    { id: 'csp2', title: 'Nouvelles recommandations' },
+    { id: 'csp3', title: 'Compte rendu par mail + O2S' },
+  ],
+  'Arbitrage': [
+    { id: 'arb1', title: 'Pièces comptables reçues' },
+    { id: 'arb2', title: 'Demander besoin trésorerie année en cours' },
+    { id: 'arb3', title: 'Remplir fichier excel (IR, cotisations sociales)' },
+    { id: 'arb4', title: 'Prévenir comptable' },
+    { id: 'arb5', title: 'Note O2S' },
+  ],
+};
+
+export function getTasksWithIdsForStatus(statut: string): Array<{ id: string; title: string }> {
+  return TASK_IDS_MAP[statut] || [];
+}
+
 // Fonction pour obtenir les templates de tâches selon le statut
 // Support NOUVEAU pipeline 8 statuts (Prospect → Arbitrage)
 export function getTasksForStatus(statut: string): string[] {

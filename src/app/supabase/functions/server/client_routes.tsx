@@ -5,7 +5,7 @@
 import type { Hono } from "npm:hono";
 import * as kv from "./kv_store.tsx";
 import { verifyAuth } from "./auth.tsx";
-import { getTasksForStatus } from "./helpers.tsx";
+import { getTasksForStatus, getTasksWithIdsForStatus } from "./helpers.tsx";
 
 export function setupClientRoutes(app: Hono) {
   // Get all clients for authenticated user
@@ -99,18 +99,18 @@ export function setupClientRoutes(app: Hono) {
 
       // Créer les tâches initiales avec le nouveau statut
       const newStatus = statusOuvert || 'Prospect';
-      const taskTemplates = getTasksForStatus(newStatus);
+      const taskTemplates = getTasksWithIdsForStatus(newStatus);
       const tasks = [];
       const tasksByStatus: Record<string, any[]> = {};
       tasksByStatus[newStatus] = [];
 
       for (let i = 0; i < taskTemplates.length; i++) {
-        const taskId = `task-${clientId}-${i}`;
-        const isFirstTask = i === 0 && taskTemplates[i] === 'Origine du prospect';
+        const { id: taskDefId, title } = taskTemplates[i];
+        const isFirstTask = i === 0 && title === 'Origine du prospect';
 
         const task = {
-          id: taskId,
-          title: taskTemplates[i],
+          id: taskDefId, // Utiliser l'ID de taskDefinitions.ts (p1, p2, p3, etc.)
+          title,
           completed: isFirstTask, // Première tâche automatiquement complétée
           status: 'pending',
           createdAt: new Date().toISOString(),
@@ -126,7 +126,7 @@ export function setupClientRoutes(app: Hono) {
           }),
         };
 
-        await kv.set(`task:${user.id}:${clientId}:${taskId}`, task);
+        await kv.set(`task:${user.id}:${clientId}:${taskDefId}`, task);
         tasks.push(task);
         tasksByStatus[newStatus].push(task);
       }
