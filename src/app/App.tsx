@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { HashRouter, Routes, Route } from "react-router";
 import { Toaster } from 'sonner';
-import { supabase } from './utils/supabase/client';
 import { Sidebar } from "./components/Sidebar";
 import { DashboardView } from "./components/DashboardView";
 import { ClientsView } from "./components/ClientsView";
@@ -93,23 +92,25 @@ export default function App() {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setIsAuthenticated(!!session);
-    });
+    const token = localStorage.getItem('auth_token');
+    const userStr = localStorage.getItem('auth_user');
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setIsAuthenticated(!!session);
-    });
-
-    return () => subscription.unsubscribe();
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setSession(user);
+        setIsAuthenticated(true);
+      } catch {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_user');
+        setIsAuthenticated(false);
+      }
+    }
   }, []);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_user');
     setIsAuthenticated(false);
     setSession(null);
   };

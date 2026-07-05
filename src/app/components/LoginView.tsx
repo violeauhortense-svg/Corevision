@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Lock, Mail, Eye, EyeOff, UserPlus } from 'lucide-react';
-import { supabase } from '../utils/supabase/client';
 import { toast } from 'sonner';
+import { apiBaseUrl } from '../utils/supabase/info';
 
 interface LoginViewProps {
   onLogin: () => void;
@@ -31,35 +31,34 @@ export function LoginView({ onLogin }: LoginViewProps) {
     }
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const response = await fetch(`${apiBaseUrl}/make-server-cac859af/auth/signin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
       });
 
-      if (error) {
-        console.error('Sign in error:', error);
-        
-        // Message d'erreur plus explicite
-        let errorMessage = 'Erreur de connexion';
-        
-        if (error.message.includes('Invalid login credentials')) {
-          errorMessage = '❌ Identifiants incorrects. Vérifiez votre email et mot de passe.';
-        } else if (error.message.includes('Email not confirmed')) {
-          errorMessage = '📧 Veuillez confirmer votre email avant de vous connecter.';
-        } else if (error.message.includes('network')) {
-          errorMessage = '🌐 Erreur réseau. Vérifiez votre connexion internet.';
-        } else {
-          errorMessage = error.message;
-        }
-        
+      const result = await response.json();
+
+      if (!response.ok) {
+        const errorMessage = result.error || 'Erreur de connexion';
         setError(errorMessage);
         toast.error(errorMessage);
         setLoading(false);
         return;
       }
 
-      toast.success('Connexion réussie !');
-      onLogin();
+      const token = result.access_token || result.session?.access_token;
+      const user = result.user;
+
+      if (token && user) {
+        localStorage.setItem('auth_token', token);
+        localStorage.setItem('auth_user', JSON.stringify(user));
+        toast.success('Connexion réussie !');
+        onLogin();
+      } else {
+        setError('Réponse serveur invalide');
+        setLoading(false);
+      }
     } catch (err: any) {
       console.error('Sign in exception:', err);
       setError(err.message || 'Erreur de connexion');
@@ -85,77 +84,66 @@ export function LoginView({ onLogin }: LoginViewProps) {
     }
 
     try {
-      console.log('🚀 Tentative de création de compte avec Supabase Auth...');
+      console.log('🚀 Tentative de création de compte...');
       console.log('📧 Email:', email);
       console.log('👤 Nom:', nom, prenom);
-      
-      // Créer le compte directement avec Supabase Auth
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            nom,
-            prenom,
-            specialite: 'Gestion de patrimoine',
-            certifications: 'CIF, AMF',
-          },
-        },
+
+      const response = await fetch(`${apiBaseUrl}/make-server-cac859af/auth/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          password,
+          nom,
+          prenom,
+          specialite: 'Gestion de patrimoine',
+          certifications: 'CIF, AMF',
+        }),
       });
 
-      if (signUpError) {
-        console.error('❌ Erreur Supabase signUp:', signUpError);
-        setError(signUpError.message);
-        toast.error(signUpError.message);
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error('❌ Erreur signup:', result);
+        const errorMessage = result.error || 'Erreur de création de compte';
+        setError(errorMessage);
+        toast.error(errorMessage);
         setLoading(false);
         return;
       }
 
-      console.log('✅ Compte créé avec succès !', signUpData);
+      console.log('✅ Compte créé avec succès !');
+      toast.success('Compte créé avec succès ! Bienvenue !');
 
-      // Vérifier si l'email doit être confirmé
-      if (signUpData.user && !signUpData.session) {
-        toast.info('Un email de confirmation a été envoyé. Veuillez vérifier votre boîte mail.');
-        setMode('signin');
-        setPassword('');
-        setNom('');
-        setPrenom('');
-        setLoading(false);
-        return;
-      }
-
-      // Si la session est créée automatiquement (email_confirm désactivé)
-      if (signUpData.session) {
-        console.log('✅ Session créée automatiquement !');
-        toast.success('Compte créé avec succès ! Bienvenue !');
-        onLogin();
-        return;
-      }
-
-      // Sinon, connexion manuelle
-      toast.success('Compte créé ! Connexion en cours...');
-      
+      // Se connecter automatiquement
       await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+
+      const signInResponse = await fetch(`${apiBaseUrl}/make-server-cac859af/auth/signin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
       });
 
-      if (signInError) {
-        console.error('❌ Erreur lors de la connexion automatique:', signInError);
+      const signInResult = await signInResponse.json();
+
+      if (!signInResponse.ok) {
+        console.error('❌ Erreur signin automatique:', signInResult);
         setMode('signin');
         toast.info('Veuillez vous connecter avec vos identifiants');
         setPassword('');
-        setNom('');
-        setPrenom('');
         setLoading(false);
         return;
       }
 
-      console.log('✅ Connexion automatique réussie !');
-      toast.success('Bienvenue !');
-      onLogin();
+      const token = signInResult.access_token || signInResult.session?.access_token;
+      const user = signInResult.user;
+
+      if (token && user) {
+        localStorage.setItem('auth_token', token);
+        localStorage.setItem('auth_user', JSON.stringify(user));
+        toast.success('Bienvenue !');
+        onLogin();
+      }
     } catch (err: any) {
       console.error('💥 Exception lors de la création:', err);
       const errorMessage = err.message || 'Erreur de connexion au serveur';

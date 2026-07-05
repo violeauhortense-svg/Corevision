@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { clientAPI } from '../../services/api';
 import { toast } from 'sonner';
-import { supabase } from '../../utils/supabase/client';
 import { BarChart3, X, Check, AlertCircle } from 'lucide-react';
 import { useAutoSave } from '../../hooks/useAutoSave';
 import { useClientData, initializeRequiredDocuments } from '../../hooks/useClientData';
@@ -92,10 +91,15 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
   // Chargement des données depuis l'API
   useEffect(() => {
     loadClientData();
-    // Charger la session Supabase
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-    });
+    // Charger la session depuis localStorage
+    const userStr = localStorage.getItem('auth_user');
+    if (userStr) {
+      try {
+        setSession(JSON.parse(userStr));
+      } catch {
+        // Invalid JSON, ignore
+      }
+    }
   }, [clientId]);
 
   // Écouter l'événement personnalisé pour changer d'onglet
