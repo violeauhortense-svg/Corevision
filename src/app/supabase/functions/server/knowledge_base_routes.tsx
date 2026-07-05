@@ -1,7 +1,7 @@
 import { Hono } from 'npm:hono';
-import { createClient } from 'npm:@supabase/supabase-js@2';
 import pdfParse from 'npm:pdf-parse@1.1.1';
 import * as kv from './kv_store.tsx';
+import { supabaseAdminCompat } from './storage.tsx';
 
 const knowledgeBaseRoutes = new Hono();
 
@@ -108,10 +108,7 @@ async function generateEmbedding(text: string): Promise<number[]> {
 // POST /make-server-cac859af/knowledge-base/ingest
 knowledgeBaseRoutes.post('/ingest', async (c) => {
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-    );
+    const supabase = supabaseAdminCompat;
 
     await ensureBucketExists(supabase);
 
@@ -228,10 +225,7 @@ knowledgeBaseRoutes.get('/documents', async (c) => {
 // DELETE /make-server-cac859af/knowledge-base/documents/:id
 knowledgeBaseRoutes.delete('/documents/:id', async (c) => {
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-    );
+    const supabase = supabaseAdminCompat;
 
     const accessToken = c.req.header('Authorization')?.split(' ')[1];
     const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
@@ -255,10 +249,7 @@ knowledgeBaseRoutes.delete('/documents/:id', async (c) => {
 // POST /make-server-cac859af/knowledge-base/search
 knowledgeBaseRoutes.post('/search', async (c) => {
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-    );
+    const supabase = supabaseAdminCompat;
 
     const accessToken = c.req.header('Authorization')?.split(' ')[1];
     const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);

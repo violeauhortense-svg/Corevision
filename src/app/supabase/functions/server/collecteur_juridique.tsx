@@ -1,4 +1,3 @@
-import { createClient } from 'jsr:@supabase/supabase-js@2';
 import * as cheerio from 'npm:cheerio@1.0.0';
 import * as kv from './kv_store.tsx';
 import * as parserJuridique from './parser_juridique.tsx';

@@ -5,11 +5,7 @@
 import type { Hono } from "npm:hono";
 import * as kv from "./kv_store.tsx";
 import { generateDERDocumentHTML } from "./helpers.tsx";
-import { createClient } from "npm:@supabase/supabase-js@2";
-
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? "https://cevzlqdencncriisrobf.supabase.co";
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+import { supabaseAdminCompat as supabaseAdmin } from "./storage.tsx";
 
 const DER_BUCKET_NAME = 'make-cac859af-der-documents';
 
