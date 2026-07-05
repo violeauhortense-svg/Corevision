@@ -124,7 +124,9 @@ export const get = async (key: string): Promise<any> => {
       [key]
     );
     if (result.rows.length === 0) return null;
-    return JSON.parse(result.rows[0][0] as string);
+    // PostgreSQL JSONB is already parsed as object
+    const value = result.rows[0][0];
+    return typeof value === 'string' ? JSON.parse(value) : value;
   } finally {
     conn.release();
   }
@@ -165,7 +167,10 @@ export const mget = async (keys: string[]): Promise<any[]> => {
       `SELECT value FROM kv_store WHERE key = ANY($1)`,
       [keys]
     );
-    return result.rows.map(row => JSON.parse(row[0] as string));
+    return result.rows.map(row => {
+      const value = row[0];
+      return typeof value === 'string' ? JSON.parse(value) : value;
+    });
   } finally {
     conn.release();
   }
@@ -192,7 +197,10 @@ export const getByPrefix = async (prefix: string): Promise<any[]> => {
       "SELECT value FROM kv_store WHERE key LIKE $1",
       [`${prefix}%`]
     );
-    return result.rows.map(row => JSON.parse(row[0] as string));
+    return result.rows.map(row => {
+      const value = row[0];
+      return typeof value === 'string' ? JSON.parse(value) : value;
+    });
   } finally {
     conn.release();
   }
