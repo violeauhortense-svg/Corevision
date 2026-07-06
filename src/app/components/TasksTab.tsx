@@ -241,10 +241,18 @@ export function TasksTab({ clientId }: TasksTabProps) {
                         type="checkbox"
                         checked={task.completed || task.status === 'na'}
                         onChange={(e) => {
-                          console.log('🔍 Checkbox clicked:', { blockState, status, idx, taskId: task.id });
+                          const taskIdToSend = String(idx);
+                          console.log('🔍 Checkbox clicked:', {
+                            blockState,
+                            status,
+                            idx,
+                            'task.id': task.id,
+                            'taskIdToSend': taskIdToSend,
+                            'URL will be': `/make-server-cac859af/clients/${clientId}/tache/${taskIdToSend}`
+                          });
                           if (blockState === 'EN_COURS') {
-                            console.log('✅ Calling handleTaskUpdate');
-                            handleTaskUpdate(status, String(idx), !task.completed);
+                            console.log('✅ Calling handleTaskUpdate with taskId:', taskIdToSend);
+                            handleTaskUpdate(status, taskIdToSend, !task.completed);
                           } else {
                             console.warn('⚠️ blockState is not EN_COURS:', blockState);
                           }
