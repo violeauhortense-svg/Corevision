@@ -69,7 +69,9 @@ export function TasksTab({ clientId }: TasksTabProps) {
 
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${apiBaseUrl}/make-server-cac859af/clients/${clientId}/tache/${taskId}`, {
+      const url = `${apiBaseUrl}/clients/${clientId}/tache/${taskId}`;
+      console.log('🔗 Fetching:', url);
+      const response = await fetch(url, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -93,7 +95,8 @@ export function TasksTab({ clientId }: TasksTabProps) {
   const saveArbitrageFields = async () => {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${apiBaseUrl}/make-server-cac859af/clients/${clientId}`, {
+      const url = `${apiBaseUrl}/clients/${clientId}`;
+      const response = await fetch(url, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
