@@ -240,7 +240,15 @@ export function TasksTab({ clientId }: TasksTabProps) {
                       <input
                         type="checkbox"
                         checked={task.completed || task.status === 'na'}
-                        onChange={() => blockState === 'EN_COURS' && handleTaskUpdate(status, String(idx), !task.completed)}
+                        onChange={(e) => {
+                          console.log('🔍 Checkbox clicked:', { blockState, status, idx, taskId: task.id });
+                          if (blockState === 'EN_COURS') {
+                            console.log('✅ Calling handleTaskUpdate');
+                            handleTaskUpdate(status, String(idx), !task.completed);
+                          } else {
+                            console.warn('⚠️ blockState is not EN_COURS:', blockState);
+                          }
+                        }}
                         disabled={blockState !== 'EN_COURS'}
                         className="mt-1 cursor-pointer"
                       />
