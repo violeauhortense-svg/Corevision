@@ -423,7 +423,6 @@ export function TasksTab({ clientId }: TasksTabProps) {
                   })()}
                 </div>
               )}
-            )}
 
             {blockState === 'A_VENIR' && (
               <p className="mt-2 text-sm text-gray-600">🔒 Ce statut sera déverrouillé une fois le précédent terminé</p>
