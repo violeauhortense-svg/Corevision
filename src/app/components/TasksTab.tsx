@@ -69,8 +69,8 @@ export function TasksTab({ clientId }: TasksTabProps) {
 
     try {
       const token = localStorage.getItem('auth_token');
-      const url = `/api/clients/${clientId}/tache/${taskId}`;
-      console.log('✅ Validation tâche:', { status, taskId, completed });
+      const url = `${apiBaseUrl}/clients/${clientId}/tache/${taskId}`;
+      console.log('✅ Validation tâche:', { status, taskId, completed, url });
 
       const response = await fetch(url, {
         method: 'PATCH',
@@ -100,8 +100,8 @@ export function TasksTab({ clientId }: TasksTabProps) {
 
     try {
       const token = localStorage.getItem('auth_token');
-      const url = `/api/clients/${clientId}/tache/${taskId}`;
-      console.log('⊘ Marquer N.A.:', { status, taskId });
+      const url = `${apiBaseUrl}/clients/${clientId}/tache/${taskId}`;
+      console.log('⊘ Marquer N.A.:', { status, taskId, url });
 
       const response = await fetch(url, {
         method: 'PATCH',
@@ -131,8 +131,8 @@ export function TasksTab({ clientId }: TasksTabProps) {
 
     try {
       const token = localStorage.getItem('auth_token');
-      const url = `/api/clients/${clientId}/progress`;
-      console.log('➡️ Progression:', { currentStatus, nextStatus });
+      const url = `${apiBaseUrl}/clients/${clientId}/progress`;
+      console.log('➡️ Progression:', { currentStatus, nextStatus, url });
 
       const response = await fetch(url, {
         method: 'POST',
