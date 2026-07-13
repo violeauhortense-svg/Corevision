@@ -384,6 +384,7 @@ export function TasksTab({ clientId }: TasksTabProps) {
                   );
                 })}
               </div>
+            )}
 
               {/* Bouton "Passez au statut suivant" */}
               {blockState === 'EN_COURS' && (
