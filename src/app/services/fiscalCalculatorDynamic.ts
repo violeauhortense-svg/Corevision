@@ -1,14 +1,14 @@
-Ôªø/**
- * üßÆ SERVICE DE CALCUL FISCAL DYNAMIQUE
+/**
+ * ?? SERVICE DE CALCUL FISCAL DYNAMIQUE
  * 
- * Charge les bar√®mes depuis Supabase pour permettre
- * une mise √† jour sans red√©ploiement de code
+ * Charge les barËmes depuis Supabase pour permettre
+ * une mise ‡ jour sans redÈploiement de code
  * 
  * Calculs automatiques :
- * - Imp√¥t sur le revenu (bar√®me progressif)
- * - Pr√©l√®vements sociaux (CSG, CRDS, etc.)
+ * - ImpÙt sur le revenu (barËme progressif)
+ * - PrÈlËvements sociaux (CSG, CRDS, etc.)
  * - TMI (Tranche Marginale d'Imposition)
- * - IFI (Imp√¥t sur la Fortune Immobili√®re)
+ * - IFI (ImpÙt sur la Fortune ImmobiliËre)
  */
 
 import { apiBaseUrl, publicAnonKey } from '../utils/supabase/info';
@@ -114,7 +114,7 @@ export interface DetailCalculIFI {
 }
 
 // ============================================
-// CACHE DES BAR√àMES
+// CACHE DES BAR»MES
 // ============================================
 
 let baremesCached: BaremesFiscaux | null = null;
@@ -122,17 +122,17 @@ let lastFetch: number = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 /**
- * Charge les bar√®mes fiscaux depuis Supabase
+ * Charge les barËmes fiscaux depuis Supabase
  */
 export async function loadBaremes(annee: string = '2026'): Promise<BaremesFiscaux> {
-  // Utiliser le cache si disponible et r√©cent
+  // Utiliser le cache si disponible et rÈcent
   if (baremesCached && Date.now() - lastFetch < CACHE_DURATION) {
     return baremesCached;
   }
 
   try {
     const response = await fetch(
-      `${apiBaseUrl}/make-server-cac859af/baremes/${annee}`,
+      `${apiBaseUrl}/baremes/${annee}`,
       {
         headers: {
           Authorization: `Bearer ${publicAnonKey}`,
@@ -156,19 +156,19 @@ export async function loadBaremes(annee: string = '2026'): Promise<BaremesFiscau
 
     lastFetch = Date.now();
 
-    console.log(`‚úÖ Bar√®mes ${annee} charg√©s depuis Supabase`);
+    console.log(`? BarËmes ${annee} chargÈs depuis Supabase`);
     return baremesCached;
   } catch (error) {
-    console.error('‚ùå Erreur chargement bar√®mes:', error);
+    console.error('? Erreur chargement barËmes:', error);
     
-    // Fallback sur les bar√®mes par d√©faut
+    // Fallback sur les barËmes par dÈfaut
     return getDefaultBaremes();
   }
 }
 
 /**
- * Bar√®mes par d√©faut (fallback)
- * Source officielle : service-public.fr - Bar√®me 2025
+ * BarËmes par dÈfaut (fallback)
+ * Source officielle : service-public.fr - BarËme 2025
  * https://www.service-public.fr/particuliers/vosdroits/F1419
  */
 function getDefaultBaremes(): BaremesFiscaux {
@@ -182,7 +182,7 @@ function getDefaultBaremes(): BaremesFiscaux {
       { min: 181917, max: null, taux: 0.45, label: 'Tranche 5 : 45%' },
     ],
     baremeIFI: [
-      { min: 0, max: 800000, taux: 0, label: 'Exon√©ration' },
+      { min: 0, max: 800000, taux: 0, label: 'ExonÈration' },
       { min: 800000, max: 1300000, taux: 0.005, label: '0,5%' },
       { min: 1300000, max: 2570000, taux: 0.007, label: '0,7%' },
       { min: 2570000, max: 5000000, taux: 0.01, label: '1%' },
@@ -213,7 +213,7 @@ function getDefaultBaremes(): BaremesFiscaux {
 // ============================================
 
 /**
- * Calcule l'imp√¥t sur le revenu avec d√©tails
+ * Calcule l'impÙt sur le revenu avec dÈtails
  */
 export async function calculerImpotRevenu(
   revenus: RevenuFiscal,
@@ -226,14 +226,14 @@ export async function calculerImpotRevenu(
     revenus.traitementsSalairesPensions +
     revenus.revenusTNS;
 
-  // 2. Abattement de 10% sur salaires (plafonn√©)
+  // 2. Abattement de 10% sur salaires (plafonnÈ)
   const abattement10Brut = revenuBrutSalairesPensions * 0.10;
   const abattement10 = Math.max(
     Math.min(abattement10Brut, baremes.abattements.abattement10PourcentPlafond),
     baremes.abattements.abattement10PourcentPlancher
   );
 
-  // 3. Revenu net apr√®s abattement
+  // 3. Revenu net aprËs abattement
   const revenuNetSalaires = revenuBrutSalairesPensions - abattement10;
   
   // 4. Total des revenus bruts (incluant TOUS les revenus)
@@ -244,7 +244,7 @@ export async function calculerImpotRevenu(
     revenus.reveusValeursCapitauxMobiliers +
     revenus.plusValueMobiliere;
 
-  // 5. Revenu net imposable total (salaires apr√®s abattement + autres revenus)
+  // 5. Revenu net imposable total (salaires aprËs abattement + autres revenus)
   const autresRevenus = 
     revenus.locationsMeublesNonPro +
     revenus.revenusFonciers +
@@ -286,7 +286,7 @@ export async function calculerImpotRevenu(
   // 8. Multiplication par le nombre de parts
   const impotAvantDecote = impotQuotient * nombreParts;
 
-  // 9. D√©cote (pour les revenus modestes)
+  // 9. DÈcote (pour les revenus modestes)
   let decote = 0;
   const plafondDecote = nombreParts > 1 
     ? baremes.abattements.decoteCouplePlafond 
@@ -302,10 +302,10 @@ export async function calculerImpotRevenu(
 
   const impotApreDecote = Math.max(0, impotAvantDecote - decote);
 
-  // 10. Plafonnement du quotient familial (simplifi√©)
+  // 10. Plafonnement du quotient familial (simplifiÈ)
   const plafonnementQF = 0;
 
-  // 11. Imp√¥t final
+  // 11. ImpÙt final
   const impotFinal = Math.round(impotApreDecote + plafonnementQF);
 
   // 12. TMI (Tranche Marginale d'Imposition)
@@ -338,7 +338,7 @@ export async function calculerImpotRevenu(
 }
 
 /**
- * Calcule les pr√©l√®vements sociaux
+ * Calcule les prÈlËvements sociaux
  */
 export async function calculerPrelevementsSociaux(
   assiette: number
@@ -369,8 +369,8 @@ export async function calculerIFI(
 ): Promise<DetailCalculIFI> {
   const baremes = await loadBaremes();
 
-  // Seuil d'imposition : 1 300 000 ‚Ç¨ avec abattement de 30% sur la r√©sidence principale
-  const abattement = 0; // √Ä personnaliser selon la situation
+  // Seuil d'imposition : 1 300 000 Ä avec abattement de 30% sur la rÈsidence principale
+  const abattement = 0; // ¿ personnaliser selon la situation
   const assiette = Math.max(0, patrimoineNetTaxable - abattement);
 
   const tranchesDetail: DetailCalculIFI['tranchesDetail'] = [];
@@ -408,10 +408,10 @@ export async function calculerIFI(
 }
 
 /**
- * Invalide le cache (√† appeler apr√®s mise √† jour des bar√®mes)
+ * Invalide le cache (‡ appeler aprËs mise ‡ jour des barËmes)
  */
 export function invalidateCache() {
   baremesCached = null;
   lastFetch = 0;
-  console.log('üóëÔ∏è Cache des bar√®mes invalid√©');
+  console.log('??? Cache des barËmes invalidÈ');
 }

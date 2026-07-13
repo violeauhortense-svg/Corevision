@@ -1,4 +1,4 @@
-Ôªøimport { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { FileText, ChevronRight, Edit3, Save, Check, Loader2, Sparkles, Clock, FolderOpen, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiBaseUrl, publicAnonKey } from '../../utils/supabase/info';
@@ -17,7 +17,7 @@ interface SectionStatus {
 }
 
 interface DossierClientComplet {
-  // M√©tadonn√©es
+  // MÈtadonnÈes
   clientId: string;
   clientName: string;
   dateDecouverte?: string;
@@ -25,7 +25,7 @@ interface DossierClientComplet {
   datePresentation?: string;
   dateValidationRecommandations?: string;
   
-  // Donn√©es saisies
+  // DonnÈes saisies
   donneesFoyer: any;
   donneesRevenus: any;
   donneesPatrimoine: any;
@@ -33,7 +33,7 @@ interface DossierClientComplet {
   
   // Documents
   documentsPermanents: any[];
-  documentsAnnuels: Record<string, any[]>; // Class√©s par ann√©e
+  documentsAnnuels: Record<string, any[]>; // ClassÈs par annÈe
   
   // Rapport progressif
   sections: {
@@ -56,7 +56,7 @@ export function CompteRenduProgressif({ clientId, clientName, clientData }: Comp
   const [promptsEditables, setPromptsEditables] = useState<Record<string, string>>({});
   const [showPromptEditor, setShowPromptEditor] = useState<string | null>(null);
   
-  // Charger le dossier existant ou cr√©er un nouveau
+  // Charger le dossier existant ou crÈer un nouveau
   useEffect(() => {
     chargerOuCreerDossier();
   }, [clientId]);
@@ -70,7 +70,7 @@ export function CompteRenduProgressif({ clientId, clientName, clientData }: Comp
       if (stored) {
         setDossier(JSON.parse(stored));
       } else {
-        // Cr√©er un nouveau dossier
+        // CrÈer un nouveau dossier
         const nouveauDossier: DossierClientComplet = {
           clientId,
           clientName,
@@ -98,7 +98,7 @@ export function CompteRenduProgressif({ clientId, clientName, clientData }: Comp
         sauvegarderDossier(nouveauDossier);
       }
       
-      // Initialiser les prompts par d√©faut
+      // Initialiser les prompts par dÈfaut
       initialiserPrompts();
     } catch (error) {
       console.error('Erreur chargement dossier:', error);
@@ -109,18 +109,18 @@ export function CompteRenduProgressif({ clientId, clientName, clientData }: Comp
   const sauvegarderDossier = (dossierAJour: DossierClientComplet) => {
     const key = `dossier_client_${clientId}`;
     localStorage.setItem(key, JSON.stringify(dossierAJour));
-    toast.success('üíæ Sauvegarde automatique r√©ussie');
+    toast.success('?? Sauvegarde automatique rÈussie');
   };
   
   const initialiserPrompts = () => {
     setPromptsEditables({
-      section1_synthese: "R√©dige une synth√®se ex√©cutive professionnelle du dossier patrimonial. Contexte + 5 points cl√©s maximum. Ton formel.",
-      section2_situation: "Analyse la situation actuelle : familiale, professionnelle, patrimoine, revenus. Sois factuel et pr√©cis.",
-      section3_analyses: "R√©alise les 4 analyses d√©taill√©es : A) Civile B) Fiscale C) Sociale D) Patrimoniale. 200-300 mots chacune.",
-      section4_problematiques: "Identifie les probl√©matiques majeures avec gravit√© (haute/moyenne/faible) et description d√©taill√©e.",
-      section5_objectifs: "Liste les objectifs d√©clar√©s et d√©duits √† partir du profil client.",
-      section6_recommandations: "Propose des recommandations concr√®tes et actionnables avec impact chiffr√© si possible.",
-      section7_plan_action: "Cr√©e un plan d'action en 3 horizons : imm√©diat, court terme (3-6 mois), moyen terme (6-12 mois)."
+      section1_synthese: "RÈdige une synthËse exÈcutive professionnelle du dossier patrimonial. Contexte + 5 points clÈs maximum. Ton formel.",
+      section2_situation: "Analyse la situation actuelle : familiale, professionnelle, patrimoine, revenus. Sois factuel et prÈcis.",
+      section3_analyses: "RÈalise les 4 analyses dÈtaillÈes : A) Civile B) Fiscale C) Sociale D) Patrimoniale. 200-300 mots chacune.",
+      section4_problematiques: "Identifie les problÈmatiques majeures avec gravitÈ (haute/moyenne/faible) et description dÈtaillÈe.",
+      section5_objectifs: "Liste les objectifs dÈclarÈs et dÈduits ‡ partir du profil client.",
+      section6_recommandations: "Propose des recommandations concrËtes et actionnables avec impact chiffrÈ si possible.",
+      section7_plan_action: "CrÈe un plan d'action en 3 horizons : immÈdiat, court terme (3-6 mois), moyen terme (6-12 mois)."
     });
   };
   
@@ -128,7 +128,7 @@ export function CompteRenduProgressif({ clientId, clientName, clientData }: Comp
     if (!dossier) return;
     
     try {
-      // Mettre √† jour le statut
+      // Mettre ‡ jour le statut
       const dossierUpdate = {
         ...dossier,
         sections: {
@@ -138,11 +138,11 @@ export function CompteRenduProgressif({ clientId, clientName, clientData }: Comp
       };
       setDossier(dossierUpdate);
       
-      toast.info(`ü§ñ G√©n√©ration de la section en cours...`);
+      toast.info(`?? GÈnÈration de la section en cours...`);
       
-      // Appeler l'API backend avec le prompt personnalis√©
+      // Appeler l'API backend avec le prompt personnalisÈ
       const response = await fetch(
-        `${apiBaseUrl}/make-server-cac859af/generer-section-rapport`,
+        `${apiBaseUrl}/generer-section-rapport`,
         {
           method: 'POST',
           headers: {
@@ -170,7 +170,7 @@ export function CompteRenduProgressif({ clientId, clientName, clientData }: Comp
       
       const result = await response.json();
       
-      // Mettre √† jour la section avec le contenu g√©n√©r√©
+      // Mettre ‡ jour la section avec le contenu gÈnÈrÈ
       const dossierFinal = {
         ...dossier,
         sections: {
@@ -191,10 +191,10 @@ export function CompteRenduProgressif({ clientId, clientName, clientData }: Comp
       setDossier(dossierFinal);
       sauvegarderDossier(dossierFinal);
       
-      toast.success(`‚úÖ Section g√©n√©r√©e avec succ√®s`);
+      toast.success(`? Section gÈnÈrÈe avec succËs`);
       
     } catch (error: any) {
-      console.error('Erreur g√©n√©ration section:', error);
+      console.error('Erreur gÈnÈration section:', error);
       
       const dossierError = {
         ...dossier,
@@ -205,7 +205,7 @@ export function CompteRenduProgressif({ clientId, clientName, clientData }: Comp
       };
       setDossier(dossierError);
       
-      toast.error(`‚ùå Erreur: ${error.message}`);
+      toast.error(`? Erreur: ${error.message}`);
     }
   };
   
@@ -230,17 +230,17 @@ export function CompteRenduProgressif({ clientId, clientName, clientData }: Comp
   const validerDossier = () => {
     if (!dossier) return;
     
-    // V√©rifier que toutes les sections sont compl√®tes
+    // VÈrifier que toutes les sections sont complËtes
     const toutesCompletes = Object.values(dossier.sections).every(s => s.status === 'completed');
     
     if (!toutesCompletes) {
-      toast.error('‚ö†Ô∏è Toutes les sections doivent √™tre g√©n√©r√©es avant validation');
+      toast.error('?? Toutes les sections doivent Ítre gÈnÈrÈes avant validation');
       return;
     }
     
-    // V√©rifier les dates obligatoires
+    // VÈrifier les dates obligatoires
     if (!dossier.dateDecouverte || !dossier.datePresentation) {
-      toast.error('‚ö†Ô∏è Dates de d√©couverte et pr√©sentation requises');
+      toast.error('?? Dates de dÈcouverte et prÈsentation requises');
       return;
     }
     
@@ -253,7 +253,7 @@ export function CompteRenduProgressif({ clientId, clientName, clientData }: Comp
     setDossier(dossierValide);
     sauvegarderDossier(dossierValide);
     
-    // Cr√©er une copie fig√©e dans l'onglet Audit
+    // CrÈer une copie figÈe dans l'onglet Audit
     const auditFige = {
       ...dossierValide,
       statut: 'archive' as const,
@@ -261,7 +261,7 @@ export function CompteRenduProgressif({ clientId, clientName, clientData }: Comp
     };
     localStorage.setItem(`audit_fige_${clientId}_${Date.now()}`, JSON.stringify(auditFige));
     
-    toast.success('‚úÖ Dossier valid√© et archiv√© dans l\'onglet Audit');
+    toast.success('? Dossier validÈ et archivÈ dans l\'onglet Audit');
   };
   
   if (!dossier) {
@@ -273,19 +273,19 @@ export function CompteRenduProgressif({ clientId, clientName, clientData }: Comp
   }
   
   const sections = [
-    { key: 'section1_synthese', titre: '1. Synth√®se Ex√©cutive', icon: 'üìã', color: 'blue' },
-    { key: 'section2_situation', titre: '2. Situation Actuelle', icon: 'üë§', color: 'green' },
-    { key: 'section3_analyses', titre: '3. Analyses D√©taill√©es (A-B-C-D)', icon: 'üîç', color: 'purple' },
-    { key: 'section4_problematiques', titre: '4. Probl√©matiques', icon: '‚ö†Ô∏è', color: 'orange' },
-    { key: 'section5_objectifs', titre: '5. Objectifs', icon: 'üéØ', color: 'indigo' },
-    { key: 'section6_recommandations', titre: '6. Recommandations', icon: 'üí°', color: 'yellow' },
-    { key: 'section7_plan_action', titre: '7. Plan d\'Action', icon: 'üìÖ', color: 'teal' }
+    { key: 'section1_synthese', titre: '1. SynthËse ExÈcutive', icon: '??', color: 'blue' },
+    { key: 'section2_situation', titre: '2. Situation Actuelle', icon: '??', color: 'green' },
+    { key: 'section3_analyses', titre: '3. Analyses DÈtaillÈes (A-B-C-D)', icon: '??', color: 'purple' },
+    { key: 'section4_problematiques', titre: '4. ProblÈmatiques', icon: '??', color: 'orange' },
+    { key: 'section5_objectifs', titre: '5. Objectifs', icon: '??', color: 'indigo' },
+    { key: 'section6_recommandations', titre: '6. Recommandations', icon: '??', color: 'yellow' },
+    { key: 'section7_plan_action', titre: '7. Plan d\'Action', icon: '??', color: 'teal' }
   ];
   
   return (
     <div className="space-y-6">
       
-      {/* En-t√™te avec progression */}
+      {/* En-tÍte avec progression */}
       <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg p-6 text-white">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
@@ -321,7 +321,7 @@ export function CompteRenduProgressif({ clientId, clientName, clientData }: Comp
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Date D√©couverte <span className="text-red-500">*</span>
+              Date DÈcouverte <span className="text-red-500">*</span>
             </label>
             <input
               type="date"
@@ -336,7 +336,7 @@ export function CompteRenduProgressif({ clientId, clientName, clientData }: Comp
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Date G√©n√©ration Audit
+              Date GÈnÈration Audit
             </label>
             <input
               type="date"
@@ -351,7 +351,7 @@ export function CompteRenduProgressif({ clientId, clientName, clientData }: Comp
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Date Pr√©sentation <span className="text-red-500">*</span>
+              Date PrÈsentation <span className="text-red-500">*</span>
             </label>
             <input
               type="date"
@@ -391,7 +391,7 @@ export function CompteRenduProgressif({ clientId, clientName, clientData }: Comp
           return (
             <div key={section.key} className="bg-white rounded-lg border-2 border-gray-200 overflow-hidden">
               
-              {/* En-t√™te de section */}
+              {/* En-tÍte de section */}
               <div className={`bg-gradient-to-r from-${section.color}-50 to-${section.color}-100 p-4 border-b border-${section.color}-200`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -402,13 +402,13 @@ export function CompteRenduProgressif({ clientId, clientName, clientData }: Comp
                     {sectionData.status === 'completed' && (
                       <span className="px-3 py-1 bg-green-500 text-white text-xs font-bold rounded-full flex items-center gap-1">
                         <Check className="w-3 h-3" />
-                        Compl√©t√©e
+                        ComplÈtÈe
                       </span>
                     )}
                     {sectionData.status === 'generating' && (
                       <span className="px-3 py-1 bg-blue-500 text-white text-xs font-bold rounded-full flex items-center gap-1">
                         <Loader2 className="w-3 h-3 animate-spin" />
-                        G√©n√©ration...
+                        GÈnÈration...
                       </span>
                     )}
                     {sectionData.status === 'error' && (
@@ -428,19 +428,19 @@ export function CompteRenduProgressif({ clientId, clientName, clientData }: Comp
                       Prompt
                     </button>
                     
-                    {/* Bouton g√©n√©rer */}
+                    {/* Bouton gÈnÈrer */}
                     <button
                       onClick={() => genererSection(sectionKey)}
                       disabled={sectionData.status === 'generating'}
                       className="px-4 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold flex items-center gap-2"
                     >
                       <Sparkles className="w-4 h-4" />
-                      {sectionData.status === 'completed' ? 'R√©g√©n√©rer' : 'G√©n√©rer'}
+                      {sectionData.status === 'completed' ? 'RÈgÈnÈrer' : 'GÈnÈrer'}
                     </button>
                   </div>
                 </div>
                 
-                {/* √âditeur de prompt */}
+                {/* …diteur de prompt */}
                 {showPromptEditor === section.key && (
                   <div className="mt-3 pt-3 border-t border-gray-200">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -468,7 +468,7 @@ export function CompteRenduProgressif({ clientId, clientName, clientData }: Comp
                   {sectionData.dateGeneration && (
                     <div className="mt-2 text-xs text-gray-500 flex items-center gap-1">
                       <Clock className="w-3 h-3" />
-                      G√©n√©r√© le {new Date(sectionData.dateGeneration).toLocaleString('fr-FR')}
+                      GÈnÈrÈ le {new Date(sectionData.dateGeneration).toLocaleString('fr-FR')}
                     </div>
                   )}
                 </div>
@@ -485,7 +485,7 @@ export function CompteRenduProgressif({ clientId, clientName, clientData }: Comp
           <div>
             <h4 className="font-bold text-gray-900 text-lg mb-1">Validation du Dossier</h4>
             <p className="text-sm text-gray-600">
-              Toutes les sections doivent √™tre compl√®tes et les dates renseign√©es
+              Toutes les sections doivent Ítre complËtes et les dates renseignÈes
             </p>
           </div>
           <button

@@ -1,7 +1,7 @@
-Ôªø/**
- * üéØ COREVISION SERVICE - Gestion des commandes d'audit
+/**
+ * ?? COREVISION SERVICE - Gestion des commandes d'audit
  * 
- * Architecture similaire √† ClientService pour coh√©rence
+ * Architecture similaire ‡ ClientService pour cohÈrence
  */
 
 import { apiBaseUrl, publicAnonKey } from '../utils/supabase/info';
@@ -42,7 +42,7 @@ interface CachedData<T> {
 // ============================================
 
 const CACHE_VERSION = '1.0.0';
-const CACHE_TTL = 2 * 60 * 1000; // 2 minutes (plus court car donn√©es admin)
+const CACHE_TTL = 2 * 60 * 1000; // 2 minutes (plus court car donnÈes admin)
 const API_BASE_URL = `${apiBaseUrl}/make-server-cac859af`;
 
 // ============================================
@@ -91,7 +91,7 @@ class CacheManager {
       };
       localStorage.setItem(this.getKey(key), JSON.stringify(cached));
     } catch (error) {
-      console.error('‚ùå Erreur √©criture cache:', error);
+      console.error('? Erreur Ècriture cache:', error);
     }
   }
 
@@ -136,7 +136,7 @@ class CoreVisionServiceClass {
       });
 
       const duration = performance.now() - startTime;
-      console.log(`üì° API ${options.method || 'GET'} ${endpoint}: ${response.status} (${Math.round(duration)}ms)`);
+      console.log(`?? API ${options.method || 'GET'} ${endpoint}: ${response.status} (${Math.round(duration)}ms)`);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -149,7 +149,7 @@ class CoreVisionServiceClass {
       const data = await response.json();
       return { data, error: null };
     } catch (error) {
-      console.error('‚ùå Erreur API:', error);
+      console.error('? Erreur API:', error);
       return { 
         data: null, 
         error: error instanceof Error ? error.message : 'Erreur inconnue' 
@@ -158,50 +158,50 @@ class CoreVisionServiceClass {
   }
 
   /**
-   * R√©cup√®re toutes les commandes CoreVision
+   * RÈcupËre toutes les commandes CoreVision
    */
   async getAllOrders(forceRefresh = false): Promise<{
     orders: CoreVisionOrder[];
     error: string | null;
     fromCache: boolean;
   }> {
-    console.log('üîç CoreVisionService.getAllOrders - forceRefresh:', forceRefresh);
+    console.log('?? CoreVisionService.getAllOrders - forceRefresh:', forceRefresh);
     const cacheKey = 'all_orders';
 
     if (!forceRefresh) {
       const cached = this.cache.get<CoreVisionOrder[]>(cacheKey);
       if (cached) {
-        console.log('‚úÖ Chargement depuis le cache:', cached.length, 'commandes');
+        console.log('? Chargement depuis le cache:', cached.length, 'commandes');
         return { orders: cached, error: null, fromCache: true };
       }
     }
 
     const requestKey = cacheKey;
     if (this.pendingRequests.has(requestKey)) {
-      console.log('‚è≥ Requ√™te d√©j√† en cours, attente...');
+      console.log('? RequÍte dÈj‡ en cours, attente...');
       return this.pendingRequests.get(requestKey)!;
     }
 
     const promise = (async () => {
-      console.log('üì° Appel API: /corevision/orders');
+      console.log('?? Appel API: /corevision/orders');
       const { data, error } = await this.fetchAPI<{ orders: CoreVisionOrder[]; count: number }>('/corevision/orders');
 
-      console.log('üì¶ R√©ponse API:', { data, error });
+      console.log('?? RÈponse API:', { data, error });
 
       if (error || !data) {
-        // Fallback vers localStorage si API √©choue
+        // Fallback vers localStorage si API Èchoue
         const localKey = 'corevision_local_orders';
         const local = localStorage.getItem(localKey);
         if (local) {
           const localOrders = JSON.parse(local);
-          console.log('‚ö†Ô∏è Fallback localStorage:', localOrders.length, 'commandes');
+          console.log('?? Fallback localStorage:', localOrders.length, 'commandes');
           return { orders: localOrders, error: null, fromCache: true };
         }
-        console.error('‚ùå Aucune commande trouv√©e (ni API ni localStorage)');
+        console.error('? Aucune commande trouvÈe (ni API ni localStorage)');
         return { orders: [], error: error || 'Erreur inconnue', fromCache: false };
       }
 
-      console.log('‚úÖ Commandes r√©cup√©r√©es depuis l\'API:', data.orders.length);
+      console.log('? Commandes rÈcupÈrÈes depuis l\'API:', data.orders.length);
       this.cache.set(cacheKey, data.orders);
 
       return { orders: data.orders, error: null, fromCache: false };
@@ -217,7 +217,7 @@ class CoreVisionServiceClass {
   }
 
   /**
-   * Met √† jour une commande
+   * Met ‡ jour une commande
    */
   async updateOrder(
     orderId: string, 
@@ -235,7 +235,7 @@ class CoreVisionServiceClass {
     );
 
     if (error || !data) {
-      return { order: null, error: error || 'Erreur mise √† jour' };
+      return { order: null, error: error || 'Erreur mise ‡ jour' };
     }
 
     // Invalider le cache

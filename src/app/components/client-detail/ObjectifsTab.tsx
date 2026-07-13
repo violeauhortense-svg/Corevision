@@ -1,4 +1,4 @@
-Ôªøimport { useState } from 'react';
+import { useState } from 'react';
 import { 
   CheckCircle, Circle, Target, Calendar, TrendingUp, Clock, 
   Play, Check, Plus, Edit2, ChevronDown, ChevronUp,
@@ -18,7 +18,7 @@ interface ObjectifsTabProps {
   patrimoineNet: number;
   cgpAbonnement?: 'mensuel' | 'annuel' | 'aucun';
   session?: any;
-  // üî• DONN√âES COMPLETES POUR L'AUDIT
+  // ?? DONN…ES COMPLETES POUR L'AUDIT
   bilanData?: {
     patrimoineData?: any;
     revenusData?: any;
@@ -28,7 +28,7 @@ interface ObjectifsTabProps {
   };
 }
 
-// Liste des objectifs pr√©d√©finis avec ic√¥nes et couleurs
+// Liste des objectifs prÈdÈfinis avec icÙnes et couleurs
 const OBJECTIFS_PREDEFINIS = [
   { 
     id: 'diag-pat', 
@@ -52,7 +52,7 @@ const OBJECTIFS_PREDEFINIS = [
   },
   { 
     id: 'acq-immo', 
-    label: 'Acquisition immobili√®re', 
+    label: 'Acquisition immobiliËre', 
     category: 'Immobilier',
     icon: Home,
     color: 'from-orange-500 to-orange-600',
@@ -62,8 +62,8 @@ const OBJECTIFS_PREDEFINIS = [
   },
   { 
     id: 'epargne-fin', 
-    label: '√âpargne financi√®re', 
-    category: '√âpargne',
+    label: '…pargne financiËre', 
+    category: '…pargne',
     icon: PiggyBank,
     color: 'from-pink-500 to-pink-600',
     bgColor: 'bg-pink-50',
@@ -72,7 +72,7 @@ const OBJECTIFS_PREDEFINIS = [
   },
   { 
     id: 'prep-retraite', 
-    label: 'Pr√©paration retraite', 
+    label: 'PrÈparation retraite', 
     category: 'Retraite',
     icon: Clock,
     color: 'from-purple-500 to-purple-600',
@@ -149,12 +149,12 @@ export function ObjectifsTab({
   const [devisId, setDevisId] = useState('');
   const [montantDevis, setMontantDevis] = useState(0);
 
-  // V√©rifier si un objectif pr√©d√©fini est s√©lectionn√©
+  // VÈrifier si un objectif prÈdÈfini est sÈlectionnÈ
   const isObjectifSelected = (predefinedId: string) => {
     return objectifs.some(obj => obj.id === predefinedId);
   };
 
-  // Obtenir les d√©tails d'un objectif
+  // Obtenir les dÈtails d'un objectif
   const getObjectifDetails = (predefinedId: string): Objectif | null => {
     return objectifs.find(obj => obj.id === predefinedId) || null;
   };
@@ -162,23 +162,23 @@ export function ObjectifsTab({
   // Toggle checkbox
   const handleToggleObjectif = (predefinedId: string, label: string, category: string) => {
     if (isObjectifSelected(predefinedId)) {
-      // D√©cocher : supprimer l'objectif
+      // DÈcocher : supprimer l'objectif
       if (confirm('Voulez-vous supprimer cet objectif ?')) {
         onUpdateObjectifs(objectifs.filter(obj => obj.id !== predefinedId));
-        toast.success('Objectif retir√©');
+        toast.success('Objectif retirÈ');
         if (selectedObjectifId === predefinedId) {
           setSelectedObjectifId(null);
           setShowDetailPanel(false);
         }
       }
     } else {
-      // Cocher : ajouter l'objectif avec valeurs par d√©faut
+      // Cocher : ajouter l'objectif avec valeurs par dÈfaut
       const now = new Date().toISOString();
       const newObjectif: Objectif = {
         id: predefinedId,
         category: category,
         description: label,
-        status: '√Ä planifier',
+        status: '¿ planifier',
         priority: 'medium',
         progress: 0,
         included: true,
@@ -187,14 +187,14 @@ export function ObjectifsTab({
         dateModification: now,
       };
       onUpdateObjectifs([...objectifs, newObjectif]);
-      toast.success('Objectif ajout√©');
-      // Ouvrir automatiquement le panneau de d√©tails
+      toast.success('Objectif ajoutÈ');
+      // Ouvrir automatiquement le panneau de dÈtails
       setSelectedObjectifId(predefinedId);
       setShowDetailPanel(true);
     }
   };
 
-  // Ouvrir le panneau de d√©tails
+  // Ouvrir le panneau de dÈtails
   const handleOpenDetail = (predefinedId: string) => {
     if (!isObjectifSelected(predefinedId)) {
       toast.error('Veuillez d\'abord cocher cet objectif');
@@ -204,7 +204,7 @@ export function ObjectifsTab({
     setShowDetailPanel(true);
   };
 
-  // Sauvegarder les d√©tails
+  // Sauvegarder les dÈtails
   const handleSaveDetails = (details: Partial<Objectif>) => {
     if (!selectedObjectifId) return;
 
@@ -217,15 +217,15 @@ export function ObjectifsTab({
         dateModification: now,
       } : obj
     ));
-    toast.success('D√©tails sauvegard√©s');
+    toast.success('DÈtails sauvegardÈs');
   };
 
   // Statistiques
   const stats = {
     total: objectifs.length,
     enCours: objectifs.filter(o => o.status === 'En cours').length,
-    termines: objectifs.filter(o => o.status === 'Termin√©').length,
-    planifier: objectifs.filter(o => o.status === '√Ä planifier').length,
+    termines: objectifs.filter(o => o.status === 'TerminÈ').length,
+    planifier: objectifs.filter(o => o.status === '¿ planifier').length,
     progressMoyen: objectifs.length > 0 
       ? Math.round(objectifs.reduce((sum, o) => sum + (o.progress || 0), 0) / objectifs.length)
       : 0,
@@ -234,9 +234,9 @@ export function ObjectifsTab({
   // Obtenir la couleur du statut
   const getStatusColor = (status?: string) => {
     switch (status) {
-      case '√Ä planifier': return 'bg-gray-100 text-gray-700 border-gray-300';
+      case '¿ planifier': return 'bg-gray-100 text-gray-700 border-gray-300';
       case 'En cours': return 'bg-blue-100 text-blue-700 border-blue-300';
-      case 'Termin√©': return 'bg-green-100 text-green-700 border-green-300';
+      case 'TerminÈ': return 'bg-green-100 text-green-700 border-green-300';
       case 'En pause': return 'bg-orange-100 text-orange-700 border-orange-300';
       default: return 'bg-gray-100 text-gray-700 border-gray-300';
     }
@@ -284,7 +284,7 @@ export function ObjectifsTab({
     return montantTotal;
   };
 
-  // G√©n√©rer le devis
+  // GÈnÈrer le devis
   const genererDevis = () => {
     const montantTotal = calculerMontantDevis();
     const newDevisId = `devis-${clientId}-${Date.now()}`;
@@ -292,7 +292,7 @@ export function ObjectifsTab({
     setMontantDevis(montantTotal);
     setDevisGenere(true);
     setShowDevisModal(true);
-    toast.success('‚úÖ Devis g√©n√©r√©');
+    toast.success('? Devis gÈnÈrÈ');
   };
 
   // Valider la commande
@@ -300,16 +300,16 @@ export function ObjectifsTab({
     try {
       const orderId = `order-${clientId}-${Date.now()}`;
       
-      // üîç R√©cup√©rer les infos CGP depuis la session
+      // ?? RÈcupÈrer les infos CGP depuis la session
       const cgpName = session?.user?.user_metadata?.name || session?.user?.email?.split('@')[0] || 'CGP';
       const cgpEmail = session?.user?.email || '';
       
-      console.log('üîç DEBUG - Session compl√®te:', session);
-      console.log('üë§ DEBUG - CGP Name:', cgpName);
-      console.log('üìß DEBUG - CGP Email:', cgpEmail);
-      console.log('üìã DEBUG - Objectifs s√©lectionn√©s:', objectifs.filter(o => o.included));
+      console.log('?? DEBUG - Session complËte:', session);
+      console.log('?? DEBUG - CGP Name:', cgpName);
+      console.log('?? DEBUG - CGP Email:', cgpEmail);
+      console.log('?? DEBUG - Objectifs sÈlectionnÈs:', objectifs.filter(o => o.included));
       
-      // Pr√©parer la commande CoreVision
+      // PrÈparer la commande CoreVision
       const order = {
         orderId,
         clientId,
@@ -321,16 +321,16 @@ export function ObjectifsTab({
         validatedAt: new Date().toISOString(),
         status: 'pending',
         createdAt: new Date().toISOString(),
-        // üî• DONN√âES COMPL√àTES POUR L'AUDIT
+        // ?? DONN…ES COMPL»TES POUR L'AUDIT
         bilanData: bilanData || null,
       };
 
-      console.log('üì¶ DEBUG - Commande √† envoyer:', order);
+      console.log('?? DEBUG - Commande ‡ envoyer:', order);
 
-      // Envoyer au serveur ‚Äî pas de fallback localStorage (donn√©es sensibles)
+      // Envoyer au serveur ó pas de fallback localStorage (donnÈes sensibles)
       const token = session?.access_token || publicAnonKey;
       const response = await fetch(
-        `${apiBaseUrl}/make-server-cac859af/corevision/orders`,
+        `${apiBaseUrl}/corevision/orders`,
         {
           method: 'POST',
           headers: {
@@ -346,18 +346,18 @@ export function ObjectifsTab({
         throw new Error(responseData.error || `Erreur serveur ${response.status}`);
       }
 
-      toast.success('‚úÖ Commande valid√©e et envoy√©e √† CoreVision !');
+      toast.success('? Commande validÈe et envoyÈe ‡ CoreVision !');
       setShowDevisModal(false);
       setDevisGenere(false);
     } catch (error) {
-      console.error('‚ùå Erreur lors de la validation:', error);
-      toast.error('‚ùå Erreur lors de la validation de la commande');
+      console.error('? Erreur lors de la validation:', error);
+      toast.error('? Erreur lors de la validation de la commande');
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* En-t√™te */}
+      {/* En-tÍte */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Target className="w-6 h-6 text-purple-600" />
@@ -365,19 +365,19 @@ export function ObjectifsTab({
         </div>
       </div>
 
-      {/* Dashboard capacit√©s financi√®res */}
+      {/* Dashboard capacitÈs financiËres */}
       <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">üí∞ Vue financi√®re du foyer</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">?? Vue financiËre du foyer</h3>
         <div className="grid grid-cols-4 gap-4">
           <div className="bg-white rounded-lg p-4 border border-blue-200">
             <div className="flex items-center gap-2 mb-2">
               <Shield className="w-5 h-5 text-blue-600" />
-              <span className="text-xs text-gray-600">Matelas de s√©curit√©</span>
+              <span className="text-xs text-gray-600">Matelas de sÈcuritÈ</span>
             </div>
             <p className="text-2xl font-bold text-blue-600">
               {bilanData?.revenusData ?
                 (Math.round((bilanData.revenusData.revenusNetsMensuel || 0) * 3)).toLocaleString('fr-FR')
-                : '‚Äî'}
+                : 'ó'}
             </p>
             <p className="text-xs text-gray-500 mt-1">3x revenus mensuel</p>
           </div>
@@ -385,25 +385,25 @@ export function ObjectifsTab({
           <div className="bg-white rounded-lg p-4 border border-green-200">
             <div className="flex items-center gap-2 mb-2">
               <DollarSign className="w-5 h-5 text-green-600" />
-              <span className="text-xs text-gray-600">Liquidit√© perso</span>
+              <span className="text-xs text-gray-600">LiquiditÈ perso</span>
             </div>
             <p className="text-2xl font-bold text-green-600">
               {bilanData?.patrimoineData?.liquiditesPersonnelles ?
                 (bilanData.patrimoineData.liquiditesPersonnelles).toLocaleString('fr-FR')
-                : '‚Äî'}
+                : 'ó'}
             </p>
-            <p className="text-xs text-gray-500 mt-1">Disponible apr√®s matelas</p>
+            <p className="text-xs text-gray-500 mt-1">Disponible aprËs matelas</p>
           </div>
 
           <div className="bg-white rounded-lg p-4 border border-orange-200">
             <div className="flex items-center gap-2 mb-2">
               <PiggyBank className="w-5 h-5 text-orange-600" />
-              <span className="text-xs text-gray-600">Capacit√© √©pargne</span>
+              <span className="text-xs text-gray-600">CapacitÈ Èpargne</span>
             </div>
             <p className="text-2xl font-bold text-orange-600">
               {bilanData?.revenusData ?
                 (Math.round((bilanData.revenusData.revenusNetsMensuel || 0) * 0.2)).toLocaleString('fr-FR')
-                : '‚Äî'}
+                : 'ó'}
             </p>
             <p className="text-xs text-gray-500 mt-1">20% des revenus mensuels</p>
           </div>
@@ -411,26 +411,26 @@ export function ObjectifsTab({
           <div className="bg-white rounded-lg p-4 border border-purple-200">
             <div className="flex items-center gap-2 mb-2">
               <Building2 className="w-5 h-5 text-purple-600" />
-              <span className="text-xs text-gray-600">Liquidit√© pro</span>
+              <span className="text-xs text-gray-600">LiquiditÈ pro</span>
             </div>
             <p className="text-2xl font-bold text-purple-600">
               {bilanData?.entreprises && bilanData.entreprises.length > 0 ?
                 (Math.round((bilanData.entreprises[0]?.tresorerie || 0) - (bilanData.entreprises[0]?.bfr || 0))).toLocaleString('fr-FR')
-                : '‚Äî'}
+                : 'ó'}
             </p>
-            <p className="text-xs text-gray-500 mt-1">Tr√©sorerie - BFR</p>
+            <p className="text-xs text-gray-500 mt-1">TrÈsorerie - BFR</p>
           </div>
         </div>
       </div>
 
-      {/* Layout principal : Liste + Panneau de d√©tails */}
+      {/* Layout principal : Liste + Panneau de dÈtails */}
       <div className="grid grid-cols-12 gap-6">
-        {/* Liste des objectifs pr√©d√©finis */}
+        {/* Liste des objectifs prÈdÈfinis */}
         <div className={showDetailPanel ? 'col-span-5' : 'col-span-12'}>
           <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">
-                üìã S√©lectionnez vos objectifs
+                ?? SÈlectionnez vos objectifs
               </h3>
               
               {/* Bouton Commander l'audit */}
@@ -446,7 +446,7 @@ export function ObjectifsTab({
               ) : (
                 <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-lg px-4 py-2">
                   <CheckCircle className="w-5 h-5 text-green-600" />
-                  <span className="text-sm font-medium text-green-900">Devis g√©n√©r√©</span>
+                  <span className="text-sm font-medium text-green-900">Devis gÈnÈrÈ</span>
                   <button
                     onClick={() => setShowDevisModal(true)}
                     className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
@@ -458,7 +458,7 @@ export function ObjectifsTab({
             </div>
             
             <p className="text-sm text-gray-600 mb-4">
-              Cochez les objectifs qui correspondent aux besoins du client, puis cliquez dessus pour renseigner les d√©tails.
+              Cochez les objectifs qui correspondent aux besoins du client, puis cliquez dessus pour renseigner les dÈtails.
             </p>
 
             <div className="space-y-3">
@@ -477,11 +477,11 @@ export function ObjectifsTab({
                     } ${selectedObjectifId === obj.id ? 'ring-4 ring-blue-400 ring-opacity-50' : ''}`}
                     onClick={() => isSelected && handleOpenDetail(obj.id)}
                   >
-                    {/* Bande de couleur lat√©rale */}
+                    {/* Bande de couleur latÈrale */}
                     <div className={`absolute left-0 top-0 bottom-0 w-2 bg-gradient-to-b ${obj.color}`}></div>
 
                     <div className="flex items-center gap-4 p-4 pl-6">
-                      {/* Ic√¥ne color√©e avec d√©grad√© */}
+                      {/* IcÙne colorÈe avec dÈgradÈ */}
                       <div className={`flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br ${obj.color} flex items-center justify-center shadow-lg transform transition-transform group-hover:rotate-6`}>
                         <Icon className="w-7 h-7 text-white" />
                       </div>
@@ -510,12 +510,12 @@ export function ObjectifsTab({
                           {obj.category}
                         </p>
                         
-                        {/* üìÖ TRA√áABILIT√â */}
+                        {/* ?? TRA«ABILIT… */}
                         {isSelected && details && (details.dateCreation || details.dateModification || details.dateSaisie) && (
                           <p className="text-xs text-gray-400 mt-1">
-                            {details.dateCreation && `‚úèÔ∏è Cr√©√© le ${new Date(details.dateCreation).toLocaleDateString('fr-FR')}`}
-                            {details.dateModification && ` ‚Ä¢ üîÑ Modifi√© le ${new Date(details.dateModification).toLocaleDateString('fr-FR')}`}
-                            {!details.dateCreation && !details.dateModification && details.dateSaisie && `üíæ ${new Date(details.dateSaisie).toLocaleDateString('fr-FR')}`}
+                            {details.dateCreation && `?? CrÈÈ le ${new Date(details.dateCreation).toLocaleDateString('fr-FR')}`}
+                            {details.dateModification && ` ï ?? ModifiÈ le ${new Date(details.dateModification).toLocaleDateString('fr-FR')}`}
+                            {!details.dateCreation && !details.dateModification && details.dateSaisie && `?? ${new Date(details.dateSaisie).toLocaleDateString('fr-FR')}`}
                           </p>
                         )}
                       </div>
@@ -523,9 +523,9 @@ export function ObjectifsTab({
                       {/* Badge statut et progression */}
                       {isSelected && details && (
                         <div className="flex items-center gap-3">
-                          {/* Priorit√© */}
+                          {/* PrioritÈ */}
                           <span className={`text-xs font-bold px-3 py-1.5 rounded-full shadow-sm ${getPriorityColor(details.priority)}`}>
-                            {details.priority === 'high' ? 'üî• Haute' : details.priority === 'medium' ? '‚ö° Moyenne' : 'üìò Basse'}
+                            {details.priority === 'high' ? '?? Haute' : details.priority === 'medium' ? '? Moyenne' : '?? Basse'}
                           </span>
 
                           {/* Statut */}
@@ -571,7 +571,7 @@ export function ObjectifsTab({
                         </div>
                       )}
 
-                      {/* Fl√®che */}
+                      {/* FlËche */}
                       {isSelected && (
                         <ChevronDown 
                           className={`w-6 h-6 text-gray-400 transition-transform ${
@@ -590,7 +590,7 @@ export function ObjectifsTab({
           </div>
         </div>
 
-        {/* Panneau de d√©tails (√† droite) */}
+        {/* Panneau de dÈtails (‡ droite) */}
         {showDetailPanel && selectedObjectif && (
           <div className="col-span-7">
             <DetailPanelEnriched
@@ -610,13 +610,13 @@ export function ObjectifsTab({
       {showDevisModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            {/* En-t√™te */}
+            {/* En-tÍte */}
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="text-2xl font-bold mb-2">üìã Devis d'Audit Patrimonial</h3>
+                  <h3 className="text-2xl font-bold mb-2">?? Devis d'Audit Patrimonial</h3>
                   <p className="text-blue-100 text-sm">Client: {clientName}</p>
-                  <p className="text-blue-100 text-xs mt-1">R√©f√©rence: {devisId}</p>
+                  <p className="text-blue-100 text-xs mt-1">RÈfÈrence: {devisId}</p>
                 </div>
                 <button
                   onClick={() => setShowDevisModal(false)}
@@ -654,50 +654,50 @@ export function ObjectifsTab({
                 </div>
               </div>
 
-              {/* D√©tail montant */}
+              {/* DÈtail montant */}
               <div className="bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200 rounded-xl p-6">
                 <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   <DollarSign className="w-5 h-5 text-blue-600" />
-                  D√©tail de la tarification
+                  DÈtail de la tarification
                 </h4>
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-700">Socle diagnostic obligatoire</span>
-                    <span className="font-medium text-gray-900">320 ‚Ç¨</span>
+                    <span className="font-medium text-gray-900">320 Ä</span>
                   </div>
                   {objectifs.filter(o => o.included && !o.mandatory && o.id !== 'opt-dirigeant' && o.id !== 'struct-holding').length > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-700">
-                        Objectifs standards ({objectifs.filter(o => o.included && !o.mandatory && o.id !== 'opt-dirigeant' && o.id !== 'struct-holding').length} √ó 120 ‚Ç¨)
+                        Objectifs standards ({objectifs.filter(o => o.included && !o.mandatory && o.id !== 'opt-dirigeant' && o.id !== 'struct-holding').length} ◊ 120 Ä)
                       </span>
                       <span className="font-medium text-gray-900">
-                        {objectifs.filter(o => o.included && !o.mandatory && o.id !== 'opt-dirigeant' && o.id !== 'struct-holding').length * 120} ‚Ç¨
+                        {objectifs.filter(o => o.included && !o.mandatory && o.id !== 'opt-dirigeant' && o.id !== 'struct-holding').length * 120} Ä
                       </span>
                     </div>
                   )}
                   {objectifs.find(o => o.id === 'opt-dirigeant' && o.included) && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-700">Dirigeant ‚Äì soci√©t√© simple</span>
-                      <span className="font-medium text-gray-900">210 ‚Ç¨</span>
+                      <span className="text-gray-700">Dirigeant ñ sociÈtÈ simple</span>
+                      <span className="font-medium text-gray-900">210 Ä</span>
                     </div>
                   )}
                   {objectifs.find(o => o.id === 'struct-holding' && o.included) && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-700">Structuration avanc√©e</span>
-                      <span className="font-medium text-gray-900">210 ‚Ç¨</span>
+                      <span className="text-gray-700">Structuration avancÈe</span>
+                      <span className="font-medium text-gray-900">210 Ä</span>
                     </div>
                   )}
                   {cgpAbonnement && cgpAbonnement !== 'aucun' && (
                     <div className="flex justify-between text-sm text-green-700">
                       <span>Remise abonnement {cgpAbonnement}</span>
-                      <span className="font-medium">-{cgpAbonnement === 'mensuel' ? '10' : '20'} ‚Ç¨</span>
+                      <span className="font-medium">-{cgpAbonnement === 'mensuel' ? '10' : '20'} Ä</span>
                     </div>
                   )}
                   <div className="border-t-2 border-blue-300 pt-3 mt-3">
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-bold text-gray-900">Montant total</span>
                       <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                        {montantDevis.toLocaleString('fr-FR')} ‚Ç¨
+                        {montantDevis.toLocaleString('fr-FR')} Ä
                       </span>
                     </div>
                   </div>
@@ -712,7 +712,7 @@ export function ObjectifsTab({
                     Validation de la commande
                   </p>
                   <p className="text-sm text-yellow-700">
-                    En validant, vous confirmez que le client accepte ce devis. Une commande sera envoy√©e √† l'√©quipe CoreVision pour production de l'audit.
+                    En validant, vous confirmez que le client accepte ce devis. Une commande sera envoyÈe ‡ l'Èquipe CoreVision pour production de l'audit.
                   </p>
                 </div>
               </div>

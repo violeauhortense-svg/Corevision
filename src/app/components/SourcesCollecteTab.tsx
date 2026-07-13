@@ -1,4 +1,4 @@
-Ôªøimport { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Database, Play, CheckCircle2, XCircle, Plus, Trash2, 
   ExternalLink, Clock, AlertCircle, Calendar, Filter, Search
@@ -46,14 +46,14 @@ interface RegleFiscale {
   date_extraction?: string;
   dateUpdate?: string;
   date_mise_a_jour?: string;
-  statut?: 'valid√©' | 'en attente' | 'obsol√®te';
+  statut?: 'validÈ' | 'en attente' | 'obsolËte';
 }
 
 interface MontagePatrimonial {
   id: string;
   nom?: string;
   montage?: string;
-  nom_montage?: string;  // Champ utilis√© par les montages statiques
+  nom_montage?: string;  // Champ utilisÈ par les montages statiques
   description?: string;
   objectif: string;
   conditions?: string;
@@ -85,12 +85,12 @@ interface RegleSociale {
   source: string;
   reference: string;
   date_mise_a_jour: string;
-  statut_validation: 'valid√©' | 'en_attente' | '√†_v√©rifier';
+  statut_validation: 'validÈ' | 'en_attente' | '‡_vÈrifier';
 }
 
 interface RegleRetraite {
   id: string;
-  regime: 'CNAV' | 'AGIRC-ARRCO' | 'R√©gime g√©n√©ral' | 'Compl√©mentaire';
+  regime: 'CNAV' | 'AGIRC-ARRCO' | 'RÈgime gÈnÈral' | 'ComplÈmentaire';
   regle: string;
   condition: string;
   formule: string;
@@ -102,13 +102,13 @@ interface RegleRetraite {
   source: string;
   reference: string;
   date_mise_a_jour: string;
-  statut_validation: 'valid√©' | 'en_attente' | '√†_v√©rifier';
+  statut_validation: 'validÈ' | 'en_attente' | '‡_vÈrifier';
 }
 
-// Sources officielles par d√©faut
+// Sources officielles par dÈfaut
 const DEFAULT_SOURCES: Source[] = [
   { id: '1', name: 'BOFiP', url: 'https://bofip.impots.gouv.fr', type: 'official' },
-  { id: '2', name: 'L√©gifrance', url: 'https://www.legifrance.gouv.fr', type: 'official' },
+  { id: '2', name: 'LÈgifrance', url: 'https://www.legifrance.gouv.fr', type: 'official' },
   { id: '3', name: 'AMF', url: 'https://www.amf-france.org', type: 'official' },
 ];
 
@@ -121,35 +121,35 @@ export function SourcesCollecteTab() {
   const [collecteHistory, setCollecteHistory] = useState<CollecteHistory[]>([]);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   
-  // Vraies donn√©es collect√©es depuis le backend
+  // Vraies donnÈes collectÈes depuis le backend
   const [reglesFiscales, setReglesFiscales] = useState<RegleFiscale[]>([]);
   const [montagesPatrimoniaux, setMontagesPatrimoniaux] = useState<MontagePatrimonial[]>([]);
   const [updateLogs, setUpdateLogs] = useState<UpdateLog[]>([]);
   const [isLoadingRegles, setIsLoadingRegles] = useState(true);
   const [isLoadingMontages, setIsLoadingMontages] = useState(true);
 
-  // √âtats pour filtres et pagination des r√®gles fiscales
+  // …tats pour filtres et pagination des rËgles fiscales
   const [filtretitre, setFiltreTitre] = useState('');
   const [filtreCategorie, setFiltreCategorie] = useState('');
   const [filtreDescription, setFiltreDescription] = useState('');
   const [filtreSource, setFiltreSource] = useState('');
   const [filtreDate, setFiltreDate] = useState('');
-  const [reglesAffichees, setReglesAffichees] = useState(10); // Nombre de r√®gles √† afficher
+  const [reglesAffichees, setReglesAffichees] = useState(10); // Nombre de rËgles ‡ afficher
 
-  // √âtats pour filtres et pagination des montages patrimoniaux
+  // …tats pour filtres et pagination des montages patrimoniaux
   const [filtreMontageNom, setFiltreMontageNom] = useState('');
   const [filtreMontageCategorie, setFiltreMontageCategorie] = useState('');
   const [filtreMontageObjectif, setFiltreMontageObjectif] = useState('');
   const [filtreMontageComplexite, setFiltreMontageComplexite] = useState('');
   const [filtreMontageEconomie, setFiltreMontageEconomie] = useState('');
-  const [montagesAffiches, setMontagesAffiches] = useState(10); // Nombre de montages √† afficher
+  const [montagesAffiches, setMontagesAffiches] = useState(10); // Nombre de montages ‡ afficher
 
-  // √âtats pour r√®gles sociales
+  // …tats pour rËgles sociales
   const [reglesSociales, setReglesSociales] = useState<RegleSociale[]>([]);
   const [isLoadingReglesSociales, setIsLoadingReglesSociales] = useState(true);
   const [isCollectingSocial, setIsCollectingSocial] = useState(false);
   
-  // √âtats pour filtres et pagination des r√®gles sociales
+  // …tats pour filtres et pagination des rËgles sociales
   const [filtreSocialRegle, setFiltreSocialRegle] = useState('');
   const [filtreSocialDomaine, setFiltreSocialDomaine] = useState('');
   const [filtreSocialTaux, setFiltreSocialTaux] = useState('');
@@ -157,12 +157,12 @@ export function SourcesCollecteTab() {
   const [filtreSocialSource, setFiltreSocialSource] = useState('');
   const [reglesSocialesAffichees, setReglesSocialesAffichees] = useState(10);
 
-  // √âtats pour r√®gles retraite
+  // …tats pour rËgles retraite
   const [reglesRetraite, setReglesRetraite] = useState<RegleRetraite[]>([]);
   const [isLoadingReglesRetraite, setIsLoadingReglesRetraite] = useState(true);
   const [isCollectingRetraite, setIsCollectingRetraite] = useState(false);
   
-  // √âtats pour filtres et pagination des r√®gles retraite
+  // …tats pour filtres et pagination des rËgles retraite
   const [filtreRetraiteRegle, setFiltreRetraiteRegle] = useState('');
   const [filtreRetraiteRegime, setFiltreRetraiteRegime] = useState('');
   const [filtreRetraiteAge, setFiltreRetraiteAge] = useState('');
@@ -170,7 +170,7 @@ export function SourcesCollecteTab() {
   const [filtreRetraiteSource, setFiltreRetraiteSource] = useState('');
   const [reglesRetraiteAffichees, setReglesRetraiteAffichees] = useState(10);
 
-  // √âtats pour le simulateur patrimonial
+  // …tats pour le simulateur patrimonial
   const [montageSelectionne, setMontageSelectionne] = useState<string>('');
   const [capitalInitial, setCapitalInitial] = useState<number>(100000);
   const [apportAnnuel, setApportAnnuel] = useState<number>(0);
@@ -180,7 +180,7 @@ export function SourcesCollecteTab() {
   const [isSimulating, setIsSimulating] = useState(false);
   const [simulationResult, setSimulationResult] = useState<any>(null);
 
-  // Charger les stats et donn√©es au d√©marrage
+  // Charger les stats et donnÈes au dÈmarrage
   useEffect(() => {
     loadStats();
     loadReglesCollectees();
@@ -189,14 +189,14 @@ export function SourcesCollecteTab() {
     loadReglesRetraite();
   }, []);
 
-  // Charger les r√®gles fiscales collect√©es
+  // Charger les rËgles fiscales collectÈes
   const loadReglesCollectees = async () => {
     setIsLoadingRegles(true);
     try {
       const { projectId, publicAnonKey } = await import('../utils/supabase/info');
       
       const response = await fetch(
-        `${apiBaseUrl}/make-server-cac859af/regles/toutes`,
+        `${apiBaseUrl}/regles/toutes`,
         {
           headers: {
             'Authorization': `Bearer ${publicAnonKey}`,
@@ -207,19 +207,19 @@ export function SourcesCollecteTab() {
       if (response.ok) {
         const data = await response.json();
         
-        // ‚ö†Ô∏è DEBUGGING D√âTAILL√â
-        console.log('=== üîç ANALYSE COMPL√àTE DES R√àGLES ===');
-        console.log('Total de r√®gles re√ßues:', data.regles?.length);
-        console.log('Nombre de r√®gles statiques:', data.statiques);
-        console.log('Nombre de r√®gles collect√©es:', data.collectees);
+        // ?? DEBUGGING D…TAILL…
+        console.log('=== ?? ANALYSE COMPL»TE DES R»GLES ===');
+        console.log('Total de rËgles reÁues:', data.regles?.length);
+        console.log('Nombre de rËgles statiques:', data.statiques);
+        console.log('Nombre de rËgles collectÈes:', data.collectees);
         
         if (data.regles && data.regles.length > 0) {
-          console.log('\n--- Premi√®re r√®gle (RAW) ---');
+          console.log('\n--- PremiËre rËgle (RAW) ---');
           console.log(JSON.stringify(data.regles[0], null, 2));
           
           console.log('\n--- Analyse des champs disponibles ---');
           const firstRule = data.regles[0];
-          console.log('Champs pr√©sents:', Object.keys(firstRule));
+          console.log('Champs prÈsents:', Object.keys(firstRule));
           console.log('id:', firstRule.id);
           console.log('titre:', firstRule.titre);
           console.log('regle:', firstRule.regle);
@@ -234,10 +234,10 @@ export function SourcesCollecteTab() {
           console.log('date_mise_a_jour:', firstRule.date_mise_a_jour);
           
           console.log('\n--- Test du mapping ---');
-          console.log('Titre affich√©:', firstRule.titre || firstRule.regle || 'Sans titre');
-          console.log('Cat√©gorie affich√©e:', firstRule.categorie || firstRule.domaine || 'G√©n√©ral');
-          console.log('Description affich√©e:', firstRule.description || firstRule.consequence || firstRule.condition || '-');
-          console.log('Source affich√©e:', firstRule.source || firstRule.reference || '-');
+          console.log('Titre affichÈ:', firstRule.titre || firstRule.regle || 'Sans titre');
+          console.log('CatÈgorie affichÈe:', firstRule.categorie || firstRule.domaine || 'GÈnÈral');
+          console.log('Description affichÈe:', firstRule.description || firstRule.consequence || firstRule.condition || '-');
+          console.log('Source affichÈe:', firstRule.source || firstRule.reference || '-');
         }
         console.log('=== FIN ANALYSE ===\n');
         
@@ -246,20 +246,20 @@ export function SourcesCollecteTab() {
         }
       }
     } catch (error) {
-      console.error('Erreur chargement r√®gles:', error);
+      console.error('Erreur chargement rËgles:', error);
     } finally {
       setIsLoadingRegles(false);
     }
   };
 
-  // Charger les montages patrimoniaux collect√©s
+  // Charger les montages patrimoniaux collectÈs
   const loadMontagesCollectes = async () => {
     setIsLoadingMontages(true);
     try {
       const { projectId, publicAnonKey } = await import('../utils/supabase/info');
       
       const response = await fetch(
-        `${apiBaseUrl}/make-server-cac859af/montages/tous`,
+        `${apiBaseUrl}/montages/tous`,
         {
           headers: {
             'Authorization': `Bearer ${publicAnonKey}`,
@@ -269,7 +269,7 @@ export function SourcesCollecteTab() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('üèóÔ∏è TOUS les montages (statiques + collect√©s):', data);
+        console.log('??? TOUS les montages (statiques + collectÈs):', data);
         
         if (data.success && data.montages) {
           setMontagesPatrimoniaux(data.montages);
@@ -289,7 +289,7 @@ export function SourcesCollecteTab() {
       const { projectId, publicAnonKey } = await import('../utils/supabase/info');
       
       const response = await fetch(
-        `${apiBaseUrl}/make-server-cac859af/collecte-juridique/stats`,
+        `${apiBaseUrl}/collecte-juridique/stats`,
         {
           headers: {
             'Authorization': `Bearer ${publicAnonKey}`,
@@ -299,7 +299,7 @@ export function SourcesCollecteTab() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('üìä Stats collecte:', data);
+        console.log('?? Stats collecte:', data);
         
         if (data.stats && data.stats.last_collecte) {
           const lastCol = data.stats.last_collecte;
@@ -338,7 +338,7 @@ export function SourcesCollecteTab() {
     setSources([...sources, newSource]);
     setNewSourceName('');
     setNewSourceUrl('');
-    toast.success(`Source "${newSourceName}" ajout√©e`);
+    toast.success(`Source "${newSourceName}" ajoutÈe`);
 
     // Ajouter au journal
     const log: UpdateLog = {
@@ -366,7 +366,7 @@ export function SourcesCollecteTab() {
     }
 
     setSources(sources.filter(s => s.id !== sourceId));
-    toast.success('Source supprim√©e');
+    toast.success('Source supprimÈe');
 
     // Ajouter au journal
     const log: UpdateLog = {
@@ -374,7 +374,7 @@ export function SourcesCollecteTab() {
       date: new Date().toLocaleString('fr-FR'),
       type: 'source',
       action: 'suppression',
-      description: `Source supprim√©e: ${source.name}`
+      description: `Source supprimÈe: ${source.name}`
     };
     setUpdateLogs([log, ...updateLogs]);
   };
@@ -382,13 +382,13 @@ export function SourcesCollecteTab() {
   // Lancer la collecte
   const handleLaunchCollecte = async () => {
     setIsCollecting(true);
-    toast.info('Collecte des donn√©es en cours...');
+    toast.info('Collecte des donnÈes en cours...');
 
     try {
       const { projectId, publicAnonKey } = await import('../utils/supabase/info');
       
       const response = await fetch(
-        `${apiBaseUrl}/make-server-cac859af/collecte-juridique/run`,
+        `${apiBaseUrl}/collecte-juridique/run`,
         {
           method: 'POST',
           headers: {
@@ -402,7 +402,7 @@ export function SourcesCollecteTab() {
       }
 
       const result = await response.json();
-      console.log('‚úÖ R√©sultat collecte:', result);
+      console.log('? RÈsultat collecte:', result);
 
       const newCollecte: CollecteHistory = {
         id: `collecte_${Date.now()}`,
@@ -418,9 +418,9 @@ export function SourcesCollecteTab() {
       setCollecteHistory([newCollecte, ...collecteHistory]);
       
       if (result.success) {
-        toast.success(`Collecte termin√©e : ${result.total} documents r√©cup√©r√©s (BOFiP: ${result.bofip_count}, Legifrance: ${result.legifrance_count})`);
+        toast.success(`Collecte terminÈe : ${result.total} documents rÈcupÈrÈs (BOFiP: ${result.bofip_count}, Legifrance: ${result.legifrance_count})`);
       } else {
-        toast.error('Collecte termin√©e avec des erreurs');
+        toast.error('Collecte terminÈe avec des erreurs');
       }
 
       // Ajouter au journal
@@ -429,18 +429,18 @@ export function SourcesCollecteTab() {
         date: new Date().toLocaleString('fr-FR'),
         type: 'regle',
         action: 'ajout',
-        description: `Collecte automatique : ${result.total} documents collect√©s`
+        description: `Collecte automatique : ${result.total} documents collectÈs`
       };
       setUpdateLogs([log, ...updateLogs]);
 
-      // Recharger les stats et les donn√©es
+      // Recharger les stats et les donnÈes
       await loadStats();
       await loadReglesCollectees();
       
-      // Attendre 5 secondes puis recharger les montages (ils sont g√©n√©r√©s en arri√®re-plan)
+      // Attendre 5 secondes puis recharger les montages (ils sont gÈnÈrÈs en arriËre-plan)
       setTimeout(() => {
         loadMontagesCollectes();
-        toast.info('V√©rification des montages g√©n√©r√©s...', { duration: 2000 });
+        toast.info('VÈrification des montages gÈnÈrÈs...', { duration: 2000 });
       }, 5000);
 
     } catch (error) {
@@ -462,9 +462,9 @@ export function SourcesCollecteTab() {
     }
   };
 
-  // Initialiser les 110 r√®gles fiscales statiques
+  // Initialiser les 110 rËgles fiscales statiques
   const handleInitialiserRegles = async () => {
-    const confirmed = confirm('Initialiser les 110 r√®gles fiscales statiques dans la base de donn√©es ?');
+    const confirmed = confirm('Initialiser les 110 rËgles fiscales statiques dans la base de donnÈes ?');
     if (!confirmed) return;
 
     toast.info('Initialisation en cours...');
@@ -473,7 +473,7 @@ export function SourcesCollecteTab() {
       const { projectId, publicAnonKey } = await import('../utils/supabase/info');
       
       const response = await fetch(
-        `${apiBaseUrl}/make-server-cac859af/regles/initialiser`,
+        `${apiBaseUrl}/regles/initialiser`,
         {
           method: 'POST',
           headers: {
@@ -483,40 +483,40 @@ export function SourcesCollecteTab() {
       );
 
       const result = await response.json();
-      console.log('üìã R√©sultat brut de l\'API:', result);
+      console.log('?? RÈsultat brut de l\'API:', result);
 
       if (!response.ok) {
-        console.error('‚ùå Erreur HTTP:', response.status, response.statusText);
-        console.error('‚ùå D√©tails erreur:', result.error);
-        console.error('‚ùå Stack trace:', result.details);
+        console.error('? Erreur HTTP:', response.status, response.statusText);
+        console.error('? DÈtails erreur:', result.error);
+        console.error('? Stack trace:', result.details);
         throw new Error(result.error || 'Erreur lors de l\'initialisation');
       }
 
-      console.log('‚úÖ R√©sultat initialisation:', result);
+      console.log('? RÈsultat initialisation:', result);
 
-      toast.success(`${result.count} r√®gles fiscales initialis√©es avec succ√®s !`);
+      toast.success(`${result.count} rËgles fiscales initialisÈes avec succËs !`);
       
-      // Recharger les r√®gles
+      // Recharger les rËgles
       await loadReglesCollectees();
 
     } catch (error) {
-      console.error('‚ùå Erreur initialisation compl√®te:', error);
+      console.error('? Erreur initialisation complËte:', error);
       toast.error('Erreur lors de l\'initialisation : ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
   const getStatutColor = (statut: RegleFiscale['statut']) => {
     switch (statut) {
-      case 'valid√©':
+      case 'validÈ':
         return 'bg-green-50 text-green-700 border-green-200';
       case 'en attente':
         return 'bg-orange-50 text-orange-700 border-orange-200';
-      case 'obsol√®te':
+      case 'obsolËte':
         return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
 
-  // Filtrer les r√®gles fiscales
+  // Filtrer les rËgles fiscales
   const reglesFiltrees = reglesFiscales.filter((regle) => {
     const titre = (regle.titre || regle.regle || '').toLowerCase();
     const categorie = (regle.categorie || regle.domaine || '').toLowerCase();
@@ -533,10 +533,10 @@ export function SourcesCollecteTab() {
     );
   });
 
-  // R√®gles √† afficher avec pagination
+  // RËgles ‡ afficher avec pagination
   const reglesAfficher = reglesFiltrees.slice(0, reglesAffichees);
 
-  // Fonction pour charger plus de r√®gles
+  // Fonction pour charger plus de rËgles
   const chargerPlusDeRegles = () => {
     setReglesAffichees(prev => prev + 10);
   };
@@ -558,7 +558,7 @@ export function SourcesCollecteTab() {
     );
   });
 
-  // Montages √† afficher avec pagination
+  // Montages ‡ afficher avec pagination
   const montagesAfficher = montagesFiltres.slice(0, montagesAffiches);
 
   // Fonction pour charger plus de montages
@@ -566,14 +566,14 @@ export function SourcesCollecteTab() {
     setMontagesAffiches(prev => prev + 10);
   };
 
-  // Charger les r√®gles sociales
+  // Charger les rËgles sociales
   const loadReglesSociales = async () => {
     setIsLoadingReglesSociales(true);
     try {
       const { projectId, publicAnonKey } = await import('../utils/supabase/info');
       
       const response = await fetch(
-        `${apiBaseUrl}/make-server-cac859af/extracteur-regles-sociales/regles`,
+        `${apiBaseUrl}/extracteur-regles-sociales/regles`,
         {
           headers: {
             'Authorization': `Bearer ${publicAnonKey}`,
@@ -583,29 +583,29 @@ export function SourcesCollecteTab() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('üìä R√®gles sociales:', data);
+        console.log('?? RËgles sociales:', data);
         
         if (data.success && data.regles) {
           setReglesSociales(data.regles);
         }
       }
     } catch (error) {
-      console.error('Erreur chargement r√®gles sociales:', error);
+      console.error('Erreur chargement rËgles sociales:', error);
     } finally {
       setIsLoadingReglesSociales(false);
     }
   };
 
-  // Lancer la collecte des r√®gles sociales
+  // Lancer la collecte des rËgles sociales
   const handleLaunchCollecteSocial = async () => {
     setIsCollectingSocial(true);
-    toast.info('Collecte des r√®gles sociales en cours...');
+    toast.info('Collecte des rËgles sociales en cours...');
 
     try {
       const { projectId, publicAnonKey } = await import('../utils/supabase/info');
       
       const response = await fetch(
-        `${apiBaseUrl}/make-server-cac859af/collecteur-social/run`,
+        `${apiBaseUrl}/collecteur-social/run`,
         {
           method: 'POST',
           headers: {
@@ -619,7 +619,7 @@ export function SourcesCollecteTab() {
       }
 
       const result = await response.json();
-      console.log('‚úÖ R√©sultat collecte:', result);
+      console.log('? RÈsultat collecte:', result);
 
       const newCollecte: CollecteHistory = {
         id: `collecte_${Date.now()}`,
@@ -635,9 +635,9 @@ export function SourcesCollecteTab() {
       setCollecteHistory([newCollecte, ...collecteHistory]);
       
       if (result.success) {
-        toast.success(`Collecte termin√©e : ${result.total} documents r√©cup√©r√©s (BOFiP: ${result.bofip_count}, Legifrance: ${result.legifrance_count})`);
+        toast.success(`Collecte terminÈe : ${result.total} documents rÈcupÈrÈs (BOFiP: ${result.bofip_count}, Legifrance: ${result.legifrance_count})`);
       } else {
-        toast.error('Collecte termin√©e avec des erreurs');
+        toast.error('Collecte terminÈe avec des erreurs');
       }
 
       // Ajouter au journal
@@ -646,18 +646,18 @@ export function SourcesCollecteTab() {
         date: new Date().toLocaleString('fr-FR'),
         type: 'regle',
         action: 'ajout',
-        description: `Collecte automatique : ${result.total} documents collect√©s`
+        description: `Collecte automatique : ${result.total} documents collectÈs`
       };
       setUpdateLogs([log, ...updateLogs]);
 
-      // Recharger les stats et les donn√©es
+      // Recharger les stats et les donnÈes
       await loadStats();
       await loadReglesCollectees();
       
-      // Attendre 5 secondes puis recharger les montages (ils sont g√©n√©r√©s en arri√®re-plan)
+      // Attendre 5 secondes puis recharger les montages (ils sont gÈnÈrÈs en arriËre-plan)
       setTimeout(() => {
         loadMontagesCollectes();
-        toast.info('V√©rification des montages g√©n√©r√©s...', { duration: 2000 });
+        toast.info('VÈrification des montages gÈnÈrÈs...', { duration: 2000 });
       }, 5000);
 
     } catch (error) {
@@ -679,7 +679,7 @@ export function SourcesCollecteTab() {
     }
   };
 
-  // Filtrer les r√®gles sociales
+  // Filtrer les rËgles sociales
   const reglesSocialesFiltrees = reglesSociales.filter((regle) => {
     const regleText = regle.regle.toLowerCase();
     const domaine = regle.domaine.toLowerCase();
@@ -696,17 +696,17 @@ export function SourcesCollecteTab() {
     );
   });
 
-  // R√®gles sociales √† afficher avec pagination
+  // RËgles sociales ‡ afficher avec pagination
   const reglesSocialesAfficher = reglesSocialesFiltrees.slice(0, reglesSocialesAffichees);
 
-  // Fonction pour charger plus de r√®gles sociales
+  // Fonction pour charger plus de rËgles sociales
   const chargerPlusDeReglesSociales = () => {
     setReglesSocialesAffichees(prev => prev + 10);
   };
 
-  // Initialiser les r√®gles sociales statiques
+  // Initialiser les rËgles sociales statiques
   const handleInitialiserReglesSociales = async () => {
-    const confirmed = confirm('Initialiser les 15 r√®gles sociales statiques dans la base de donn√©es ?');
+    const confirmed = confirm('Initialiser les 15 rËgles sociales statiques dans la base de donnÈes ?');
     if (!confirmed) return;
 
     toast.info('Initialisation en cours...');
@@ -715,7 +715,7 @@ export function SourcesCollecteTab() {
       const { projectId, publicAnonKey } = await import('../utils/supabase/info');
       
       const response = await fetch(
-        `${apiBaseUrl}/make-server-cac859af/extracteur-regles-sociales/initialiser`,
+        `${apiBaseUrl}/extracteur-regles-sociales/initialiser`,
         {
           method: 'POST',
           headers: {
@@ -730,25 +730,25 @@ export function SourcesCollecteTab() {
         throw new Error(result.error || 'Erreur lors de l\'initialisation');
       }
 
-      toast.success(`${result.count} r√®gles sociales initialis√©es avec succ√®s !`);
+      toast.success(`${result.count} rËgles sociales initialisÈes avec succËs !`);
       
-      // Recharger les r√®gles
+      // Recharger les rËgles
       await loadReglesSociales();
 
     } catch (error) {
-      console.error('‚ùå Erreur initialisation r√®gles sociales:', error);
+      console.error('? Erreur initialisation rËgles sociales:', error);
       toast.error('Erreur lors de l\'initialisation : ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
-  // Charger les r√®gles retraite
+  // Charger les rËgles retraite
   const loadReglesRetraite = async () => {
     setIsLoadingReglesRetraite(true);
     try {
       const { projectId, publicAnonKey } = await import('../utils/supabase/info');
       
       const response = await fetch(
-        `${apiBaseUrl}/make-server-cac859af/extracteur-regles-retraite/regles`,
+        `${apiBaseUrl}/extracteur-regles-retraite/regles`,
         {
           headers: {
             'Authorization': `Bearer ${publicAnonKey}`,
@@ -758,29 +758,29 @@ export function SourcesCollecteTab() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('üèõÔ∏è R√®gles retraite:', data);
+        console.log('??? RËgles retraite:', data);
         
         if (data.success && data.regles) {
           setReglesRetraite(data.regles);
         }
       }
     } catch (error) {
-      console.error('Erreur chargement r√®gles retraite:', error);
+      console.error('Erreur chargement rËgles retraite:', error);
     } finally {
       setIsLoadingReglesRetraite(false);
     }
   };
 
-  // Lancer la collecte des r√®gles retraite
+  // Lancer la collecte des rËgles retraite
   const handleLaunchCollecteRetraite = async () => {
     setIsCollectingRetraite(true);
-    toast.info('Collecte des r√®gles retraite en cours...');
+    toast.info('Collecte des rËgles retraite en cours...');
 
     try {
       const { projectId, publicAnonKey } = await import('../utils/supabase/info');
       
       const response = await fetch(
-        `${apiBaseUrl}/make-server-cac859af/collecteur-retraite/run`,
+        `${apiBaseUrl}/collecteur-retraite/run`,
         {
           method: 'POST',
           headers: {
@@ -794,15 +794,15 @@ export function SourcesCollecteTab() {
       }
 
       const result = await response.json();
-      console.log('‚úÖ R√©sultat collecte retraite:', result);
+      console.log('? RÈsultat collecte retraite:', result);
 
       if (result.success) {
-        toast.success(`Collecte termin√©e : ${result.total} documents r√©cup√©r√©s (CNAV: ${result.cnav_count}, AGIRC-ARRCO: ${result.agirc_arrco_count}, Service-Public: ${result.service_public_count})`);
+        toast.success(`Collecte terminÈe : ${result.total} documents rÈcupÈrÈs (CNAV: ${result.cnav_count}, AGIRC-ARRCO: ${result.agirc_arrco_count}, Service-Public: ${result.service_public_count})`);
       } else {
-        toast.error('Collecte termin√©e avec des erreurs');
+        toast.error('Collecte terminÈe avec des erreurs');
       }
 
-      // Recharger les donn√©es
+      // Recharger les donnÈes
       await loadReglesRetraite();
 
     } catch (error) {
@@ -813,9 +813,9 @@ export function SourcesCollecteTab() {
     }
   };
 
-  // Initialiser les r√®gles retraite statiques
+  // Initialiser les rËgles retraite statiques
   const handleInitialiserReglesRetraite = async () => {
-    const confirmed = confirm('Initialiser les 25 r√®gles retraite statiques dans la base de donn√©es ?');
+    const confirmed = confirm('Initialiser les 25 rËgles retraite statiques dans la base de donnÈes ?');
     if (!confirmed) return;
 
     toast.info('Initialisation en cours...');
@@ -824,7 +824,7 @@ export function SourcesCollecteTab() {
       const { projectId, publicAnonKey } = await import('../utils/supabase/info');
       
       const response = await fetch(
-        `${apiBaseUrl}/make-server-cac859af/extracteur-regles-retraite/initialiser`,
+        `${apiBaseUrl}/extracteur-regles-retraite/initialiser`,
         {
           method: 'POST',
           headers: {
@@ -839,18 +839,18 @@ export function SourcesCollecteTab() {
         throw new Error(result.error || 'Erreur lors de l\'initialisation');
       }
 
-      toast.success(`${result.count} r√®gles retraite initialis√©es avec succ√®s !`);
+      toast.success(`${result.count} rËgles retraite initialisÈes avec succËs !`);
       
-      // Recharger les r√®gles
+      // Recharger les rËgles
       await loadReglesRetraite();
 
     } catch (error) {
-      console.error('‚ùå Erreur initialisation r√®gles retraite:', error);
+      console.error('? Erreur initialisation rËgles retraite:', error);
       toast.error('Erreur lors de l\'initialisation : ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
-  // Filtrer les r√®gles retraite
+  // Filtrer les rËgles retraite
   const reglesRetraiteFiltrees = reglesRetraite.filter((regle) => {
     const regleText = regle.regle.toLowerCase();
     const regime = regle.regime.toLowerCase();
@@ -867,10 +867,10 @@ export function SourcesCollecteTab() {
     );
   });
 
-  // R√®gles retraite √† afficher avec pagination
+  // RËgles retraite ‡ afficher avec pagination
   const reglesRetraiteAfficher = reglesRetraiteFiltrees.slice(0, reglesRetraiteAffichees);
 
-  // Fonction pour charger plus de r√®gles retraite
+  // Fonction pour charger plus de rËgles retraite
   const chargerPlusDeReglesRetraite = () => {
     setReglesRetraiteAffichees(prev => prev + 10);
   };
@@ -878,7 +878,7 @@ export function SourcesCollecteTab() {
   // Lancer une simulation patrimoniale
   const handleLancerSimulation = async () => {
     if (!montageSelectionne) {
-      toast.error('Veuillez s√©lectionner un montage patrimonial');
+      toast.error('Veuillez sÈlectionner un montage patrimonial');
       return;
     }
 
@@ -900,7 +900,7 @@ export function SourcesCollecteTab() {
       };
 
       const response = await fetch(
-        `${apiBaseUrl}/make-server-cac859af/simulateur-patrimonial/simuler`,
+        `${apiBaseUrl}/simulateur-patrimonial/simuler`,
         {
           method: 'POST',
           headers: {
@@ -918,10 +918,10 @@ export function SourcesCollecteTab() {
       }
 
       setSimulationResult(result.simulation);
-      toast.success('Simulation termin√©e !');
+      toast.success('Simulation terminÈe !');
 
     } catch (error) {
-      console.error('‚ùå Erreur simulation:', error);
+      console.error('? Erreur simulation:', error);
       toast.error('Erreur lors de la simulation : ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setIsSimulating(false);
@@ -975,7 +975,7 @@ export function SourcesCollecteTab() {
 
           {/* Ajouter une source */}
           <div className="border-t border-gray-200 pt-4">
-            <p className="text-sm font-medium text-gray-700 mb-3">Ajouter une source personnalis√©e</p>
+            <p className="text-sm font-medium text-gray-700 mb-3">Ajouter une source personnalisÈe</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <input
                 type="text"
@@ -1003,12 +1003,12 @@ export function SourcesCollecteTab() {
         </div>
       </div>
 
-      {/* 2. Bloc Collecte des donn√©es */}
+      {/* 2. Bloc Collecte des donnÈes */}
       <div className="bg-white border border-gray-200 rounded-lg">
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <Play className="w-5 h-5 text-slate-600" />
-            Collecte des donn√©es
+            Collecte des donnÈes
           </h3>
         </div>
         <div className="p-6 space-y-4">
@@ -1031,7 +1031,7 @@ export function SourcesCollecteTab() {
             )}
           </button>
 
-          {/* Derni√®re collecte */}
+          {/* DerniËre collecte */}
           {lastCollecte && (
             <div className={`p-4 rounded-lg border-2 ${lastCollecte.status === 'success' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
               <div className="flex items-start gap-3">
@@ -1042,20 +1042,20 @@ export function SourcesCollecteTab() {
                 )}
                 <div className="flex-1">
                   <p className="font-medium text-gray-900 mb-1">
-                    Derni√®re collecte : {new Date(lastCollecte.date).toLocaleString('fr-FR')}
+                    DerniËre collecte : {new Date(lastCollecte.date).toLocaleString('fr-FR')}
                   </p>
                   <div className="text-sm space-y-1">
                     <p className="text-gray-700">
-                      <strong>Statut :</strong> {lastCollecte.status === 'success' ? 'Succ√®s' : 'Erreur'}
+                      <strong>Statut :</strong> {lastCollecte.status === 'success' ? 'SuccËs' : 'Erreur'}
                     </p>
                     <p className="text-gray-700">
-                      <strong>Sources consult√©es :</strong> {lastCollecte.sourcesCount}
+                      <strong>Sources consultÈes :</strong> {lastCollecte.sourcesCount}
                     </p>
                     <p className="text-gray-700">
-                      <strong>√âl√©ments r√©cup√©r√©s :</strong> {lastCollecte.itemsCollected}
+                      <strong>…lÈments rÈcupÈrÈs :</strong> {lastCollecte.itemsCollected}
                     </p>
                     <p className="text-gray-700">
-                      <strong>Dur√©e :</strong> {lastCollecte.duration}
+                      <strong>DurÈe :</strong> {lastCollecte.duration}
                     </p>
                     {lastCollecte.errorMessage && (
                       <p className="text-red-700">
@@ -1070,12 +1070,12 @@ export function SourcesCollecteTab() {
         </div>
       </div>
 
-      {/* 3. Bloc R√®gles fiscales */}
+      {/* 3. Bloc RËgles fiscales */}
       <div className="bg-white border border-gray-200 rounded-lg">
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <AlertCircle className="w-5 h-5 text-slate-600" />
-            R√®gles fiscales collect√©es ({reglesFiscales.length})
+            RËgles fiscales collectÈes ({reglesFiscales.length})
           </h3>
           <div className="flex items-center gap-3">
             {isLoadingRegles ? (
@@ -1086,7 +1086,7 @@ export function SourcesCollecteTab() {
                 className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
               >
                 <Database className="w-4 h-4" />
-                Initialiser les 110 r√®gles
+                Initialiser les 110 rËgles
               </button>
             )}
           </div>
@@ -1095,8 +1095,8 @@ export function SourcesCollecteTab() {
           <div className="p-12 text-center">
             <AlertCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500">
-              Aucune r√®gle fiscale collect√©e pour le moment.<br/>
-              <span className="text-sm">Lancez une collecte pour extraire automatiquement les r√®gles fiscales.</span>
+              Aucune rËgle fiscale collectÈe pour le moment.<br/>
+              <span className="text-sm">Lancez une collecte pour extraire automatiquement les rËgles fiscales.</span>
             </p>
           </div>
         ) : (
@@ -1105,7 +1105,7 @@ export function SourcesCollecteTab() {
             <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
               <div className="flex items-center gap-2 mb-3">
                 <Search className="w-4 h-4 text-gray-500" />
-                <p className="text-sm font-medium text-gray-700">Filtrer les r√®gles</p>
+                <p className="text-sm font-medium text-gray-700">Filtrer les rËgles</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
                 <input
@@ -1117,7 +1117,7 @@ export function SourcesCollecteTab() {
                 />
                 <input
                   type="text"
-                  placeholder="Rechercher par cat√©gorie..."
+                  placeholder="Rechercher par catÈgorie..."
                   value={filtreCategorie}
                   onChange={(e) => setFiltreCategorie(e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -1145,17 +1145,17 @@ export function SourcesCollecteTab() {
                 />
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                {reglesFiltrees.length} r√®gle{reglesFiltrees.length > 1 ? 's' : ''} trouv√©e{reglesFiltrees.length > 1 ? 's' : ''} sur {reglesFiscales.length}
+                {reglesFiltrees.length} rËgle{reglesFiltrees.length > 1 ? 's' : ''} trouvÈe{reglesFiltrees.length > 1 ? 's' : ''} sur {reglesFiscales.length}
               </p>
             </div>
 
-            {/* Tableau des r√®gles */}
+            {/* Tableau des rËgles */}
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Titre</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Cat√©gorie</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">CatÈgorie</th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Description</th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Source</th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Date extraction</th>
@@ -1169,7 +1169,7 @@ export function SourcesCollecteTab() {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
                         <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                          {regle.categorie || regle.domaine || 'G√©n√©ral'}
+                          {regle.categorie || regle.domaine || 'GÈnÈral'}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600 max-w-md truncate">
@@ -1200,7 +1200,7 @@ export function SourcesCollecteTab() {
                     className="px-6 py-2.5 bg-slate-700 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 mx-auto"
                   >
                     <Plus className="w-4 h-4" />
-                    Charger 10 r√®gles suppl√©mentaires ({reglesFiltrees.length - reglesAffichees} restantes)
+                    Charger 10 rËgles supplÈmentaires ({reglesFiltrees.length - reglesAffichees} restantes)
                   </button>
                 </div>
               )}
@@ -1214,7 +1214,7 @@ export function SourcesCollecteTab() {
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <Database className="w-5 h-5 text-slate-600" />
-            Montages patrimoniaux g√©n√©r√©s automatiquement ({montagesPatrimoniaux.length})
+            Montages patrimoniaux gÈnÈrÈs automatiquement ({montagesPatrimoniaux.length})
           </h3>
           {isLoadingMontages && (
             <Clock className="w-5 h-5 animate-spin text-slate-600" />
@@ -1224,8 +1224,8 @@ export function SourcesCollecteTab() {
           <div className="p-12 text-center">
             <Database className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500">
-              Aucun montage patrimonial g√©n√©r pour le moment.<br/>
-              <span className="text-sm">Les montages seront g√©n√©r√©s automatiquement apr√®s une collecte de r√®gles fiscales.</span>
+              Aucun montage patrimonial gÈnÈr pour le moment.<br/>
+              <span className="text-sm">Les montages seront gÈnÈrÈs automatiquement aprËs une collecte de rËgles fiscales.</span>
             </p>
           </div>
         ) : (
@@ -1246,7 +1246,7 @@ export function SourcesCollecteTab() {
                 />
                 <input
                   type="text"
-                  placeholder="Rechercher par cat√©gorie..."
+                  placeholder="Rechercher par catÈgorie..."
                   value={filtreMontageCategorie}
                   onChange={(e) => setFiltreMontageCategorie(e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -1261,7 +1261,7 @@ export function SourcesCollecteTab() {
                 <input
                   key="filtre-montage-complexite"
                   type="text"
-                  placeholder="Rechercher par complexit√©..."
+                  placeholder="Rechercher par complexitÈ..."
                   value={filtreMontageComplexite}
                   onChange={(e) => setFiltreMontageComplexite(e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -1269,14 +1269,14 @@ export function SourcesCollecteTab() {
                 <input
                   key="filtre-montage-economie"
                   type="text"
-                  placeholder="Rechercher par √©conomie..."
+                  placeholder="Rechercher par Èconomie..."
                   value={filtreMontageEconomie}
                   onChange={(e) => setFiltreMontageEconomie(e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                {montagesFiltres.length} montage{montagesFiltres.length > 1 ? 's' : ''} trouv√©{montagesFiltres.length > 1 ? 's' : ''} sur {montagesPatrimoniaux.length}
+                {montagesFiltres.length} montage{montagesFiltres.length > 1 ? 's' : ''} trouvÈ{montagesFiltres.length > 1 ? 's' : ''} sur {montagesPatrimoniaux.length}
               </p>
             </div>
 
@@ -1286,10 +1286,10 @@ export function SourcesCollecteTab() {
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Montage</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Cat√©gorie</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">CatÈgorie</th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Objectif</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Complexit√©</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">√âconomies estim√©es</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">ComplexitÈ</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">…conomies estimÈes</th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Score IA</th>
                   </tr>
                 </thead>
@@ -1301,7 +1301,7 @@ export function SourcesCollecteTab() {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
                         <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
-                          {montage.categorie || 'G√©n√©ral'}
+                          {montage.categorie || 'GÈnÈral'}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600 max-w-sm truncate">
@@ -1353,7 +1353,7 @@ export function SourcesCollecteTab() {
                     className="px-6 py-2.5 bg-slate-700 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 mx-auto"
                   >
                     <Plus className="w-4 h-4" />
-                    Charger 10 montages suppl√©mentaires ({montagesFiltres.length - montagesAffiches} restants)
+                    Charger 10 montages supplÈmentaires ({montagesFiltres.length - montagesAffiches} restants)
                   </button>
                 </div>
               )}
@@ -1362,12 +1362,12 @@ export function SourcesCollecteTab() {
         )}
       </div>
 
-      {/* 5. Bloc R√®gles sociales URSSAF */}
+      {/* 5. Bloc RËgles sociales URSSAF */}
       <div className="bg-white border border-gray-200 rounded-lg">
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <Database className="w-5 h-5 text-emerald-600" />
-            R√®gles sociales URSSAF ({reglesSociales.length})
+            RËgles sociales URSSAF ({reglesSociales.length})
           </h3>
           <div className="flex items-center gap-3">
             {isLoadingReglesSociales ? (
@@ -1378,7 +1378,7 @@ export function SourcesCollecteTab() {
                 className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-2"
               >
                 <Database className="w-4 h-4" />
-                Initialiser les r√®gles sociales
+                Initialiser les rËgles sociales
               </button>
             )}
           </div>
@@ -1387,8 +1387,8 @@ export function SourcesCollecteTab() {
           <div className="p-12 text-center">
             <Database className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500">
-              Aucune r√®gle sociale collect√©e pour le moment.<br/>
-              <span className="text-sm">Cliquez sur le bouton ci-dessus pour initialiser les r√®gles sociales URSSAF.</span>
+              Aucune rËgle sociale collectÈe pour le moment.<br/>
+              <span className="text-sm">Cliquez sur le bouton ci-dessus pour initialiser les rËgles sociales URSSAF.</span>
             </p>
           </div>
         ) : (
@@ -1397,13 +1397,13 @@ export function SourcesCollecteTab() {
             <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
               <div className="flex items-center gap-2 mb-3">
                 <Search className="w-4 h-4 text-gray-500" />
-                <p className="text-sm font-medium text-gray-700">Filtrer les r√®gles sociales</p>
+                <p className="text-sm font-medium text-gray-700">Filtrer les rËgles sociales</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
                 <input
                   key="filtre-social-regle"
                   type="text"
-                  placeholder="Rechercher par r√®gle..."
+                  placeholder="Rechercher par rËgle..."
                   value={filtreSocialRegle}
                   onChange={(e) => setFiltreSocialRegle(e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
@@ -1442,16 +1442,16 @@ export function SourcesCollecteTab() {
                 />
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                {reglesSocialesFiltrees.length} r√®gle{reglesSocialesFiltrees.length > 1 ? 's' : ''} trouv√©e{reglesSocialesFiltrees.length > 1 ? 's' : ''} sur {reglesSociales.length}
+                {reglesSocialesFiltrees.length} rËgle{reglesSocialesFiltrees.length > 1 ? 's' : ''} trouvÈe{reglesSocialesFiltrees.length > 1 ? 's' : ''} sur {reglesSociales.length}
               </p>
             </div>
 
-            {/* Tableau des r√®gles sociales */}
+            {/* Tableau des rËgles sociales */}
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">R√®gle</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">RËgle</th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Domaine</th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Taux</th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Plafond</th>
@@ -1485,13 +1485,13 @@ export function SourcesCollecteTab() {
                       </td>
                       <td className="px-6 py-4 text-sm">
                         <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border ${
-                          regle.statut_validation === 'valid√©' ? 'bg-green-50 text-green-700 border-green-200' :
+                          regle.statut_validation === 'validÈ' ? 'bg-green-50 text-green-700 border-green-200' :
                           regle.statut_validation === 'en_attente' ? 'bg-orange-50 text-orange-700 border-orange-200' :
                           'bg-gray-50 text-gray-700 border-gray-200'
                         }`}>
-                          {regle.statut_validation === 'valid√©' ? 'Valid√©' :
+                          {regle.statut_validation === 'validÈ' ? 'ValidÈ' :
                            regle.statut_validation === 'en_attente' ? 'En attente' :
-                           '√Ä v√©rifier'}
+                           '¿ vÈrifier'}
                         </span>
                       </td>
                     </tr>
@@ -1507,7 +1507,7 @@ export function SourcesCollecteTab() {
                     className="px-6 py-2.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 mx-auto"
                   >
                     <Plus className="w-4 h-4" />
-                    Charger 10 r√®gles suppl√©mentaires ({reglesSocialesFiltrees.length - reglesSocialesAffichees} restantes)
+                    Charger 10 rËgles supplÈmentaires ({reglesSocialesFiltrees.length - reglesSocialesAffichees} restantes)
                   </button>
                 </div>
               )}
@@ -1516,12 +1516,12 @@ export function SourcesCollecteTab() {
         )}
       </div>
 
-      {/* 6. Bloc R√®gles retraite */}
+      {/* 6. Bloc RËgles retraite */}
       <div className="bg-white border border-gray-200 rounded-lg">
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <Database className="w-5 h-5 text-purple-600" />
-            R√®gles retraite ({reglesRetraite.length})
+            RËgles retraite ({reglesRetraite.length})
           </h3>
           <div className="flex items-center gap-3">
             {isLoadingReglesRetraite ? (
@@ -1533,7 +1533,7 @@ export function SourcesCollecteTab() {
                   className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
                 >
                   <Database className="w-4 h-4" />
-                  Initialiser les r√®gles retraite
+                  Initialiser les rËgles retraite
                 </button>
                 <button
                   onClick={handleLaunchCollecteRetraite}
@@ -1545,7 +1545,7 @@ export function SourcesCollecteTab() {
                   ) : (
                     <Play className="w-4 h-4" />
                   )}
-                  {isCollectingRetraite ? 'Collecte en cours...' : 'Lancer collecte r√®gles retraite'}
+                  {isCollectingRetraite ? 'Collecte en cours...' : 'Lancer collecte rËgles retraite'}
                 </button>
               </>
             )}
@@ -1555,13 +1555,13 @@ export function SourcesCollecteTab() {
           <div className="p-12 text-center">
             <Database className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500">
-              Aucune r√®gle retraite collect√©e pour le moment.<br/>
-              <span className="text-sm">Cliquez sur le bouton ci-dessus pour initialiser les r√®gles retraite.</span>
+              Aucune rËgle retraite collectÈe pour le moment.<br/>
+              <span className="text-sm">Cliquez sur le bouton ci-dessus pour initialiser les rËgles retraite.</span>
             </p>
           </div>
         ) : (
           <>
-            {/* Stats des r√®gles retraite */}
+            {/* Stats des rËgles retraite */}
             <div className="px-6 py-4 border-b border-gray-200 bg-purple-50">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center">
@@ -1578,9 +1578,9 @@ export function SourcesCollecteTab() {
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-purple-700">
-                    {reglesRetraite.filter(r => r.statut_validation === 'valid√©').length}
+                    {reglesRetraite.filter(r => r.statut_validation === 'validÈ').length}
                   </p>
-                  <p className="text-xs text-purple-900 mt-1">Valid√©es</p>
+                  <p className="text-xs text-purple-900 mt-1">ValidÈes</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-purple-700">
@@ -1589,7 +1589,7 @@ export function SourcesCollecteTab() {
                       : '-'
                     }
                   </p>
-                  <p className="text-xs text-purple-900 mt-1">Derni√®re MAJ</p>
+                  <p className="text-xs text-purple-900 mt-1">DerniËre MAJ</p>
                 </div>
               </div>
             </div>
@@ -1598,26 +1598,26 @@ export function SourcesCollecteTab() {
             <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
               <div className="flex items-center gap-2 mb-3">
                 <Search className="w-4 h-4 text-gray-500" />
-                <p className="text-sm font-medium text-gray-700">Filtrer les r√®gles retraite</p>
+                <p className="text-sm font-medium text-gray-700">Filtrer les rËgles retraite</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
                 <input
                   type="text"
-                  placeholder="Rechercher r√®gle..."
+                  placeholder="Rechercher rËgle..."
                   value={filtreRetraiteRegle}
                   onChange={(e) => setFiltreRetraiteRegle(e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
                 <input
                   type="text"
-                  placeholder="R√©gime..."
+                  placeholder="RÈgime..."
                   value={filtreRetraiteRegime}
                   onChange={(e) => setFiltreRetraiteRegime(e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
                 <input
                   type="text"
-                  placeholder="√Çge l√©gal..."
+                  placeholder="¬ge lÈgal..."
                   value={filtreRetraiteAge}
                   onChange={(e) => setFiltreRetraiteAge(e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -1639,19 +1639,19 @@ export function SourcesCollecteTab() {
               </div>
             </div>
 
-            {/* Tableau des r√®gles retraite */}
+            {/* Tableau des rËgles retraite */}
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      R√®gle
+                      RËgle
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      R√©gime
+                      RÈgime
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      √Çge l√©gal
+                      ¬ge lÈgal
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Trimestres requis
@@ -1693,11 +1693,11 @@ export function SourcesCollecteTab() {
                       </td>
                       <td className="px-6 py-4 text-sm">
                         <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border ${
-                          regle.statut_validation === 'valid√©' ? 'bg-green-50 text-green-700 border-green-200' :
+                          regle.statut_validation === 'validÈ' ? 'bg-green-50 text-green-700 border-green-200' :
                           regle.statut_validation === 'en_attente' ? 'bg-orange-50 text-orange-700 border-orange-200' :
                           'bg-gray-50 text-gray-700 border-gray-200'
                         }`}>
-                          {regle.statut_validation || 'valid√©'}
+                          {regle.statut_validation || 'validÈ'}
                         </span>
                       </td>
                     </tr>
@@ -1713,7 +1713,7 @@ export function SourcesCollecteTab() {
                     className="px-6 py-2.5 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 mx-auto"
                   >
                     <Plus className="w-4 h-4" />
-                    Charger 10 r√®gles suppl√©mentaires ({reglesRetraiteFiltrees.length - reglesRetraiteAffichees} restantes)
+                    Charger 10 rËgles supplÈmentaires ({reglesRetraiteFiltrees.length - reglesRetraiteAffichees} restantes)
                   </button>
                 </div>
               )}
@@ -1730,16 +1730,16 @@ export function SourcesCollecteTab() {
             Simulateurs patrimoniaux
           </h3>
           <p className="text-sm text-gray-600 mt-1">
-            Testez les simulateurs avec vos r√®gles fiscales, sociales, retraite et montages collect√©s
+            Testez les simulateurs avec vos rËgles fiscales, sociales, retraite et montages collectÈs
           </p>
         </div>
         <div className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Formulaire de simulation */}
             <div className="space-y-4">
-              <h4 className="font-semibold text-gray-900 mb-4">Param√®tres de simulation</h4>
+              <h4 className="font-semibold text-gray-900 mb-4">ParamËtres de simulation</h4>
               
-              {/* S√©lection du montage */}
+              {/* SÈlection du montage */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Montage patrimonial
@@ -1749,7 +1749,7 @@ export function SourcesCollecteTab() {
                   onChange={(e) => setMontageSelectionne(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 >
-                  <option value="">S√©lectionner un montage...</option>
+                  <option value="">SÈlectionner un montage...</option>
                   {montagesPatrimoniaux.map((montage) => (
                     <option key={montage.id} value={montage.id}>
                       {montage.nom_montage || montage.nom || montage.montage}
@@ -1761,7 +1761,7 @@ export function SourcesCollecteTab() {
               {/* Capital initial */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Capital initial (‚Ç¨)
+                  Capital initial (Ä)
                 </label>
                 <input
                   type="number"
@@ -1776,7 +1776,7 @@ export function SourcesCollecteTab() {
               {/* Apport annuel */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Apport annuel (‚Ç¨)
+                  Apport annuel (Ä)
                 </label>
                 <input
                   type="number"
@@ -1804,10 +1804,10 @@ export function SourcesCollecteTab() {
                 />
               </div>
 
-              {/* Dur√©e */}
+              {/* DurÈe */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Dur√©e (ann√©es)
+                  DurÈe (annÈes)
                 </label>
                 <input
                   type="number"
@@ -1857,31 +1857,31 @@ export function SourcesCollecteTab() {
               </button>
             </div>
 
-            {/* R√©sultats de simulation */}
+            {/* RÈsultats de simulation */}
             <div className="space-y-4">
-              <h4 className="font-semibold text-gray-900 mb-4">R√©sultats</h4>
+              <h4 className="font-semibold text-gray-900 mb-4">RÈsultats</h4>
               
               {!simulationResult ? (
                 <div className="flex flex-col items-center justify-center h-full py-12 text-center border-2 border-dashed border-gray-300 rounded-lg">
                   <AlertCircle className="w-12 h-12 text-gray-300 mb-3" />
                   <p className="text-gray-500">
-                    Aucune simulation lanc√©e.<br/>
-                    <span className="text-sm">Configurez les param√®tres et lancez une simulation.</span>
+                    Aucune simulation lancÈe.<br/>
+                    <span className="text-sm">Configurez les paramËtres et lancez une simulation.</span>
                   </p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {/* Montage utilis√© */}
+                  {/* Montage utilisÈ */}
                   <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
                     <p className="text-sm font-medium text-indigo-900 mb-1">
-                      Montage simul√©
+                      Montage simulÈ
                     </p>
                     <p className="text-lg font-semibold text-indigo-700">
                       {simulationResult.montage.nom_montage || simulationResult.montage.nom}
                     </p>
                   </div>
 
-                  {/* M√©triques principales */}
+                  {/* MÈtriques principales */}
                   <div className="grid grid-cols-2 gap-3">
                     <div key="metric-capital" className="bg-green-50 border border-green-200 rounded-lg p-3">
                       <p className="text-xs font-medium text-green-900 mb-1">Capital final</p>
@@ -1912,20 +1912,20 @@ export function SourcesCollecteTab() {
                     </div>
                   </div>
 
-                  {/* Fiscalit√© */}
+                  {/* FiscalitÈ */}
                   <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <p className="text-sm font-medium text-red-900 mb-2">Fiscalit√© totale</p>
+                    <p className="text-sm font-medium text-red-900 mb-2">FiscalitÈ totale</p>
                     <p className="text-2xl font-bold text-red-700">
                       {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(simulationResult.total_fiscalite)}
                     </p>
                     {simulationResult.economie_fiscale_vs_bareme && simulationResult.economie_fiscale_vs_bareme > 0 && (
                       <p className="text-xs text-red-700 mt-1">
-                        √âconomie vs bar√®me classique : {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(simulationResult.economie_fiscale_vs_bareme)}
+                        …conomie vs barËme classique : {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(simulationResult.economie_fiscale_vs_bareme)}
                       </p>
                     )}
                   </div>
 
-                  {/* M√©triques avanc√©es */}
+                  {/* MÈtriques avancÈes */}
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                     <div className="space-y-2 text-sm">
                       <div key="metric-adv-investi" className="flex justify-between">
@@ -1941,24 +1941,24 @@ export function SourcesCollecteTab() {
                         </span>
                       </div>
                       <div key="metric-adv-seuil" className="flex justify-between">
-                        <span className="text-gray-600">Seuil de rentabilit√© :</span>
+                        <span className="text-gray-600">Seuil de rentabilitÈ :</span>
                         <span className="font-semibold text-gray-900">
-                          Ann√©e {simulationResult.seuil_rentabilite}
+                          AnnÈe {simulationResult.seuil_rentabilite}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Flux annuels (aper√ßu) */}
+                  {/* Flux annuels (aperÁu) */}
                   {simulationResult.flux_annuels && simulationResult.flux_annuels.length > 0 && (
                     <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                       <p className="text-sm font-medium text-gray-900 mb-3">
-                        Flux annuels ({simulationResult.flux_annuels.length} ann√©es)
+                        Flux annuels ({simulationResult.flux_annuels.length} annÈes)
                       </p>
                       <div className="max-h-48 overflow-y-auto space-y-2">
                         {simulationResult.flux_annuels.slice(0, 5).map((flux: any) => (
                           <div key={flux.annee} className="flex justify-between text-xs bg-white p-2 rounded border border-gray-200">
-                            <span className="font-medium text-gray-700">Ann√©e {flux.annee}</span>
+                            <span className="font-medium text-gray-700">AnnÈe {flux.annee}</span>
                             <span className="text-gray-900 font-semibold">
                               {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(flux.capital_fin)}
                             </span>
@@ -1966,7 +1966,7 @@ export function SourcesCollecteTab() {
                         ))}
                         {simulationResult.flux_annuels.length > 5 && (
                           <p className="text-xs text-gray-500 text-center pt-2">
-                            ... et {simulationResult.flux_annuels.length - 5} autres ann√©es
+                            ... et {simulationResult.flux_annuels.length - 5} autres annÈes
                           </p>
                         )}
                       </div>
@@ -1988,36 +1988,36 @@ export function SourcesCollecteTab() {
               <div key="stat-regles-fiscales" className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
                 <Database className="w-8 h-8 text-blue-600 mx-auto mb-2" />
                 <p className="text-2xl font-bold text-blue-700">{reglesFiscales.length}</p>
-                <p className="text-sm text-blue-900">R√®gles fiscales</p>
+                <p className="text-sm text-blue-900">RËgles fiscales</p>
               </div>
               <div key="stat-regles-sociales" className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 text-center">
                 <Database className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
                 <p className="text-2xl font-bold text-emerald-700">{reglesSociales.length}</p>
-                <p className="text-sm text-emerald-900">R√®gles sociales</p>
+                <p className="text-sm text-emerald-900">RËgles sociales</p>
               </div>
               <div key="stat-regles-retraite" className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-center">
                 <Database className="w-8 h-8 text-purple-600 mx-auto mb-2" />
                 <p className="text-2xl font-bold text-purple-700">{reglesRetraite.length}</p>
-                <p className="text-sm text-purple-900">R√®gles retraite</p>
+                <p className="text-sm text-purple-900">RËgles retraite</p>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 7. Bloc Journal des mises √† jour */}
+      {/* 7. Bloc Journal des mises ‡ jour */}
       <div className="bg-white border border-gray-200 rounded-lg">
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <Calendar className="w-5 h-5 text-slate-600" />
-            Journal des mises √† jour ({updateLogs.length})
+            Journal des mises ‡ jour ({updateLogs.length})
           </h3>
         </div>
         <div className="p-6">
           {updateLogs.length === 0 ? (
             <div className="text-center py-8">
               <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">Aucune activit√© r√©cente</p>
+              <p className="text-gray-500">Aucune activitÈ rÈcente</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -2045,7 +2045,7 @@ export function SourcesCollecteTab() {
                       <span className="text-xs text-gray-500">{log.date}</span>
                     </div>
                     <p className="text-sm text-gray-600 mt-1">
-                      Type: <span className="font-medium">{log.type}</span> ‚Ä¢ Action: <span className="font-medium">{log.action}</span>
+                      Type: <span className="font-medium">{log.type}</span> ï Action: <span className="font-medium">{log.action}</span>
                     </p>
                   </div>
                 </div>

@@ -1,4 +1,4 @@
-Ôªøimport { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { CheckCircle2, Send, Loader2, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiBaseUrl, publicAnonKey } from '../utils/supabase/info';
@@ -8,7 +8,7 @@ interface CoreVisionWorkflowProps {
   taskTitle: string;
   coreVisionOrderValidated: boolean;
   onValidateRecommendations?: (recommendations: any[]) => void;
-  onTaskCompleted?: () => void; // Nouvelle callback pour compl√©ter la t√¢che
+  onTaskCompleted?: () => void; // Nouvelle callback pour complÈter la t‚che
 }
 
 export function CoreVisionWorkflow({ 
@@ -23,19 +23,19 @@ export function CoreVisionWorkflow({
   const [loading, setLoading] = useState(false);
   const [orderExists, setOrderExists] = useState(false);
   const [checkingOrder, setCheckingOrder] = useState(true);
-  const [auditValidatedByAdmin, setAuditValidatedByAdmin] = useState(false); // Nouveau √©tat
+  const [auditValidatedByAdmin, setAuditValidatedByAdmin] = useState(false); // Nouveau Ètat
   
-  const isElaborationTask = taskTitle.toLowerCase().includes('√©laboration de la strat√©gie patrimoniale');
-  const isPreparationTask = taskTitle.toLowerCase().includes('pr√©paration du bilan d√©taill√©');
+  const isElaborationTask = taskTitle.toLowerCase().includes('Èlaboration de la stratÈgie patrimoniale');
+  const isPreparationTask = taskTitle.toLowerCase().includes('prÈparation du bilan dÈtaillÈ');
   const isValidationTask = taskTitle.toLowerCase().includes('validation des recommandations');
-  const isLivrablesTask = taskTitle.toLowerCase().includes('livrables pr√™ts pour pr√©sentation');
+  const isLivrablesTask = taskTitle.toLowerCase().includes('livrables prÍts pour prÈsentation');
   
-  // V√©rifier si une commande existe c√¥t√© serveur
+  // VÈrifier si une commande existe cÙtÈ serveur
   useEffect(() => {
     const checkOrderExists = async () => {
       try {
         const response = await fetch(
-          `${apiBaseUrl}/make-server-cac859af/corevision/orders`,
+          `${apiBaseUrl}/corevision/orders`,
           {
             headers: {
               'Authorization': `Bearer ${publicAnonKey}`,
@@ -49,7 +49,7 @@ export function CoreVisionWorkflow({
           setOrderExists(!!order);
         }
       } catch (error) {
-        console.error('Erreur v√©rification commande:', error);
+        console.error('Erreur vÈrification commande:', error);
       } finally {
         setCheckingOrder(false);
       }
@@ -62,13 +62,13 @@ export function CoreVisionWorkflow({
     }
   }, [clientId, isElaborationTask, isPreparationTask, isValidationTask, isLivrablesTask]);
   
-  // üî• √âcouter l'√©v√©nement de validation admin pour rafra√Æchir en temps r√©el
+  // ?? …couter l'ÈvÈnement de validation admin pour rafraÓchir en temps rÈel
   useEffect(() => {
     const handleAdminValidation = (event: CustomEvent) => {
       if (event.detail && event.detail.clientId === clientId) {
-        console.log('üéâ √âv√©nement adminValidated re√ßu pour le client:', clientId);
+        console.log('?? …vÈnement adminValidated reÁu pour le client:', clientId);
         
-        // Rafra√Æchir l'√©tat en v√©rifiant √† nouveau le localStorage
+        // RafraÓchir l'Ètat en vÈrifiant ‡ nouveau le localStorage
         const localOrdersKey = 'corevision_local_orders';
         const localOrders = JSON.parse(localStorage.getItem(localOrdersKey) || '[]');
         const localOrder = localOrders.find((o: any) => o.clientId === clientId);
@@ -76,13 +76,13 @@ export function CoreVisionWorkflow({
         if (localOrder && localOrder.validatedByAdmin) {
           setAuditValidatedByAdmin(true);
           
-          // Pour la t√¢che de validation, charger les recommandations
+          // Pour la t‚che de validation, charger les recommandations
           if (isValidationTask && localOrder.preconisations && localOrder.preconisations.length > 0) {
             setRecommendations(localOrder.preconisations);
             setAuditReceived(true);
           }
           
-          // Auto-compl√©ter la t√¢che si applicable
+          // Auto-complÈter la t‚che si applicable
           if ((isElaborationTask || isPreparationTask || isLivrablesTask) && onTaskCompleted) {
             const taskKey = `corevision_task_completed_${clientId}_${taskTitle}`;
             const alreadyCompleted = localStorage.getItem(taskKey);
@@ -90,7 +90,7 @@ export function CoreVisionWorkflow({
             if (!alreadyCompleted) {
               localStorage.setItem(taskKey, 'true');
               onTaskCompleted();
-              console.log(`‚úÖ T√¢che \"${taskTitle}\" valid√©e automatiquement suite √† validation admin`);
+              console.log(`? T‚che \"${taskTitle}\" validÈe automatiquement suite ‡ validation admin`);
             }
           }
         }
@@ -104,23 +104,23 @@ export function CoreVisionWorkflow({
     };
   }, [clientId, isElaborationTask, isPreparationTask, isValidationTask, isLivrablesTask, taskTitle, onTaskCompleted]);
   
-  // V√©rifier automatiquement si l'audit est valid√© par l'admin (pour la t√¢che de validation)
+  // VÈrifier automatiquement si l'audit est validÈ par l'admin (pour la t‚che de validation)
   useEffect(() => {
-    // Ne s'ex√©cute que si c'est la t√¢che de validation
+    // Ne s'exÈcute que si c'est la t‚che de validation
     if (!isValidationTask) return;
     
     const checkAuditValidation = async () => {
       try {
-        // üî• PRIORIT√â 1: V√©rifier d'abord les commandes locales
+        // ?? PRIORIT… 1: VÈrifier d'abord les commandes locales
         const localOrdersKey = 'corevision_local_orders';
         const localOrders = JSON.parse(localStorage.getItem(localOrdersKey) || '[]');
         const localOrder = localOrders.find((o: any) => o.clientId === clientId);
         
         if (localOrder) {
-          console.log('üì¶ Commande locale trouv√©e pour client:', clientId, localOrder);
+          console.log('?? Commande locale trouvÈe pour client:', clientId, localOrder);
           
           if (localOrder.validatedByAdmin && localOrder.preconisations && localOrder.preconisations.length > 0) {
-            console.log('‚úÖ Audit valid√© par admin (localStorage):', localOrder);
+            console.log('? Audit validÈ par admin (localStorage):', localOrder);
             
             // Charger depuis localStorage
             const savedKey = `corevision_recommendations_${clientId}`;
@@ -141,13 +141,13 @@ export function CoreVisionWorkflow({
               }));
             }
             setAuditValidatedByAdmin(true);
-            return; // ‚úÖ Sortir ici, pas besoin de v√©rifier le serveur
+            return; // ? Sortir ici, pas besoin de vÈrifier le serveur
           }
         }
         
-        // üî• PRIORIT√â 2: V√©rifier le serveur (seulement si pas de commande locale)
+        // ?? PRIORIT… 2: VÈrifier le serveur (seulement si pas de commande locale)
         const response = await fetch(
-          `${apiBaseUrl}/make-server-cac859af/corevision/orders`,
+          `${apiBaseUrl}/corevision/orders`,
           {
             headers: {
               'Authorization': `Bearer ${publicAnonKey}`,
@@ -182,33 +182,33 @@ export function CoreVisionWorkflow({
           }
         }
       } catch (error) {
-        console.error('‚ùå Erreur v√©rification audit:', error);
+        console.error('? Erreur vÈrification audit:', error);
       }
     };
 
     checkAuditValidation();
   }, [clientId, isValidationTask]);
   
-  // V√©rifier si l'audit est valid√© par l'admin (pour les t√¢ches d'√©laboration et pr√©paration)
+  // VÈrifier si l'audit est validÈ par l'admin (pour les t‚ches d'Èlaboration et prÈparation)
   useEffect(() => {
-    // Ne s'ex√©cute que si c'est une t√¢che d'√©laboration ou pr√©paration
+    // Ne s'exÈcute que si c'est une t‚che d'Èlaboration ou prÈparation
     if (!isElaborationTask && !isPreparationTask) return;
     
     const checkAuditCompletion = async () => {
       try {
-        // üî• PRIORIT√â 1: V√©rifier d'abord les commandes locales
+        // ?? PRIORIT… 1: VÈrifier d'abord les commandes locales
         const localOrdersKey = 'corevision_local_orders';
         const localOrders = JSON.parse(localStorage.getItem(localOrdersKey) || '[]');
         const localOrder = localOrders.find((o: any) => o.clientId === clientId);
         
         if (localOrder) {
-          console.log('üì¶ Commande locale trouv√©e pour √©laboration/pr√©paration:', clientId, localOrder);
+          console.log('?? Commande locale trouvÈe pour Èlaboration/prÈparation:', clientId, localOrder);
           
           if (localOrder.validatedByAdmin) {
-            console.log('‚úÖ Audit valid√© par admin (localStorage) - T√¢che auto-compl√©t√©e');
+            console.log('? Audit validÈ par admin (localStorage) - T‚che auto-complÈtÈe');
             setAuditValidatedByAdmin(true);
             
-            // Valider automatiquement la t√¢che si la callback est fournie
+            // Valider automatiquement la t‚che si la callback est fournie
             if (onTaskCompleted) {
               const taskKey = `corevision_task_completed_${clientId}_${taskTitle}`;
               const alreadyCompleted = localStorage.getItem(taskKey);
@@ -216,16 +216,16 @@ export function CoreVisionWorkflow({
               if (!alreadyCompleted) {
                 localStorage.setItem(taskKey, 'true');
                 onTaskCompleted();
-                console.log(`‚úÖ T√¢che \"${taskTitle}\" valid√©e automatiquement`);
+                console.log(`? T‚che \"${taskTitle}\" validÈe automatiquement`);
               }
             }
-            return; // ‚úÖ Sortir ici, pas besoin de v√©rifier le serveur
+            return; // ? Sortir ici, pas besoin de vÈrifier le serveur
           }
         }
         
-        // üî• PRIORIT√â 2: V√©rifier le serveur (seulement si pas de commande locale)
+        // ?? PRIORIT… 2: VÈrifier le serveur (seulement si pas de commande locale)
         const response = await fetch(
-          `${apiBaseUrl}/make-server-cac859af/corevision/orders`,
+          `${apiBaseUrl}/corevision/orders`,
           {
             headers: {
               'Authorization': `Bearer ${publicAnonKey}`,
@@ -240,48 +240,48 @@ export function CoreVisionWorkflow({
           if (order && order.validatedByAdmin) {
             setAuditValidatedByAdmin(true);
             
-            // Valider automatiquement la t√¢che si la callback est fournie
+            // Valider automatiquement la t‚che si la callback est fournie
             if (onTaskCompleted) {
-              // V√©rifier si la t√¢che n'a pas d√©j√† √©t√© compl√©t√©e pour √©viter les appels multiples
+              // VÈrifier si la t‚che n'a pas dÈj‡ ÈtÈ complÈtÈe pour Èviter les appels multiples
               const taskKey = `corevision_task_completed_${clientId}_${taskTitle}`;
               const alreadyCompleted = localStorage.getItem(taskKey);
               
               if (!alreadyCompleted) {
                 localStorage.setItem(taskKey, 'true');
                 onTaskCompleted();
-                console.log(`‚úÖ T√¢che \"${taskTitle}\" valid√©e automatiquement`);
+                console.log(`? T‚che \"${taskTitle}\" validÈe automatiquement`);
               }
             }
           }
         }
       } catch (error) {
-        console.error('‚ùå Erreur v√©rification completion audit:', error);
+        console.error('? Erreur vÈrification completion audit:', error);
       }
     };
 
     checkAuditCompletion();
   }, [clientId, isElaborationTask, isPreparationTask, taskTitle, onTaskCompleted]);
   
-  // V√©rifier si l'audit est valid√© par l'admin (pour la t√¢che "Livrables pr√™ts pour pr√©sentation")
+  // VÈrifier si l'audit est validÈ par l'admin (pour la t‚che "Livrables prÍts pour prÈsentation")
   useEffect(() => {
-    // Ne s'ex√©cute que si c'est la t√¢che des livrables
+    // Ne s'exÈcute que si c'est la t‚che des livrables
     if (!isLivrablesTask) return;
     
     const checkLivrablesCompletion = async () => {
       try {
-        // üî• PRIORIT√â 1: V√©rifier d'abord les commandes locales
+        // ?? PRIORIT… 1: VÈrifier d'abord les commandes locales
         const localOrdersKey = 'corevision_local_orders';
         const localOrders = JSON.parse(localStorage.getItem(localOrdersKey) || '[]');
         const localOrder = localOrders.find((o: any) => o.clientId === clientId);
         
         if (localOrder) {
-          console.log('üì¶ Commande locale trouv√©e pour livrables:', clientId, localOrder);
+          console.log('?? Commande locale trouvÈe pour livrables:', clientId, localOrder);
           
           if (localOrder.validatedByAdmin) {
-            console.log('‚úÖ Audit valid√© par admin (localStorage) - Livrables pr√™ts');
+            console.log('? Audit validÈ par admin (localStorage) - Livrables prÍts');
             setAuditValidatedByAdmin(true);
             
-            // Valider automatiquement la t√¢che si la callback est fournie
+            // Valider automatiquement la t‚che si la callback est fournie
             if (onTaskCompleted) {
               const taskKey = `corevision_task_completed_${clientId}_${taskTitle}`;
               const alreadyCompleted = localStorage.getItem(taskKey);
@@ -289,16 +289,16 @@ export function CoreVisionWorkflow({
               if (!alreadyCompleted) {
                 localStorage.setItem(taskKey, 'true');
                 onTaskCompleted();
-                console.log(`‚úÖ T√¢che \"${taskTitle}\" valid√©e automatiquement`);
+                console.log(`? T‚che \"${taskTitle}\" validÈe automatiquement`);
               }
             }
-            return; // ‚úÖ Sortir ici, pas besoin de v√©rifier le serveur
+            return; // ? Sortir ici, pas besoin de vÈrifier le serveur
           }
         }
         
-        // üî• PRIORIT√â 2: V√©rifier le serveur (seulement si pas de commande locale)
+        // ?? PRIORIT… 2: VÈrifier le serveur (seulement si pas de commande locale)
         const response = await fetch(
-          `${apiBaseUrl}/make-server-cac859af/corevision/orders`,
+          `${apiBaseUrl}/corevision/orders`,
           {
             headers: {
               'Authorization': `Bearer ${publicAnonKey}`,
@@ -313,7 +313,7 @@ export function CoreVisionWorkflow({
           if (order && order.validatedByAdmin) {
             setAuditValidatedByAdmin(true);
             
-            // Valider automatiquement la t√¢che si la callback est fournie
+            // Valider automatiquement la t‚che si la callback est fournie
             if (onTaskCompleted) {
               const taskKey = `corevision_task_completed_${clientId}_${taskTitle}`;
               const alreadyCompleted = localStorage.getItem(taskKey);
@@ -321,47 +321,47 @@ export function CoreVisionWorkflow({
               if (!alreadyCompleted) {
                 localStorage.setItem(taskKey, 'true');
                 onTaskCompleted();
-                console.log(`‚úÖ T√¢che \"${taskTitle}\" valid√©e automatiquement`);
+                console.log(`? T‚che \"${taskTitle}\" validÈe automatiquement`);
               }
             }
           }
         }
       } catch (error) {
-        console.error('‚ùå Erreur v√©rification completion livrables:', error);
+        console.error('? Erreur vÈrification completion livrables:', error);
       }
     };
 
     checkLivrablesCompletion();
   }, [clientId, isLivrablesTask, taskTitle, onTaskCompleted]);
   
-  // Une commande est valid√©e si elle existe localement OU c√¥t√© serveur
+  // Une commande est validÈe si elle existe localement OU cÙtÈ serveur
   const hasValidOrder = coreVisionOrderValidated || orderExists;
   
-  // Afficher un loader pendant la v√©rification
+  // Afficher un loader pendant la vÈrification
   if (checkingOrder && (isElaborationTask || isPreparationTask || isValidationTask || isLivrablesTask)) {
     return (
       <div className="mt-3 p-4 bg-gray-50 border border-gray-200 rounded-lg">
         <div className="flex items-center gap-2">
           <Loader2 className="w-4 h-4 animate-spin text-gray-600" />
-          <p className="text-sm text-gray-600">V√©rification du statut CoreVision...</p>
+          <p className="text-sm text-gray-600">VÈrification du statut CoreVision...</p>
         </div>
       </div>
     );
   }
   
-  // Pour les t√¢ches d'√©laboration et pr√©paration
+  // Pour les t‚ches d'Èlaboration et prÈparation
   if (isElaborationTask || isPreparationTask) {
     if (!hasValidOrder) {
       return (
         <div className="mt-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
           <p className="text-sm text-amber-800">
-            ‚ö†Ô∏è Validez d'abord la commande CoreVision dans l'onglet <strong>Objectifs</strong> pour d√©marrer le traitement.
+            ?? Validez d'abord la commande CoreVision dans l'onglet <strong>Objectifs</strong> pour dÈmarrer le traitement.
           </p>
         </div>
       );
     }
     
-    // Si l'audit est valid√© par l'admin, afficher un badge de succ√®s
+    // Si l'audit est validÈ par l'admin, afficher un badge de succËs
     if (auditValidatedByAdmin) {
       return (
         <div className="mt-3 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-400 rounded-lg">
@@ -373,12 +373,12 @@ export function CoreVisionWorkflow({
             </div>
             <div className="flex-1">
               <p className="text-sm font-semibold text-green-900 mb-1">
-                ‚úÖ Traitement termin√© par CoreVision
+                ? Traitement terminÈ par CoreVision
               </p>
               <p className="text-xs text-green-700">
                 {isElaborationTask 
-                  ? "La strat√©gie patrimoniale a √©t√© √©labor√©e avec succ√®s. L'audit et les recommandations sont disponibles."
-                  : "Le bilan d√©taill√© et les analyses sont pr√™ts. Les recommandations CoreVision peuvent √™tre consult√©es."
+                  ? "La stratÈgie patrimoniale a ÈtÈ ÈlaborÈe avec succËs. L'audit et les recommandations sont disponibles."
+                  : "Le bilan dÈtaillÈ et les analyses sont prÍts. Les recommandations CoreVision peuvent Ítre consultÈes."
                 }
               </p>
             </div>
@@ -392,21 +392,21 @@ export function CoreVisionWorkflow({
       <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
         <p className="text-sm text-gray-700">
           {isElaborationTask 
-            ? "L'√©quipe CoreVision √©labore actuellement la strat√©gie patrimoniale adapt√©e aux objectifs du client."
-            : "L'√©quipe CoreVision pr√©pare le bilan d√©taill√© avec l'ensemble des analyses et recommandations."
+            ? "L'Èquipe CoreVision Èlabore actuellement la stratÈgie patrimoniale adaptÈe aux objectifs du client."
+            : "L'Èquipe CoreVision prÈpare le bilan dÈtaillÈ avec l'ensemble des analyses et recommandations."
           }
         </p>
       </div>
     );
   }
   
-  // Pour la t√¢che de validation des recommandations
+  // Pour la t‚che de validation des recommandations
   if (isValidationTask) {
     if (!hasValidOrder) {
       return (
         <div className="mt-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
           <p className="text-sm text-amber-800">
-            ‚ö†Ô∏è Aucune commande CoreVision n'a √©t√© pass√©e. Cette t√¢che n√©cessite que l'√©laboration de la strat√©gie ait √©t√© confi√©e √† CoreVision.
+            ?? Aucune commande CoreVision n'a ÈtÈ passÈe. Cette t‚che nÈcessite que l'Èlaboration de la stratÈgie ait ÈtÈ confiÈe ‡ CoreVision.
           </p>
         </div>
       );
@@ -417,20 +417,20 @@ export function CoreVisionWorkflow({
       return (
         <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
           <p className="text-sm text-gray-700">
-            L'√©quipe CoreVision finalise l'audit et les recommandations. Vous serez notifi√© automatiquement d√®s qu'ils seront pr√™ts.
+            L'Èquipe CoreVision finalise l'audit et les recommandations. Vous serez notifiÈ automatiquement dËs qu'ils seront prÍts.
           </p>
         </div>
       );
     }
     
-    // Audit re√ßu ‚Üí Rediriger vers l'onglet Audit pour validation
+    // Audit reÁu ? Rediriger vers l'onglet Audit pour validation
     return (
       <div className="mt-3 p-4 bg-purple-50 border border-purple-200 rounded-lg">
         <p className="text-sm font-semibold text-purple-900 mb-2">
-          ‚úÖ {recommendations.length} recommandation(s) CoreVision re√ßue(s)
+          ? {recommendations.length} recommandation(s) CoreVision reÁue(s)
         </p>
         <p className="text-sm text-purple-800 mb-3">
-          Les recommandations sont disponibles dans l'onglet <strong>Audit</strong> du client. Consultez-les et validez-les pour compl√©ter cette t√¢che.
+          Les recommandations sont disponibles dans l'onglet <strong>Audit</strong> du client. Consultez-les et validez-les pour complÈter cette t‚che.
         </p>
         <button
           onClick={() => {
@@ -439,25 +439,25 @@ export function CoreVisionWorkflow({
           className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
         >
           <FileText className="w-4 h-4" />
-          Aller √† l'onglet Audit
+          Aller ‡ l'onglet Audit
         </button>
       </div>
     );
   }
   
-  // Pour la t√¢che "Livrables pr√™ts pour pr√©sentation"
+  // Pour la t‚che "Livrables prÍts pour prÈsentation"
   if (isLivrablesTask) {
     if (!hasValidOrder) {
       return (
         <div className="mt-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
           <p className="text-sm text-amber-800">
-            ‚ö†Ô∏è Validez d'abord la commande CoreVision dans l'onglet <strong>Objectifs</strong> pour d√©marrer le traitement.
+            ?? Validez d'abord la commande CoreVision dans l'onglet <strong>Objectifs</strong> pour dÈmarrer le traitement.
           </p>
         </div>
       );
     }
     
-    // Si l'audit est valid√© par l'admin, afficher un badge de succ√®s
+    // Si l'audit est validÈ par l'admin, afficher un badge de succËs
     if (auditValidatedByAdmin) {
       return (
         <div className="mt-3 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-400 rounded-lg">
@@ -469,10 +469,10 @@ export function CoreVisionWorkflow({
             </div>
             <div className="flex-1">
               <p className="text-sm font-semibold text-green-900 mb-1">
-                ‚úÖ Livrables pr√™ts
+                ? Livrables prÍts
               </p>
               <p className="text-xs text-green-700">
-                L'audit, les recommandations et la pr√©sentation client sont finalis√©s et disponibles pour pr√©sentation.
+                L'audit, les recommandations et la prÈsentation client sont finalisÈs et disponibles pour prÈsentation.
               </p>
             </div>
           </div>
@@ -491,10 +491,10 @@ export function CoreVisionWorkflow({
           </div>
           <div className="flex-1">
             <p className="text-sm font-semibold text-purple-900 mb-1">
-              üöÄ En cours de traitement par CoreVision
+              ?? En cours de traitement par CoreVision
             </p>
             <p className="text-xs text-purple-700">
-              L'√©quipe CoreVision finalise les livrables pour la pr√©sentation client.
+              L'Èquipe CoreVision finalise les livrables pour la prÈsentation client.
             </p>
           </div>
         </div>

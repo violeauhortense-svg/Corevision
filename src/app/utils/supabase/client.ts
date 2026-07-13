@@ -3,7 +3,7 @@
 import { apiBaseUrl, publicAnonKey } from './info';
 
 const SESSION_KEY = 'corevision_session';
-const BASE_AUTH = `${apiBaseUrl}/make-server-cac859af/auth`;
+const BASE_AUTH = `${apiBaseUrl}/auth`;
 
 // ─── Session helpers ───────────────────────────────────────────────────────
 function loadSession(): any | null {

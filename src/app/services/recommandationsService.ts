@@ -1,5 +1,5 @@
-Ôªø/**
- * üéØ SERVICE FRONTEND - RECOMMANDATIONS INTELLIGENTES
+/**
+ * ?? SERVICE FRONTEND - RECOMMANDATIONS INTELLIGENTES
  * 
  * Gestion des recommandations patrimoniales automatiques
  */
@@ -32,7 +32,7 @@ export interface Recommandation {
   // Impact financier
   simulation?: SimulationFinanciere;
   
-  // M√©tadonn√©es
+  // MÈtadonnÈes
   strategieId: string;
   dateGeneration: string;
 }
@@ -69,7 +69,7 @@ export interface RapportRecommandations {
   
   // Statistiques
   totalRecommandations: number;
-  recommandationsImm√©diates: number;
+  recommandationsImmÈdiates: number;
   recommandationsCourtTerme: number;
   recommandationsMoyenTerme: number;
   recommandationsLongTerme: number;
@@ -86,17 +86,17 @@ export interface RapportRecommandations {
 // API
 // ============================================
 
-const BASE_URL = `${apiBaseUrl}/make-server-cac859af/recommandations`;
+const BASE_URL = `${apiBaseUrl}/recommandations`;
 
 /**
- * G√©n√®re les recommandations pour un client
+ * GÈnËre les recommandations pour un client
  */
 export async function genererRecommandations(
   clientId: string,
   clientData: any
 ): Promise<{ success: boolean; rapport?: RapportRecommandations; error?: string }> {
   try {
-    console.log(`üéØ G√©n√©ration recommandations pour client ${clientId}...`);
+    console.log(`?? GÈnÈration recommandations pour client ${clientId}...`);
     
     const response = await fetch(`${BASE_URL}/generer/${clientId}`, {
       method: 'POST',
@@ -110,37 +110,37 @@ export async function genererRecommandations(
     const data = await response.json();
     
     if (!response.ok) {
-      console.error('‚ùå Erreur API:', data);
+      console.error('? Erreur API:', data);
       return {
         success: false,
-        error: data.error || 'Erreur lors de la g√©n√©ration',
+        error: data.error || 'Erreur lors de la gÈnÈration',
       };
     }
 
-    console.log(`‚úÖ ${data.rapport.totalRecommandations} recommandation(s) g√©n√©r√©e(s)`);
-    console.log(`üí∞ Gain potentiel: ${data.rapport.gainFiscalPotentielAnnuel.toLocaleString('fr-FR')} ‚Ç¨/an`);
+    console.log(`? ${data.rapport.totalRecommandations} recommandation(s) gÈnÈrÈe(s)`);
+    console.log(`?? Gain potentiel: ${data.rapport.gainFiscalPotentielAnnuel.toLocaleString('fr-FR')} Ä/an`);
     
     return {
       success: true,
       rapport: data.rapport,
     };
   } catch (error: any) {
-    console.error('‚ùå Erreur g√©n√©ration recommandations:', error);
+    console.error('? Erreur gÈnÈration recommandations:', error);
     return {
       success: false,
-      error: error.message || 'Erreur r√©seau',
+      error: error.message || 'Erreur rÈseau',
     };
   }
 }
 
 /**
- * R√©cup√®re le rapport de recommandations pour un client
+ * RÈcupËre le rapport de recommandations pour un client
  */
 export async function getRecommandations(
   clientId: string
 ): Promise<{ success: boolean; rapport?: RapportRecommandations; error?: string }> {
   try {
-    console.log(`üì• R√©cup√©ration recommandations pour client ${clientId}...`);
+    console.log(`?? RÈcupÈration recommandations pour client ${clientId}...`);
     
     const response = await fetch(`${BASE_URL}/${clientId}`, {
       method: 'GET',
@@ -152,24 +152,24 @@ export async function getRecommandations(
     const data = await response.json();
     
     if (!response.ok) {
-      console.error('‚ùå Erreur API:', data);
+      console.error('? Erreur API:', data);
       return {
         success: false,
-        error: data.error || 'Erreur lors de la r√©cup√©ration',
+        error: data.error || 'Erreur lors de la rÈcupÈration',
       };
     }
 
-    console.log(`‚úÖ Rapport charg√©: ${data.rapport.totalRecommandations} recommandation(s)`);
+    console.log(`? Rapport chargÈ: ${data.rapport.totalRecommandations} recommandation(s)`);
     
     return {
       success: true,
       rapport: data.rapport,
     };
   } catch (error: any) {
-    console.error('‚ùå Erreur r√©cup√©ration recommandations:', error);
+    console.error('? Erreur rÈcupÈration recommandations:', error);
     return {
       success: false,
-      error: error.message || 'Erreur r√©seau',
+      error: error.message || 'Erreur rÈseau',
     };
   }
 }
@@ -179,7 +179,7 @@ export async function getRecommandations(
 // ============================================
 
 /**
- * Obtient la couleur badge selon la cat√©gorie
+ * Obtient la couleur badge selon la catÈgorie
  */
 export function getCategorieColor(categorie: CategorieRecommandation): string {
   const colors: Record<CategorieRecommandation, string> = {
@@ -196,24 +196,24 @@ export function getCategorieColor(categorie: CategorieRecommandation): string {
 }
 
 /**
- * Obtient l'emoji selon la cat√©gorie
+ * Obtient l'emoji selon la catÈgorie
  */
 export function getCategorieEmoji(categorie: CategorieRecommandation): string {
   const emojis: Record<CategorieRecommandation, string> = {
-    fiscalite: 'üí∞',
-    patrimoine: 'üè†',
-    retraite: 'üë¥',
-    transmission: 'üéÅ',
-    protection: 'üõ°Ô∏è',
-    investissement: 'üìà',
-    optimisation: '‚ö°',
+    fiscalite: '??',
+    patrimoine: '??',
+    retraite: '??',
+    transmission: '??',
+    protection: '???',
+    investissement: '??',
+    optimisation: '?',
   };
   
-  return emojis[categorie] || 'üìã';
+  return emojis[categorie] || '??';
 }
 
 /**
- * Obtient la couleur selon la priorit√©
+ * Obtient la couleur selon la prioritÈ
  */
 export function getPrioriteColor(priorite: Recommandation['priorite']): string {
   const colors = {
@@ -227,14 +227,14 @@ export function getPrioriteColor(priorite: Recommandation['priorite']): string {
 }
 
 /**
- * Obtient le label selon la priorit√©
+ * Obtient le label selon la prioritÈ
  */
 export function getPrioriteLabel(priorite: Recommandation['priorite']): string {
   const labels = {
-    immediate: 'üî¥ Imm√©diate',
-    court_terme: 'üü† Court terme',
-    moyen_terme: 'üîµ Moyen terme',
-    long_terme: '‚ö™ Long terme',
+    immediate: '?? ImmÈdiate',
+    court_terme: '?? Court terme',
+    moyen_terme: '?? Moyen terme',
+    long_terme: '? Long terme',
   };
   
   return labels[priorite];
@@ -254,7 +254,7 @@ export function getScoreColor(score: number): string {
  * Formate un montant en euros
  */
 export function formatEuros(montant: number): string {
-  return `${montant.toLocaleString('fr-FR')} ‚Ç¨`;
+  return `${montant.toLocaleString('fr-FR')} Ä`;
 }
 
 /**

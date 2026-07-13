@@ -1,4 +1,4 @@
-ï»¿import { useState } from 'react';
+import { useState } from 'react';
 import { Eye, Download, Trash2, Loader2 } from 'lucide-react';
 import { apiBaseUrl, publicAnonKey } from '../utils/supabase/info';
 import { toast } from 'sonner';
@@ -14,9 +14,9 @@ export function BilanVisualization({ bilanSignature, onDelete }: BilanVisualizat
 
   const handleView = () => {
     setShowPreview(true);
-    // Ouvrir dans une nouvelle fenÃªtre
+    // Ouvrir dans une nouvelle fenêtre
     window.open(
-      `${apiBaseUrl}/make-server-cac859af/bilan-document/${bilanSignature.token}`,
+      `${apiBaseUrl}/bilan-document/${bilanSignature.token}`,
       '_blank'
     );
   };
@@ -24,14 +24,14 @@ export function BilanVisualization({ bilanSignature, onDelete }: BilanVisualizat
   const handleDownload = () => {
     // Ouvrir le document pour permettre l'impression/sauvegarde PDF
     window.open(
-      `${apiBaseUrl}/make-server-cac859af/bilan-document/${bilanSignature.token}`,
+      `${apiBaseUrl}/bilan-document/${bilanSignature.token}`,
       '_blank'
     );
-    toast.success('ðŸ“„ Document ouvert dans un nouvel onglet');
+    toast.success('?? Document ouvert dans un nouvel onglet');
   };
 
   const handleDelete = async () => {
-    if (!confirm('ÃŠtes-vous sÃ»r de vouloir supprimer ce bilan patrimonial signÃ© ?')) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce bilan patrimonial signé ?')) {
       return;
     }
 
@@ -42,7 +42,7 @@ export function BilanVisualization({ bilanSignature, onDelete }: BilanVisualizat
         onDelete();
       }
       
-      toast.success('âœ… Bilan supprimÃ©');
+      toast.success('? Bilan supprimé');
     } catch (error: any) {
       console.error('Erreur suppression:', error);
       toast.error(error.message || 'Erreur lors de la suppression');
@@ -64,7 +64,7 @@ export function BilanVisualization({ bilanSignature, onDelete }: BilanVisualizat
       <button
         onClick={handleDownload}
         className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
-        title="TÃ©lÃ©charger"
+        title="Télécharger"
       >
         <Download className="w-5 h-5" />
       </button>

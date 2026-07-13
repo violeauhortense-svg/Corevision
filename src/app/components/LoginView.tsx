@@ -31,7 +31,7 @@ export function LoginView({ onLogin }: LoginViewProps) {
     }
 
     try {
-      const response = await fetch(`${apiBaseUrl}/make-server-cac859af/auth/signin`, {
+      const response = await fetch(`${apiBaseUrl}/auth/signin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -88,7 +88,7 @@ export function LoginView({ onLogin }: LoginViewProps) {
       console.log('📧 Email:', email);
       console.log('👤 Nom:', nom, prenom);
 
-      const response = await fetch(`${apiBaseUrl}/make-server-cac859af/auth/signup`, {
+      const response = await fetch(`${apiBaseUrl}/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -118,7 +118,7 @@ export function LoginView({ onLogin }: LoginViewProps) {
       // Se connecter automatiquement
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      const signInResponse = await fetch(`${apiBaseUrl}/make-server-cac859af/auth/signin`, {
+      const signInResponse = await fetch(`${apiBaseUrl}/auth/signin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

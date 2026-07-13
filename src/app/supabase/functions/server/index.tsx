@@ -1,4 +1,4 @@
-﻿import { Hono } from "npm:hono";
+import { Hono } from "npm:hono";
 import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
 import * as kv from "./kv_store.tsx";
@@ -39,23 +39,23 @@ import { setupDashboardRoutes } from "./dashboard_routes.tsx";
 
 // ============================================
 // VERSION: 2026-02-27-DER-FIX-V6
-// Architecture modulaire refactorisée  
+// Architecture modulaire refactoris�e  
 // FIX: Routes DER publiques accessibles
 // ============================================
 const SERVER_VERSION = "2026-02-27-DER-FIX-V6";
-console.log(`🚀🚀🚀 Server starting - ROUTES DER PUBLIQUES - Version ${SERVER_VERSION} 🚀🚀🚀`);
+console.log(`?????? Server starting - ROUTES DER PUBLIQUES - Version ${SERVER_VERSION} ??????`);
 
 const app = new Hono();
 
 const supabaseAdmin = supabaseAdminCompat;
 
-// Initialiser le dossier de documents au démarrage
+// Initialiser le dossier de documents au d�marrage
 (async () => {
   try {
     await Deno.mkdir(`${UPLOADS_DIR}/make-cac859af-documents`, { recursive: true });
-    console.log('✅ Dossier uploads initialisé:', UPLOADS_DIR);
+    console.log('? Dossier uploads initialis�:', UPLOADS_DIR);
   } catch {
-    console.log('✅ Dossier uploads déjà existant');
+    console.log('? Dossier uploads d�j� existant');
   }
 })();
 
@@ -74,8 +74,8 @@ app.use("/*", cors({
 // ============================================
 
 app.get("/make-server-cac859af/health", (c) => {
-  console.log('✅ Health check called - NO AUTH REQUIRED');
-  console.log('📍 Headers:', c.req.header('Authorization') ? 'Auth present' : 'NO AUTH');
+  console.log('? Health check called - NO AUTH REQUIRED');
+  console.log('?? Headers:', c.req.header('Authorization') ? 'Auth present' : 'NO AUTH');
   return c.json({ 
     status: "ok", 
     version: SERVER_VERSION,
@@ -85,7 +85,7 @@ app.get("/make-server-cac859af/health", (c) => {
 });
 
 app.get("/make-server-cac859af/test", (c) => {
-  console.log(`🧪 Test endpoint called`);
+  console.log(`?? Test endpoint called`);
   return c.json({
     message: "Server is running correctly!",
     version: SERVER_VERSION,
@@ -98,7 +98,7 @@ app.get("/make-server-cac859af/test", (c) => {
 app.get("/make-server-cac859af/debug/users", async (c) => {
   try {
     const users = await kv.getByPrefix("user:email:");
-    console.log(`📋 Found ${users.length} users`);
+    console.log(`?? Found ${users.length} users`);
     return c.json({
       count: users.length,
       users: users.map(u => ({
@@ -123,7 +123,7 @@ app.delete("/make-server-cac859af/reset-user-data", async (c) => {
   }
 
   try {
-    console.log('🗑️ RESET: Suppression de toutes les données pour user:', user.id);
+    console.log('??? RESET: Suppression de toutes les donn�es pour user:', user.id);
     
     const clients = await kv.getByPrefix(`client:${user.id}:`);
     for (const client of clients) {
@@ -140,14 +140,14 @@ app.delete("/make-server-cac859af/reset-user-data", async (c) => {
     
     return c.json({ 
       success: true,
-      message: 'Toutes les données ont été supprimées',
+      message: 'Toutes les donn�es ont �t� supprim�es',
       deleted: {
         clients: clients.length,
         tasks: taskCount
       }
     });
   } catch (err) {
-    console.error('❌ Erreur reset:', err);
+    console.error('? Erreur reset:', err);
     return c.json({ error: 'Failed to reset data: ' + err.message }, 500);
   }
 });
@@ -158,12 +158,12 @@ app.delete("/make-server-cac859af/reset-user-data", async (c) => {
 
 app.post("/make-server-cac859af/auth/signup", async (c) => {
   try {
-    console.log("🔐 Signup endpoint called");
+    console.log("?? Signup endpoint called");
     const body = await c.req.json();
     const { email, password, nom, prenom, specialite, certifications } = body;
 
-    console.log(`🔐 Signup attempt: ${email}`);
-    console.log(`📧 Creating user with email: ${email}, nom: ${nom}, prenom: ${prenom}`);
+    console.log(`?? Signup attempt: ${email}`);
+    console.log(`?? Creating user with email: ${email}, nom: ${nom}, prenom: ${prenom}`);
 
     const user = await createUser(email, password, {
       nom: nom || '',
@@ -172,11 +172,11 @@ app.post("/make-server-cac859af/auth/signup", async (c) => {
       certifications: certifications || 'CIF, AMF',
     });
 
-    console.log(`✅ User created: ${email}`);
+    console.log(`? User created: ${email}`);
     return c.json({ user });
   } catch (error) {
     const msg = (error as Error).message;
-    console.error(`❌ SIGNUP FAILED: ${msg}`);
+    console.error(`? SIGNUP FAILED: ${msg}`);
     console.error(`Stack:`, (error as Error).stack);
     return c.json({ error: msg, details: String(error) }, 400);
   }
@@ -209,14 +209,14 @@ app.get("/make-server-cac859af/auth/profile", async (c) => {
 // SETUP FEATURE MODULES
 // ============================================
 
-console.log('🔧 Chargement des modules...');
+console.log('?? Chargement des modules...');
 
 // ============================================
 // UPLOAD DOCUMENT ROUTE
 // ============================================
 app.post("/make-server-cac859af/upload-document", async (c) => {
   try {
-    console.log('📤 Upload document route called');
+    console.log('?? Upload document route called');
 
     const formData = await c.req.formData();
     const file = formData.get('file') as File;
@@ -243,7 +243,7 @@ app.post("/make-server-cac859af/upload-document", async (c) => {
       .upload(filePath, fileBuffer, { contentType: file.type || 'application/octet-stream', upsert: true });
 
     if (uploadError) {
-      console.error('❌ Erreur upload:', uploadError);
+      console.error('? Erreur upload:', uploadError);
       return c.json({ error: 'Failed to upload file: ' + uploadError.message }, 500);
     }
 
@@ -251,7 +251,7 @@ app.post("/make-server-cac859af/upload-document", async (c) => {
       .from('make-cac859af-documents')
       .createSignedUrl(filePath, 31536000);
 
-    console.log('✅ Fichier uploadé:', uploadData.path);
+    console.log('? Fichier upload�:', uploadData.path);
     return c.json({
       success: true,
       fileUrl: signedUrlData.signedUrl,
@@ -259,7 +259,7 @@ app.post("/make-server-cac859af/upload-document", async (c) => {
       filePath: uploadData.path,
     });
   } catch (error) {
-    console.error('❌ Erreur upload document:', error);
+    console.error('? Erreur upload document:', error);
     return c.json({ error: 'Upload failed: ' + (error as Error).message }, 500);
   }
 });
@@ -289,116 +289,116 @@ app.get("/make-server-cac859af/files/*", async (c) => {
 });
 
 setupDashboardRoutes(app);
-console.log('✅ Dashboard routes loaded');
+console.log('? Dashboard routes loaded');
 setupClientRoutes(app);
-console.log('✅ Client routes loaded');
+console.log('? Client routes loaded');
 setupTaskRoutes(app);
-console.log('✅ Task routes loaded');
+console.log('? Task routes loaded');
 setupBilanRoutes(app, verifyAuth);
-console.log('✅ Bilan routes loaded');
+console.log('? Bilan routes loaded');
 setupDERRoutes(app, verifyAuth);
-console.log('✅ DER routes loaded');
+console.log('? DER routes loaded');
 setupEmailRoutes(app, verifyAuth);
-console.log('✅ Email routes loaded');
+console.log('? Email routes loaded');
 setupCoreVisionRoutes(app, supabaseAdminCompat, kv);
-console.log('✅ CoreVision routes loaded');
+console.log('? CoreVision routes loaded');
 setupSignatureRoutes(app, supabaseAdminCompat, kv);
-console.log('✅ Signature routes loaded');
+console.log('? Signature routes loaded');
 setupSanctionsRoutes(app, supabaseAdminCompat, kv);
-console.log('✅ Sanctions routes loaded');
+console.log('? Sanctions routes loaded');
 setupEmailWebhookRoutes(app);
-console.log('✅ Email webhook routes loaded');
+console.log('? Email webhook routes loaded');
 setupRDVRoutes(app);
-console.log('✅ RDV routes loaded');
+console.log('? RDV routes loaded');
 
 // Knowledge Base routes
 app.route('/make-server-cac859af/knowledge-base', knowledgeBaseRoutes);
-console.log('✅ Knowledge base routes loaded');
+console.log('? Knowledge base routes loaded');
 
-// 🆕 Calcul routes
+// ?? Calcul routes
 setupCalculRoutes(app);
-console.log('✅ Calcul routes loaded');
+console.log('? Calcul routes loaded');
 
-// 🆕 Incohérences routes
+// ?? Incoh�rences routes
 setupIncoherencesRoutes(app);
-console.log('✅ Incohérences routes loaded');
+console.log('? Incoh�rences routes loaded');
 
-// 🆕 Recommandations routes
+// ?? Recommandations routes
 setupRecommandationsRoutes(app);
-console.log('✅ Recommandations routes loaded');
+console.log('? Recommandations routes loaded');
 
-// 🆕 Section rapport progressif routes
+// ?? Section rapport progressif routes
 setupSectionRapportRoutes(app);
-console.log('✅ Section rapport progressif routes loaded');
+console.log('? Section rapport progressif routes loaded');
 
-// 🆕 Barèmes fiscaux routes
+// ?? Bar�mes fiscaux routes
 setupBaremesRoutes(app);
-console.log('✅ Barèmes fiscaux routes loaded');
+console.log('? Bar�mes fiscaux routes loaded');
 
-// 🆕 Mail routes
+// ?? Mail routes
 app.route('/make-server-cac859af', mailRoutes);
-console.log('✅ Mail routes loaded');
+console.log('? Mail routes loaded');
 
 // ============================================
 // KNOWLEDGE INGESTION + PATRIMOINE ROUTES
 // ============================================
 
 setupCollecteurJuridiqueRoutes(app);
-console.log('✅ Collecteur juridique routes loaded');
+console.log('? Collecteur juridique routes loaded');
 setupParserJuridiqueRoutes(app);
-console.log('✅ Parser juridique routes loaded');
+console.log('? Parser juridique routes loaded');
 setupExtracteurReglesRoutes(app);
-console.log('✅ Extracteur règles routes loaded');
+console.log('? Extracteur r�gles routes loaded');
 setupCollecteurSocialRoutes(app);
-console.log('✅ Collecteur social + social + retraite routes loaded');
+console.log('? Collecteur social + social + retraite routes loaded');
 setupCollecteurRetraiteRoutes(app);
-console.log('✅ Collecteur retraite + retraite routes loaded');
+console.log('? Collecteur retraite + retraite routes loaded');
 setupIndexIARoutes(app);
-console.log('✅ Index IA routes loaded');
+console.log('? Index IA routes loaded');
 setupMontagesPatrimoniauxRoutes(app);
-console.log('✅ Montages patrimoniaux routes loaded');
+console.log('? Montages patrimoniaux routes loaded');
 setupMoteurPatrimonialIARoutes(app);
-console.log('✅ Moteur patrimonial IA routes loaded');
+console.log('? Moteur patrimonial IA routes loaded');
 setupSimulateurPatrimonialRoutes(app);
-console.log('✅ Simulateur patrimonial routes loaded');
+console.log('? Simulateur patrimonial routes loaded');
 setupReglesFiscalesRoutes(app);
-console.log('✅ Règles fiscales routes loaded');
+console.log('? R�gles fiscales routes loaded');
 setupAuditPatrimonialRoutes(app);
-console.log('✅ Audit patrimonial routes loaded');
+console.log('? Audit patrimonial routes loaded');
 
 
 
 // ============================================
-// INITIALISATION AUTOMATIQUE AU DÉMARRAGE
+// INITIALISATION AUTOMATIQUE AU D�MARRAGE
 // ============================================
 
-console.log('🚀 Initialisation automatique des données au démarrage...');
+console.log('?? Initialisation automatique des donn�es au d�marrage...');
 
-// ⚠️ DÉSACTIVÉ : Les calculs fiscaux sont maintenant faits en frontend via /services/fiscalCalculator.ts
-// Les règles fiscales en base de données ne sont plus nécessaires au démarrage
-// Pour réactiver, décommentez le bloc ci-dessous
+// ?? D�SACTIV� : Les calculs fiscaux sont maintenant faits en frontend via /services/fiscalCalculator.ts
+// Les r�gles fiscales en base de donn�es ne sont plus n�cessaires au d�marrage
+// Pour r�activer, d�commentez le bloc ci-dessous
 
 /*
-// Initialiser les règles fiscales si elles n'existent pas
+// Initialiser les r�gles fiscales si elles n'existent pas
 (async () => {
   try {
     const reglesExistantes = await reglesFiscalesDB.getToutesRegles();
     
     if (reglesExistantes.length === 0) {
-      console.log('⚠️ Aucune règle fiscale trouvée. Initialisation en cours...');
+      console.log('?? Aucune r�gle fiscale trouv�e. Initialisation en cours...');
       const result = await reglesFiscalesDB.initialiserReglesFiscales();
-      console.log(`✅ ${result.count} règles fiscales initialisées avec succès`);
+      console.log(`? ${result.count} r�gles fiscales initialis�es avec succ�s`);
     } else {
-      console.log(`✅ ${reglesExistantes.length} règles fiscales déjà présentes`);
+      console.log(`? ${reglesExistantes.length} r�gles fiscales d�j� pr�sentes`);
     }
   } catch (error) {
-    console.error('❌ Erreur lors de l\'initialisation des règles fiscales:', error);
+    console.error('? Erreur lors de l\'initialisation des r�gles fiscales:', error);
   }
 })();
 */
 
-console.log('ℹ️ Initialisation des règles fiscales désactivée (calculs maintenant en frontend)');
+console.log('?? Initialisation des r�gles fiscales d�sactiv�e (calculs maintenant en frontend)');
 
-console.log(`✅ Server initialized - Version ${SERVER_VERSION} - Modular architecture`);
+console.log(`? Server initialized - Version ${SERVER_VERSION} - Modular architecture`);
 
 Deno.serve(app.fetch);

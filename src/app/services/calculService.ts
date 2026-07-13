@@ -1,16 +1,16 @@
-Ôªø/**
- * üßÆ CALCUL SERVICE - Interface pour les calculs patrimoniaux c√¥t√© serveur
+/**
+ * ?? CALCUL SERVICE - Interface pour les calculs patrimoniaux cÙtÈ serveur
  * 
  * Architecture :
- * - TOUS les calculs sont effectu√©s c√¥t√© serveur
+ * - TOUS les calculs sont effectuÈs cÙtÈ serveur
  * - Le frontend ne fait QUE de l'affichage
- * - Cache intelligent pour √©viter les recalculs
+ * - Cache intelligent pour Èviter les recalculs
  */
 
 import { apiBaseUrl, publicAnonKey } from '../utils/supabase/info';
 
 // ============================================
-// TYPES (synchronis√©s avec le serveur)
+// TYPES (synchronisÈs avec le serveur)
 // ============================================
 
 export interface ActifFinancier {
@@ -207,7 +207,7 @@ class CalculServiceClass {
       });
 
       const duration = performance.now() - startTime;
-      console.log(`üßÆ Calcul ${endpoint}: ${response.status} (${Math.round(duration)}ms)`);
+      console.log(`?? Calcul ${endpoint}: ${response.status} (${Math.round(duration)}ms)`);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -217,7 +217,7 @@ class CalculServiceClass {
       const data = await response.json();
       return { data, error: null };
     } catch (error) {
-      console.error('‚ùå Erreur API calcul:', error);
+      console.error('? Erreur API calcul:', error);
       return {
         data: null,
         error: error instanceof Error ? error.message : 'Erreur inconnue',
@@ -250,11 +250,11 @@ class CalculServiceClass {
   }> {
     const cacheKey = getCacheKey('patrimoine', input);
 
-    // V√©rifier le cache
+    // VÈrifier le cache
     if (useCache) {
       const cached = getFromCache<CalculsPatrimoniauxResult>(cacheKey);
       if (cached) {
-        console.log('üíæ Calculs patrimoine depuis cache');
+        console.log('?? Calculs patrimoine depuis cache');
         return { calculs: cached, error: null, fromCache: true };
       }
     }
@@ -276,7 +276,7 @@ class CalculServiceClass {
   }
 
   /**
-   * Simule l'√©volution du patrimoine
+   * Simule l'Èvolution du patrimoine
    */
   async simulerPatrimoine(
     input: SimulationInput,
@@ -291,7 +291,7 @@ class CalculServiceClass {
     if (useCache) {
       const cached = getFromCache<SimulationResult>(cacheKey);
       if (cached) {
-        console.log('üíæ Simulation depuis cache');
+        console.log('?? Simulation depuis cache');
         return { simulation: cached, error: null, fromCache: true };
       }
     }
@@ -311,7 +311,7 @@ class CalculServiceClass {
   }
 
   /**
-   * D√©tecte les probl√®mes patrimoniaux
+   * DÈtecte les problËmes patrimoniaux
    */
   async detecterProblemes(
     input: CalculsPatrimoniauxInput
@@ -326,14 +326,14 @@ class CalculServiceClass {
     }>('/calculate/problemes', input);
 
     if (error || !data) {
-      return { problemes: [], calculs: null, error: error || 'Erreur de d√©tection' };
+      return { problemes: [], calculs: null, error: error || 'Erreur de dÈtection' };
     }
 
     return { problemes: data.problemes, calculs: data.calculs, error: null };
   }
 
   /**
-   * Calcule le capital restant d√ª d'un emprunt
+   * Calcule le capital restant d˚ d'un emprunt
    */
   async calculerCRD(
     capitalInitial: number,
@@ -357,7 +357,7 @@ class CalculServiceClass {
   }
 
   /**
-   * Calcule la mensualit√© d'un emprunt
+   * Calcule la mensualitÈ d'un emprunt
    */
   async calculerMensualite(
     capitalInitial: number,
@@ -373,7 +373,7 @@ class CalculServiceClass {
     );
 
     if (error || !data) {
-      return { mensualite: null, error: error || 'Erreur de calcul mensualit√©' };
+      return { mensualite: null, error: error || 'Erreur de calcul mensualitÈ' };
     }
 
     return { mensualite: data.mensualite, error: null };
@@ -384,7 +384,7 @@ class CalculServiceClass {
    */
   clearCache(): void {
     calculCache.clear();
-    console.log('üóëÔ∏è Cache calculs vid√©');
+    console.log('??? Cache calculs vidÈ');
   }
 }
 

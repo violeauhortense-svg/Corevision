@@ -1,4 +1,4 @@
-ï»¿import { apiBaseUrl, publicAnonKey } from '../utils/supabase/info';
+import { apiBaseUrl, publicAnonKey } from '../utils/supabase/info';
 
 const API_URL = `${apiBaseUrl}/make-server-cac859af`;
 
@@ -20,7 +20,7 @@ export const getMailTemplates = async () => {
 
     return await response.json();
   } catch (error) {
-    console.error('Erreur lors de la rÃ©cupÃ©ration des templates mail:', error);
+    console.error('Erreur lors de la récupération des templates mail:', error);
     throw error;
   }
 };
@@ -86,7 +86,7 @@ export const getMailConversations = async () => {
 
     return await response.json();
   } catch (error) {
-    console.error('Erreur lors de la rÃ©cupÃ©ration des conversations mail:', error);
+    console.error('Erreur lors de la récupération des conversations mail:', error);
     throw error;
   }
 };
@@ -108,7 +108,7 @@ export const createMailConversation = async (conversation: any) => {
 
     return await response.json();
   } catch (error) {
-    console.error('Erreur lors de la crÃ©ation de la conversation mail:', error);
+    console.error('Erreur lors de la création de la conversation mail:', error);
     throw error;
   }
 };
@@ -130,7 +130,7 @@ export const sendMailReply = async (conversationId: string, message: any) => {
 
     return await response.json();
   } catch (error) {
-    console.error('Erreur lors de l\'envoi de la rÃ©ponse mail:', error);
+    console.error('Erreur lors de l\'envoi de la réponse mail:', error);
     throw error;
   }
 };
@@ -153,7 +153,7 @@ export const getInboxEmails = async () => {
 
     return await response.json();
   } catch (error) {
-    console.error('Erreur lors de la rÃ©cupÃ©ration des emails de la boÃ®te de rÃ©ception:', error);
+    console.error('Erreur lors de la récupération des emails de la boîte de réception:', error);
     throw error;
   }
 };
@@ -197,7 +197,7 @@ export const getInternalMessages = async () => {
 
     return await response.json();
   } catch (error) {
-    console.error('Erreur lors de la rÃ©cupÃ©ration des messages internes:', error);
+    console.error('Erreur lors de la récupération des messages internes:', error);
     throw error;
   }
 };
@@ -242,7 +242,7 @@ export const getMailStats = async () => {
 
     return await response.json();
   } catch (error) {
-    console.error('Erreur lors de la rÃ©cupÃ©ration des statistiques mail:', error);
+    console.error('Erreur lors de la récupération des statistiques mail:', error);
     throw error;
   }
 };

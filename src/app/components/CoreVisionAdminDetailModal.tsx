@@ -1,4 +1,4 @@
-ï»¿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Eye, Save, Plus, Trash2, Send, CheckCircle2, Euro, User, Users, Baby, Heart, FileText, Sparkles, TrendingUp, AlertTriangle, Target, BarChart3, Loader, Copy, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiBaseUrl, publicAnonKey } from '../utils/supabase/info';
@@ -44,7 +44,7 @@ export function CoreVisionAdminDetailModal({ order, onClose, onUpdate }: CoreVis
   const bilanData = order.bilanData;
   const profils = order.profilsInvestisseurs;
 
-  // ğŸ†• Hook IncohÃ©rences
+  // ?? Hook Incohérences
   const {
     rapport: rapportIncoherences,
     loading: loadingIncoherences,
@@ -55,25 +55,25 @@ export function CoreVisionAdminDetailModal({ order, onClose, onUpdate }: CoreVis
     corriger,
   } = useIncoherences(order.clientId);
 
-  // ğŸ†• DÃ©tection automatique au chargement
+  // ?? Détection automatique au chargement
   useEffect(() => {
     const detectIncoh = async () => {
       if (order.clientId && bilanData) {
-        console.log('ğŸ” DÃ©tection automatique des incohÃ©rences...');
+        console.log('?? Détection automatique des incohérences...');
         await detecter({ ...order, bilanData });
       }
     };
     detectIncoh();
   }, [order.clientId]);
 
-  //  Fonction utilitaire pour mettre Ã  jour une commande (serveur + local)
+  //  Fonction utilitaire pour mettre à jour une commande (serveur + local)
   const updateOrderData = async (updates: Partial<any>) => {
     let serverUpdateSuccess = false;
     
-    // Essayer de mettre Ã  jour sur le serveur
+    // Essayer de mettre à jour sur le serveur
     try {
       const response = await fetch(
-        `${apiBaseUrl}/make-server-cac859af/corevision/orders/${order.orderId}`,
+        `${apiBaseUrl}/corevision/orders/${order.orderId}`,
         {
           method: 'PUT',
           headers: {
@@ -88,10 +88,10 @@ export function CoreVisionAdminDetailModal({ order, onClose, onUpdate }: CoreVis
         serverUpdateSuccess = true;
       }
     } catch (error) {
-      console.warn('âš ï¸ Serveur inaccessible, mise Ã  jour en local uniquement');
+      console.warn('?? Serveur inaccessible, mise à jour en local uniquement');
     }
 
-    // Mettre Ã  jour en local Ã©galement
+    // Mettre à jour en local également
     const localOrdersKey = 'corevision_local_orders';
     const localOrders = JSON.parse(localStorage.getItem(localOrdersKey) || '[]');
     const orderIndex = localOrders.findIndex((o: any) => o.orderId === order.orderId);
@@ -103,7 +103,7 @@ export function CoreVisionAdminDetailModal({ order, onClose, onUpdate }: CoreVis
         updatedAt: new Date().toISOString(),
       };
       localStorage.setItem(localOrdersKey, JSON.stringify(localOrders));
-      console.log('âœ… Commande mise Ã  jour en local');
+      console.log('? Commande mise à jour en local');
     }
 
     return serverUpdateSuccess || orderIndex !== -1;
@@ -112,11 +112,11 @@ export function CoreVisionAdminDetailModal({ order, onClose, onUpdate }: CoreVis
   const handleSaveAudit = async () => {
     setSaving(true);
     try {
-      // ğŸ”¥ 1. Sauvegarder dans la commande CoreVision
+      // ?? 1. Sauvegarder dans la commande CoreVision
       const success = await updateOrderData({ audit });
 
       if (success) {
-        // ğŸ”¥ 2. NOUVEAU : Sauvegarder aussi dans la fiche client
+        // ?? 2. NOUVEAU : Sauvegarder aussi dans la fiche client
         try {
           const { data: { session } } = await supabase.auth.getSession();
           const userId = session?.user?.id || 'default';
@@ -128,20 +128,20 @@ export function CoreVisionAdminDetailModal({ order, onClose, onUpdate }: CoreVis
             const clientData = JSON.parse(storedClientDetail);
             clientData.auditCoreVision = audit;
             localStorage.setItem(clientDetailKey, JSON.stringify(clientData));
-            console.log('âœ… Audit sauvegardÃ© dans la fiche client');
+            console.log('? Audit sauvegardé dans la fiche client');
           }
         } catch (error) {
-          console.error('âš ï¸ Erreur lors de la sauvegarde dans la fiche client:', error);
+          console.error('?? Erreur lors de la sauvegarde dans la fiche client:', error);
         }
         
-        toast.success('âœ… Audit sauvegardÃ©');
+        toast.success('? Audit sauvegardé');
         onUpdate();
       } else {
-        toast.error('âŒ Erreur lors de la sauvegarde');
+        toast.error('? Erreur lors de la sauvegarde');
       }
     } catch (error) {
       console.error('Erreur:', error);
-      toast.error('âŒ Erreur lors de la sauvegarde');
+      toast.error('? Erreur lors de la sauvegarde');
     } finally {
       setSaving(false);
     }
@@ -149,23 +149,23 @@ export function CoreVisionAdminDetailModal({ order, onClose, onUpdate }: CoreVis
 
   const handleGenerateAudit = async () => {
     setGeneratingAudit(true);
-    toast.info('ğŸ¤– GÃ©nÃ©ration de l\'audit en cours...');
+    toast.info('?? Génération de l\'audit en cours...');
 
     try {
-      // ğŸ”¥ UTILISER order.bilanData QUI CONTIENT LES DONNÃ‰ES COMPLETES DU CLIENT
+      // ?? UTILISER order.bilanData QUI CONTIENT LES DONNÉES COMPLETES DU CLIENT
       // (patrimoineData, revenusData, impositionData, familyInfo, entreprises)
       let clientData = order.bilanData;
 
-      // Si order.bilanData est absent (anciennes commandes), rÃ©cupÃ©rer via API
+      // Si order.bilanData est absent (anciennes commandes), récupérer via API
       if (!clientData) {
-        console.warn('âš ï¸ order.bilanData absent, rÃ©cupÃ©ration via API...');
+        console.warn('?? order.bilanData absent, récupération via API...');
         clientData = await clientAPI.getById(order.clientId);
       }
 
-      console.log('ğŸ“¦ DonnÃ©es client utilisÃ©es pour l\'audit:', clientData);
+      console.log('?? Données client utilisées pour l\'audit:', clientData);
 
       const response = await fetch(
-        `${apiBaseUrl}/make-server-cac859af/audit-patrimonial/generer/${order.clientId}`,
+        `${apiBaseUrl}/audit-patrimonial/generer/${order.clientId}`,
         {
           method: 'POST',
           headers: {
@@ -174,7 +174,7 @@ export function CoreVisionAdminDetailModal({ order, onClose, onUpdate }: CoreVis
           },
           body: JSON.stringify({
             commandeId: order.orderId,
-            clientData: clientData // âœ… Envoyer les donnÃ©es complÃ¨tes du client
+            clientData: clientData // ? Envoyer les données complètes du client
           }),
         }
       );
@@ -182,21 +182,21 @@ export function CoreVisionAdminDetailModal({ order, onClose, onUpdate }: CoreVis
       const data = await response.json();
       
       if (!response.ok) {
-        console.error('âŒ Erreur serveur:', data);
-        const errorMsg = data.details || data.error || 'Erreur lors de la gÃ©nÃ©ration de l\'audit';
-        toast.error(`âŒ ${errorMsg}`);
+        console.error('? Erreur serveur:', data);
+        const errorMsg = data.details || data.error || 'Erreur lors de la génération de l\'audit';
+        toast.error(`? ${errorMsg}`);
         return;
       }
 
       if (data.success && data.audit) {
         setAuditGenere(data.audit);
-        toast.success('âœ… Audit gÃ©nÃ©rÃ© automatiquement !');
+        toast.success('? Audit généré automatiquement !');
       } else {
-        toast.error('âŒ Erreur lors de la gÃ©nÃ©ration de l\'audit');
+        toast.error('? Erreur lors de la génération de l\'audit');
       }
     } catch (error) {
-      console.error('Erreur gÃ©nÃ©ration audit:', error);
-      toast.error('âŒ Erreur lors de la gÃ©nÃ©ration de l\'audit');
+      console.error('Erreur génération audit:', error);
+      toast.error('? Erreur lors de la génération de l\'audit');
     } finally {
       setGeneratingAudit(false);
     }
@@ -205,17 +205,17 @@ export function CoreVisionAdminDetailModal({ order, onClose, onUpdate }: CoreVis
   const handleCopyAuditGenere = () => {
     if (!auditGenere) return;
     
-    // Formatter l'audit gÃ©nÃ©rÃ© en texte
+    // Formatter l'audit généré en texte
     let texte = `AUDIT PATRIMONIAL AUTOMATIQUE
 ========================================
 
 `;
     
-    // 1. SynthÃ¨se
-    texte += `1. SYNTHÃˆSE CLIENT
+    // 1. Synthèse
+    texte += `1. SYNTHÈSE CLIENT
 ------------------
 Nom : ${order.clientName}
-Patrimoine total : ${auditGenere.analyse_patrimoniale.patrimoine_total.toLocaleString('fr-FR')} â‚¬
+Patrimoine total : ${auditGenere.analyse_patrimoniale.patrimoine_total.toLocaleString('fr-FR')} €
 Score global : ${auditGenere.score_global}/10
 
 `;
@@ -223,16 +223,16 @@ Score global : ${auditGenere.score_global}/10
     // 2. Analyse civile
     texte += `2. ANALYSE CIVILE (${auditGenere.analyse_civile.score}/10)
 ------------------
-RÃ©gime matrimonial : ${auditGenere.analyse_civile.regime_matrimonial_analyse}
+Régime matrimonial : ${auditGenere.analyse_civile.regime_matrimonial_analyse}
 
 Protection conjoint : ${auditGenere.analyse_civile.protection_conjoint.niveau}
-${auditGenere.analyse_civile.protection_conjoint.recommandations.map((r: string) => `  â€¢ ${r}`).join('\n')}
+${auditGenere.analyse_civile.protection_conjoint.recommandations.map((r: string) => `  • ${r}`).join('\n')}
 
 Organisation successorale :
 ${auditGenere.analyse_civile.organisation_successorale.analyse}
 
-Optimisations proposÃ©es :
-${auditGenere.analyse_civile.organisation_successorale.optimisations.map((o: string) => `  â€¢ ${o}`).join('\n')}
+Optimisations proposées :
+${auditGenere.analyse_civile.organisation_successorale.optimisations.map((o: string) => `  • ${o}`).join('\n')}
 
 `;
     
@@ -240,17 +240,17 @@ ${auditGenere.analyse_civile.organisation_successorale.optimisations.map((o: str
     texte += `3. ANALYSE FISCALE (${auditGenere.analyse_fiscale.score}/10)
 ------------------
 Revenus :
-  â€¢ IR estimÃ© : ${auditGenere.analyse_fiscale.fiscalite_revenus.ir_estime.toLocaleString('fr-FR')} â‚¬
-  â€¢ PS estimÃ©es : ${auditGenere.analyse_fiscale.fiscalite_revenus.ps_estimees.toLocaleString('fr-FR')} â‚¬
-  â€¢ Taux global : ${auditGenere.analyse_fiscale.fiscalite_revenus.taux_global.toFixed(1)}%
+  • IR estimé : ${auditGenere.analyse_fiscale.fiscalite_revenus.ir_estime.toLocaleString('fr-FR')} €
+  • PS estimées : ${auditGenere.analyse_fiscale.fiscalite_revenus.ps_estimees.toLocaleString('fr-FR')} €
+  • Taux global : ${auditGenere.analyse_fiscale.fiscalite_revenus.taux_global.toFixed(1)}%
 
 Patrimoine :
-  â€¢ IFI estimÃ© : ${auditGenere.analyse_fiscale.fiscalite_patrimoine.ifi_estime.toLocaleString('fr-FR')} â‚¬
-  â€¢ Assujetti : ${auditGenere.analyse_fiscale.fiscalite_patrimoine.assujetti ? 'Oui' : 'Non'}
+  • IFI estimé : ${auditGenere.analyse_fiscale.fiscalite_patrimoine.ifi_estime.toLocaleString('fr-FR')} €
+  • Assujetti : ${auditGenere.analyse_fiscale.fiscalite_patrimoine.assujetti ? 'Oui' : 'Non'}
 
-Optimisations identifiÃ©es :
+Optimisations identifiées :
 ${auditGenere.analyse_fiscale.optimisations_possibles.map((opt: any) => 
-  `  â€¢ ${opt.type} : Gain estimÃ© ${opt.gain_estime.toLocaleString('fr-FR')} â‚¬\n    ${opt.description}`
+  `  • ${opt.type} : Gain estimé ${opt.gain_estime.toLocaleString('fr-FR')} €\n    ${opt.description}`
 ).join('\n')}
 
 `;
@@ -259,14 +259,14 @@ ${auditGenere.analyse_fiscale.optimisations_possibles.map((opt: any) =>
     texte += `4. ANALYSE SOCIALE (${auditGenere.analyse_sociale.score}/10)
 ------------------
 Statut : ${auditGenere.analyse_sociale.statut_social}
-Cotisations estimÃ©es : ${auditGenere.analyse_sociale.cotisations_estimees.toLocaleString('fr-FR')} â‚¬
+Cotisations estimées : ${auditGenere.analyse_sociale.cotisations_estimees.toLocaleString('fr-FR')} €
 Protection sociale : ${auditGenere.analyse_sociale.protection_sociale.niveau}
 
 `;
     
     if (auditGenere.analyse_sociale.optimisation_remuneration) {
-      texte += `Optimisation rÃ©munÃ©ration possible :
-  Gain annuel : ${auditGenere.analyse_sociale.optimisation_remuneration.gain_annuel.toLocaleString('fr-FR')} â‚¬
+      texte += `Optimisation rémunération possible :
+  Gain annuel : ${auditGenere.analyse_sociale.optimisation_remuneration.gain_annuel.toLocaleString('fr-FR')} €
 
 `;
     }
@@ -274,32 +274,32 @@ Protection sociale : ${auditGenere.analyse_sociale.protection_sociale.niveau}
     // 5. Analyse patrimoniale
     texte += `5. ANALYSE PATRIMONIALE (${auditGenere.analyse_patrimoniale.score}/10)
 ------------------
-Patrimoine total : ${auditGenere.analyse_patrimoniale.patrimoine_total.toLocaleString('fr-FR')} â‚¬
+Patrimoine total : ${auditGenere.analyse_patrimoniale.patrimoine_total.toLocaleString('fr-FR')} €
 
-RÃ©partition :
-  â€¢ Immobilier PP : ${auditGenere.analyse_patrimoniale.repartition.immobilier_pp_pct.toFixed(1)}%
-  â€¢ Immobilier locatif : ${auditGenere.analyse_patrimoniale.repartition.immobilier_locatif_pct.toFixed(1)}%
-  â€¢ LiquiditÃ©s : ${auditGenere.analyse_patrimoniale.repartition.liquidites_pct.toFixed(1)}%
-  â€¢ Assurance-vie : ${auditGenere.analyse_patrimoniale.repartition.assurance_vie_pct.toFixed(1)}%
-  â€¢ Titres sociÃ©tÃ© : ${auditGenere.analyse_patrimoniale.repartition.titres_societe_pct.toFixed(1)}%
-  â€¢ Portefeuille financier : ${auditGenere.analyse_patrimoniale.repartition.portefeuille_financier_pct.toFixed(1)}%
+Répartition :
+  • Immobilier PP : ${auditGenere.analyse_patrimoniale.repartition.immobilier_pp_pct.toFixed(1)}%
+  • Immobilier locatif : ${auditGenere.analyse_patrimoniale.repartition.immobilier_locatif_pct.toFixed(1)}%
+  • Liquidités : ${auditGenere.analyse_patrimoniale.repartition.liquidites_pct.toFixed(1)}%
+  • Assurance-vie : ${auditGenere.analyse_patrimoniale.repartition.assurance_vie_pct.toFixed(1)}%
+  • Titres société : ${auditGenere.analyse_patrimoniale.repartition.titres_societe_pct.toFixed(1)}%
+  • Portefeuille financier : ${auditGenere.analyse_patrimoniale.repartition.portefeuille_financier_pct.toFixed(1)}%
 
 Diversification (${auditGenere.analyse_patrimoniale.diversification.score}/10) :
 ${auditGenere.analyse_patrimoniale.diversification.analyse}
 
 Recommandations :
-${auditGenere.analyse_patrimoniale.diversification.recommandations.map((r: string) => `  â€¢ ${r}`).join('\n')}
+${auditGenere.analyse_patrimoniale.diversification.recommandations.map((r: string) => `  • ${r}`).join('\n')}
 
 `;
     
-    // 6. StratÃ©gies proposÃ©es
+    // 6. Stratégies proposées
     if (auditGenere.strategies_proposees.length > 0) {
-      texte += `6. STRATÃ‰GIES PATRIMONIALES PROPOSÃ‰ES (${auditGenere.strategies_proposees.length})
+      texte += `6. STRATÉGIES PATRIMONIALES PROPOSÉES (${auditGenere.strategies_proposees.length})
 ------------------
 `;
       auditGenere.strategies_proposees.forEach((strat: any, idx: number) => {
         texte += `
-StratÃ©gie ${idx + 1} : ${strat.nom} (Pertinence: ${strat.pertinence}/10)
+Stratégie ${idx + 1} : ${strat.nom} (Pertinence: ${strat.pertinence}/10)
 
 Objectif : ${strat.objectif}
 
@@ -309,23 +309,23 @@ Avantages : ${strat.avantages}
 
 Risques : ${strat.risques}
 
-FiscalitÃ© : ${strat.fiscalite}
+Fiscalité : ${strat.fiscalite}
 
 `;
         if (strat.simulation) {
-          texte += `Simulation financiÃ¨re :
-  â€¢ Gain fiscal annuel : ${strat.simulation.gain_fiscal_annuel.toLocaleString('fr-FR')} â‚¬
-  â€¢ CoÃ»t mise en place : ${strat.simulation.cout_mise_en_place.toLocaleString('fr-FR')} â‚¬
-  â€¢ Gain sur 10 ans : ${strat.simulation.gain_sur_10ans.toLocaleString('fr-FR')} â‚¬
+          texte += `Simulation financière :
+  • Gain fiscal annuel : ${strat.simulation.gain_fiscal_annuel.toLocaleString('fr-FR')} €
+  • Coût mise en place : ${strat.simulation.cout_mise_en_place.toLocaleString('fr-FR')} €
+  • Gain sur 10 ans : ${strat.simulation.gain_sur_10ans.toLocaleString('fr-FR')} €
 
 `;
         }
       });
     }
     
-    // 7. PrÃ©conisations
+    // 7. Préconisations
     if (auditGenere.preconisations.length > 0) {
-      texte += `7. PRÃ‰CONISATIONS PRIORITAIRES
+      texte += `7. PRÉCONISATIONS PRIORITAIRES
 ------------------
 `;
       auditGenere.preconisations.forEach((preco: string, idx: number) => {
@@ -334,17 +334,17 @@ FiscalitÃ© : ${strat.fiscalite}
     }
     
     setAudit(texte);
-    toast.success('âœ… Audit copiÃ© dans l\'Ã©diteur !');
+    toast.success('? Audit copié dans l\'éditeur !');
   };
 
   const handleLoadRapportStructure = async () => {
     setLoadingRapport(true);
     
     try {
-      console.log('ğŸ” Chargement du rapport structurÃ© pour le client:', order.clientId);
+      console.log('?? Chargement du rapport structuré pour le client:', order.clientId);
       
       const response = await fetch(
-        `${apiBaseUrl}/make-server-cac859af/audit-patrimonial/client/${order.clientId}`,
+        `${apiBaseUrl}/audit-patrimonial/client/${order.clientId}`,
         {
           method: 'GET',
           headers: {
@@ -355,50 +355,50 @@ FiscalitÃ© : ${strat.fiscalite}
       );
 
       if (!response.ok) {
-        console.error('âŒ Erreur HTTP:', response.status, response.statusText);
+        console.error('? Erreur HTTP:', response.status, response.statusText);
         throw new Error(`Erreur HTTP ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('ğŸ“¦ DonnÃ©es reÃ§ues:', data);
+      console.log('?? Données reçues:', data);
       
       if (!data.success || !data.audits || data.audits.length === 0) {
-        toast.error('Aucun audit trouvÃ©', {
-          description: 'Veuillez d\'abord gÃ©nÃ©rer un audit patrimonial avec le bouton "GÃ©nÃ©rer l\'audit"'
+        toast.error('Aucun audit trouvé', {
+          description: 'Veuillez d\'abord générer un audit patrimonial avec le bouton "Générer l\'audit"'
         });
         return;
       }
 
-      // Prendre le dernier audit (le plus rÃ©cent)
+      // Prendre le dernier audit (le plus récent)
       const dernierAudit = data.audits[0];
-      console.log('ğŸ“„ Dernier audit:', dernierAudit);
+      console.log('?? Dernier audit:', dernierAudit);
       
       if (!dernierAudit.rapport_structure) {
         toast.error('Rapport non disponible', {
-          description: 'Cet audit ne contient pas de rapport structurÃ©. Veuillez rÃ©gÃ©nÃ©rer l\'audit.'
+          description: 'Cet audit ne contient pas de rapport structuré. Veuillez régénérer l\'audit.'
         });
         return;
       }
 
       const rapport = dernierAudit.rapport_structure;
-      console.log('âœ… Rapport structurÃ© chargÃ©:', rapport);
+      console.log('? Rapport structuré chargé:', rapport);
       
-      // ğŸ”¥ Formater le rapport en texte pour l'Ã©diteur
-      let texte = `RAPPORT PATRIMONIAL STRUCTURÃ‰\n========================================\n\n`;
+      // ?? Formater le rapport en texte pour l'éditeur
+      let texte = `RAPPORT PATRIMONIAL STRUCTURÉ\n========================================\n\n`;
       
       texte += `Client: ${order.clientName}\n`;
       texte += `Date: ${new Date(dernierAudit.date_creation).toLocaleDateString('fr-FR')}\n\n`;
       
-      // Section 1: SynthÃ¨se exÃ©cutive
+      // Section 1: Synthèse exécutive
       if (rapport.section1_synthese) {
         texte += `========================================\n`;
-        texte += `1. SYNTHÃˆSE EXÃ‰CUTIVE\n`;
+        texte += `1. SYNTHÈSE EXÉCUTIVE\n`;
         texte += `========================================\n\n`;
         texte += `${rapport.section1_synthese.contexte}\n\n`;
         if (rapport.section1_synthese.points_cles?.length > 0) {
-          texte += `Points clÃ©s:\n`;
+          texte += `Points clés:\n`;
           rapport.section1_synthese.points_cles.forEach((point: string) => {
-            texte += `  â€¢ ${point}\n`;
+            texte += `  • ${point}\n`;
           });
           texte += `\n`;
         }
@@ -424,10 +424,10 @@ FiscalitÃ© : ${strat.fiscalite}
         }
       }
       
-      // Section 3: Analyses dÃ©taillÃ©es
+      // Section 3: Analyses détaillées
       if (rapport.section3_analyses) {
         texte += `========================================\n`;
-        texte += `3. ANALYSES DÃ‰TAILLÃ‰ES\n`;
+        texte += `3. ANALYSES DÉTAILLÉES\n`;
         texte += `========================================\n\n`;
         
         if (rapport.section3_analyses.analyse_civile) {
@@ -448,14 +448,14 @@ FiscalitÃ© : ${strat.fiscalite}
         }
       }
       
-      // Section 4: ProblÃ©matiques identifiÃ©es
+      // Section 4: Problématiques identifiées
       if (rapport.section4_problematiques?.length > 0) {
         texte += `========================================\n`;
-        texte += `4. PROBLÃ‰MATIQUES IDENTIFIÃ‰ES\n`;
+        texte += `4. PROBLÉMATIQUES IDENTIFIÉES\n`;
         texte += `========================================\n\n`;
         rapport.section4_problematiques.forEach((prob: any, idx: number) => {
           texte += `${idx + 1}. ${prob.titre}\n`;
-          texte += `   GravitÃ©: ${prob.gravite}\n`;
+          texte += `   Gravité: ${prob.gravite}\n`;
           texte += `   ${prob.description}\n\n`;
         });
       }
@@ -467,26 +467,26 @@ FiscalitÃ© : ${strat.fiscalite}
         texte += `========================================\n\n`;
         
         if (rapport.section5_objectifs.objectifs_declares?.length > 0) {
-          texte += `Objectifs dÃ©clarÃ©s:\n`;
+          texte += `Objectifs déclarés:\n`;
           rapport.section5_objectifs.objectifs_declares.forEach((obj: string) => {
-            texte += `  â€¢ ${obj}\n`;
+            texte += `  • ${obj}\n`;
           });
           texte += `\n`;
         }
         
         if (rapport.section5_objectifs.objectifs_deduits?.length > 0) {
-          texte += `Objectifs identifiÃ©s:\n`;
+          texte += `Objectifs identifiés:\n`;
           rapport.section5_objectifs.objectifs_deduits.forEach((obj: string) => {
-            texte += `  â€¢ ${obj}\n`;
+            texte += `  • ${obj}\n`;
           });
           texte += `\n`;
         }
       }
       
-      // Section 6: Recommandations stratÃ©giques
+      // Section 6: Recommandations stratégiques
       if (rapport.section6_recommandations?.strategies?.length > 0) {
         texte += `========================================\n`;
-        texte += `6. RECOMMANDATIONS STRATÃ‰GIQUES\n`;
+        texte += `6. RECOMMANDATIONS STRATÉGIQUES\n`;
         texte += `========================================\n\n`;
         
         if (rapport.section6_recommandations.synthese) {
@@ -501,7 +501,7 @@ FiscalitÃ© : ${strat.fiscalite}
             texte += `   Avantages: ${strat.avantages}\n`;
           }
           if (strat.simulation?.gain_fiscal_annuel) {
-            texte += `   Gain fiscal estimÃ©: ${strat.simulation.gain_fiscal_annuel.toLocaleString('fr-FR')} â‚¬/an\n`;
+            texte += `   Gain fiscal estimé: ${strat.simulation.gain_fiscal_annuel.toLocaleString('fr-FR')} €/an\n`;
           }
           texte += `\n`;
         });
@@ -514,9 +514,9 @@ FiscalitÃ© : ${strat.fiscalite}
         texte += `========================================\n\n`;
         
         if (rapport.section7_plan_action.actions_immediates?.length > 0) {
-          texte += `Actions immÃ©diates (1-3 mois):\n`;
+          texte += `Actions immédiates (1-3 mois):\n`;
           rapport.section7_plan_action.actions_immediates.forEach((action: string) => {
-            texte += `  â€¢ ${action}\n`;
+            texte += `  • ${action}\n`;
           });
           texte += `\n`;
         }
@@ -524,7 +524,7 @@ FiscalitÃ© : ${strat.fiscalite}
         if (rapport.section7_plan_action.actions_court_terme?.length > 0) {
           texte += `Actions court terme (3-6 mois):\n`;
           rapport.section7_plan_action.actions_court_terme.forEach((action: string) => {
-            texte += `  â€¢ ${action}\n`;
+            texte += `  • ${action}\n`;
           });
           texte += `\n`;
         }
@@ -532,18 +532,18 @@ FiscalitÃ© : ${strat.fiscalite}
         if (rapport.section7_plan_action.actions_moyen_terme?.length > 0) {
           texte += `Actions moyen terme (6-12 mois):\n`;
           rapport.section7_plan_action.actions_moyen_terme.forEach((action: string) => {
-            texte += `  â€¢ ${action}\n`;
+            texte += `  • ${action}\n`;
           });
           texte += `\n`;
         }
       }
       
-      // ğŸ”¥ InsÃ©rer le texte dans le textarea
+      // ?? Insérer le texte dans le textarea
       setAudit(texte);
-      toast.success('Rapport structurÃ© chargÃ© dans l\'Ã©diteur');
+      toast.success('Rapport structuré chargé dans l\'éditeur');
       
     } catch (error) {
-      console.error('âŒ Erreur chargement rapport:', error);
+      console.error('? Erreur chargement rapport:', error);
       toast.error('Erreur', {
         description: error instanceof Error ? error.message : 'Impossible de charger le rapport'
       });
@@ -554,7 +554,7 @@ FiscalitÃ© : ${strat.fiscalite}
 
   const handleAddPreconisation = () => {
     if (!newPreconisation.title || !newPreconisation.description) {
-      toast.error('âŒ Veuillez remplir tous les champs');
+      toast.error('? Veuillez remplir tous les champs');
       return;
     }
 
@@ -573,12 +573,12 @@ FiscalitÃ© : ${strat.fiscalite}
       priority: 'medium',
       category: '',
     });
-    toast.success('âœ… PrÃ©conisation ajoutÃ©e');
+    toast.success('? Préconisation ajoutée');
   };
 
   const handleDeletePreconisation = (id: string) => {
     setPreconisations(preconisations.filter(p => p.id !== id));
-    toast.success('âœ… PrÃ©conisation supprimÃ©e');
+    toast.success('? Préconisation supprimée');
   };
 
   const handleSavePreconisations = async () => {
@@ -587,14 +587,14 @@ FiscalitÃ© : ${strat.fiscalite}
       const success = await updateOrderData({ preconisations });
 
       if (success) {
-        toast.success('âœ… PrÃ©conisations sauvegardÃ©es');
+        toast.success('? Préconisations sauvegardées');
         onUpdate();
       } else {
-        toast.error('âŒ Erreur lors de la sauvegarde');
+        toast.error('? Erreur lors de la sauvegarde');
       }
     } catch (error) {
       console.error('Erreur:', error);
-      toast.error('âŒ Erreur lors de la sauvegarde');
+      toast.error('? Erreur lors de la sauvegarde');
     } finally {
       setSaving(false);
     }
@@ -606,14 +606,14 @@ FiscalitÃ© : ${strat.fiscalite}
       const success = await updateOrderData({ presentationClient });
 
       if (success) {
-        toast.success('âœ… PrÃ©sentation sauvegardÃ©e');
+        toast.success('? Présentation sauvegardée');
         onUpdate();
       } else {
-        toast.error('âŒ Erreur lors de la sauvegarde');
+        toast.error('? Erreur lors de la sauvegarde');
       }
     } catch (error) {
       console.error('Erreur:', error);
-      toast.error('âŒ Erreur lors de la sauvegarde');
+      toast.error('? Erreur lors de la sauvegarde');
     } finally {
       setSaving(false);
     }
@@ -621,17 +621,17 @@ FiscalitÃ© : ${strat.fiscalite}
 
   const handleValidateAndSend = async () => {
     if (!audit.trim()) {
-      toast.error('âŒ Veuillez rÃ©diger l\'audit avant de valider');
+      toast.error('? Veuillez rédiger l\'audit avant de valider');
       return;
     }
     if (preconisations.length === 0) {
-      toast.error('âŒ Veuillez ajouter au moins une prÃ©conisation');
+      toast.error('? Veuillez ajouter au moins une préconisation');
       return;
     }
 
     setSending(true);
     try {
-      // ğŸ”¥ Ã‰TAPE 1 : Mettre Ã  jour la commande CoreVision
+      // ?? ÉTAPE 1 : Mettre à jour la commande CoreVision
       const success = await updateOrderData({
         status: 'completed',
         audit,
@@ -642,47 +642,47 @@ FiscalitÃ© : ${strat.fiscalite}
       });
 
       if (!success) {
-        toast.error('âŒ Erreur lors de la validation');
+        toast.error('? Erreur lors de la validation');
         setSending(false);
         return;
       }
 
-      // ğŸ”¥ Ã‰TAPE 2 : RÃ©cupÃ©rer les donnÃ©es du client
+      // ?? ÉTAPE 2 : Récupérer les données du client
       const clientId = order.clientId;
-      console.log('ğŸ“‹ Mise Ã  jour du client:', clientId);
+      console.log('?? Mise à jour du client:', clientId);
       
-      // ğŸ”¥ RÃ©cupÃ©rer le vrai userId depuis la session Supabase
+      // ?? Récupérer le vrai userId depuis la session Supabase
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id || 'default';
-      console.log('ğŸ‘¤ User ID rÃ©cupÃ©rÃ©:', userId);
+      console.log('?? User ID récupéré:', userId);
       
       // Charger le client depuis localStorage
       const clientDetailKey = `client_detail_${userId}_${clientId}`;
       const storedClient = localStorage.getItem(clientDetailKey);
       
       if (!storedClient) {
-        console.warn('âš ï¸ Client non trouvÃ© en localStorage avec clÃ©:', clientDetailKey);
-        toast.success('âœ… Audit validÃ© et envoyÃ© au CGP !');
+        console.warn('?? Client non trouvé en localStorage avec clé:', clientDetailKey);
+        toast.success('? Audit validé et envoyé au CGP !');
         onUpdate();
         onClose();
         return;
       }
 
       const clientData = JSON.parse(storedClient);
-      console.log('ğŸ“¦ DonnÃ©es client chargÃ©es:', clientData);
+      console.log('?? Données client chargées:', clientData);
 
-      // ğŸ”¥ Ã‰TAPE 3 : Ajouter l'audit, la prÃ©sentation et les prÃ©conisations CoreVision au client
+      // ?? ÉTAPE 3 : Ajouter l'audit, la présentation et les préconisations CoreVision au client
       clientData.auditCoreVision = audit;
       clientData.presentationCoreVision = presentationClient;
       clientData.preconisationsCoreVision = preconisations;
       
-      console.log('âœ… DonnÃ©es CoreVision sauvegardÃ©es:', {
+      console.log('? Données CoreVision sauvegardées:', {
         audit: audit.substring(0, 100) + '...',
         presentation: presentationClient.substring(0, 100) + '...',
         nbPreconisations: preconisations.length
       });
 
-      // ğŸ”¥ Ã‰TAPE 4 : Convertir les prÃ©conisations en recommandations
+      // ?? ÉTAPE 4 : Convertir les préconisations en recommandations
       const corevisionRecommendations = preconisations.map((preco) => ({
         id: preco.id,
         category: preco.category || 'Autre',
@@ -692,67 +692,67 @@ FiscalitÃ© : ${strat.fiscalite}
         deadline: undefined,
         completed: false,
         source: 'corevision' as const,
-        validatedByCGP: false, // Ã€ valider par le CGP
+        validatedByCGP: false, // À valider par le CGP
       }));
 
       // Fusionner avec les recommandations existantes
       const existingRecommendations = clientData.auditRecommendations || [];
       clientData.auditRecommendations = [...existingRecommendations, ...corevisionRecommendations];
 
-      // ğŸ”¥ Ã‰TAPE 5 : Mettre Ã  jour les tÃ¢ches R1-R2
+      // ?? ÉTAPE 5 : Mettre à jour les tâches R1-R2
       const tasksKey = `client_tasks_${userId}_${clientId}`;
       const storedTasks = localStorage.getItem(tasksKey);
       
       if (storedTasks) {
         const tasks = JSON.parse(storedTasks);
-        console.log('ğŸ“‹ TÃ¢ches chargÃ©es:', tasks);
+        console.log('?? Tâches chargées:', tasks);
 
-        // Trouver et valider les tÃ¢ches R1-R2
+        // Trouver et valider les tâches R1-R2
         tasks.forEach((task: any) => {
-          // TÃ¢che 1 : "Ã‰laboration de la stratÃ©gie patrimoniale"
-          if (task.title === 'Ã‰laboration de la stratÃ©gie patrimoniale' && task.stage === 'R1-R2') {
+          // Tâche 1 : "Élaboration de la stratégie patrimoniale"
+          if (task.title === 'Élaboration de la stratégie patrimoniale' && task.stage === 'R1-R2') {
             task.completed = true;
-            task.notes = 'âœ… StratÃ©gie Ã©tablie par CoreVision - Analyse terminÃ©e';
+            task.notes = '? Stratégie établie par CoreVision - Analyse terminée';
             task.completedAt = new Date().toISOString();
-            console.log('âœ… TÃ¢che "Ã‰laboration de la stratÃ©gie" validÃ©e');
+            console.log('? Tâche "Élaboration de la stratégie" validée');
           }
 
-          // TÃ¢che 2 : "PrÃ©paration du bilan dÃ©taillÃ©"
-          if (task.title === 'PrÃ©paration du bilan dÃ©taillÃ©' && task.stage === 'R1-R2') {
+          // Tâche 2 : "Préparation du bilan détaillé"
+          if (task.title === 'Préparation du bilan détaillé' && task.stage === 'R1-R2') {
             task.completed = true;
-            task.notes = `âœ… Bilan prÃ©parÃ© par CoreVision\n\n${audit}`;
+            task.notes = `? Bilan préparé par CoreVision\n\n${audit}`;
             task.completedAt = new Date().toISOString();
-            console.log('âœ… TÃ¢che "PrÃ©paration du bilan" validÃ©e avec copie audit');
+            console.log('? Tâche "Préparation du bilan" validée avec copie audit');
           }
 
-          // TÃ¢che 3 : "Validation des recommandations" â†’ Ajouter les recommandations
+          // Tâche 3 : "Validation des recommandations" ? Ajouter les recommandations
           if (task.title === 'Validation des recommandations' && task.stage === 'R1-R2') {
-            // Ne pas marquer comme complÃ©tÃ©e, juste ajouter les recommandations dans les notes
-            task.notes = `ğŸ“‹ ${preconisations.length} recommandation(s) CoreVision reÃ§ues. Consultez-les dans l'onglet Audit pour validation.`;
-            console.log('ğŸ“‹ TÃ¢che "Validation des recommandations" mise Ã  jour');
+            // Ne pas marquer comme complétée, juste ajouter les recommandations dans les notes
+            task.notes = `?? ${preconisations.length} recommandation(s) CoreVision reçues. Consultez-les dans l'onglet Audit pour validation.`;
+            console.log('?? Tâche "Validation des recommandations" mise à jour');
           }
         });
 
         localStorage.setItem(tasksKey, JSON.stringify(tasks));
-        console.log('âœ… TÃ¢ches mises Ã  jour');
+        console.log('? Tâches mises à jour');
       }
 
-      // ğŸ”¥ Ã‰TAPE 6 : Sauvegarder le client
+      // ?? ÉTAPE 6 : Sauvegarder le client
       localStorage.setItem(clientDetailKey, JSON.stringify(clientData));
-      console.log('âœ… Client mis Ã  jour avec audit et recommandations');
+      console.log('? Client mis à jour avec audit et recommandations');
 
-      // ğŸ”¥ Ã‰TAPE 7 : Ã‰mettre l'vÃ©nement de validation admin pour rafraÃ®chir les tÃ¢ches en temps rÃ©el
+      // ?? ÉTAPE 7 : Émettre l'vénement de validation admin pour rafraîchir les tâches en temps réel
       window.dispatchEvent(new CustomEvent('adminValidated', { 
         detail: { clientId: order.clientId } 
       }));
-      console.log('ğŸ“¡ Ã‰vÃ©nement adminValidated Ã©mis pour clientId:', order.clientId);
+      console.log('?? Événement adminValidated émis pour clientId:', order.clientId);
 
-      toast.success('âœ… Audit validÃ© et envoyÃ© au CGP !');
+      toast.success('? Audit validé et envoyé au CGP !');
       onUpdate();
       onClose();
     } catch (error) {
-      console.error('âŒ Erreur:', error);
-      toast.error('âŒ Erreur lors de la validation');
+      console.error('? Erreur:', error);
+      toast.error('? Erreur lors de la validation');
     } finally {
       setSending(false);
     }
@@ -773,7 +773,7 @@ FiscalitÃ© : ${strat.fiscalite}
         <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold">{order.clientName}</h2>
-            <p className="text-purple-100 text-sm mt-1">CGP: {order.cgpName} â€¢ {order.cgpEmail}</p>
+            <p className="text-purple-100 text-sm mt-1">CGP: {order.cgpName} • {order.cgpEmail}</p>
           </div>
           <button
             onClick={onClose}
@@ -786,10 +786,10 @@ FiscalitÃ© : ${strat.fiscalite}
         {/* Sub-tabs */}
         <div className="flex border-b border-gray-200 bg-gray-50 px-6">
           {[
-            { id: 'rapport', label: 'ğŸ“„ Rapport Patrimonial', icon: 'ğŸ“„' },
-            { id: 'preconisations', label: 'ğŸ’¡ PrÃ©conisations', icon: 'ğŸ’¡' },
-            { id: 'presentation', label: 'ğŸ’¬ PrÃ©sentation', icon: 'ğŸ’¬' },
-            { id: 'incoherences', label: 'ğŸš¨ IncohÃ©rences', icon: 'ğŸš¨' },
+            { id: 'rapport', label: '?? Rapport Patrimonial', icon: '??' },
+            { id: 'preconisations', label: '?? Préconisations', icon: '??' },
+            { id: 'presentation', label: '?? Présentation', icon: '??' },
+            { id: 'incoherences', label: '?? Incohérences', icon: '??' },
           ].map((tab: any) => (
             <button
               key={tab.id}
@@ -818,12 +818,12 @@ FiscalitÃ© : ${strat.fiscalite}
 
           {activeSubTab === 'preconisations' && (
             <div className="space-y-6">
-              {/* Liste des prÃ©conisations */}
+              {/* Liste des préconisations */}
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3">ğŸ’¡ PrÃ©conisations ({preconisations.length})</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">?? Préconisations ({preconisations.length})</h3>
                 {preconisations.length === 0 ? (
                   <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                    <p className="text-gray-600">Aucune prÃ©conisation. Ajoutez-en ci-dessous.</p>
+                    <p className="text-gray-600">Aucune préconisation. Ajoutez-en ci-dessous.</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -849,7 +849,7 @@ FiscalitÃ© : ${strat.fiscalite}
                               ? 'bg-orange-100 text-orange-700'
                               : 'bg-gray-100 text-gray-700'
                           }`}>
-                            {preco.priority === 'high' ? 'ğŸ”´ Prioritaire' : preco.priority === 'medium' ? 'ğŸŸ  Moyen' : 'âšª Faible'}
+                            {preco.priority === 'high' ? '?? Prioritaire' : preco.priority === 'medium' ? '?? Moyen' : '? Faible'}
                           </span>
                           <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">
                             {preco.category}
@@ -863,7 +863,7 @@ FiscalitÃ© : ${strat.fiscalite}
 
               {/* Formulaire d'ajout */}
               <div className="border-2 border-purple-200 rounded-lg p-4 bg-purple-50">
-                <h4 className="font-semibold text-purple-900 mb-3">â• Ajouter une prÃ©conisation</h4>
+                <h4 className="font-semibold text-purple-900 mb-3">? Ajouter une préconisation</h4>
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Titre</label>
@@ -880,31 +880,31 @@ FiscalitÃ© : ${strat.fiscalite}
                     <textarea
                       value={newPreconisation.description}
                       onChange={(e) => setNewPreconisation({ ...newPreconisation, description: e.target.value })}
-                      placeholder="Description dÃ©taillÃ©e de la prÃ©conisation..."
+                      placeholder="Description détaillée de la préconisation..."
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                       rows={3}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">PrioritÃ©</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Priorité</label>
                       <select
                         value={newPreconisation.priority}
                         onChange={(e) => setNewPreconisation({ ...newPreconisation, priority: e.target.value as any })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                       >
-                        <option value="high">ğŸ”´ Prioritaire</option>
-                        <option value="medium">ğŸŸ  Moyen</option>
-                        <option value="low">âšª Faible</option>
+                        <option value="high">?? Prioritaire</option>
+                        <option value="medium">?? Moyen</option>
+                        <option value="low">? Faible</option>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">CatÃ©gorie</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
                       <input
                         type="text"
                         value={newPreconisation.category}
                         onChange={(e) => setNewPreconisation({ ...newPreconisation, category: e.target.value })}
-                        placeholder="Ex: FiscalitÃ©"
+                        placeholder="Ex: Fiscalité"
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                       />
                     </div>
@@ -925,7 +925,7 @@ FiscalitÃ© : ${strat.fiscalite}
                 className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium disabled:opacity-50"
               >
                 <Save className="w-5 h-5" />
-                {saving ? 'Sauvegarde...' : 'Sauvegarder les prÃ©conisations'}
+                {saving ? 'Sauvegarde...' : 'Sauvegarder les préconisations'}
               </button>
             </div>
           )}
@@ -933,14 +933,14 @@ FiscalitÃ© : ${strat.fiscalite}
           {activeSubTab === 'presentation' && (
             <div className="space-y-4">
               <div>
-                <label className="block font-semibold text-gray-900 mb-2">ğŸ’¬ PrÃ©sentation du client</label>
+                <label className="block font-semibold text-gray-900 mb-2">?? Présentation du client</label>
                 <p className="text-sm text-gray-600 mb-3">
-                  RÃ©digez une prÃ©sentation dÃ©taillÃ©e du client qui sera transmise au CGP aprÃ¨s validation.
+                  Rédigez une présentation détaillée du client qui sera transmise au CGP après validation.
                 </p>
                 <textarea
                   value={presentationClient}
                   onChange={(e) => setPresentationClient(e.target.value)}
-                  placeholder="PrÃ©sentation dÃ©taillÃ©e du client..."
+                  placeholder="Présentation détaillée du client..."
                   className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                   rows={15}
                 />
@@ -952,21 +952,21 @@ FiscalitÃ© : ${strat.fiscalite}
                 className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium disabled:opacity-50"
               >
                 <Save className="w-5 h-5" />
-                {saving ? 'Sauvegarde...' : 'Sauvegarder la prÃ©sentation'}
+                {saving ? 'Sauvegarde...' : 'Sauvegarder la présentation'}
               </button>
             </div>
           )}
 
           {activeSubTab === 'incoherences' && (
             <div className="space-y-4">
-              <h3 className="font-semibold text-gray-900 mb-3">ğŸš¨ IncohÃ©rences dÃ©tectÃ©es</h3>
+              <h3 className="font-semibold text-gray-900 mb-3">?? Incohérences détectées</h3>
               {loadingIncoherences ? (
                 <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                  <p className="text-gray-600">DÃ©tection des incohÃ©rences en cours...</p>
+                  <p className="text-gray-600">Détection des incohérences en cours...</p>
                 </div>
               ) : errorIncoherences ? (
                 <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                  <p className="text-gray-600">Erreur lors de la dÃ©tection des incohÃ©rences: {errorIncoherences.message}</p>
+                  <p className="text-gray-600">Erreur lors de la détection des incohérences: {errorIncoherences.message}</p>
                 </div>
               ) : rapportIncoherences && rapportIncoherences.length > 0 ? (
                 <div className="space-y-3">
@@ -1006,7 +1006,7 @@ FiscalitÃ© : ${strat.fiscalite}
                             ? 'bg-orange-100 text-orange-700'
                             : 'bg-gray-100 text-gray-700'
                         }`}>
-                          {incoherence.severity === 'high' ? 'ğŸ”´ Critique' : incoherence.severity === 'medium' ? 'ğŸŸ  Moyenne' : 'âšª Faible'}
+                          {incoherence.severity === 'high' ? '?? Critique' : incoherence.severity === 'medium' ? '?? Moyenne' : '? Faible'}
                         </span>
                         <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">
                           {incoherence.category}
@@ -1017,7 +1017,7 @@ FiscalitÃ© : ${strat.fiscalite}
                 </div>
               ) : (
                 <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                  <p className="text-gray-600">Aucune incohÃ©rence dÃ©tectÃ©e.</p>
+                  <p className="text-gray-600">Aucune incohérence détectée.</p>
                 </div>
               )}
             </div>
@@ -1028,7 +1028,7 @@ FiscalitÃ© : ${strat.fiscalite}
         <div className="border-t border-gray-200 p-6 bg-gray-50">
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-600">
-              Une fois validÃ©, l'audit et les prÃ©conisations seront accessibles au CGP
+              Une fois validé, l'audit et les préconisations seront accessibles au CGP
             </p>
             <button
               onClick={handleValidateAndSend}

@@ -1,5 +1,5 @@
-Ôªø// ============================================
-// HELPERS POUR LA GESTION DES DOCUMENTS DEMAND√âS
+// ============================================
+// HELPERS POUR LA GESTION DES DOCUMENTS DEMAND…S
 // ============================================
 
 import { taskAPI, clientAPI } from '../services/api';
@@ -16,53 +16,53 @@ export interface RequestedDocument {
 }
 
 /**
- * Cr√©e ou met √† jour la liste des documents demand√©s pour un client
+ * CrÈe ou met ‡ jour la liste des documents demandÈs pour un client
  */
 export async function createDocumentRequests(
   clientId: string,
   documentsToRequest: string[]
 ): Promise<boolean> {
   try {
-    console.log('üìã Cr√©ation des demandes de documents pour client:', clientId);
-    console.log('üìÑ Documents demand√©s:', documentsToRequest);
+    console.log('?? CrÈation des demandes de documents pour client:', clientId);
+    console.log('?? Documents demandÈs:', documentsToRequest);
 
-    // 1. R√©cup√©rer le statut actuel du client pour cr√©er la t√¢che au bon stage
+    // 1. RÈcupÈrer le statut actuel du client pour crÈer la t‚che au bon stage
     const clientData = await clientAPI.getById(clientId);
     const currentStage = clientData.status || 'R0';
     
-    console.log('üìä Statut actuel du client:', currentStage);
+    console.log('?? Statut actuel du client:', currentStage);
 
-    // 2. R√©cup√©rer toutes les t√¢ches du client via l'API
+    // 2. RÈcupÈrer toutes les t‚ches du client via l'API
     const allTasks = await taskAPI.getAll();
     const clientTasks = allTasks.filter((t: any) => t.clientId === clientId);
     
-    console.log('üîç T√¢ches trouv√©es pour ce client:', clientTasks.length);
+    console.log('?? T‚ches trouvÈes pour ce client:', clientTasks.length);
     
-    // 3. Trouver la t√¢che "R√©ception des documents clients"
+    // 3. Trouver la t‚che "RÈception des documents clients"
     let task = clientTasks.find((t: any) => 
-      t.title?.includes('R√©ception des documents clients')
+      t.title?.includes('RÈception des documents clients')
     );
     
-    // Si la t√¢che n'existe pas, cr√©er une t√¢che au stage actuel du client
+    // Si la t‚che n'existe pas, crÈer une t‚che au stage actuel du client
     if (!task) {
-      console.log(`‚ö†Ô∏è T√¢che "R√©ception des documents clients" non trouv√©e, cr√©ation au stage ${currentStage}...`);
+      console.log(`?? T‚che "RÈception des documents clients" non trouvÈe, crÈation au stage ${currentStage}...`);
       
-      // Cr√©er une t√¢che au stage actuel du client
+      // CrÈer une t‚che au stage actuel du client
       const newTask = await taskAPI.create(clientId, {
-        titre: 'R√©ception des documents clients',
-        description: 'Documents demand√©s par email',
+        titre: 'RÈception des documents clients',
+        description: 'Documents demandÈs par email',
         priorite: 'normale',
         date_echeance: '',
-        stage: currentStage, // ‚úÖ Utiliser le stage actuel du client
+        stage: currentStage, // ? Utiliser le stage actuel du client
       });
       
       task = newTask;
-      console.log('‚úÖ T√¢che cr√©√©e au stage:', currentStage, 'avec ID:', task.id);
+      console.log('? T‚che crÈÈe au stage:', currentStage, 'avec ID:', task.id);
     } else {
-      console.log('‚úÖ T√¢che trouv√©e:', task.title);
+      console.log('? T‚che trouvÈe:', task.title);
     }
     
-    // 4. Cr√©er la structure des documents demand√©s
+    // 4. CrÈer la structure des documents demandÈs
     const requestedDocuments: RequestedDocument[] = documentsToRequest.map((docName, index) => ({
       id: `doc_${Date.now()}_${index}`,
       name: docName,
@@ -70,7 +70,7 @@ export async function createDocumentRequests(
       requestedDate: new Date().toISOString(),
     }));
     
-    // 5. Mettre √† jour la t√¢che avec les documents demand√©s
+    // 5. Mettre ‡ jour la t‚che avec les documents demandÈs
     const updatedTask = {
       ...task,
       documentRequests: {
@@ -79,23 +79,23 @@ export async function createDocumentRequests(
         totalReceived: 0,
         allReceived: false,
       },
-      description: `üìã ${requestedDocuments.length} document(s) demand√©(s) - 0 re√ßu(s)`,
+      description: `?? ${requestedDocuments.length} document(s) demandÈ(s) - 0 reÁu(s)`,
       completed: false,
     };
     
     // 6. Sauvegarder via l'API
     await taskAPI.update(task.id, updatedTask);
     
-    console.log('‚úÖ Demandes de documents cr√©√©es avec succ√®s');
+    console.log('? Demandes de documents crÈÈes avec succËs');
     return true;
   } catch (error) {
-    console.error('‚ùå Erreur cr√©ation demandes documents:', error);
+    console.error('? Erreur crÈation demandes documents:', error);
     return false;
   }
 }
 
 /**
- * R√©cup√®re la liste des documents demand√©s pour un client
+ * RÈcupËre la liste des documents demandÈs pour un client
  */
 export async function getRequestedDocuments(clientId: string): Promise<RequestedDocument[]> {
   try {
@@ -107,10 +107,10 @@ export async function getRequestedDocuments(clientId: string): Promise<Requested
       t.title?.includes('Collecter documents')
     );
 
-    // Fallback: chercher dans "R√©ception des documents clients"
+    // Fallback: chercher dans "RÈception des documents clients"
     if (!task) {
       task = clientTasks.find((t: any) =>
-        t.title?.includes('R√©ception des documents clients')
+        t.title?.includes('RÈception des documents clients')
       );
     }
 
@@ -118,13 +118,13 @@ export async function getRequestedDocuments(clientId: string): Promise<Requested
 
     return task.documentRequests.requestedDocuments || [];
   } catch (error) {
-    console.error('‚ùå Erreur r√©cup√©ration documents demand√©s:', error);
+    console.error('? Erreur rÈcupÈration documents demandÈs:', error);
     return [];
   }
 }
 
 /**
- * Upload un document et met √† jour le statut
+ * Upload un document et met ‡ jour le statut
  */
 export async function uploadRequestedDocument(
   clientId: string,
@@ -132,8 +132,8 @@ export async function uploadRequestedDocument(
   file: File
 ): Promise<boolean> {
   try {
-    console.log('üì§ Upload du document:', documentId);
-    console.log('üìÑ Fichier:', file.name, 'Taille:', file.size);
+    console.log('?? Upload du document:', documentId);
+    console.log('?? Fichier:', file.name, 'Taille:', file.size);
     
     // 1. Upload du fichier vers le serveur
     const formData = new FormData();
@@ -141,10 +141,10 @@ export async function uploadRequestedDocument(
     formData.append('clientId', clientId);
     formData.append('documentType', 'requested_document');
     
-    console.log('üåê Envoi vers serveur...');
+    console.log('?? Envoi vers serveur...');
     
     const uploadResponse = await fetch(
-      `${apiBaseUrl}/make-server-cac859af/upload-document`,
+      `${apiBaseUrl}/upload-document`,
       {
         method: 'POST',
         headers: {
@@ -154,56 +154,56 @@ export async function uploadRequestedDocument(
       }
     );
     
-    console.log('üì° Response status:', uploadResponse.status);
+    console.log('?? Response status:', uploadResponse.status);
     
     if (!uploadResponse.ok) {
       const errorText = await uploadResponse.text();
-      console.error('‚ùå Erreur serveur:', errorText);
+      console.error('? Erreur serveur:', errorText);
       throw new Error(`Erreur serveur (${uploadResponse.status}): ${errorText}`);
     }
     
     const responseData = await uploadResponse.json();
-    console.log('‚úÖ Response data:', responseData);
+    console.log('? Response data:', responseData);
     
     if (!responseData.fileUrl) {
-      console.error('‚ùå Pas de fileUrl dans la r√©ponse:', responseData);
-      throw new Error('Pas d\'URL de fichier dans la r√©ponse');
+      console.error('? Pas de fileUrl dans la rÈponse:', responseData);
+      throw new Error('Pas d\'URL de fichier dans la rÈponse');
     }
     
     const { fileUrl } = responseData;
-    console.log('‚úÖ Fichier upload√©:', fileUrl);
+    console.log('? Fichier uploadÈ:', fileUrl);
     
-    // 2. R√©cup√©rer la t√¢che via l'API
+    // 2. RÈcupÈrer la t‚che via l'API
     const allTasks = await taskAPI.getAll();
     const clientTasks = allTasks.filter((t: any) => t.clientId === clientId);
     
     const task = clientTasks.find((t: any) => 
-      t.title?.includes('R√©ception des documents clients')
+      t.title?.includes('RÈception des documents clients')
     );
     
     if (!task || !task.documentRequests) {
-      console.warn('‚ö†Ô∏è Aucune demande de document trouv√©e');
+      console.warn('?? Aucune demande de document trouvÈe');
       return false;
     }
     
-    // 3. Mettre √† jour le document sp√©cifique - CR√âER UNE COPIE PROFONDE
+    // 3. Mettre ‡ jour le document spÈcifique - CR…ER UNE COPIE PROFONDE
     const updatedDocumentRequests = JSON.parse(JSON.stringify(task.documentRequests));
     const docIndex = updatedDocumentRequests.requestedDocuments.findIndex(
       (doc: RequestedDocument) => doc.id === documentId
     );
     
     if (docIndex === -1) {
-      console.warn('‚ö†Ô∏è Document demand√© non trouv√©:', documentId);
+      console.warn('?? Document demandÈ non trouvÈ:', documentId);
       return false;
     }
     
-    // Mettre √† jour le document
+    // Mettre ‡ jour le document
     updatedDocumentRequests.requestedDocuments[docIndex].status = 'received';
     updatedDocumentRequests.requestedDocuments[docIndex].receivedDate = new Date().toISOString();
     updatedDocumentRequests.requestedDocuments[docIndex].fileUrl = fileUrl;
     updatedDocumentRequests.requestedDocuments[docIndex].fileName = file.name;
     
-    console.log('üìã Document mis √† jour:', updatedDocumentRequests.requestedDocuments[docIndex]);
+    console.log('?? Document mis ‡ jour:', updatedDocumentRequests.requestedDocuments[docIndex]);
     
     // 4. Recalculer les totaux
     const totalReceived = updatedDocumentRequests.requestedDocuments.filter(
@@ -213,19 +213,19 @@ export async function uploadRequestedDocument(
     updatedDocumentRequests.totalReceived = totalReceived;
     updatedDocumentRequests.allReceived = totalReceived === updatedDocumentRequests.totalRequested;
     
-    // 5. Pr√©parer les mises √† jour de la t√¢che
+    // 5. PrÈparer les mises ‡ jour de la t‚che
     const taskUpdates: any = {
       documentRequests: updatedDocumentRequests,
-      description: `üìã ${updatedDocumentRequests.totalRequested} document(s) demand√©(s) - ${totalReceived} re√ßu(s)`,
+      description: `?? ${updatedDocumentRequests.totalRequested} document(s) demandÈ(s) - ${totalReceived} reÁu(s)`,
       completed: false,
     };
     
     if (updatedDocumentRequests.allReceived) {
       taskUpdates.completed = true;
-      taskUpdates.description = `‚úÖ Tous les documents ont √©t√© re√ßus (${totalReceived}/${updatedDocumentRequests.totalRequested})`;
+      taskUpdates.description = `? Tous les documents ont ÈtÈ reÁus (${totalReceived}/${updatedDocumentRequests.totalRequested})`;
     }
     
-    console.log('üíæ Sauvegarde de la t√¢che avec:', taskUpdates);
+    console.log('?? Sauvegarde de la t‚che avec:', taskUpdates);
     
     // 6. Sauvegarder via l'API avec un merge explicite
     const updatedTask = {
@@ -233,22 +233,22 @@ export async function uploadRequestedDocument(
       ...taskUpdates,
     };
     
-    console.log('üîç T√¢che compl√®te avant sauvegarde:', JSON.stringify(updatedTask, null, 2));
+    console.log('?? T‚che complËte avant sauvegarde:', JSON.stringify(updatedTask, null, 2));
     
     await taskAPI.update(task.id, updatedTask);
     
-    console.log('‚úÖ Document marqu√© comme re√ßu et sauvegard√©');
+    console.log('? Document marquÈ comme reÁu et sauvegardÈ');
     
-    // 7. V√©rification : relire la t√¢che pour confirmer la sauvegarde
+    // 7. VÈrification : relire la t‚che pour confirmer la sauvegarde
     const verificationTasks = await taskAPI.getAll();
     const verifiedTask = verificationTasks.find((t: any) => t.id === task.id);
     
-    console.log('üîç V√©rification de la t√¢che recharg√©e:', JSON.stringify(verifiedTask?.documentRequests, null, 2));
+    console.log('?? VÈrification de la t‚che rechargÈe:', JSON.stringify(verifiedTask?.documentRequests, null, 2));
     
     if (verifiedTask?.documentRequests?.requestedDocuments[docIndex]?.status === 'received') {
-      console.log('‚úÖ V√©rification r√©ussie : le document est bien enregistr√© comme "received"');
+      console.log('? VÈrification rÈussie : le document est bien enregistrÈ comme "received"');
       
-      // ‚úÖ NOUVEAU : Double v√©rification avec relecture directe du localStorage
+      // ? NOUVEAU : Double vÈrification avec relecture directe du localStorage
       const userId = localStorage.getItem('user_id') || 'default';
       const tasksKey = `client_tasks_${userId}_${clientId}`;
       const directCheck = localStorage.getItem(tasksKey);
@@ -256,7 +256,7 @@ export async function uploadRequestedDocument(
       if (directCheck) {
         const directTasks = JSON.parse(directCheck);
         const directTask = directTasks.find((t: any) => t.id === task.id);
-        console.log('üîç V√©rification directe localStorage:', {
+        console.log('?? VÈrification directe localStorage:', {
           found: !!directTask,
           hasDocumentRequests: !!directTask?.documentRequests,
           docStatus: directTask?.documentRequests?.requestedDocuments[docIndex]?.status
@@ -265,18 +265,18 @@ export async function uploadRequestedDocument(
       
       return true;
     } else {
-      console.error('‚ùå V√©rification √©chou√©e : le document n\'est pas enregistr√© correctement');
-      console.error('√âtat attendu: received, √©tat actuel:', verifiedTask?.documentRequests?.requestedDocuments[docIndex]?.status);
+      console.error('? VÈrification ÈchouÈe : le document n\'est pas enregistrÈ correctement');
+      console.error('…tat attendu: received, Ètat actuel:', verifiedTask?.documentRequests?.requestedDocuments[docIndex]?.status);
       return false;
     }
   } catch (error) {
-    console.error('‚ùå Erreur upload document:', error);
+    console.error('? Erreur upload document:', error);
     return false;
   }
 }
 
 /**
- * Supprime un document demand√©
+ * Supprime un document demandÈ
  */
 export async function deleteRequestedDocument(
   clientId: string,
@@ -287,12 +287,12 @@ export async function deleteRequestedDocument(
     const clientTasks = allTasks.filter((t: any) => t.clientId === clientId);
     
     const task = clientTasks.find((t: any) => 
-      t.title?.includes('R√©ception des documents clients')
+      t.title?.includes('RÈception des documents clients')
     );
     
     if (!task || !task.documentRequests) return false;
     
-    // Filtrer le document √† supprimer
+    // Filtrer le document ‡ supprimer
     task.documentRequests.requestedDocuments = task.documentRequests.requestedDocuments.filter(
       (doc: RequestedDocument) => doc.id !== documentId
     );
@@ -305,8 +305,8 @@ export async function deleteRequestedDocument(
     task.documentRequests.totalReceived = totalReceived;
     task.documentRequests.allReceived = totalReceived === task.documentRequests.totalRequested;
     
-    // Mettre √† jour la description
-    task.description = `üìã ${task.documentRequests.totalRequested} document(s) demand√©(s) - ${totalReceived} re√ßu(s)`;
+    // Mettre ‡ jour la description
+    task.description = `?? ${task.documentRequests.totalRequested} document(s) demandÈ(s) - ${totalReceived} reÁu(s)`;
     
     if (task.documentRequests.allReceived && task.documentRequests.totalRequested > 0) {
       task.completed = true;
@@ -317,10 +317,10 @@ export async function deleteRequestedDocument(
     // Sauvegarder via l'API
     await taskAPI.update(task.id, task);
     
-    console.log('‚úÖ Document demand√© supprim√©');
+    console.log('? Document demandÈ supprimÈ');
     return true;
   } catch (error) {
-    console.error('‚ùå Erreur suppression document:', error);
+    console.error('? Erreur suppression document:', error);
     return false;
   }
 }

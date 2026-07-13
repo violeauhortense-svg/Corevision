@@ -1,16 +1,16 @@
-Ôªø/**
- * üîç SERVICE INCOH√âRENCES - Interface pour la d√©tection et gestion des incoh√©rences
+/**
+ * ?? SERVICE INCOH…RENCES - Interface pour la dÈtection et gestion des incohÈrences
  * 
- * Phase 3 : Am√©lioration processus CoreVision
- * - D√©tection automatique d'incoh√©rences
- * - Validation/Ignore/Correction avec tra√ßabilit√©
- * - UI de gestion structur√©e
+ * Phase 3 : AmÈlioration processus CoreVision
+ * - DÈtection automatique d'incohÈrences
+ * - Validation/Ignore/Correction avec traÁabilitÈ
+ * - UI de gestion structurÈe
  */
 
 import { apiBaseUrl, publicAnonKey } from '../utils/supabase/info';
 
 // ============================================
-// TYPES (synchronis√©s avec le serveur)
+// TYPES (synchronisÈs avec le serveur)
 // ============================================
 
 export type CategorieIncoherence =
@@ -37,7 +37,7 @@ export interface Incoherence {
   description: string;
   consequence: string;
 
-  // Donn√©es concern√©es
+  // DonnÈes concernÈes
   champsAffectes: string[];
   valeursActuelles: any;
 
@@ -45,13 +45,13 @@ export interface Incoherence {
   suggestionsResolution: string[];
   valeursCorrigees?: any;
 
-  // Tra√ßabilit√©
+  // TraÁabilitÈ
   dateDetection: string;
   dateResolution?: string;
   utilisateurResolution?: string;
   commentaireResolution?: string;
 
-  // R√®gle appliqu√©e
+  // RËgle appliquÈe
   regleId: string;
   regleDescription: string;
 }
@@ -76,10 +76,10 @@ export interface RapportIncoherences {
     corrigee: number;
   };
 
-  // Liste des incoh√©rences
+  // Liste des incohÈrences
   incoherences: Incoherence[];
 
-  // Score de coh√©rence global
+  // Score de cohÈrence global
   scoreCoherence: number; // 0-100
 }
 
@@ -107,7 +107,7 @@ class IncoherencesServiceClass {
   }
 
   /**
-   * D√©tecte toutes les incoh√©rences pour un client
+   * DÈtecte toutes les incohÈrences pour un client
    */
   async detecter(
     clientId: string,
@@ -135,18 +135,18 @@ class IncoherencesServiceClass {
 
       const duration = performance.now() - startTime;
       console.log(
-        `üîç D√©tection incoh√©rences: ${response.status} (${Math.round(duration)}ms)`
+        `?? DÈtection incohÈrences: ${response.status} (${Math.round(duration)}ms)`
       );
 
       if (!response.ok) {
         const errorData = await response.json();
-        return { rapport: null, error: errorData.error || 'Erreur de d√©tection' };
+        return { rapport: null, error: errorData.error || 'Erreur de dÈtection' };
       }
 
       const data = await response.json();
       return { rapport: data.rapport, error: null };
     } catch (error) {
-      console.error('‚ùå Erreur d√©tection incoh√©rences:', error);
+      console.error('? Erreur dÈtection incohÈrences:', error);
       return {
         rapport: null,
         error: error instanceof Error ? error.message : 'Erreur inconnue',
@@ -155,7 +155,7 @@ class IncoherencesServiceClass {
   }
 
   /**
-   * R√©cup√®re le rapport d'incoh√©rences pour un client
+   * RÈcupËre le rapport d'incohÈrences pour un client
    */
   async getRapport(clientId: string): Promise<{
     rapport: RapportIncoherences | null;
@@ -173,13 +173,13 @@ class IncoherencesServiceClass {
 
       if (!response.ok) {
         const errorData = await response.json();
-        return { rapport: null, error: errorData.error || 'Rapport non trouv√©' };
+        return { rapport: null, error: errorData.error || 'Rapport non trouvÈ' };
       }
 
       const data = await response.json();
       return { rapport: data.rapport, error: null };
     } catch (error) {
-      console.error('‚ùå Erreur r√©cup√©ration rapport:', error);
+      console.error('? Erreur rÈcupÈration rapport:', error);
       return {
         rapport: null,
         error: error instanceof Error ? error.message : 'Erreur inconnue',
@@ -188,7 +188,7 @@ class IncoherencesServiceClass {
   }
 
   /**
-   * Valide une incoh√©rence (accepte comme correcte)
+   * Valide une incohÈrence (accepte comme correcte)
    */
   async valider(
     clientId: string,
@@ -220,10 +220,10 @@ class IncoherencesServiceClass {
       }
 
       const data = await response.json();
-      console.log(`‚úÖ Incoh√©rence valid√©e: ${incoherenceId}`);
+      console.log(`? IncohÈrence validÈe: ${incoherenceId}`);
       return { rapport: data.rapport, error: null };
     } catch (error) {
-      console.error('‚ùå Erreur validation:', error);
+      console.error('? Erreur validation:', error);
       return {
         rapport: null,
         error: error instanceof Error ? error.message : 'Erreur inconnue',
@@ -232,7 +232,7 @@ class IncoherencesServiceClass {
   }
 
   /**
-   * Ignore une incoh√©rence (marque comme non pertinente)
+   * Ignore une incohÈrence (marque comme non pertinente)
    */
   async ignorer(
     clientId: string,
@@ -264,10 +264,10 @@ class IncoherencesServiceClass {
       }
 
       const data = await response.json();
-      console.log(`‚è≠Ô∏è Incoh√©rence ignor√©e: ${incoherenceId}`);
+      console.log(`?? IncohÈrence ignorÈe: ${incoherenceId}`);
       return { rapport: data.rapport, error: null };
     } catch (error) {
-      console.error('‚ùå Erreur ignore:', error);
+      console.error('? Erreur ignore:', error);
       return {
         rapport: null,
         error: error instanceof Error ? error.message : 'Erreur inconnue',
@@ -276,7 +276,7 @@ class IncoherencesServiceClass {
   }
 
   /**
-   * Marque une incoh√©rence comme corrig√©e
+   * Marque une incohÈrence comme corrigÈe
    */
   async marquerCorrigee(
     clientId: string,
@@ -308,10 +308,10 @@ class IncoherencesServiceClass {
       }
 
       const data = await response.json();
-      console.log(`üîß Incoh√©rence corrig√©e: ${incoherenceId}`);
+      console.log(`?? IncohÈrence corrigÈe: ${incoherenceId}`);
       return { rapport: data.rapport, error: null };
     } catch (error) {
-      console.error('‚ùå Erreur correction:', error);
+      console.error('? Erreur correction:', error);
       return {
         rapport: null,
         error: error instanceof Error ? error.message : 'Erreur inconnue',

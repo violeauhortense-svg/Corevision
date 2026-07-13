@@ -1,4 +1,4 @@
-Ôªøimport { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Upload, FileText, Settings, Trash2, RefreshCw, Download, 
   CheckCircle2, XCircle, Clock, AlertCircle, ChevronDown, X,
@@ -20,7 +20,7 @@ interface KnowledgeDocument {
   errorMessage?: string;
 }
 
-type DocumentCategory = 'Fiscal' | 'Civil' | 'Produit' | 'Conformit√©' | 'P√©dagogique';
+type DocumentCategory = 'Fiscal' | 'Civil' | 'Produit' | 'ConformitÈ' | 'PÈdagogique';
 
 interface IngestionParams {
   chunkSize: number;
@@ -33,8 +33,8 @@ const CATEGORIES: { value: DocumentCategory; label: string; icon: any; color: st
   { value: 'Fiscal', label: 'Fiscal', icon: Scale, color: 'blue' },
   { value: 'Civil', label: 'Civil', icon: Shield, color: 'purple' },
   { value: 'Produit', label: 'Produit', icon: Package, color: 'green' },
-  { value: 'Conformit√©', label: 'Conformit√©', icon: AlertCircle, color: 'orange' },
-  { value: 'P√©dagogique', label: 'P√©dagogique', icon: BookOpen, color: 'indigo' },
+  { value: 'ConformitÈ', label: 'ConformitÈ', icon: AlertCircle, color: 'orange' },
+  { value: 'PÈdagogique', label: 'PÈdagogique', icon: BookOpen, color: 'indigo' },
 ];
 
 interface AdminKnowledgeBaseProps {
@@ -55,8 +55,8 @@ export function AdminKnowledgeBase({ session }: AdminKnowledgeBaseProps) {
   const [documentName, setDocumentName] = useState('');
   const [category, setCategory] = useState<DocumentCategory>('Fiscal');
   const [params, setParams] = useState<IngestionParams>({
-    chunkSize: 300,  // 300 tokens ‚âà 225 mots (meilleur pour le chunking)
-    overlap: 50,     // 50 tokens ‚âà 38 mots (overlap raisonnable)
+    chunkSize: 300,  // 300 tokens ò 225 mots (meilleur pour le chunking)
+    overlap: 50,     // 50 tokens ò 38 mots (overlap raisonnable)
     autoClean: true,
     priority: false,
   });
@@ -75,7 +75,7 @@ export function AdminKnowledgeBase({ session }: AdminKnowledgeBaseProps) {
       const authToken = publicAnonKey;
       
       const response = await fetch(
-        `${apiBaseUrl}/make-server-cac859af/knowledge-base/documents`,
+        `${apiBaseUrl}/knowledge-base/documents`,
         {
           headers: {
             'Authorization': `Bearer ${authToken}`,
@@ -127,7 +127,7 @@ export function AdminKnowledgeBase({ session }: AdminKnowledgeBaseProps) {
       setSelectedFile(pdfFile);
       setDocumentName(pdfFile.name.replace('.pdf', ''));
     } else {
-      toast.error('Seuls les fichiers PDF sont accept√©s');
+      toast.error('Seuls les fichiers PDF sont acceptÈs');
     }
   };
 
@@ -137,7 +137,7 @@ export function AdminKnowledgeBase({ session }: AdminKnowledgeBaseProps) {
       setSelectedFile(file);
       setDocumentName(file.name.replace('.pdf', ''));
     } else {
-      toast.error('Seuls les fichiers PDF sont accept√©s');
+      toast.error('Seuls les fichiers PDF sont acceptÈs');
     }
   };
 
@@ -154,7 +154,7 @@ export function AdminKnowledgeBase({ session }: AdminKnowledgeBaseProps) {
       const { projectId, publicAnonKey } = await import('../utils/supabase/info');
       const authToken = publicAnonKey;
 
-      // Cr√©er un FormData pour envoyer le fichier
+      // CrÈer un FormData pour envoyer le fichier
       const formData = new FormData();
       formData.append('file', selectedFile);
       formData.append('name', documentName);
@@ -166,7 +166,7 @@ export function AdminKnowledgeBase({ session }: AdminKnowledgeBaseProps) {
 
       // Appeler l'API d'ingestion
       const response = await fetch(
-        `${apiBaseUrl}/make-server-cac859af/knowledge-base/ingest`,
+        `${apiBaseUrl}/knowledge-base/ingest`,
         {
           method: 'POST',
           headers: {
@@ -182,27 +182,27 @@ export function AdminKnowledgeBase({ session }: AdminKnowledgeBaseProps) {
       }
 
       const result = await response.json();
-      console.log('‚úÖ Document index√©:', result);
+      console.log('? Document indexÈ:', result);
 
       // Ajouter au journal
       addLog(
         documentName,
         'completed',
-        `‚úÖ Index√© avec succ√®s (${result.chunksCount} chunks)`
+        `? IndexÈ avec succËs (${result.chunksCount} chunks)`
       );
 
       // Recharger la liste des documents
       await loadDocuments();
 
-      // R√©initialiser le formulaire
+      // RÈinitialiser le formulaire
       setSelectedFile(null);
       setDocumentName('');
     } catch (error) {
-      console.error('‚ùå Erreur indexation:', error);
+      console.error('? Erreur indexation:', error);
       addLog(
         documentName,
         'error',
-        `‚ùå Erreur: ${error instanceof Error ? error.message : 'Upload failed'}`
+        `? Erreur: ${error instanceof Error ? error.message : 'Upload failed'}`
       );
     } finally {
       setIsUploading(false);
@@ -211,7 +211,7 @@ export function AdminKnowledgeBase({ session }: AdminKnowledgeBaseProps) {
 
   // Supprimer un document
   const handleDeleteDocument = async (docId: string) => {
-    if (!confirm('√ätes-vous s√ªr de vouloir supprimer ce document de l\'index ?')) {
+    if (!confirm(' tes-vous s˚r de vouloir supprimer ce document de l\'index ?')) {
       return;
     }
 
@@ -220,39 +220,39 @@ export function AdminKnowledgeBase({ session }: AdminKnowledgeBaseProps) {
       // await fetch(`/api/knowledge-base/documents/${docId}`, { method: 'DELETE' });
       
       setDocuments(documents.filter(doc => doc.id !== docId));
-      toast.success('Document supprim√© de l\'index');
+      toast.success('Document supprimÈ de l\'index');
     } catch (error) {
       console.error('Erreur suppression:', error);
       toast.error('Erreur lors de la suppression');
     }
   };
 
-  // R√©indexer un document
+  // RÈindexer un document
   const handleReindexDocument = async (docId: string) => {
     try {
-      // TODO: Appeler l'API pour r√©indexer
+      // TODO: Appeler l'API pour rÈindexer
       setDocuments(documents.map(doc => 
         doc.id === docId ? { ...doc, status: 'processing', chunksCount: 0 } : doc
       ));
       
-      toast.success('R√©indexation lanc√©e');
+      toast.success('RÈindexation lancÈe');
 
-      // Simuler la compl√©tion
+      // Simuler la complÈtion
       setTimeout(() => {
         setDocuments(prev => prev.map(doc => 
           doc.id === docId 
             ? { ...doc, status: 'completed', chunksCount: Math.floor(Math.random() * 200) + 50 }
             : doc
         ));
-        toast.success('R√©indexation termin√©e !');
+        toast.success('RÈindexation terminÈe !');
       }, 5000);
     } catch (error) {
-      console.error('Erreur r√©indexation:', error);
-      toast.error('Erreur lors de la r√©indexation');
+      console.error('Erreur rÈindexation:', error);
+      toast.error('Erreur lors de la rÈindexation');
     }
   };
 
-  // T√©l√©charger le log d'indexation
+  // TÈlÈcharger le log d'indexation
   const handleDownloadLog = () => {
     const logContent = documents.map(doc => ({
       nom: doc.name,
@@ -270,13 +270,13 @@ export function AdminKnowledgeBase({ session }: AdminKnowledgeBaseProps) {
     a.download = `knowledge-base-log-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success('Log t√©l√©charg√©');
+    toast.success('Log tÈlÈchargÈ');
   };
 
   const getStatusConfig = (status: KnowledgeDocument['status']) => {
     switch (status) {
       case 'completed':
-        return { icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-50', label: 'Termin√©' };
+        return { icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-50', label: 'TerminÈ' };
       case 'processing':
         return { icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50', label: 'En cours' };
       case 'error':
@@ -298,7 +298,7 @@ export function AdminKnowledgeBase({ session }: AdminKnowledgeBaseProps) {
       timestamp: new Date().toISOString(),
     };
     console.log('Ajout au journal:', logEntry);
-    // Vous pouvez ici ajouter le logEntry √† une base de donn√©es ou un fichier de log
+    // Vous pouvez ici ajouter le logEntry ‡ une base de donnÈes ou un fichier de log
   };
 
   return (
@@ -309,7 +309,7 @@ export function AdminKnowledgeBase({ session }: AdminKnowledgeBaseProps) {
           <div>
             <h1 className="text-3xl font-bold mb-2">Base de Connaissances IA</h1>
             <p className="text-indigo-100">
-              Gestion des r√®gles fiscales et indexation des documents pour l'assistant IA
+              Gestion des rËgles fiscales et indexation des documents pour l'assistant IA
             </p>
           </div>
           <Lightbulb className="w-16 h-16 opacity-20" />
@@ -394,7 +394,7 @@ export function AdminKnowledgeBase({ session }: AdminKnowledgeBaseProps) {
                           <Upload className="w-12 h-12 text-gray-400 mx-auto" />
                           <div>
                             <p className="font-medium text-gray-700">
-                              Glissez un PDF ici ou cliquez pour s√©lectionner
+                              Glissez un PDF ici ou cliquez pour sÈlectionner
                             </p>
                             <p className="text-sm text-gray-500 mt-1">
                               Taille maximale : 10 MB
@@ -428,10 +428,10 @@ export function AdminKnowledgeBase({ session }: AdminKnowledgeBaseProps) {
                       />
                     </div>
 
-                    {/* Cat√©gorie */}
+                    {/* CatÈgorie */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Cat√©gorie *
+                        CatÈgorie *
                       </label>
                       <div className="relative">
                         <select
@@ -449,14 +449,14 @@ export function AdminKnowledgeBase({ session }: AdminKnowledgeBaseProps) {
                       </div>
                     </div>
 
-                    {/* Param√®tres avanc√©s */}
+                    {/* ParamËtres avancÈs */}
                     <div>
                       <button
                         onClick={() => setShowAdvanced(!showAdvanced)}
                         className="flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-700 font-medium"
                       >
                         <Settings className="w-4 h-4" />
-                        Param√®tres avanc√©s
+                        ParamËtres avancÈs
                         <ChevronDown className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
                       </button>
 
@@ -465,7 +465,7 @@ export function AdminKnowledgeBase({ session }: AdminKnowledgeBaseProps) {
                           {/* Info chunking */}
                           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
                             <p className="text-xs text-blue-800 leading-relaxed">
-                              üí° <strong>Chunking optimis√© :</strong> Les documents sont d√©coup√©s en morceaux de ~{Math.floor(params.chunkSize * 0.75)} mots (‚âà{params.chunkSize} tokens) avec un chevauchement de ~{Math.floor(params.overlap * 0.75)} mots pour une meilleure recherche s√©mantique.
+                              ?? <strong>Chunking optimisÈ :</strong> Les documents sont dÈcoupÈs en morceaux de ~{Math.floor(params.chunkSize * 0.75)} mots (ò{params.chunkSize} tokens) avec un chevauchement de ~{Math.floor(params.overlap * 0.75)} mots pour une meilleure recherche sÈmantique.
                             </p>
                           </div>
 
@@ -483,7 +483,7 @@ export function AdminKnowledgeBase({ session }: AdminKnowledgeBaseProps) {
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                             />
                             <p className="text-xs text-gray-500 mt-1">
-                              Recommand√© : 200-400 tokens pour une bonne granularit√©
+                              RecommandÈ : 200-400 tokens pour une bonne granularitÈ
                             </p>
                           </div>
 
@@ -521,7 +521,7 @@ export function AdminKnowledgeBase({ session }: AdminKnowledgeBaseProps) {
                                 onChange={(e) => setParams({ ...params, priority: e.target.checked })}
                                 className="w-4 h-4 text-indigo-600 rounded"
                               />
-                              <span className="text-sm text-gray-700">Priorit√© haute (traitement urgent)</span>
+                              <span className="text-sm text-gray-700">PrioritÈ haute (traitement urgent)</span>
                             </label>
                           </div>
                         </div>
@@ -562,14 +562,14 @@ export function AdminKnowledgeBase({ session }: AdminKnowledgeBaseProps) {
                     className="flex items-center gap-2 px-4 py-2 text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                   >
                     <Download className="w-4 h-4" />
-                    T√©l√©charger le log
+                    TÈlÈcharger le log
                   </button>
                 </div>
 
                 {documents.length === 0 ? (
                   <div className="text-center py-12 text-gray-500">
                     <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                    <p>Aucun document index√© pour le moment</p>
+                    <p>Aucun document indexÈ pour le moment</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
@@ -580,7 +580,7 @@ export function AdminKnowledgeBase({ session }: AdminKnowledgeBaseProps) {
                             Document
                           </th>
                           <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">
-                            Cat√©gorie
+                            CatÈgorie
                           </th>
                           <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">
                             Statut
@@ -613,7 +613,7 @@ export function AdminKnowledgeBase({ session }: AdminKnowledgeBaseProps) {
                                     <p className="text-xs text-gray-500">
                                       {(doc.fileSize / 1024 / 1024).toFixed(2)} MB
                                       {doc.priority && (
-                                        <span className="ml-2 text-orange-600">‚óè Priorit√© haute</span>
+                                        <span className="ml-2 text-orange-600">? PrioritÈ haute</span>
                                       )}
                                     </p>
                                   </div>
@@ -657,7 +657,7 @@ export function AdminKnowledgeBase({ session }: AdminKnowledgeBaseProps) {
                                     onClick={() => handleReindexDocument(doc.id)}
                                     disabled={doc.status === 'processing'}
                                     className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                    title="R√©indexer"
+                                    title="RÈindexer"
                                   >
                                     <RefreshCw className="w-4 h-4" />
                                   </button>
@@ -685,7 +685,7 @@ export function AdminKnowledgeBase({ session }: AdminKnowledgeBaseProps) {
                 <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <CheckCircle2 className="w-5 h-5 text-green-600" />
-                    <span className="text-sm text-gray-600">Documents index√©s</span>
+                    <span className="text-sm text-gray-600">Documents indexÈs</span>
                   </div>
                   <p className="text-3xl font-bold text-green-600">
                     {documents.filter(d => d.status === 'completed').length}

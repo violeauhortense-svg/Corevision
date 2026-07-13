@@ -53,7 +53,7 @@ export const KanbanBoard: React.FC<{ token?: string; onClientClick: (clientId: s
 
   const loadKanban = async () => {
     try {
-      const response = await fetch(`${apiBaseUrl}/make-server-cac859af/dashboard/kanban`, {
+      const response = await fetch(`${apiBaseUrl}/dashboard/kanban`, {
         headers: {
           'Authorization': `Bearer ${token || localStorage.getItem('auth_token')}`
         }

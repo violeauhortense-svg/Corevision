@@ -1,4 +1,4 @@
-Ôªøimport { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { apiBaseUrl, publicAnonKey } from '../utils/supabase/info';
 
@@ -78,7 +78,7 @@ export function SimulateurPatrimonial() {
   const chargerMontages = async () => {
     try {
       const response = await fetch(
-        `${apiBaseUrl}/make-server-cac859af/montages-patrimoniaux?statut=actif`,
+        `${apiBaseUrl}/montages-patrimoniaux?statut=actif`,
         {
           headers: {
             'Authorization': `Bearer ${publicAnonKey}`,
@@ -98,7 +98,7 @@ export function SimulateurPatrimonial() {
   const chargerParametresDefaut = async (montageId: string) => {
     try {
       const response = await fetch(
-        `${apiBaseUrl}/make-server-cac859af/simulateur-patrimonial/parametres-defaut/${montageId}?capital=100000&duree=10&tranche=30`,
+        `${apiBaseUrl}/simulateur-patrimonial/parametres-defaut/${montageId}?capital=100000&duree=10&tranche=30`,
         {
           headers: {
             'Authorization': `Bearer ${publicAnonKey}`,
@@ -111,7 +111,7 @@ export function SimulateurPatrimonial() {
         setParametres(data.parametres);
       }
     } catch (error) {
-      console.error('Erreur chargement param√®tres:', error);
+      console.error('Erreur chargement paramËtres:', error);
     }
   };
 
@@ -127,7 +127,7 @@ export function SimulateurPatrimonial() {
     setLoading(true);
     try {
       const response = await fetch(
-        `${apiBaseUrl}/make-server-cac859af/simulateur-patrimonial/simuler`,
+        `${apiBaseUrl}/simulateur-patrimonial/simuler`,
         {
           method: 'POST',
           headers: {
@@ -158,7 +158,7 @@ export function SimulateurPatrimonial() {
 
     setLoading(true);
     try {
-      // Cr√©er 3 sc√©narios : pessimiste, r√©aliste, optimiste
+      // CrÈer 3 scÈnarios : pessimiste, rÈaliste, optimiste
       const scenarios = [
         {
           ...parametres,
@@ -172,7 +172,7 @@ export function SimulateurPatrimonial() {
       ];
 
       const response = await fetch(
-        `${apiBaseUrl}/make-server-cac859af/simulateur-patrimonial/comparer`,
+        `${apiBaseUrl}/simulateur-patrimonial/comparer`,
         {
           method: 'POST',
           headers: {
@@ -213,10 +213,10 @@ export function SimulateurPatrimonial() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">
-            üìä Simulateur Patrimonial
+            ?? Simulateur Patrimonial
           </h1>
           <p className="text-slate-600">
-            Simulations financi√®res et comparaison de montages patrimoniaux
+            Simulations financiËres et comparaison de montages patrimoniaux
           </p>
         </div>
 
@@ -240,18 +240,18 @@ export function SimulateurPatrimonial() {
                 : 'bg-white text-slate-700 hover:bg-slate-50'
             }`}
           >
-            Comparaison de Sc√©narios
+            Comparaison de ScÈnarios
           </button>
         </div>
 
         {/* Configuration */}
         <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
           <h2 className="text-xl font-semibold text-slate-900 mb-4">
-            ‚öôÔ∏è Configuration
+            ?? Configuration
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* S√©lection du montage */}
+            {/* SÈlection du montage */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Montage patrimonial
@@ -261,7 +261,7 @@ export function SimulateurPatrimonial() {
                 onChange={(e) => handleMontageChange(e.target.value)}
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="">S√©lectionner...</option>
+                <option value="">SÈlectionner...</option>
                 {montages.map((m) => (
                   <option key={m.montage_id} value={m.montage_id}>
                     {m.nom_montage}
@@ -275,7 +275,7 @@ export function SimulateurPatrimonial() {
                 {/* Capital initial */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Capital initial (‚Ç¨)
+                    Capital initial (Ä)
                   </label>
                   <input
                     type="number"
@@ -290,10 +290,10 @@ export function SimulateurPatrimonial() {
                   />
                 </div>
 
-                {/* Dur√©e */}
+                {/* DurÈe */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Dur√©e (ann√©es)
+                    DurÈe (annÈes)
                   </label>
                   <input
                     type="number"
@@ -348,7 +348,7 @@ export function SimulateurPatrimonial() {
                 {/* Apport annuel */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Apport annuel (‚Ç¨) - optionnel
+                    Apport annuel (Ä) - optionnel
                   </label>
                   <input
                     type="number"
@@ -375,19 +375,19 @@ export function SimulateurPatrimonial() {
               {loading
                 ? 'Calcul en cours...'
                 : mode === 'simple'
-                ? '‚ñ∂Ô∏è Lancer la simulation'
-                : 'üìä Comparer les sc√©narios'}
+                ? '?? Lancer la simulation'
+                : '?? Comparer les scÈnarios'}
             </button>
           </div>
         </div>
 
-        {/* R√©sultats - Simulation simple */}
+        {/* RÈsultats - Simulation simple */}
         {mode === 'simple' && simulation && (
           <div className="space-y-6">
-            {/* Synth√®se */}
+            {/* SynthËse */}
             <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg p-6 text-white">
               <h2 className="text-2xl font-bold mb-6">
-                üìà {simulation.montage.nom_montage}
+                ?? {simulation.montage.nom_montage}
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -412,7 +412,7 @@ export function SimulateurPatrimonial() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-blue-100 text-sm mb-1">Fiscalit√© Totale</p>
+                  <p className="text-blue-100 text-sm mb-1">FiscalitÈ Totale</p>
                   <p className="text-3xl font-bold">
                     {formatCurrency(simulation.total_fiscalite)}
                   </p>
@@ -422,7 +422,7 @@ export function SimulateurPatrimonial() {
               {simulation.economie_fiscale_vs_bareme !== undefined && (
                 <div className="mt-4 p-4 bg-white/10 rounded-xl">
                   <p className="text-sm text-blue-100 mb-1">
-                    √âconomie fiscale vs bar√®me progressif
+                    …conomie fiscale vs barËme progressif
                   </p>
                   <p className="text-2xl font-bold">
                     {formatCurrency(simulation.economie_fiscale_vs_bareme)}
@@ -431,10 +431,10 @@ export function SimulateurPatrimonial() {
               )}
             </div>
 
-            {/* Graphique d'√©volution du capital */}
+            {/* Graphique d'Èvolution du capital */}
             <div className="bg-white rounded-2xl shadow-sm p-6">
               <h3 className="text-xl font-semibold text-slate-900 mb-4">
-                üìà √âvolution du capital sur{' '}
+                ?? …volution du capital sur{' '}
                 {simulation.parametres.duree_annees} ans
               </h3>
               <ResponsiveContainer width="100%" height={400}>
@@ -442,11 +442,11 @@ export function SimulateurPatrimonial() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis
                     dataKey="annee"
-                    label={{ value: 'Ann√©es', position: 'insideBottom', offset: -5 }}
+                    label={{ value: 'AnnÈes', position: 'insideBottom', offset: -5 }}
                     stroke="#64748b"
                   />
                   <YAxis
-                    label={{ value: 'Capital (‚Ç¨)', angle: -90, position: 'insideLeft' }}
+                    label={{ value: 'Capital (Ä)', angle: -90, position: 'insideLeft' }}
                     stroke="#64748b"
                     tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
                   />
@@ -480,10 +480,10 @@ export function SimulateurPatrimonial() {
               </ResponsiveContainer>
             </div>
 
-            {/* Graphique de d√©composition des flux */}
+            {/* Graphique de dÈcomposition des flux */}
             <div className="bg-white rounded-2xl shadow-sm p-6">
               <h3 className="text-xl font-semibold text-slate-900 mb-4">
-                üí∞ D√©composition des flux annuels
+                ?? DÈcomposition des flux annuels
               </h3>
               <ResponsiveContainer width="100%" height={400}>
                 <BarChart data={simulation.flux_annuels}>
@@ -503,7 +503,7 @@ export function SimulateurPatrimonial() {
                   />
                   <Legend />
                   <Bar dataKey="rendement_brut" name="Rendement brut" fill="#10b981" />
-                  <Bar dataKey="fiscalite" name="Fiscalit√©" fill="#ef4444" />
+                  <Bar dataKey="fiscalite" name="FiscalitÈ" fill="#ef4444" />
                   <Bar
                     dataKey="rendement_net_final"
                     name="Rendement net"
@@ -513,26 +513,26 @@ export function SimulateurPatrimonial() {
               </ResponsiveContainer>
             </div>
 
-            {/* Tableau d√©taill√© */}
+            {/* Tableau dÈtaillÈ */}
             <div className="bg-white rounded-2xl shadow-sm p-6">
               <h3 className="text-xl font-semibold text-slate-900 mb-4">
-                üìã Tableau d√©taill√© des flux
+                ?? Tableau dÈtaillÈ des flux
               </h3>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b-2 border-slate-200">
                       <th className="text-left py-3 px-4 font-semibold text-slate-700">
-                        Ann√©e
+                        AnnÈe
                       </th>
                       <th className="text-right py-3 px-4 font-semibold text-slate-700">
-                        Capital d√©but
+                        Capital dÈbut
                       </th>
                       <th className="text-right py-3 px-4 font-semibold text-slate-700">
                         Rendement brut
                       </th>
                       <th className="text-right py-3 px-4 font-semibold text-slate-700">
-                        Fiscalit√©
+                        FiscalitÈ
                       </th>
                       <th className="text-right py-3 px-4 font-semibold text-slate-700">
                         Rendement net
@@ -575,13 +575,13 @@ export function SimulateurPatrimonial() {
           </div>
         )}
 
-        {/* R√©sultats - Comparaison de sc√©narios */}
+        {/* RÈsultats - Comparaison de scÈnarios */}
         {mode === 'comparaison' && comparaison && (
           <div className="space-y-6">
             {/* Tableau comparatif */}
             <div className="bg-white rounded-2xl shadow-sm p-6">
               <h2 className="text-2xl font-semibold text-slate-900 mb-6">
-                üîÄ Comparaison des sc√©narios
+                ?? Comparaison des scÈnarios
               </h2>
 
               <div className="overflow-x-auto">
@@ -589,7 +589,7 @@ export function SimulateurPatrimonial() {
                   <thead>
                     <tr className="border-b-2 border-slate-200">
                       <th className="text-left py-3 px-4 font-semibold text-slate-700">
-                        Sc√©nario
+                        ScÈnario
                       </th>
                       <th className="text-right py-3 px-4 font-semibold text-slate-700">
                         Capital Final
@@ -601,13 +601,13 @@ export function SimulateurPatrimonial() {
                         Rendement Annuel
                       </th>
                       <th className="text-right py-3 px-4 font-semibold text-slate-700">
-                        Fiscalit√©
+                        FiscalitÈ
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     {comparaison.scenarios.map((scenario, index) => {
-                      const labels = ['Pessimiste', 'R√©aliste', 'Optimiste'];
+                      const labels = ['Pessimiste', 'RÈaliste', 'Optimiste'];
                       const colors = [
                         'text-red-600',
                         'text-blue-600',
@@ -654,7 +654,7 @@ export function SimulateurPatrimonial() {
             {/* Graphique comparatif */}
             <div className="bg-white rounded-2xl shadow-sm p-6">
               <h3 className="text-xl font-semibold text-slate-900 mb-4">
-                üìä Comparaison de l'√©volution du capital
+                ?? Comparaison de l'Èvolution du capital
               </h3>
               <ResponsiveContainer width="100%" height={400}>
                 <LineChart>
@@ -693,7 +693,7 @@ export function SimulateurPatrimonial() {
                     data={comparaison.scenarios[1].flux_annuels}
                     type="monotone"
                     dataKey="capital_fin"
-                    name="R√©aliste"
+                    name="RÈaliste"
                     stroke="#3b82f6"
                     strokeWidth={3}
                   />

@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { Shield, AlertTriangle, CheckCircle2, Loader2, X, FileText, Download, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiBaseUrl, publicAnonKey } from '../utils/supabase/info';
@@ -47,7 +47,7 @@ export function GelAvoirsChecker({ clientId, clientData, familyInfo, onReportGen
     setShowModal(true);
 
     try {
-      // Préparer les données pour la vérification
+      // Pr�parer les donn�es pour la v�rification
       const searchData = {
         firstName: clientData.firstName,
         lastName: clientData.lastName,
@@ -59,11 +59,11 @@ export function GelAvoirsChecker({ clientId, clientData, familyInfo, onReportGen
         profession: clientData.profession,
       };
 
-      console.log('🔍 Vérification gel des avoirs pour:', searchData);
+      console.log('?? V�rification gel des avoirs pour:', searchData);
 
-      // Appel au backend pour vérifier les listes
+      // Appel au backend pour v�rifier les listes
       const response = await fetch(
-        `${apiBaseUrl}/make-server-cac859af/sanctions/check`,
+        `${apiBaseUrl}/sanctions/check`,
         {
           method: 'POST',
           headers: {
@@ -89,7 +89,7 @@ export function GelAvoirsChecker({ clientId, clientData, familyInfo, onReportGen
 
         setVerificationResult(verification);
         
-        // Ajouter à l'historique
+        // Ajouter � l'historique
         const newHistory = [verification, ...history];
         setHistory(newHistory);
         
@@ -99,7 +99,7 @@ export function GelAvoirsChecker({ clientId, clientData, familyInfo, onReportGen
           JSON.stringify(newHistory)
         );
 
-        // Générer et enregistrer automatiquement le rapport
+        // G�n�rer et enregistrer automatiquement le rapport
         const reportContent = generateReportContent(verification);
         
         if (onReportGenerated) {
@@ -112,15 +112,15 @@ export function GelAvoirsChecker({ clientId, clientData, familyInfo, onReportGen
         }
 
         if (verification.status === 'clean') {
-          toast.success('✅ Aucune correspondance trouvée - Rapport enregistré dans les documents réglementaires');
+          toast.success('? Aucune correspondance trouv�e - Rapport enregistr� dans les documents r�glementaires');
         } else {
-          toast.error('⚠️ ALERTE : Correspondances trouvées - Rapport enregistré dans les documents réglementaires');
+          toast.error('?? ALERTE : Correspondances trouv�es - Rapport enregistr� dans les documents r�glementaires');
         }
       } else {
-        throw new Error('Erreur lors de la vérification');
+        throw new Error('Erreur lors de la v�rification');
       }
     } catch (error) {
-      console.error('❌ Erreur vérification gel des avoirs:', error);
+      console.error('? Erreur v�rification gel des avoirs:', error);
       
       const errorResult: VerificationResult = {
         date: new Date().toISOString(),
@@ -130,7 +130,7 @@ export function GelAvoirsChecker({ clientId, clientData, familyInfo, onReportGen
       };
       
       setVerificationResult(errorResult);
-      toast.error('❌ Erreur lors de la vérification');
+      toast.error('? Erreur lors de la v�rification');
     } finally {
       setLoading(false);
     }
@@ -140,75 +140,75 @@ export function GelAvoirsChecker({ clientId, clientData, familyInfo, onReportGen
     if (!verificationResult) return;
 
     const report = `
-╔════════════════════════════════════════════════════════════════╗
-║          RAPPORT DE VÉRIFICATION - GEL DES AVOIRS            ║
-╚════════════════════════════════════════════════════════════════╝
++----------------------------------------------------------------+
+�          RAPPORT DE V�RIFICATION - GEL DES AVOIRS            �
++----------------------------------------------------------------+
 
-📅 Date de vérification : ${new Date(verificationResult.date).toLocaleString('fr-FR')}
+?? Date de v�rification : ${new Date(verificationResult.date).toLocaleString('fr-FR')}
 
-👤 IDENTITÉ VÉRIFIÉE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Nom complet       : ${clientData.name}
-• Prénom            : ${clientData.firstName}
-• Nom               : ${clientData.lastName}
-• Date de naissance : ${clientData.birthDate || 'Non renseignée'}
-• Lieu de naissance : ${clientData.birthPlace || 'Non renseigné'}
-• Nationalité       : ${clientData.nationality || 'Non renseignée'}
-• Résidence fiscale : ${clientData.fiscalResidence || 'Non renseignée'}
-• Profession        : ${clientData.profession || 'Non renseignée'}
+?? IDENTIT� V�RIFI�E
+??????????????????????????????????????????????????????????????
+� Nom complet       : ${clientData.name}
+� Pr�nom            : ${clientData.firstName}
+� Nom               : ${clientData.lastName}
+� Date de naissance : ${clientData.birthDate || 'Non renseign�e'}
+� Lieu de naissance : ${clientData.birthPlace || 'Non renseign�'}
+� Nationalit�       : ${clientData.nationality || 'Non renseign�e'}
+� R�sidence fiscale : ${clientData.fiscalResidence || 'Non renseign�e'}
+� Profession        : ${clientData.profession || 'Non renseign�e'}
 
-🔍 LISTES CONSULTÉES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${verificationResult.checkedLists.map(list => `✓ ${list}`).join('\\n')}
+?? LISTES CONSULT�ES
+??????????????????????????????????????????????????????????????
+${verificationResult.checkedLists.map(list => `? ${list}`).join('\\n')}
 
 ${verificationResult.status === 'clean' ? `
-✅ RÉSULTAT : AUCUNE CORRESPONDANCE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Aucune correspondance n'a été trouvée sur les listes de sanctions
-financières consultées.
+? R�SULTAT : AUCUNE CORRESPONDANCE
+??????????????????????????????????????????????????????????????
+Aucune correspondance n'a �t� trouv�e sur les listes de sanctions
+financi�res consult�es.
 
 Le client ne figure pas sur :
-• La liste du Trésor français (sanctions financières)
-• Les listes consolidées de l'Union Européenne
-• La liste OFAC (Office of Foreign Assets Control - USA)
+� La liste du Tr�sor fran�ais (sanctions financi�res)
+� Les listes consolid�es de l'Union Europ�enne
+� La liste OFAC (Office of Foreign Assets Control - USA)
 
-→ Le dossier peut être traité normalement.
+? Le dossier peut �tre trait� normalement.
 ` : `
-⚠️ ALERTE : CORRESPONDANCES TROUVÉES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${verificationResult.matches.length} correspondance(s) trouvée(s) :
+?? ALERTE : CORRESPONDANCES TROUV�ES
+??????????????????????????????????????????????????????????????
+${verificationResult.matches.length} correspondance(s) trouv�e(s) :
 
 ${verificationResult.matches.map((match, i) => `
 ${i + 1}. ${match.name}
    Source       : ${match.source}
    Score        : ${match.score}%
-   Détails      : ${match.details}
+   D�tails      : ${match.details}
 `).join('\\n')}
 
-⚠️ ACTION REQUISE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. Vérifier manuellement chaque correspondance
+?? ACTION REQUISE
+??????????????????????????????????????????????????????????????
+1. V�rifier manuellement chaque correspondance
 2. S'assurer qu'il ne s'agit pas d'un homonyme
-3. En cas de correspondance avérée, suspendre immédiatement 
-   toute opération et contacter TRACFIN
-4. Documenter toutes les démarches entreprises
+3. En cas de correspondance av�r�e, suspendre imm�diatement 
+   toute op�ration et contacter TRACFIN
+4. Documenter toutes les d�marches entreprises
 `}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📌 CONFORMITÉ RÉGLEMENTAIRE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Cette vérification est r��alisée conformément :
-• Au règlement (UE) 2015/847 relatif aux virements de fonds
-• À l'article L. 561-10-2 du Code monétaire et financier
-• Aux obligations de gel des avoirs (article L. 562-4 CMF)
+??????????????????????????????????????????????????????????????
+?? CONFORMIT� R�GLEMENTAIRE
+??????????????????????????????????????????????????????????????
+Cette v�rification est r??alis�e conform�ment :
+� Au r�glement (UE) 2015/847 relatif aux virements de fonds
+� � l'article L. 561-10-2 du Code mon�taire et financier
+� Aux obligations de gel des avoirs (article L. 562-4 CMF)
 
 Conservez ce rapport pendant 5 ans minimum.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Généré par CRM Patrimoine - ${new Date().toLocaleString('fr-FR')}
+??????????????????????????????????????????????????????????????
+G�n�r� par CRM Patrimoine - ${new Date().toLocaleString('fr-FR')}
 `;
 
-    // Télécharger le fichier
+    // T�l�charger le fichier
     const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -219,29 +219,29 @@ Généré par CRM Patrimoine - ${new Date().toLocaleString('fr-FR')}
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    toast.success('📥 Rapport téléchargé');
+    toast.success('?? Rapport t�l�charg�');
 
-    // Sauvegarder dans les documents réglementaires
+    // Sauvegarder dans les documents r�glementaires
     try {
-      // 🔥 CORRECTION: Utiliser la session Supabase
+      // ?? CORRECTION: Utiliser la session Supabase
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id || 'default';
       const clientDetailKey = `client_detail_${userId}_${clientId}`;
-      console.log('🔑 Clé localStorage utilisée:', clientDetailKey);
-      console.log('👤 User ID:', userId);
+      console.log('?? Cl� localStorage utilis�e:', clientDetailKey);
+      console.log('?? User ID:', userId);
       const storedData = localStorage.getItem(clientDetailKey);
 
       if (storedData) {
         const clientDetail = JSON.parse(storedData);
         const regulatoryDocs = clientDetail.regulatoryDocs || [];
 
-        // Vérifier si le document existe déjà
+        // V�rifier si le document existe d�j�
         const existingIndex = regulatoryDocs.findIndex((doc: any) => doc.id === 'r4');
         
         const gelAvoirsDoc = {
           id: 'r4',
           name: 'Gel des avoirs',
-          status: verificationResult.status === 'clean' ? 'completed' as const : 'pending' as const, // ✅ Changé : 'completed' si clean, 'pending' si alert
+          status: verificationResult.status === 'clean' ? 'completed' as const : 'pending' as const, // ? Chang� : 'completed' si clean, 'pending' si alert
           requiredForStage: 'R1',
           completedDate: verificationResult.status === 'clean' ? verificationResult.date : undefined,
           validatedAt: verificationResult.date,
@@ -252,27 +252,27 @@ Généré par CRM Patrimoine - ${new Date().toLocaleString('fr-FR')}
 
         if (existingIndex !== -1) {
           regulatoryDocs[existingIndex] = gelAvoirsDoc;
-          console.log('📝 Rapport Gel des Avoirs mis à jour dans les documents réglementaires');
+          console.log('?? Rapport Gel des Avoirs mis � jour dans les documents r�glementaires');
         } else {
           regulatoryDocs.push(gelAvoirsDoc);
-          console.log('📝 Rapport Gel des Avoirs ajouté aux documents réglementaires');
+          console.log('?? Rapport Gel des Avoirs ajout� aux documents r�glementaires');
         }
 
         // Sauvegarder les modifications
         clientDetail.regulatoryDocs = regulatoryDocs;
         localStorage.setItem(clientDetailKey, JSON.stringify(clientDetail));
 
-        // 🔥 Émettre un événement pour notifier la mise à jour des documents
+        // ?? �mettre un �v�nement pour notifier la mise � jour des documents
         window.dispatchEvent(new CustomEvent('documentsUpdated', { 
           detail: { clientId: clientData.id, documentType: 'GelAvoirs' } 
         }));
-        console.log('📢 Événement documentsUpdated émis');
+        console.log('?? �v�nement documentsUpdated �mis');
 
-        toast.success('✅ Rapport enregistré dans les documents réglementaires');
+        toast.success('? Rapport enregistr� dans les documents r�glementaires');
       }
     } catch (error) {
-      console.error('❌ Erreur sauvegarde dans documents réglementaires:', error);
-      toast.error('⚠️ Rapport téléchargé mais erreur lors de la sauvegarde');
+      console.error('? Erreur sauvegarde dans documents r�glementaires:', error);
+      toast.error('?? Rapport t�l�charg� mais erreur lors de la sauvegarde');
     }
 
     if (onReportGenerated) {
@@ -286,77 +286,77 @@ Généré par CRM Patrimoine - ${new Date().toLocaleString('fr-FR')}
   };
 
   const generateReportContent = (verification: VerificationResult) => `
-╔════════════════════════════════════════════════════════════════╗
-║          RAPPORT DE VÉRIFICATION - GEL DES AVOIRS            ║
-╚════════════════════════════════════════════════════════════════╝
++----------------------------------------------------------------+
+�          RAPPORT DE V�RIFICATION - GEL DES AVOIRS            �
++----------------------------------------------------------------+
 
-📅 Date de vérification : ${new Date(verification.date).toLocaleString('fr-FR')}
+?? Date de v�rification : ${new Date(verification.date).toLocaleString('fr-FR')}
 
-👤 IDENTITÉ VÉRIFIÉE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Nom complet       : ${clientData.name}
-• Prénom            : ${clientData.firstName}
-• Nom               : ${clientData.lastName}
-• Date de naissance : ${clientData.birthDate || 'Non renseignée'}
-• Lieu de naissance : ${clientData.birthPlace || 'Non renseigné'}
-• Nationalité       : ${clientData.nationality || 'Non renseignée'}
-• Résidence fiscale : ${clientData.fiscalResidence || 'Non renseignée'}
-• Profession        : ${clientData.profession || 'Non renseignée'}
+?? IDENTIT� V�RIFI�E
+?????????????????????????????????????????????????????????????
+� Nom complet       : ${clientData.name}
+� Pr�nom            : ${clientData.firstName}
+� Nom               : ${clientData.lastName}
+� Date de naissance : ${clientData.birthDate || 'Non renseign�e'}
+� Lieu de naissance : ${clientData.birthPlace || 'Non renseign�'}
+� Nationalit�       : ${clientData.nationality || 'Non renseign�e'}
+� R�sidence fiscale : ${clientData.fiscalResidence || 'Non renseign�e'}
+� Profession        : ${clientData.profession || 'Non renseign�e'}
 
-🔍 LISTES CONSULTÉES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${verification.checkedLists.map(list => `✓ ${list}`).join('\n')}
+?? LISTES CONSULT�ES
+??????????????????????????????????????????????????????????????
+${verification.checkedLists.map(list => `? ${list}`).join('\n')}
 
 ${verification.status === 'clean' ? `
-✅ RÉSULTAT : AUCUNE CORRESPONDANCE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Aucune correspondance n'a été trouvée sur les listes de sanctions
-financières consultées.
+? R�SULTAT : AUCUNE CORRESPONDANCE
+??????????????????????????????????????????????????????????????
+Aucune correspondance n'a �t� trouv�e sur les listes de sanctions
+financi�res consult�es.
 
 Le client ne figure pas sur :
-• La liste du Trésor français (sanctions financières)
-• Les listes consolidées de l'Union Européenne
-• La liste OFAC (Office of Foreign Assets Control - USA)
+� La liste du Tr�sor fran�ais (sanctions financi�res)
+� Les listes consolid�es de l'Union Europ�enne
+� La liste OFAC (Office of Foreign Assets Control - USA)
 
-→ Le dossier peut être traité normalement.
+? Le dossier peut �tre trait� normalement.
 ` : `
-⚠️ ALERTE : CORRESPONDANCES TROUVÉES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${verification.matches.length} correspondance(s) trouvée(s) :
+?? ALERTE : CORRESPONDANCES TROUV�ES
+??????????????????????????????????????????????????????????????
+${verification.matches.length} correspondance(s) trouv�e(s) :
 
 ${verification.matches.map((match, i) => `
 ${i + 1}. ${match.name}
    Source       : ${match.source}
    Score        : ${match.score}%
-   Détails      : ${match.details}
+   D�tails      : ${match.details}
 `).join('\n')}
 
-⚠️ ACTION REQUISE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. Vérifier manuellement chaque correspondance
+?? ACTION REQUISE
+??????????????????????????????????????????????????????????????
+1. V�rifier manuellement chaque correspondance
 2. S'assurer qu'il ne s'agit pas d'un homonyme
-3. En cas de correspondance avérée, suspendre immédiatement 
-   toute opération et contacter TRACFIN
-4. Documenter toutes les démarches entreprises
+3. En cas de correspondance av�r�e, suspendre imm�diatement 
+   toute op�ration et contacter TRACFIN
+4. Documenter toutes les d�marches entreprises
 `}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📌 CONFORMITÉ RÉGLEMENTAIRE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Cette vérification est réalisée conformément :
-• Au règlement (UE) 2015/847 relatif aux virements de fonds
-• À l'article L. 561-10-2 du Code monétaire et financier
-• Aux obligations de gel des avoirs (article L. 562-4 CMF)
+??????????????????????????????????????????????????????????????
+?? CONFORMIT� R�GLEMENTAIRE
+?????????????????????????????????????????????????????????????
+Cette v�rification est r�alis�e conform�ment :
+� Au r�glement (UE) 2015/847 relatif aux virements de fonds
+� � l'article L. 561-10-2 du Code mon�taire et financier
+� Aux obligations de gel des avoirs (article L. 562-4 CMF)
 
 Conservez ce rapport pendant 5 ans minimum.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━���━━
-Généré par CRM Patrimoine - ${new Date().toLocaleString('fr-FR')}
+????????????????????????????????????????????????????????????????
+G�n�r� par CRM Patrimoine - ${new Date().toLocaleString('fr-FR')}
 `;
 
   return (
     <>
-      {/* Bouton de vérification */}
+      {/* Bouton de v�rification */}
       <button
         onClick={performCheck}
         disabled={loading}
@@ -365,17 +365,17 @@ Généré par CRM Patrimoine - ${new Date().toLocaleString('fr-FR')}
         {loading ? (
           <>
             <Loader2 className="w-5 h-5 animate-spin" />
-            <span className="font-medium">Vérification en cours...</span>
+            <span className="font-medium">V�rification en cours...</span>
           </>
         ) : (
           <>
             <Shield className="w-5 h-5" />
-            <span className="font-medium">Vérifier Gel des Avoirs</span>
+            <span className="font-medium">V�rifier Gel des Avoirs</span>
           </>
         )}
       </button>
 
-      {/* Modal de résultats */}
+      {/* Modal de r�sultats */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
@@ -405,13 +405,13 @@ Généré par CRM Patrimoine - ${new Date().toLocaleString('fr-FR')}
                   
                   <div>
                     <h3 className="text-xl font-bold text-gray-900">
-                      {loading && 'Vérification en cours...'}
-                      {!loading && verificationResult?.status === 'clean' && '✅ Aucune correspondance'}
-                      {!loading && verificationResult?.status === 'alert' && '⚠️ ALERTE : Correspondances trouvées'}
-                      {!loading && verificationResult?.status === 'error' && '❌ Erreur de vérification'}
+                      {loading && 'V�rification en cours...'}
+                      {!loading && verificationResult?.status === 'clean' && '? Aucune correspondance'}
+                      {!loading && verificationResult?.status === 'alert' && '?? ALERTE : Correspondances trouv�es'}
+                      {!loading && verificationResult?.status === 'error' && '? Erreur de v�rification'}
                     </h3>
                     <p className="text-sm text-gray-600 mt-1">
-                      Vérification du gel des avoirs • {clientData.name}
+                      V�rification du gel des avoirs � {clientData.name}
                     </p>
                   </div>
                 </div>
@@ -432,15 +432,15 @@ Généré par CRM Patrimoine - ${new Date().toLocaleString('fr-FR')}
                   <Loader2 className="w-16 h-16 text-blue-600 animate-spin mb-4" />
                   <p className="text-gray-600 mb-2">Consultation des listes de sanctions en cours...</p>
                   <p className="text-sm text-gray-500">
-                    Cette opération peut prendre quelques secondes
+                    Cette op�ration peut prendre quelques secondes
                   </p>
                 </div>
               ) : verificationResult ? (
                 <div className="space-y-6">
-                  {/* Informations vérifiées */}
+                  {/* Informations v�rifi�es */}
                   <div className="bg-gray-50 rounded-lg p-4">
                     <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                      👤 Identité vérifiée
+                      ?? Identit� v�rifi�e
                     </h4>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
@@ -449,31 +449,31 @@ Généré par CRM Patrimoine - ${new Date().toLocaleString('fr-FR')}
                       </div>
                       <div>
                         <span className="text-gray-600">Date de naissance :</span>
-                        <span className="ml-2 font-medium text-gray-900">{clientData.birthDate || 'Non renseignée'}</span>
+                        <span className="ml-2 font-medium text-gray-900">{clientData.birthDate || 'Non renseign�e'}</span>
                       </div>
                       <div>
                         <span className="text-gray-600">Lieu de naissance :</span>
-                        <span className="ml-2 font-medium text-gray-900">{clientData.birthPlace || 'Non renseigné'}</span>
+                        <span className="ml-2 font-medium text-gray-900">{clientData.birthPlace || 'Non renseign�'}</span>
                       </div>
                       <div>
-                        <span className="text-gray-600">Nationalité :</span>
-                        <span className="ml-2 font-medium text-gray-900">{clientData.nationality || 'Non renseignée'}</span>
+                        <span className="text-gray-600">Nationalit� :</span>
+                        <span className="ml-2 font-medium text-gray-900">{clientData.nationality || 'Non renseign�e'}</span>
                       </div>
                       <div>
-                        <span className="text-gray-600">Résidence fiscale :</span>
-                        <span className="ml-2 font-medium text-gray-900">{clientData.fiscalResidence || 'Non renseignée'}</span>
+                        <span className="text-gray-600">R�sidence fiscale :</span>
+                        <span className="ml-2 font-medium text-gray-900">{clientData.fiscalResidence || 'Non renseign�e'}</span>
                       </div>
                       <div>
                         <span className="text-gray-600">Profession :</span>
-                        <span className="ml-2 font-medium text-gray-900">{clientData.profession || 'Non renseignée'}</span>
+                        <span className="ml-2 font-medium text-gray-900">{clientData.profession || 'Non renseign�e'}</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Listes consultées */}
+                  {/* Listes consult�es */}
                   <div className="bg-blue-50 rounded-lg p-4">
                     <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                      🔍 Listes consultées
+                      ?? Listes consult�es
                     </h4>
                     <div className="space-y-2">
                       {verificationResult.checkedLists.map((list, i) => (
@@ -485,20 +485,20 @@ Généré par CRM Patrimoine - ${new Date().toLocaleString('fr-FR')}
                     </div>
                   </div>
 
-                  {/* Résultats */}
+                  {/* R�sultats */}
                   {verificationResult.status === 'clean' ? (
                     <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6">
                       <div className="flex items-start gap-4">
                         <CheckCircle2 className="w-8 h-8 text-green-600 flex-shrink-0" />
                         <div>
                           <h4 className="font-bold text-green-900 text-lg mb-2">
-                            Aucune correspondance trouvée
+                            Aucune correspondance trouv�e
                           </h4>
                           <p className="text-sm text-green-800 mb-3">
-                            Le client ne figure sur aucune des listes de sanctions financières consultées.
+                            Le client ne figure sur aucune des listes de sanctions financi�res consult�es.
                           </p>
                           <p className="text-sm text-green-700 font-medium">
-                            ✓ Le dossier peut être traité normalement
+                            ? Le dossier peut �tre trait� normalement
                           </p>
                         </div>
                       </div>
@@ -509,10 +509,10 @@ Généré par CRM Patrimoine - ${new Date().toLocaleString('fr-FR')}
                         <AlertTriangle className="w-8 h-8 text-red-600 flex-shrink-0" />
                         <div>
                           <h4 className="font-bold text-red-900 text-lg mb-2">
-                            ⚠️ ALERTE : Correspondances trouvées
+                            ?? ALERTE : Correspondances trouv�es
                           </h4>
                           <p className="text-sm text-red-800 mb-3">
-                            {verificationResult.matches.length} correspondance(s) trouvée(s) sur les listes de sanctions.
+                            {verificationResult.matches.length} correspondance(s) trouv�e(s) sur les listes de sanctions.
                           </p>
                         </div>
                       </div>
@@ -539,27 +539,27 @@ Généré par CRM Patrimoine - ${new Date().toLocaleString('fr-FR')}
 
                       {/* Actions requises */}
                       <div className="mt-4 p-4 bg-red-100 rounded-lg">
-                        <h5 className="font-semibold text-red-900 mb-2">⚠️ Actions requises :</h5>
+                        <h5 className="font-semibold text-red-900 mb-2">?? Actions requises :</h5>
                         <ul className="text-sm text-red-800 space-y-1 list-disc list-inside">
-                          <li>Vérifier manuellement chaque correspondance</li>
+                          <li>V�rifier manuellement chaque correspondance</li>
                           <li>S'assurer qu'il ne s'agit pas d'un homonyme</li>
-                          <li>En cas de correspondance avérée, suspendre toute opération</li>
-                          <li>Contacter TRACFIN immédiatement</li>
-                          <li>Documenter toutes les démarches</li>
+                          <li>En cas de correspondance av�r�e, suspendre toute op�ration</li>
+                          <li>Contacter TRACFIN imm�diatement</li>
+                          <li>Documenter toutes les d�marches</li>
                         </ul>
                       </div>
                     </div>
                   ) : null}
 
-                  {/* Note légale */}
+                  {/* Note l�gale */}
                   <div className="bg-gray-100 rounded-lg p-4 text-xs text-gray-600">
-                    <p className="font-semibold mb-2">📌 Conformité réglementaire :</p>
+                    <p className="font-semibold mb-2">?? Conformit� r�glementaire :</p>
                     <p className="mb-2">
-                      Cette vérification est réalisée conformément au règlement (UE) 2015/847 relatif aux virements de fonds, 
-                      à l'article L. 561-10-2 du Code monétaire et financier et aux obligations de gel des avoirs (article L. 562-4 CMF).
+                      Cette v�rification est r�alis�e conform�ment au r�glement (UE) 2015/847 relatif aux virements de fonds, 
+                      � l'article L. 561-10-2 du Code mon�taire et financier et aux obligations de gel des avoirs (article L. 562-4 CMF).
                     </p>
                     <p className="font-medium text-gray-700">
-                      ⚠️ Conservez ce rapport pendant 5 ans minimum.
+                      ?? Conservez ce rapport pendant 5 ans minimum.
                     </p>
                   </div>
                 </div>
@@ -570,7 +570,7 @@ Généré par CRM Patrimoine - ${new Date().toLocaleString('fr-FR')}
             {!loading && verificationResult && (
               <div className="p-6 border-t border-gray-200 flex items-center justify-between bg-gray-50">
                 <div className="text-xs text-gray-600">
-                  Vérification effectuée le {new Date(verificationResult.date).toLocaleString('fr-FR')}
+                  V�rification effectu�e le {new Date(verificationResult.date).toLocaleString('fr-FR')}
                 </div>
                 <div className="flex items-center gap-3">
                   <button
@@ -584,7 +584,7 @@ Généré par CRM Patrimoine - ${new Date().toLocaleString('fr-FR')}
                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     <Download className="w-4 h-4" />
-                    Télécharger le rapport
+                    T�l�charger le rapport
                   </button>
                 </div>
               </div>

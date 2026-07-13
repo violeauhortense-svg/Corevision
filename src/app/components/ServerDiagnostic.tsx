@@ -1,4 +1,4 @@
-ï»¿import { useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
@@ -20,7 +20,7 @@ export function ServerDiagnostic() {
     setResults({});
 
     // Test 1: Configuration
-    console.log('ðŸ” Test 1: VÃ©rification de la configuration');
+    console.log('?? Test 1: Vérification de la configuration');
     const configResult = {
       success: true,
       projectId,
@@ -28,14 +28,14 @@ export function ServerDiagnostic() {
       hasAnonKey: !!publicAnonKey,
       anonKeyLength: publicAnonKey?.length || 0,
     };
-    console.log('âœ… Config:', configResult);
+    console.log('? Config:', configResult);
     setResults(prev => ({ ...prev, config: { success: true } }));
 
     // Test 2: Health endpoint AVEC authentification
-    console.log('ðŸ” Test 2: Test du endpoint /health avec Bearer token');
+    console.log('?? Test 2: Test du endpoint /health avec Bearer token');
     try {
       const healthUrl = `${BASE_URL}/health`;
-      console.log('ðŸ“¡ URL complÃ¨te:', healthUrl);
+      console.log('?? URL complète:', healthUrl);
       
       const response = await fetch(healthUrl, {
         method: 'GET',
@@ -45,19 +45,19 @@ export function ServerDiagnostic() {
         },
       });
 
-      console.log('ðŸ“¥ Response status:', response.status);
-      console.log('ðŸ“¥ Response headers:', Object.fromEntries(response.headers.entries()));
+      console.log('?? Response status:', response.status);
+      console.log('?? Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (response.ok) {
         const data = await response.json();
-        console.log('âœ… Health check rÃ©ussi:', data);
+        console.log('? Health check réussi:', data);
         setResults(prev => ({ ...prev, health: { success: true, response: data } }));
         toast.success('Serveur accessible !');
       } else {
         const errorText = await response.text();
-        console.error('âŒ Health check Ã©chouÃ©:', response.status, errorText);
+        console.error('? Health check échoué:', response.status, errorText);
         
-        // Si c'est une erreur 401, c'est quand mÃªme positif car le serveur rÃ©pond
+        // Si c'est une erreur 401, c'est quand même positif car le serveur répond
         if (response.status === 401) {
           setResults(prev => ({ 
             ...prev, 
@@ -83,7 +83,7 @@ export function ServerDiagnostic() {
         }
       }
     } catch (error: any) {
-      console.error('âŒ Erreur de connexion:', error);
+      console.error('? Erreur de connexion:', error);
       setResults(prev => ({ 
         ...prev, 
         health: { 
@@ -95,10 +95,10 @@ export function ServerDiagnostic() {
     }
 
     // Test 3: Auth endpoint
-    console.log('ðŸ” Test 3: Test du endpoint /auth/profile');
+    console.log('?? Test 3: Test du endpoint /auth/profile');
     try {
       const authUrl = `${BASE_URL}/auth/profile`;
-      console.log('ðŸ“¡ URL auth:', authUrl);
+      console.log('?? URL auth:', authUrl);
       
       const response = await fetch(authUrl, {
         method: 'GET',
@@ -108,15 +108,15 @@ export function ServerDiagnostic() {
         },
       });
 
-      console.log('ðŸ“¥ Auth response status:', response.status);
+      console.log('?? Auth response status:', response.status);
 
       if (response.ok || response.status === 401) {
-        // 401 est normal si pas authentifiÃ©, mais Ã§a prouve que le serveur rÃ©pond
-        console.log('âœ… Endpoint auth rÃ©pond (mÃªme si 401)');
+        // 401 est normal si pas authentifié, mais ça prouve que le serveur répond
+        console.log('? Endpoint auth répond (même si 401)');
         setResults(prev => ({ ...prev, auth: { success: true } }));
       } else {
         const errorText = await response.text();
-        console.error('âŒ Auth endpoint Ã©chouÃ©:', response.status, errorText);
+        console.error('? Auth endpoint échoué:', response.status, errorText);
         setResults(prev => ({ 
           ...prev, 
           auth: { 
@@ -126,7 +126,7 @@ export function ServerDiagnostic() {
         }));
       }
     } catch (error: any) {
-      console.error('âŒ Erreur auth:', error);
+      console.error('? Erreur auth:', error);
       setResults(prev => ({ 
         ...prev, 
         auth: { 
@@ -168,7 +168,7 @@ export function ServerDiagnostic() {
             <p className="text-sm text-gray-600">Project ID: {projectId}</p>
             <p className="text-sm text-gray-600 break-all">URL: {BASE_URL}</p>
             {results.config?.success && (
-              <p className="text-sm text-green-600 mt-1">âœ“ Configuration valide</p>
+              <p className="text-sm text-green-600 mt-1">? Configuration valide</p>
             )}
           </div>
         </div>
@@ -188,7 +188,7 @@ export function ServerDiagnostic() {
             <p className="font-medium">Endpoint /health</p>
             {results.health?.success && (
               <div className="text-sm text-green-600 mt-1">
-                <p>âœ“ Serveur accessible</p>
+                <p>? Serveur accessible</p>
                 {results.health.response && (
                   <pre className="text-xs mt-2 p-2 bg-white rounded border">
                     {JSON.stringify(results.health.response, null, 2)}
@@ -198,14 +198,14 @@ export function ServerDiagnostic() {
             )}
             {results.health?.error && (
               <div className="text-sm text-red-600 mt-1">
-                <p>âœ— {results.health.error}</p>
+                <p>? {results.health.error}</p>
                 <div className="mt-2 p-2 bg-red-50 rounded text-xs">
                   <p className="font-semibold">Causes possibles :</p>
                   <ul className="list-disc list-inside mt-1 space-y-1">
-                    <li>Edge Function pas dÃ©ployÃ©e sur Supabase</li>
-                    <li>Nom de la fonction incorrect (doit Ãªtre "make-server-cac859af")</li>
-                    <li>CORS mal configurÃ©</li>
-                    <li>ProblÃ¨me rÃ©seau</li>
+                    <li>Edge Function pas déployée sur Supabase</li>
+                    <li>Nom de la fonction incorrect (doit être "make-server-cac859af")</li>
+                    <li>CORS mal configuré</li>
+                    <li>Problème réseau</li>
                   </ul>
                 </div>
               </div>
@@ -227,21 +227,21 @@ export function ServerDiagnostic() {
           <div className="flex-1">
             <p className="font-medium">Endpoint /auth/profile</p>
             {results.auth?.success && (
-              <p className="text-sm text-green-600 mt-1">âœ“ Endpoint rÃ©pond</p>
+              <p className="text-sm text-green-600 mt-1">? Endpoint répond</p>
             )}
             {results.auth?.error && (
-              <p className="text-sm text-red-600 mt-1">âœ— {results.auth.error}</p>
+              <p className="text-sm text-red-600 mt-1">? {results.auth.error}</p>
             )}
           </div>
         </div>
       </div>
 
-      {/* Instructions de dÃ©ploiement */}
+      {/* Instructions de déploiement */}
       {results.health?.success === false && (
         <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
           <h3 className="font-semibold text-yellow-900 flex items-center gap-2 mb-2">
             <AlertCircle className="w-5 h-5" />
-            Comment dÃ©ployer l'Edge Function ?
+            Comment déployer l'Edge Function ?
           </h3>
           <ol className="list-decimal list-inside space-y-2 text-sm text-yellow-900">
             <li>
@@ -251,13 +251,13 @@ export function ServerDiagnostic() {
               </code>
             </li>
             <li>
-              Connectez-vous Ã  votre projet :
+              Connectez-vous à votre projet :
               <code className="block mt-1 p-2 bg-white rounded text-xs">
                 supabase link --project-ref {projectId}
               </code>
             </li>
             <li>
-              DÃ©ployez la fonction :
+              Déployez la fonction :
               <code className="block mt-1 p-2 bg-white rounded text-xs">
                 supabase functions deploy make-server-cac859af
               </code>

@@ -25,7 +25,7 @@ export function DashboardView({ session }: DashboardViewProps) {
   const loadMetrics = async () => {
     try {
       const token = session?.access_token || localStorage.getItem('auth_token');
-      const response = await fetch(`${apiBaseUrl}/make-server-cac859af/dashboard/metrics`, {
+      const response = await fetch(`${apiBaseUrl}/dashboard/metrics`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
