@@ -5,6 +5,7 @@
 import type { Hono } from "npm:hono";
 import * as kv from "./kv_store.tsx";
 import { verifyAuth } from "./auth.tsx";
+import { getTasksWithIdsForStatus } from "./helpers.tsx";
 
 export function setupTaskRoutes(app: Hono) {
   // Get tasks for a client
@@ -114,11 +115,126 @@ export function setupTaskRoutes(app: Hono) {
       };
 
       await kv.set(`task:${user.id}:${existingTask.client_id}:${taskId}`, updatedTask);
-      
+
       return c.json({ task: updatedTask });
     } catch (err) {
       console.error('Error updating task:', err);
       return c.json({ error: 'Failed to update task: ' + err.message }, 500);
+    }
+  });
+
+  // PATCH: Validate/NA a task in the 8-status pipeline
+  app.patch("/make-server-cac859af/clients/:clientId/tache/:taskIdx", async (c) => {
+    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+
+    if (error || !user) {
+      return c.json({ error: error || 'Unauthorized' }, 401);
+    }
+
+    try {
+      const clientId = c.req.param('clientId');
+      const taskIdx = parseInt(c.req.param('taskIdx'), 10);
+      const body = await c.req.json();
+      const { completed, status } = body;
+
+      console.log(`🔄 Task validation: clientId=${clientId}, taskIdx=${taskIdx}, completed=${completed}, status=${status}`);
+
+      // Fetch the client
+      const client = await kv.get(`client:${user.id}:${clientId}`);
+      if (!client) {
+        return c.json({ error: 'Client not found' }, 404);
+      }
+
+      const currentStatus = client.statusOuvert || 'Prospect';
+      const tasks = client.taches?.[currentStatus] || [];
+
+      if (taskIdx < 0 || taskIdx >= tasks.length) {
+        return c.json({ error: `Invalid task index ${taskIdx} for status "${currentStatus}"` }, 400);
+      }
+
+      console.log(`   Task before: id=${tasks[taskIdx]?.id}, completed=${tasks[taskIdx]?.completed}, status=${tasks[taskIdx]?.status}`);
+
+      // Update the task
+      tasks[taskIdx].completed = completed;
+      tasks[taskIdx].status = status || (completed ? 'validated' : 'pending');
+      tasks[taskIdx].updated_at = new Date().toISOString();
+
+      // Save client
+      client.taches[currentStatus] = tasks;
+      client.updated_at = new Date().toISOString();
+      await kv.set(`client:${user.id}:${clientId}`, client);
+
+      console.log(`   Task after: completed=${tasks[taskIdx].completed}, status=${tasks[taskIdx].status}`);
+      console.log(`✅ Task validation successful`);
+
+      return c.json({
+        success: true,
+        message: `Task ${status === 'na' ? 'marked N.A.' : (completed ? 'validated' : 'unvalidated')}`,
+        client
+      });
+    } catch (err) {
+      console.error('❌ Error validating task:', err);
+      return c.json({ error: 'Failed to validate task: ' + (err as Error).message }, 500);
+    }
+  });
+
+  // POST: Progress to next status
+  app.post("/make-server-cac859af/clients/:clientId/progress", async (c) => {
+    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+
+    if (error || !user) {
+      return c.json({ error: error || 'Unauthorized' }, 401);
+    }
+
+    try {
+      const clientId = c.req.param('clientId');
+      const body = await c.req.json();
+      const { fromStatus, toStatus } = body;
+
+      console.log(`➡️ Status progression: ${fromStatus} → ${toStatus}`);
+
+      // Fetch the client
+      const client = await kv.get(`client:${user.id}:${clientId}`);
+      if (!client) {
+        return c.json({ error: 'Client not found' }, 404);
+      }
+
+      // Validate current status matches
+      if (client.statusOuvert !== fromStatus) {
+        return c.json({
+          error: `Current status is "${client.statusOuvert}", not "${fromStatus}"`
+        }, 400);
+      }
+
+      // Initialize tasks for next status if not exists
+      if (!client.taches[toStatus]) {
+        const nextTaskDefs = getTasksWithIdsForStatus(toStatus);
+        client.taches[toStatus] = nextTaskDefs.map((def: any) => ({
+          id: def.id,
+          title: def.title,
+          completed: false,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+          clientId: clientId,
+          statusPipeline: toStatus,
+        }));
+      }
+
+      // Update client status
+      client.statusOuvert = toStatus;
+      client.updated_at = new Date().toISOString();
+      await kv.set(`client:${user.id}:${clientId}`, client);
+
+      console.log(`✅ Client progressed to "${toStatus}"`);
+
+      return c.json({
+        success: true,
+        message: `Client progressed to "${toStatus}"`,
+        client
+      });
+    } catch (err) {
+      console.error('❌ Error progressing status:', err);
+      return c.json({ error: 'Failed to progress: ' + (err as Error).message }, 500);
     }
   });
 }

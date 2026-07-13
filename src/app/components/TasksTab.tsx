@@ -70,24 +70,89 @@ export function TasksTab({ clientId }: TasksTabProps) {
     try {
       const token = localStorage.getItem('auth_token');
       const url = `/api/clients/${clientId}/tache/${taskId}`;
-      console.log('🔗 Fetching:', url);
+      console.log('✅ Validation tâche:', { status, taskId, completed });
+
       const response = await fetch(url, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ completed }),
+        body: JSON.stringify({ completed, status: completed ? 'validated' : 'pending' }),
       });
 
       if (response.ok) {
-        toast.success('Tâche mise à jour');
+        toast.success(completed ? '✅ Tâche validée' : '↩️ Validation annulée');
         await loadClient();
       } else {
-        toast.error('Erreur mise à jour');
+        const error = await response.text();
+        console.error('❌ Erreur:', error);
+        toast.error('Erreur validation tâche');
       }
     } catch (err) {
       console.error('❌ Erreur update tâche:', err);
+      toast.error('Erreur réseau');
+    }
+  };
+
+  const handleTaskNA = async (status: string, taskId: string) => {
+    if (!client) return;
+
+    try {
+      const token = localStorage.getItem('auth_token');
+      const url = `/api/clients/${clientId}/tache/${taskId}`;
+      console.log('⊘ Marquer N.A.:', { status, taskId });
+
+      const response = await fetch(url, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ completed: false, status: 'na' }),
+      });
+
+      if (response.ok) {
+        toast.success('⊘ Tâche marquée N.A.');
+        await loadClient();
+      } else {
+        const error = await response.text();
+        console.error('❌ Erreur:', error);
+        toast.error('Erreur marquage N.A.');
+      }
+    } catch (err) {
+      console.error('❌ Erreur N.A.:', err);
+      toast.error('Erreur réseau');
+    }
+  };
+
+  const handleProgressToNextStatus = async (currentStatus: string, nextStatus: string) => {
+    if (!client) return;
+
+    try {
+      const token = localStorage.getItem('auth_token');
+      const url = `/api/clients/${clientId}/progress`;
+      console.log('➡️ Progression:', { currentStatus, nextStatus });
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ fromStatus: currentStatus, toStatus: nextStatus }),
+      });
+
+      if (response.ok) {
+        toast.success(`✅ Passage à "${nextStatus}" complété`);
+        await loadClient();
+      } else {
+        const error = await response.text();
+        console.error('❌ Erreur:', error);
+        toast.error('Erreur progression');
+      }
+    } catch (err) {
+      console.error('❌ Erreur progression:', err);
       toast.error('Erreur réseau');
     }
   };
@@ -236,35 +301,20 @@ export function TasksTab({ clientId }: TasksTabProps) {
                   return (
                     <div
                       key={task.id}
-                      className={`flex items-start gap-3 p-3 rounded border transition-all ${
+                      className={`flex items-start gap-3 p-4 rounded border transition-all ${
                         blockState === 'COMPLETE' ? 'bg-gray-100 border-gray-300' : 'bg-white border-gray-200 hover:border-blue-300'
                       }`}
                     >
-                      <input
-                        type="checkbox"
-                        checked={task.completed || task.status === 'na'}
-                        onChange={(e) => {
-                          const taskIdToSend = String(idx);
-                          console.log('🔍 Checkbox clicked:', {
-                            blockState,
-                            status,
-                            idx,
-                            'task.id': task.id,
-                            'taskIdToSend': taskIdToSend,
-                            'URL will be': `/make-server-cac859af/clients/${clientId}/tache/${taskIdToSend}`
-                          });
-                          if (blockState === 'EN_COURS') {
-                            console.log('✅ Calling handleTaskUpdate with taskId:', taskIdToSend);
-                            handleTaskUpdate(status, taskIdToSend, !task.completed);
-                          } else {
-                            console.warn('⚠️ blockState is not EN_COURS:', blockState);
-                          }
-                        }}
-                        disabled={blockState !== 'EN_COURS'}
-                        className="mt-1 cursor-pointer"
-                      />
+                      {/* État de la tâche - Icône */}
+                      <div className="mt-1">
+                        {task.completed && <span className="text-lg">✅</span>}
+                        {task.status === 'na' && <span className="text-lg">⊘</span>}
+                        {!task.completed && task.status !== 'na' && <span className="text-lg">⭕</span>}
+                      </div>
+
+                      {/* Titre et description */}
                       <div className="flex-1">
-                        <p className={`text-sm font-medium ${task.completed ? 'line-through text-gray-500' : 'text-gray-800'}`}>
+                        <p className={`text-sm font-medium ${task.completed ? 'line-through text-gray-500' : task.status === 'na' ? 'text-yellow-600' : 'text-gray-800'}`}>
                           {task.title}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">{taskDef.description}</p>
@@ -272,31 +322,107 @@ export function TasksTab({ clientId }: TasksTabProps) {
                           <p className="text-xs text-gray-500 mt-1">📅 {new Date(task.deadline).toLocaleDateString('fr-FR')}</p>
                         )}
                       </div>
-                      {blockState === 'EN_COURS' && taskDef.button && (
-                        <button
-                          onClick={() => setActiveModal({ type: taskDef.button!, taskId: task.id, status })}
-                          className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 font-medium whitespace-nowrap"
-                        >
-                          {taskDef.button === 'origine' && '➕ Ajouter'}
-                          {taskDef.button === 'rdv' && '📅 Organiser'}
-                          {taskDef.button === 'mailComptable' && '📧 Préparer'}
-                          {taskDef.button === 'o2s' && '💾 O2S+Excel'}
-                          {taskDef.button === 'conformite' && '🔒 Conformité'}
-                          {taskDef.button === 'bilanSuivi' && '📋 Suivi'}
-                          {taskDef.button === 'noteRdv' && '📝 Notes'}
-                          {taskDef.button === 'verifications' && '💹 Vérif'}
-                          {taskDef.button === 'noteRapport' && '📝 Notes'}
-                          {taskDef.button === 'recommandation' && '➕ Recomm'}
-                          {taskDef.button === 'documents' && '📄 Documents'}
-                          {taskDef.button === 'treso' && '💰 Tréso'}
-                          {taskDef.button === 'mailComptableArb' && '📞 Comptable'}
-                        </button>
+
+                      {/* Boutons d'action */}
+                      {blockState === 'EN_COURS' && (
+                        <div className="flex gap-2 flex-wrap justify-end">
+                          {!task.completed && task.status !== 'na' && (
+                            <button
+                              onClick={() => handleTaskUpdate(status, String(idx), true)}
+                              className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 font-medium whitespace-nowrap"
+                            >
+                              ✅ Valider
+                            </button>
+                          )}
+                          {!task.completed && task.status !== 'na' && (
+                            <button
+                              onClick={() => handleTaskNA(status, String(idx))}
+                              className="px-3 py-1 text-xs bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 font-medium whitespace-nowrap"
+                            >
+                              ⊘ N.A.
+                            </button>
+                          )}
+                          {task.completed && (
+                            <button
+                              onClick={() => handleTaskUpdate(status, String(idx), false)}
+                              className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 font-medium whitespace-nowrap"
+                            >
+                              ↩️ Dé-valider
+                            </button>
+                          )}
+                          {task.status === 'na' && (
+                            <button
+                              onClick={() => handleTaskUpdate(status, String(idx), false)}
+                              className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 font-medium whitespace-nowrap"
+                            >
+                              ↩️ Rétablir
+                            </button>
+                          )}
+                          {taskDef.button && (
+                            <button
+                              onClick={() => setActiveModal({ type: taskDef.button!, taskId: task.id, status })}
+                              className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 font-medium whitespace-nowrap"
+                            >
+                              {taskDef.button === 'origine' && '📝 Infos'}
+                              {taskDef.button === 'rdv' && '📅 RDV'}
+                              {taskDef.button === 'mailComptable' && '📧 Mail'}
+                              {taskDef.button === 'o2s' && '💾 O2S'}
+                              {taskDef.button === 'conformite' && '🔒 Conf'}
+                              {taskDef.button === 'bilanSuivi' && '📋 Bilan'}
+                              {taskDef.button === 'noteRdv' && '📝 Note'}
+                              {taskDef.button === 'verifications' && '💹 Vérif'}
+                              {taskDef.button === 'noteRapport' && '📝 Note'}
+                              {taskDef.button === 'recommandation' && '➕ Ajouter'}
+                              {taskDef.button === 'documents' && '📄 Doc'}
+                              {taskDef.button === 'treso' && '💰 Tréso'}
+                              {taskDef.button === 'mailComptableArb' && '📞 Call'}
+                            </button>
+                          )}
+                        </div>
                       )}
-                      {task.status === 'na' && <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">⊘ N.C.</span>}
                     </div>
                   );
                 })}
               </div>
+
+              {/* Bouton "Passez au statut suivant" */}
+              {blockState === 'EN_COURS' && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  {(() => {
+                    const currentIdx = STATUSES.indexOf(status);
+                    const nextStatus = currentIdx < STATUSES.length - 1 ? STATUSES[currentIdx + 1] : null;
+                    const allTasksCompleted = tasks.every((t: any) => t.completed || t.status === 'na');
+
+                    return (
+                      <div className="flex gap-3 items-center justify-between">
+                        <div className="text-sm">
+                          {allTasksCompleted && nextStatus && (
+                            <p className="text-green-600 font-medium">✅ Toutes les tâches sont validées</p>
+                          )}
+                          {!allTasksCompleted && (
+                            <p className="text-orange-600 text-xs">
+                              ⏳ {tasks.filter((t: any) => !t.completed && t.status !== 'na').length} tâche(s) à valider
+                            </p>
+                          )}
+                        </div>
+                        {allTasksCompleted && nextStatus && (
+                          <button
+                            onClick={() => handleProgressToNextStatus(status, nextStatus)}
+                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium whitespace-nowrap"
+                          >
+                            ➡️ Passez à {nextStatus}
+                          </button>
+                        )}
+                        {!nextStatus && allTasksCompleted && (
+                          <div className="px-4 py-2 bg-green-100 text-green-700 rounded font-medium">
+                            🎉 Toutes les étapes complétées!
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
             )}
 
             {blockState === 'A_VENIR' && (
