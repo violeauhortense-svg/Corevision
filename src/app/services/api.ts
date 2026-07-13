@@ -1,7 +1,7 @@
 import { apiBaseUrl, publicAnonKey } from '../utils/supabase/info';
 import { supabase } from '../utils/supabase/client';
 
-const BASE_URL = `${apiBaseUrl}/make-server-cac859af`;
+const BASE_URL = apiBaseUrl;
 
 console.log('🔗 API Base URL:', BASE_URL);
 
