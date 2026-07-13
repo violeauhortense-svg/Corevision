@@ -206,6 +206,20 @@ export const getByPrefix = async (prefix: string): Promise<any[]> => {
   }
 };
 
+export const delByPrefix = async (prefix: string): Promise<number> => {
+  const pool = await getPool();
+  const conn = await pool.connect();
+  try {
+    const result = await conn.queryArray(
+      "DELETE FROM kv_store WHERE key LIKE $1",
+      [`${prefix}%`]
+    );
+    return result.rows.length;
+  } finally {
+    conn.release();
+  }
+};
+
 // Graceful shutdown
 if (typeof Deno !== "undefined" && "unload" in Deno) {
   (Deno as any).unload = async () => {

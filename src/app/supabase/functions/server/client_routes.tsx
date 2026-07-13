@@ -181,7 +181,7 @@ export function setupClientRoutes(app: Hono) {
   // Delete client
   app.delete("/make-server-cac859af/clients/:id", async (c) => {
     const { user, error } = await verifyAuth(c.req.header('Authorization'));
-    
+
     if (error || !user) {
       return c.json({ error: error || 'Unauthorized' }, 401);
     }
@@ -189,11 +189,31 @@ export function setupClientRoutes(app: Hono) {
     try {
       const clientId = c.req.param('id');
       await kv.del(`client:${user.id}:${clientId}`);
-      
+
       return c.json({ success: true });
     } catch (err) {
       console.error('Error deleting client:', err);
       return c.json({ error: 'Failed to delete client: ' + err.message }, 500);
+    }
+  });
+
+  // TEMP: Clear all clients and tasks (for testing/debugging)
+  app.delete("/make-server-cac859af/admin/clear-all", async (c) => {
+    try {
+      const clientsDeleted = await kv.delByPrefix('client:');
+      const tasksDeleted = await kv.delByPrefix('task:');
+
+      console.log(`🗑️ CLEARED: ${clientsDeleted} clients, ${tasksDeleted} tasks`);
+
+      return c.json({
+        success: true,
+        message: `Cleared ${clientsDeleted} clients and ${tasksDeleted} tasks`,
+        clientsDeleted,
+        tasksDeleted
+      });
+    } catch (err) {
+      console.error('❌ Error clearing data:', err);
+      return c.json({ error: 'Failed to clear data: ' + err.message }, 500);
     }
   });
 }
