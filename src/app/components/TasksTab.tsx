@@ -69,7 +69,7 @@ export function TasksTab({ clientId }: TasksTabProps) {
 
     try {
       const token = localStorage.getItem('auth_token');
-      const url = `${apiBaseUrl}/clients/${clientId}/tache/${taskId}`;
+      const url = `${apiBaseUrl}/make-server-cac859af/clients/${clientId}/tache/${taskId}`;
       console.log('🔗 Fetching:', url);
       const response = await fetch(url, {
         method: 'PATCH',
@@ -95,7 +95,7 @@ export function TasksTab({ clientId }: TasksTabProps) {
   const saveArbitrageFields = async () => {
     try {
       const token = localStorage.getItem('auth_token');
-      const url = `${apiBaseUrl}/clients/${clientId}`;
+      const url = `${apiBaseUrl}/make-server-cac859af/clients/${clientId}`;
       const response = await fetch(url, {
         method: 'PUT',
         headers: {
