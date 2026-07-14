@@ -4,7 +4,6 @@ import * as kv from "./kv_store.tsx";
 import * as sessions from "./sessions.tsx";
 import { supabaseAdminCompat, UPLOADS_DIR } from "./storage.tsx";
 import { verifyAuth, createUser, signInUser } from "./auth.tsx";
-import { schemas } from "./validation.tsx";
 // Feature routes
 import { setupBilanRoutes } from "./bilan_routes.tsx";
 import { setupClientRoutes } from "./client_routes.tsx";
@@ -179,13 +178,6 @@ app.delete("/make-server-cac859af/reset-user-data", async (c) => {
 app.post("/make-server-cac859af/auth/signup", async (c) => {
   try {
     const body = await c.req.json();
-
-    // Validate email and password
-    const validation = schemas.signup(body);
-    if (!validation.valid) {
-      return c.json({ error: 'Validation failed', errors: validation.errors }, 400);
-    }
-
     const { email, password, nom, prenom, specialite, certifications } = body;
 
     const user = await createUser(email, password, {
@@ -206,13 +198,6 @@ app.post("/make-server-cac859af/auth/signup", async (c) => {
 app.post("/make-server-cac859af/auth/signin", async (c) => {
   try {
     const body = await c.req.json();
-
-    // Validate email and password
-    const validation = schemas.signup(body);
-    if (!validation.valid) {
-      return c.json({ error: 'Validation failed', errors: validation.errors }, 400);
-    }
-
     const { email, password } = body;
 
     const data = await signInUser(email, password);

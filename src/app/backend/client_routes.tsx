@@ -6,7 +6,6 @@ import type { Hono } from "npm:hono";
 import * as kv from "./kv_store.tsx";
 import { verifyAuthRequest } from "./auth.tsx";
 import { getTasksForStatus, getTasksWithIdsForStatus } from "./helpers.tsx";
-import { schemas } from "./validation.tsx";
 
 export function setupClientRoutes(app: Hono) {
   // Get all clients for authenticated user
@@ -105,13 +104,6 @@ export function setupClientRoutes(app: Hono) {
 
     try {
       const body = await c.req.json();
-
-      // Validate input
-      const validation = schemas.createClient(body);
-      if (!validation.valid) {
-        return c.json({ error: 'Validation failed', errors: validation.errors }, 400);
-      }
-
       const { nom, prenom, email, telephone, statut, patrimoine, statusOuvert, cspSigne, taches } = body;
 
       const clientId = crypto.randomUUID();
@@ -189,12 +181,6 @@ export function setupClientRoutes(app: Hono) {
     try {
       const clientId = c.req.param('id');
       const body = await c.req.json();
-
-      // Validate input
-      const validation = schemas.updateClient(body);
-      if (!validation.valid) {
-        return c.json({ error: 'Validation failed', errors: validation.errors }, 400);
-      }
       
       const existingClient = await kv.get(`client:${user.id}:${clientId}`);
       if (!existingClient) {
