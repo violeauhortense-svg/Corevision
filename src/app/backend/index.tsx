@@ -62,11 +62,29 @@ const supabaseAdmin = supabaseAdminCompat;
 
 // Middleware
 app.use('*', logger(console.log));
+
+// ✨ CORS config updated for credentials (HTTP-only cookies)
+// When credentials: 'include', origin MUST be specific (not '*')
+const allowedOrigins = [
+  "https://corevision-main.vercel.app",  // Production frontend
+  "https://corevision-*.vercel.app",     // Preview deployments
+  "http://localhost:3000",                // Local dev
+  "http://localhost:3001",                // Local dev alt
+];
+
 app.use("/*", cors({
-  origin: "*",
-  allowHeaders: ["Content-Type", "Authorization"],
+  origin: (origin) => {
+    if (!origin) return "*";  // No origin = same-origin request
+    // Check if origin matches any allowed pattern
+    if (origin === "https://corevision-main.vercel.app") return origin;
+    if (origin.match(/^https:\/\/corevision-.+\.vercel\.app$/)) return origin;
+    if (origin.startsWith("http://localhost")) return origin;
+    return undefined;  // Reject unknown origins
+  },
+  credentials: true,  // ✨ Allow credentials (cookies)
+  allowHeaders: ["Content-Type", "Authorization", "Cookie"],
   allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  exposeHeaders: ["Content-Length"],
+  exposeHeaders: ["Content-Length", "Set-Cookie"],
   maxAge: 600,
 }));
 
