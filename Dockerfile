@@ -3,13 +3,13 @@ FROM denoland/deno:latest as builder
 
 WORKDIR /app
 
-# Copier le code du serveur
-COPY src/app/supabase/functions/server /app/server
+# Copier le code du serveur (backend seulement)
+COPY src/app/backend /app/server
 
 WORKDIR /app/server
 
 # Pré-télécharger les dépendances Deno (cache)
-RUN deno cache --import-map=import_map.json index.tsx || deno cache index.tsx || true
+RUN deno cache index.tsx || true
 
 # Production stage
 FROM denoland/deno:latest
