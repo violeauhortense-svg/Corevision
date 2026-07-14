@@ -24,8 +24,25 @@ function clearSession() {
 }
 
 function getAuthToken(): string | null {
-  const session = loadSession();
-  return session?.access_token || null;
+  const SESSION_KEY = 'corevision_session';
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    console.log('🔑 [getAuthToken] localStorage.getItem("corevision_session"):', raw ? 'exists' : 'MISSING');
+
+    if (!raw) {
+      console.log('🔑 [getAuthToken] Session not found in localStorage!');
+      console.log('🔑 [getAuthToken] Available localStorage keys:', Object.keys(localStorage).join(', '));
+      return null;
+    }
+
+    const session = JSON.parse(raw);
+    const token = session?.access_token;
+    console.log('🔑 [getAuthToken] Token found:', token ? 'YES' : 'NO');
+    return token || null;
+  } catch (err) {
+    console.error('🔑 [getAuthToken] Error:', err);
+    return null;
+  }
 }
 
 // ─── Auth state listeners ──────────────────────────────────────────────────

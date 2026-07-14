@@ -229,7 +229,7 @@ export function setupTaskRoutes(app: Hono) {
         client,
         stats: {
           taskStatus: taskAfter.status,
-          allCompleted,
+          allCompleted,  // ✨ Important for auto-progression
           counts: stats,
         }
       });
