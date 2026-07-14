@@ -124,7 +124,7 @@ export function setupEmailRoutes(app: Hono, verifyAuth: Function) {
   
   // Send presentation email
   app.post("/make-server-cac859af/send-presentation-email", async (c) => {
-    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error } = await verifyAuthRequest(c.req);
     
     if (error || !user) {
       return c.json({ error: error || 'Unauthorized' }, 401);
@@ -305,7 +305,7 @@ export function setupEmailRoutes(app: Hono, verifyAuth: Function) {
   app.post("/make-server-cac859af/send-email", async (c) => {
     console.log('📧 POST /send-email - Route appelée');
     
-    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error } = await verifyAuthRequest(c.req);
     
     if (error || !user) {
       console.error('❌ Auth error:', error);

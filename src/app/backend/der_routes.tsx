@@ -191,7 +191,7 @@ export function setupDERRoutes(app: Hono, verifyAuth: Function) {
   
   // Generate DER signature link
   app.post("/make-server-cac859af/generate-der-signature", async (c) => {
-    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error } = await verifyAuthRequest(c.req);
     
     if (error || !user) {
       return c.json({ error: error || 'Unauthorized' }, 401);
@@ -268,7 +268,7 @@ export function setupDERRoutes(app: Hono, verifyAuth: Function) {
 
   // Get DER signature by client ID (PROTECTED)
   app.get("/make-server-cac859af/clients/:clientId/der-signature", async (c) => {
-    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error } = await verifyAuthRequest(c.req);
     
     if (error || !user) {
       return c.json({ error: error || 'Unauthorized' }, 401);
@@ -476,7 +476,7 @@ export function setupDERRoutes(app: Hono, verifyAuth: Function) {
 
   // Get all DER signatures for user (PROTECTED)
   app.get("/make-server-cac859af/der-signatures", async (c) => {
-    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error } = await verifyAuthRequest(c.req);
     
     if (error || !user) {
       return c.json({ error: error || 'Unauthorized' }, 401);
@@ -495,7 +495,7 @@ export function setupDERRoutes(app: Hono, verifyAuth: Function) {
 
   // Delete DER signature (PROTECTED)
   app.delete("/make-server-cac859af/der-signature/:token", async (c) => {
-    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error } = await verifyAuthRequest(c.req);
     
     if (error || !user) {
       return c.json({ error: error || 'Unauthorized' }, 401);
@@ -552,7 +552,7 @@ export function setupDERRoutes(app: Hono, verifyAuth: Function) {
 
   // Preview DER document for client (PROTECTED)
   app.get("/make-server-cac859af/clients/:clientId/der/preview", async (c) => {
-    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error } = await verifyAuthRequest(c.req);
     
     if (error || !user) {
       return c.json({ error: error || 'Unauthorized' }, 401);

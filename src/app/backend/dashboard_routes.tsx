@@ -4,7 +4,7 @@
 
 import type { Hono } from "npm:hono";
 import * as kv from "./kv_store.tsx";
-import { verifyAuth } from "./auth.tsx";
+import { verifyAuthRequest } from "./auth.tsx";
 
 const STATUSES = [
   'Prospect',
@@ -23,7 +23,7 @@ export function setupDashboardRoutes(app: Hono) {
   // GET /dashboard/metrics - Les 6 cartes principales
   // ============================================
   app.get("/make-server-cac859af/dashboard/metrics", async (c) => {
-    const { user, error: authError } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error: authError } = await verifyAuthRequest(c.req);
 
     if (authError || !user) {
       return c.json({ error: authError || 'Unauthorized' }, 401);
@@ -104,7 +104,7 @@ export function setupDashboardRoutes(app: Hono) {
   // GET /dashboard/kanban - Clients groupés par statut
   // ============================================
   app.get("/make-server-cac859af/dashboard/kanban", async (c) => {
-    const { user, error: authError } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error: authError } = await verifyAuthRequest(c.req);
 
     if (authError || !user) {
       return c.json({ error: authError || 'Unauthorized' }, 401);
@@ -158,7 +158,7 @@ export function setupDashboardRoutes(app: Hono) {
   // POST /clients/{id}/status - Changer le statut d'un client
   // ============================================
   app.post("/make-server-cac859af/clients/:clientId/status", async (c) => {
-    const { user, error: authError } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error: authError } = await verifyAuthRequest(c.req);
 
     if (authError || !user) {
       return c.json({ error: authError || 'Unauthorized' }, 401);
@@ -197,7 +197,7 @@ export function setupDashboardRoutes(app: Hono) {
   // PATCH /clients/{id}/tache/{taskId} - Valider une tâche
   // ============================================
   app.patch("/make-server-cac859af/clients/:clientId/tache/:taskId", async (c) => {
-    const { user, error: authError } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error: authError } = await verifyAuthRequest(c.req);
 
     if (authError || !user) {
       return c.json({ error: authError || 'Unauthorized' }, 401);

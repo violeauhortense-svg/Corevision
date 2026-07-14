@@ -7,7 +7,7 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
   
   // Generate bilan patrimonial signature link (PROTECTED)
   app.post("/make-server-cac859af/bilan-signatures/generate", async (c) => {
-    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error } = await verifyAuthRequest(c.req);
     
     if (error || !user) {
       return c.json({ error: error || 'Unauthorized' }, 401);
@@ -174,7 +174,7 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
   app.post("/make-server-cac859af/bilan-signatures/send-email", async (c) => {
     console.log('📧 POST /bilan-signatures/send-email - Route appelée');
     
-    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error } = await verifyAuthRequest(c.req);
     
     if (error || !user) {
       console.error('❌ Auth error:', error);
@@ -385,7 +385,7 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
     console.log('📋 GET /bilan-signatures/all - Route appelée');
     console.log('🔐 Authorization header:', c.req.header('Authorization'));
     
-    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error } = await verifyAuthRequest(c.req);
     
     console.log('✅ User après verifyAuth:', user);
     console.log('❌ Error après verifyAuth:', error);
@@ -457,7 +457,7 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
 
   // Delete bilan signature (PROTECTED)
   app.delete("/make-server-cac859af/bilan-signature/:token", async (c) => {
-    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error } = await verifyAuthRequest(c.req);
     
     if (error || !user) {
       return c.json({ error: error || 'Unauthorized' }, 401);
