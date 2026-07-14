@@ -43,50 +43,55 @@ export function setupClientRoutes(app: Hono) {
       }
 
       // Charger et regrouper les tâches par statut
-      const tasksByStatus: Record<string, any[]> = {};
       const STATUSES = ['Prospect', 'Découverte', 'Simulation', 'Lettre Mission', 'Rapport/Audit', 'Suivi MEP', 'Suivi CSP', 'Arbitrage'];
-
-      for (const status of STATUSES) {
-        tasksByStatus[status] = [];
-      }
-
-      // S'assurer que le client a les tâches pour son statut actuel
       const currentStatus = client.statusOuvert || 'Prospect';
+      const currentStatusIdx = STATUSES.indexOf(currentStatus);
 
-      // Si les tâches n'existent pas pour le statut actuel, les initialiser
-      if (!client.taches || !client.taches[currentStatus]) {
-        console.log(`📝 Initializing tasks for client ${clientId} with status "${currentStatus}"`);
+      console.log(`📋 Loading client ${clientId} at status: "${currentStatus}" (index: ${currentStatusIdx})`);
 
-        if (!client.taches) {
-          client.taches = tasksByStatus;
+      // Initialiser client.taches si absent
+      if (!client.taches) {
+        client.taches = {};
+      }
+
+      let tasksSaved = false;
+
+      // ✨ S'assurer que TOUS les statuts jusqu'au statut courant sont initialisés
+      for (let i = 0; i <= currentStatusIdx; i++) {
+        const status = STATUSES[i];
+
+        if (!client.taches[status]) {
+          console.log(`📝 Initializing missing tasks for status "${status}"`);
+
+          const taskTemplates = getTasksWithIdsForStatus(status);
+          client.taches[status] = taskTemplates.map((def: any, idx: number) => ({
+            id: def.id,
+            title: def.title,
+            description: def.description,
+            completed: false,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            clientId: clientId,
+            statusPipeline: status,
+          }));
+
+          // Auto-complete first task of Prospect only
+          if (status === 'Prospect' && client.taches[status].length > 0) {
+            client.taches[status][0].completed = true;
+          }
+
+          tasksSaved = true;
         }
+      }
 
-        const taskTemplates = getTasksWithIdsForStatus(currentStatus);
-        client.taches[currentStatus] = taskTemplates.map((def: any, idx: number) => ({
-          id: def.id,
-          title: def.title,
-          description: def.description,
-          completed: idx === 0, // First task auto-completed
-          status: idx === 0 ? 'pending' : 'pending',
-          createdAt: new Date().toISOString(),
-          clientId: clientId,
-          statusPipeline: currentStatus,
-        }));
-
-        // Sauvegarder le client mis à jour avec les tâches
+      // Sauvegarder si des tâches ont été initialisées
+      if (tasksSaved) {
         await kv.set(`client:${user.id}:${clientId}`, client);
-        console.log(`✅ ${client.taches[currentStatus].length} tasks initialized for status "${currentStatus}"`);
+        console.log(`✅ Initialized all missing statuses up to "${currentStatus}"`);
       }
 
-      // Chercher toutes les tâches de ce client
-      // Pour l'instant, retourner le client avec les tâches qu'on a déjà stockées
-      if (client.taches && Object.keys(client.taches).length > 0) {
-        // Les tâches sont déjà groupées dans le client
-        return c.json({ client });
-      }
+      console.log(`📊 Client taches statuses:`, Object.keys(client.taches).join(', '));
 
-      // Fallback: retourner avec tâches vides
-      client.taches = tasksByStatus;
       return c.json({ client });
     } catch (err) {
       console.error('Error fetching client:', err);
