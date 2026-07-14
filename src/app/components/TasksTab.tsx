@@ -289,14 +289,6 @@ export function TasksTab({ clientId }: TasksTabProps) {
   const cspSigne = client.cspSigne ?? false;
   const clientStatus = client?.statusOuvert || client?.status || 'Prospect';
 
-  // Debug
-    clientId,
-    clientStatus,
-    hasStatusOuvert: !!client?.statusOuvert,
-    hasTaches: !!client?.taches,
-    tachesKeys: client?.taches ? Object.keys(client.taches) : []
-  });
-
   return (
     <div className="space-y-4 p-4">
       {STATUSES.map((status) => {

@@ -206,11 +206,6 @@ export function RevenusImpositionForm({
     
     try {
       const parts = calculerNombreParts(familyInfo);
-        maritalStatus: familyInfo.maritalStatus,
-        children: familyInfo.children?.length || 0,
-        childrenFiscaux: familyInfo.children?.filter((e: any) => e.isChargeFiscale || e.aChargeFiscalement).length || 0,
-        partsCalculees: parts
-      });
       return parts;
     } catch (error) {
       console.error('❌ Erreur calcul nombre de parts:', error);
@@ -434,11 +429,6 @@ export function RevenusImpositionForm({
       
       // ✅ Version SYNC pour affichage immédiat
       const detailIR = calculerImpotRevenuSync(revenusFiscal, partsEffectives);
-        revenus: revenusFiscal, 
-        parts: partsEffectives,
-        TMI: detailIR.TMI,
-        impotFinal: detailIR.impotFinal
-      });
       return detailIR;
     } catch (error) {
       console.error('❌ Erreur calcul IR:', error);
@@ -600,15 +590,7 @@ export function RevenusImpositionForm({
   const calculIRDisplay = calculIR || calculIRStable;
   const calculPSDisplay = calculPS || calculPSStable;
   const calculIFIDisplay = calculIFI || calculIFIStable;
-  
-  // 🐛 DEBUG : Logs pour voir ce qui est défini
-    calculIRStable: calculIRStable ? 'DÉFINI' : 'NULL',
-    calculIR: calculIR ? 'DÉFINI' : 'NULL',
-    calculIRDisplay: calculIRDisplay ? 'DÉFINI' : 'NULL',
-    nombrePartsCalcule,
-    impotFinal: calculIRDisplay?.impotFinal
-  });
-  
+
   const totalImpots = impotSurRevenuAffiche + (afficherIFI ? ifiAffiche : 0);
   const tauxImpositionGlobal = totalRevenus > 0 ? (totalImpots / totalRevenus) * 100 : 0;
   const revenuNetApresImpots = totalRevenus - totalImpots;
