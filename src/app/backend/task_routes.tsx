@@ -6,6 +6,16 @@ import type { Hono } from "npm:hono";
 import * as kv from "./kv_store.tsx";
 import { verifyAuth } from "./auth.tsx";
 import { getTasksWithIdsForStatus } from "./helpers.tsx";
+import {
+  TASK_STATES,
+  TaskState,
+  isValidTaskState,
+  areAllTasksCompleted,
+  countTasksByState,
+  validateTaskUpdate,
+  applyTaskUpdate,
+  TASK_STATE_LABELS,
+} from "./task_states.tsx";
 
 export function setupTaskRoutes(app: Hono) {
   // Get tasks for a client
@@ -136,12 +146,19 @@ export function setupTaskRoutes(app: Hono) {
       const clientId = c.req.param('clientId');
       const taskIdx = parseInt(c.req.param('taskIdx'), 10);
       const body = await c.req.json();
-      const { completed, status } = body;
 
       console.log(`🔄 Task validation request:`);
       console.log(`   userId: ${user.id}`);
       console.log(`   clientId: ${clientId}`);
-      console.log(`   taskIdx: ${taskIdx}, completed: ${completed}, status: ${status}`);
+      console.log(`   taskIdx: ${taskIdx}`);
+      console.log(`   payload: ${JSON.stringify(body)}`);
+
+      // Valider la payload
+      const { valid, error: validationError, normalized } = validateTaskUpdate(body, user.id);
+      if (!valid) {
+        console.error(`❌ Validation error: ${validationError}`);
+        return c.json({ error: validationError }, 400);
+      }
 
       // Fetch the client
       const kvKey = `client:${user.id}:${clientId}`;
@@ -150,7 +167,6 @@ export function setupTaskRoutes(app: Hono) {
 
       if (!client) {
         console.error(`❌ Client not found with key: ${kvKey}`);
-        // Debug: list all client keys for this user
         const allClientKeys = await kv.getByPrefix(`client:${user.id}:`);
         console.log(`📋 All client keys for user ${user.id}: ${allClientKeys.length} found`);
         allClientKeys.forEach((c: any, i: number) => {
@@ -165,28 +181,42 @@ export function setupTaskRoutes(app: Hono) {
       const tasks = client.taches?.[currentStatus] || [];
 
       if (taskIdx < 0 || taskIdx >= tasks.length) {
-        return c.json({ error: `Invalid task index ${taskIdx} for status "${currentStatus}"` }, 400);
+        return c.json({
+          error: `Invalid task index ${taskIdx} for status "${currentStatus}" (max: ${tasks.length - 1})`
+        }, 400);
       }
 
-      console.log(`   Task before: id=${tasks[taskIdx]?.id}, completed=${tasks[taskIdx]?.completed}, status=${tasks[taskIdx]?.status}`);
+      const taskBefore = tasks[taskIdx];
+      console.log(`   📋 Task before:`);
+      console.log(`      id=${taskBefore?.id}, status=${taskBefore?.status} (${TASK_STATE_LABELS[taskBefore?.status as TaskState]})`);
 
-      // Update the task
-      tasks[taskIdx].completed = completed;
-      tasks[taskIdx].status = status || (completed ? 'validated' : 'pending');
-      tasks[taskIdx].updated_at = new Date().toISOString();
+      // Appliquer la mise à jour validée
+      const taskAfter = applyTaskUpdate(taskBefore, normalized!, user.id);
+      tasks[taskIdx] = taskAfter;
 
-      // Save client
+      // Sauvegarder le client
       client.taches[currentStatus] = tasks;
       client.updated_at = new Date().toISOString();
       await kv.set(`client:${user.id}:${clientId}`, client);
 
-      console.log(`   Task after: completed=${tasks[taskIdx].completed}, status=${tasks[taskIdx].status}`);
-      console.log(`✅ Task validation successful`);
+      // Calculer stats pour debug
+      const stats = countTasksByState(tasks);
+      const allCompleted = areAllTasksCompleted(tasks);
+
+      console.log(`   ✅ Task after: status=${taskAfter.status} (${TASK_STATE_LABELS[taskAfter.status]})`);
+      console.log(`   📊 Status stats: ${stats.validated} validées, ${stats.na} N/A, ${stats.pending} pending`);
+      console.log(`   ✨ All completed? ${allCompleted ? 'OUI ✓' : 'NON ✗'}`);
 
       return c.json({
         success: true,
-        message: `Task ${status === 'na' ? 'marked N.A.' : (completed ? 'validated' : 'unvalidated')}`,
-        client
+        message: `Task marked as ${TASK_STATE_LABELS[taskAfter.status]}`,
+        task: taskAfter,
+        client,
+        stats: {
+          taskStatus: taskAfter.status,
+          allCompleted,
+          counts: stats,
+        }
       });
     } catch (err) {
       console.error('❌ Error validating task:', err);
@@ -232,6 +262,28 @@ export function setupTaskRoutes(app: Hono) {
         }, 400);
       }
 
+      // ✨ IMPORTANT: Vérifier que TOUTES les tâches du statut actuel sont complétées
+      const currentTasks = client.taches?.[fromStatus] || [];
+      const allCompleted = areAllTasksCompleted(currentTasks);
+
+      if (!allCompleted) {
+        const stats = countTasksByState(currentTasks);
+        console.error(`❌ Cannot progress: ${stats.pending} task(s) still pending`);
+
+        return c.json({
+          error: `Cannot progress: ${stats.pending} task(s) still pending in "${fromStatus}"`,
+          code: 'TASKS_NOT_COMPLETED',
+          stats: {
+            validated: stats.validated,
+            na: stats.na,
+            pending: stats.pending,
+            total: currentTasks.length,
+          }
+        }, 422); // 422 Unprocessable Entity
+      }
+
+      console.log(`✅ All tasks in "${fromStatus}" are completed (${currentTasks.length})`);
+
       // Initialize tasks for next status if not exists
       if (!client.taches[toStatus]) {
         const nextTaskDefs = getTasksWithIdsForStatus(toStatus);
@@ -239,11 +291,12 @@ export function setupTaskRoutes(app: Hono) {
           id: def.id,
           title: def.title,
           completed: false,
-          status: 'pending',
+          status: TASK_STATES.PENDING,
           createdAt: new Date().toISOString(),
           clientId: clientId,
           statusPipeline: toStatus,
         }));
+        console.log(`📝 Initialized ${nextTaskDefs.length} tasks for "${toStatus}"`);
       }
 
       // Update client status
@@ -256,7 +309,9 @@ export function setupTaskRoutes(app: Hono) {
       return c.json({
         success: true,
         message: `Client progressed to "${toStatus}"`,
-        client
+        client,
+        previousStatus: fromStatus,
+        newTaskCount: client.taches[toStatus].length,
       });
     } catch (err) {
       console.error('❌ Error progressing status:', err);
