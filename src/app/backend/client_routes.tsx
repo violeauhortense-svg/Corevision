@@ -230,6 +230,51 @@ export function setupClientRoutes(app: Hono) {
     }
   });
 
+  // DEBUG: Inspect a specific client's tasks
+  app.get("/make-server-cac859af/admin/inspect/:clientId", async (c) => {
+    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+
+    if (error || !user) {
+      return c.json({ error: error || 'Unauthorized' }, 401);
+    }
+
+    try {
+      const clientId = c.req.param('clientId');
+      const client = await kv.get(`client:${user.id}:${clientId}`);
+
+      if (!client) {
+        return c.json({ error: 'Client not found' }, 404);
+      }
+
+      // Debug: Show complete client data
+      return c.json({
+        client: {
+          id: client.id,
+          nom: client.nom,
+          statusOuvert: client.statusOuvert,
+          updated_at: client.updated_at,
+          tachesStatuses: Object.keys(client.taches || {}),
+          tachesDetail: Object.entries(client.taches || {}).reduce((acc: any, [status, tasks]: any) => {
+            acc[status] = tasks.map((t: any) => ({
+              id: t.id,
+              title: t.title,
+              completed: t.completed,
+              status: t.status,
+              validated_at: t.validated_at,
+              validated_by: t.validated_by,
+              na_at: t.na_at,
+              na_by: t.na_by,
+            }));
+            return acc;
+          }, {}),
+        }
+      });
+    } catch (err) {
+      console.error('Error inspecting client:', err);
+      return c.json({ error: 'Failed to inspect: ' + (err as Error).message }, 500);
+    }
+  });
+
   // TEMP: Clear all clients and tasks (for testing/debugging)
   app.delete("/make-server-cac859af/admin/clear-all", async (c) => {
     try {
