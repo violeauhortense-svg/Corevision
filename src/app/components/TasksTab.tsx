@@ -88,10 +88,10 @@ export function TasksTab({ clientId }: TasksTabProps) {
         console.log('✅ Task update response:', result);
         toast.success(completed ? '✅ Tâche validée' : '↩️ Validation annulée');
 
-        // UPDATE STATE IMMEDIATELY instead of full reload
+        // UPDATE STATE IMMEDIATELY
         setClient(prev => {
           if (!prev) return prev;
-          return {
+          const updatedClient = {
             ...prev,
             taches: {
               ...prev.taches,
@@ -100,6 +100,22 @@ export function TasksTab({ clientId }: TasksTabProps) {
               )
             }
           };
+
+          // ✨ AUTO-PROGRESSION: Check if all tasks completed for current status
+          if (result.stats?.allCompleted && status === (prev.statusOuvert || prev.status || 'Prospect')) {
+            console.log(`🎯 All tasks completed for "${status}", auto-progressing...`);
+            const STATUSES = ['Prospect', 'Découverte', 'Simulation', 'Lettre Mission', 'Rapport/Audit', 'Suivi MEP', 'Suivi CSP', 'Arbitrage'];
+            const currentIdx = STATUSES.indexOf(status);
+            const nextStatus = currentIdx < STATUSES.length - 1 ? STATUSES[currentIdx + 1] : null;
+
+            if (nextStatus) {
+              setTimeout(() => {
+                handleProgressToNextStatus(status, nextStatus);
+              }, 800);  // Small delay for UX (let user see the last badge change)
+            }
+          }
+
+          return updatedClient;
         });
       } else {
         const error = await response.text();
@@ -137,7 +153,7 @@ export function TasksTab({ clientId }: TasksTabProps) {
         // UPDATE STATE IMMEDIATELY
         setClient(prev => {
           if (!prev) return prev;
-          return {
+          const updatedClient = {
             ...prev,
             taches: {
               ...prev.taches,
@@ -146,6 +162,22 @@ export function TasksTab({ clientId }: TasksTabProps) {
               )
             }
           };
+
+          // ✨ AUTO-PROGRESSION: Check if all tasks completed for current status
+          if (result.stats?.allCompleted && status === (prev.statusOuvert || prev.status || 'Prospect')) {
+            console.log(`🎯 All tasks completed for "${status}", auto-progressing...`);
+            const STATUSES = ['Prospect', 'Découverte', 'Simulation', 'Lettre Mission', 'Rapport/Audit', 'Suivi MEP', 'Suivi CSP', 'Arbitrage'];
+            const currentIdx = STATUSES.indexOf(status);
+            const nextStatus = currentIdx < STATUSES.length - 1 ? STATUSES[currentIdx + 1] : null;
+
+            if (nextStatus) {
+              setTimeout(() => {
+                handleProgressToNextStatus(status, nextStatus);
+              }, 800);  // Small delay for UX
+            }
+          }
+
+          return updatedClient;
         });
       } else {
         const error = await response.text();
@@ -454,44 +486,27 @@ export function TasksTab({ clientId }: TasksTabProps) {
               </div>
             )}
 
-              {/* Bouton "Passez au statut suivant" */}
+              {/* Statut de progression - Auto-progression quand toutes tâches complétées */}
               {blockState === 'EN_COURS' && (
                 <div className="mt-4 pt-4 border-t-2 border-blue-300">
                   {(() => {
-                    const currentIdx = STATUSES.indexOf(status);
-                    const nextStatus = currentIdx < STATUSES.length - 1 ? STATUSES[currentIdx + 1] : null;
                     const allTasksCompleted = tasks.every((t: any) => t.completed || t.status === 'na');
                     const remainingTasks = tasks.filter((t: any) => !t.completed && t.status !== 'na').length;
 
-                    console.log(`📊 Progression check for "${status}": completed=${allTasksCompleted}, remaining=${remainingTasks}, tasks=${tasks.length}`);
+                    console.log(`📊 Progress check for "${status}": ${allTasksCompleted ? 'COMPLETE' : `${remainingTasks} pending`}`);
 
                     return (
-                      <div className="flex gap-3 items-center justify-between">
-                        <div className="text-sm flex-1">
-                          {allTasksCompleted && nextStatus && (
-                            <div className="bg-green-50 border border-green-300 p-3 rounded">
-                              <p className="text-green-700 font-bold">✅ Toutes les tâches sont validées!</p>
-                              <p className="text-green-600 text-xs mt-1">Vous pouvez maintenant passer à l'étape suivante</p>
-                            </div>
-                          )}
-                          {!allTasksCompleted && (
-                            <div className="bg-orange-50 border border-orange-300 p-3 rounded">
-                              <p className="text-orange-700 font-bold">⏳ {remainingTasks} tâche(s) en attente</p>
-                              <p className="text-orange-600 text-xs mt-1">Validez ou marquez N/A pour continuer</p>
-                            </div>
-                          )}
-                        </div>
-                        {allTasksCompleted && nextStatus && (
-                          <button
-                            onClick={() => handleProgressToNextStatus(status, nextStatus)}
-                            className="px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 font-bold whitespace-nowrap shadow-lg transition-all"
-                          >
-                            ➡️ Passez à<br/>{nextStatus}
-                          </button>
+                      <div className="text-sm">
+                        {allTasksCompleted && (
+                          <div className="bg-green-50 border border-green-300 p-3 rounded">
+                            <p className="text-green-700 font-bold">✅ Toutes les tâches sont validées!</p>
+                            <p className="text-green-600 text-xs mt-1">⏳ Passage automatique au statut suivant en cours...</p>
+                          </div>
                         )}
-                        {!nextStatus && allTasksCompleted && (
-                          <div className="px-4 py-3 bg-gradient-to-r from-green-100 to-green-200 text-green-700 rounded-lg font-bold border border-green-300">
-                            🎉 Bravo! Toutes étapes complétées!
+                        {!allTasksCompleted && (
+                          <div className="bg-orange-50 border border-orange-300 p-3 rounded">
+                            <p className="text-orange-700 font-bold">⏳ {remainingTasks} tâche(s) en attente</p>
+                            <p className="text-orange-600 text-xs mt-1">Validez ou marquez N/A pour continuer</p>
                           </div>
                         )}
                       </div>
