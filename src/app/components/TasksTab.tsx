@@ -84,8 +84,23 @@ export function TasksTab({ clientId }: TasksTabProps) {
       });
 
       if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Task update response:', result);
         toast.success(completed ? '✅ Tâche validée' : '↩️ Validation annulée');
-        await loadClient();
+
+        // UPDATE STATE IMMEDIATELY instead of full reload
+        setClient(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            taches: {
+              ...prev.taches,
+              [status]: (prev.taches?.[status] || []).map(t =>
+                (t.id === taskId || t.title === taskId) ? result.task : t
+              )
+            }
+          };
+        });
       } else {
         const error = await response.text();
         console.error('❌ Erreur:', error);
@@ -115,8 +130,23 @@ export function TasksTab({ clientId }: TasksTabProps) {
       });
 
       if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Task N/A response:', result);
         toast.success('⊘ Tâche marquée N.A.');
-        await loadClient();
+
+        // UPDATE STATE IMMEDIATELY
+        setClient(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            taches: {
+              ...prev.taches,
+              [status]: (prev.taches?.[status] || []).map(t =>
+                (t.id === taskId || t.title === taskId) ? result.task : t
+              )
+            }
+          };
+        });
       } else {
         const error = await response.text();
         console.error('❌ Erreur:', error);
@@ -362,7 +392,7 @@ export function TasksTab({ clientId }: TasksTabProps) {
                         <div className="flex gap-2 flex-wrap justify-end">
                           {!task.completed && task.status !== 'na' && (
                             <button
-                              onClick={() => handleTaskUpdate(status, String(idx), true)}
+                              onClick={() => handleTaskUpdate(status, task.id, true)}
                               className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 font-medium whitespace-nowrap transition-colors"
                             >
                               ✅ Valider
@@ -370,7 +400,7 @@ export function TasksTab({ clientId }: TasksTabProps) {
                           )}
                           {!task.completed && task.status !== 'na' && (
                             <button
-                              onClick={() => handleTaskNA(status, String(idx))}
+                              onClick={() => handleTaskNA(status, task.id)}
                               className="px-3 py-1 text-xs bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 font-medium whitespace-nowrap transition-colors"
                             >
                               ⊘ N.A.
@@ -378,7 +408,7 @@ export function TasksTab({ clientId }: TasksTabProps) {
                           )}
                           {task.completed && (
                             <button
-                              onClick={() => handleTaskUpdate(status, String(idx), false)}
+                              onClick={() => handleTaskUpdate(status, task.id, false)}
                               className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 font-medium whitespace-nowrap"
                             >
                               ↩️ Dé-valider
@@ -386,7 +416,7 @@ export function TasksTab({ clientId }: TasksTabProps) {
                           )}
                           {task.status === 'na' && (
                             <button
-                              onClick={() => handleTaskUpdate(status, String(idx), false)}
+                              onClick={() => handleTaskUpdate(status, task.id, false)}
                               className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 font-medium whitespace-nowrap"
                             >
                               ↩️ Rétablir

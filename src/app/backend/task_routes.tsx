@@ -134,7 +134,8 @@ export function setupTaskRoutes(app: Hono) {
   });
 
   // PATCH: Validate/NA a task in the 8-status pipeline
-  app.patch("/make-server-cac859af/clients/:clientId/tache/:taskIdx", async (c) => {
+  // Accept either task index (legacy) or task ID (preferred)
+  app.patch("/make-server-cac859af/clients/:clientId/tache/:taskId", async (c) => {
     const { user, error } = await verifyAuth(c.req.header('Authorization'));
 
     if (error || !user) {
@@ -144,13 +145,13 @@ export function setupTaskRoutes(app: Hono) {
 
     try {
       const clientId = c.req.param('clientId');
-      const taskIdx = parseInt(c.req.param('taskIdx'), 10);
+      const taskIdParam = c.req.param('taskId');
       const body = await c.req.json();
 
       console.log(`🔄 Task validation request:`);
       console.log(`   userId: ${user.id}`);
       console.log(`   clientId: ${clientId}`);
-      console.log(`   taskIdx: ${taskIdx}`);
+      console.log(`   taskId (ID or index): ${taskIdParam}`);
       console.log(`   payload: ${JSON.stringify(body)}`);
 
       // Valider la payload
@@ -180,10 +181,24 @@ export function setupTaskRoutes(app: Hono) {
       const currentStatus = client.statusOuvert || 'Prospect';
       const tasks = client.taches?.[currentStatus] || [];
 
-      if (taskIdx < 0 || taskIdx >= tasks.length) {
+      // Find task by ID (preferred) or by index (legacy fallback)
+      let taskIdx = -1;
+
+      // Try to find by task ID first
+      taskIdx = tasks.findIndex((t: any) => t.id === taskIdParam);
+
+      // If not found and taskIdParam is numeric, try as index (backward compatibility)
+      if (taskIdx === -1 && !isNaN(Number(taskIdParam))) {
+        const idx = parseInt(taskIdParam, 10);
+        if (idx >= 0 && idx < tasks.length) {
+          taskIdx = idx;
+        }
+      }
+
+      if (taskIdx === -1) {
         return c.json({
-          error: `Invalid task index ${taskIdx} for status "${currentStatus}" (max: ${tasks.length - 1})`
-        }, 400);
+          error: `Task not found: "${taskIdParam}" in status "${currentStatus}". Available tasks: ${tasks.map((t: any) => t.id).join(', ')}`
+        }, 404);
       }
 
       const taskBefore = tasks[taskIdx];
