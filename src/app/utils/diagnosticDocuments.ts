@@ -3,7 +3,7 @@
  * Utilisez ces fonctions dans la console du navigateur pour déboguer
  */
 
-import { supabase } from './supabase/client';
+import { supabase } from './api/client';
 
 // 🔍 Afficher tous les documents d'un client
 export async function debugClientDocuments(clientId: string) {

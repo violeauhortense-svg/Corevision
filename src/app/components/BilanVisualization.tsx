@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Eye, Download, Trash2, Loader2 } from 'lucide-react';
-import { apiBaseUrl, publicAnonKey } from '../utils/supabase/info';
+import { apiBaseUrl, publicAnonKey } from '../utils/api/info';
 import { toast } from 'sonner';
 
 interface BilanVisualizationProps {

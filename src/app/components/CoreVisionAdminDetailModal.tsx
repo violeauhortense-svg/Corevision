@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Eye, Save, Plus, Trash2, Send, CheckCircle2, Euro, User, Users, Baby, Heart, FileText, Sparkles, TrendingUp, AlertTriangle, Target, BarChart3, Loader, Copy, Edit } from 'lucide-react';
 import { toast } from 'sonner';
-import { apiBaseUrl, publicAnonKey } from '../utils/supabase/info';
-import { supabase } from '../utils/supabase/client';
+import { apiBaseUrl, publicAnonKey } from '../utils/api/info';
+import { supabase } from '../utils/api/client';
 import { clientAPI } from '../services/api';
 import { useIncoherences } from '../hooks/useIncoherences';
 import { IncoherencesPanel } from './IncoherencesPanel';

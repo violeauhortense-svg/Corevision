@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { MetricsCard } from './MetricsCard';
 import { KanbanBoard } from './KanbanBoard';
-import { apiBaseUrl } from '../utils/supabase/info';
+import { apiBaseUrl } from '../utils/api/info';
 
 // Force rebuild - Cache bust
 

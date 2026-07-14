@@ -4,7 +4,7 @@
  * Transfère les clients depuis localStorage vers le backend Supabase KV
  */
 
-import { apiBaseUrl, publicAnonKey } from '../utils/supabase/info';
+import { apiBaseUrl, publicAnonKey } from '../utils/api/info';
 import type { Client } from './clientService';
 
 const API_BASE_URL = `${apiBaseUrl}/make-server-cac859af`;
@@ -21,7 +21,7 @@ interface MigrationResult {
  */
 async function getAccessToken(): Promise<string | null> {
   try {
-    const { supabase } = await import('../utils/supabase/client');
+    const { supabase } = await import('../utils/api/client');
     const { data: { session } } = await supabase.auth.getSession();
     return session?.access_token || null;
   } catch (error) {
@@ -35,7 +35,7 @@ async function getAccessToken(): Promise<string | null> {
  */
 async function getUserId(): Promise<string | null> {
   try {
-    const { supabase } = await import('../utils/supabase/client');
+    const { supabase } = await import('../utils/api/client');
     const { data: { session } } = await supabase.auth.getSession();
     return session?.user?.id || null;
   } catch (error) {

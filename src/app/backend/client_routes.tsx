@@ -50,6 +50,30 @@ export function setupClientRoutes(app: Hono) {
         tasksByStatus[status] = [];
       }
 
+      // Si le client n'a pas de tâches, les initialiser pour le statut actuel
+      if (!client.taches || Object.keys(client.taches).length === 0) {
+        console.log(`📝 Initializing tasks for client ${clientId} with status "${client.statusOuvert || 'Prospect'}"`);
+        const currentStatus = client.statusOuvert || 'Prospect';
+        const taskTemplates = getTasksWithIdsForStatus(currentStatus);
+
+        tasksByStatus[currentStatus] = taskTemplates.map((def: any, idx: number) => ({
+          id: def.id,
+          title: def.title,
+          description: def.description,
+          completed: idx === 0, // First task auto-completed
+          status: idx === 0 ? 'pending' : 'pending',
+          createdAt: new Date().toISOString(),
+          clientId: clientId,
+          statusPipeline: currentStatus,
+        }));
+
+        client.taches = tasksByStatus;
+        // Sauvegarder le client mis à jour avec les tâches
+        await kv.set(`client:${user.id}:${clientId}`, client);
+        console.log(`✅ ${tasksByStatus[currentStatus].length} tasks initialized for status "${currentStatus}"`);
+        return c.json({ client });
+      }
+
       // Chercher toutes les tâches de ce client (brute-force: impossible sans query)
       // Pour l'instant, retourner le client avec les tâches qu'on a déjà stockées
       if (client.taches && Object.keys(client.taches).length > 0) {

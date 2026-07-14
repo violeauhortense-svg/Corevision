@@ -3,7 +3,7 @@ import { FileText, Download, Edit3, Save, X, Loader2, CheckCircle2, AlertCircle,
 import { toast } from 'sonner';
 import { ClientService } from '../../services/clientService';
 import { AnalyseAvanceeIndicateur } from './AnalyseAvanceeIndicateur';
-import { apiBaseUrl, publicAnonKey } from '../../utils/supabase/info';
+import { apiBaseUrl, publicAnonKey } from '../../utils/api/info';
 
 interface RapportPatrimonialProps {
   clientId: string;

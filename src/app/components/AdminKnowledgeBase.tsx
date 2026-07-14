@@ -69,7 +69,7 @@ export function AdminKnowledgeBase({ session }: AdminKnowledgeBaseProps) {
 
   const loadDocuments = async () => {
     try {
-      const { projectId, publicAnonKey } = await import('../utils/supabase/info');
+      const { projectId, publicAnonKey } = await import('../utils/api/info');
       
       // NE PAS utiliser l'access token - utiliser uniquement le publicAnonKey
       const authToken = publicAnonKey;
@@ -151,7 +151,7 @@ export function AdminKnowledgeBase({ session }: AdminKnowledgeBaseProps) {
     setIsUploading(true);
 
     try {
-      const { projectId, publicAnonKey } = await import('../utils/supabase/info');
+      const { projectId, publicAnonKey } = await import('../utils/api/info');
       const authToken = publicAnonKey;
 
       // Créer un FormData pour envoyer le fichier

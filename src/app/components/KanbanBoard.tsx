@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { apiBaseUrl } from '../utils/supabase/info';
+import { apiBaseUrl } from '../utils/api/info';
 
 const STATUSES = [
   'Prospect',

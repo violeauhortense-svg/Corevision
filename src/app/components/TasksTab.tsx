@@ -5,7 +5,7 @@ import { TaskModals } from './tasks/TaskModals';
 import { ClientService } from '../services/ClientService';
 import type { Client } from '../services/ClientService';
 import type { Task } from '../types/client';
-import { apiBaseUrl } from '../utils/supabase/info';
+import { apiBaseUrl } from '../utils/api/info';
 import { toast } from 'sonner';
 
 const STATUSES = ['Prospect', 'Découverte', 'Simulation', 'Lettre Mission', 'Rapport/Audit', 'Suivi MEP', 'Suivi CSP', 'Arbitrage'];
@@ -52,8 +52,9 @@ export function TasksTab({ clientId }: TasksTabProps) {
   };
 
   const getBlockState = (status: string) => {
-    if (!client?.statusOuvert) return 'A_VENIR';
-    const currentIdx = STATUSES.indexOf(client.statusOuvert);
+    const clientStatus = client?.statusOuvert || client?.status || 'Prospect';
+    if (!clientStatus) return 'A_VENIR';
+    const currentIdx = STATUSES.indexOf(clientStatus);
     const statusIdx = STATUSES.indexOf(status);
     if (statusIdx < currentIdx) return 'COMPLETE';
     if (statusIdx === currentIdx) return 'EN_COURS';
@@ -193,6 +194,16 @@ export function TasksTab({ clientId }: TasksTabProps) {
   if (loading || !client) return <div className="p-4 text-center">Chargement...</div>;
 
   const cspSigne = client.cspSigne ?? false;
+  const clientStatus = client?.statusOuvert || client?.status || 'Prospect';
+
+  // Debug
+  console.log('🔍 TasksTab Debug:', {
+    clientId,
+    clientStatus,
+    hasStatusOuvert: !!client?.statusOuvert,
+    hasTaches: !!client?.taches,
+    tachesKeys: client?.taches ? Object.keys(client.taches) : []
+  });
 
   return (
     <div className="space-y-4 p-4">
@@ -203,6 +214,8 @@ export function TasksTab({ clientId }: TasksTabProps) {
         const taskDefs = getTaskDefs(status);
         const isProtected = ['Suivi CSP', 'Arbitrage'].includes(status);
         const color = getStatusColor(status);
+
+        console.log(`   ${status}: blockState=${blockState}, tasks=${tasks.length}`);
 
         // Protection CSP
         if (isProtected && !cspSigne) {
@@ -324,12 +337,12 @@ export function TasksTab({ clientId }: TasksTabProps) {
                       </div>
 
                       {/* Boutons d'action */}
-                      {blockState === 'EN_COURS' && (
+                      {(blockState === 'EN_COURS' || blockState === 'COMPLETE') && (
                         <div className="flex gap-2 flex-wrap justify-end">
                           {!task.completed && task.status !== 'na' && (
                             <button
                               onClick={() => handleTaskUpdate(status, String(idx), true)}
-                              className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 font-medium whitespace-nowrap"
+                              className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 font-medium whitespace-nowrap transition-colors"
                             >
                               ✅ Valider
                             </button>
@@ -337,7 +350,7 @@ export function TasksTab({ clientId }: TasksTabProps) {
                           {!task.completed && task.status !== 'na' && (
                             <button
                               onClick={() => handleTaskNA(status, String(idx))}
-                              className="px-3 py-1 text-xs bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 font-medium whitespace-nowrap"
+                              className="px-3 py-1 text-xs bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 font-medium whitespace-nowrap transition-colors"
                             >
                               ⊘ N.A.
                             </button>

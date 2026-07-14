@@ -1,5 +1,5 @@
-import { apiBaseUrl, publicAnonKey } from '../utils/supabase/info';
-import { supabase } from '../utils/supabase/client';
+import { apiBaseUrl, publicAnonKey } from '../utils/api/info';
+import { supabase } from '../utils/api/client';
 
 const BASE_URL = apiBaseUrl;
 

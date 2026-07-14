@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { CheckCircle2, Send, Loader2, FileText } from 'lucide-react';
 import { toast } from 'sonner';
-import { apiBaseUrl, publicAnonKey } from '../utils/supabase/info';
+import { apiBaseUrl, publicAnonKey } from '../utils/api/info';
 
 interface CoreVisionWorkflowProps {
   clientId: string;

@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AlertCircle, RefreshCw, X } from 'lucide-react';
-import { apiBaseUrl, publicAnonKey } from '../utils/supabase/info';
+import { apiBaseUrl, publicAnonKey } from '../utils/api/info';
 
 export function BaremeUpdateNotification() {
   const [showNotification, setShowNotification] = useState(false);

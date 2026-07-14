@@ -193,7 +193,7 @@ export function SourcesCollecteTab() {
   const loadReglesCollectees = async () => {
     setIsLoadingRegles(true);
     try {
-      const { projectId, publicAnonKey } = await import('../utils/supabase/info');
+      const { projectId, publicAnonKey } = await import('../utils/api/info');
       
       const response = await fetch(
         `${apiBaseUrl}/regles/toutes`,
@@ -256,7 +256,7 @@ export function SourcesCollecteTab() {
   const loadMontagesCollectes = async () => {
     setIsLoadingMontages(true);
     try {
-      const { projectId, publicAnonKey } = await import('../utils/supabase/info');
+      const { projectId, publicAnonKey } = await import('../utils/api/info');
       
       const response = await fetch(
         `${apiBaseUrl}/montages/tous`,
@@ -286,7 +286,7 @@ export function SourcesCollecteTab() {
   const loadStats = async () => {
     setIsLoadingStats(true);
     try {
-      const { projectId, publicAnonKey } = await import('../utils/supabase/info');
+      const { projectId, publicAnonKey } = await import('../utils/api/info');
       
       const response = await fetch(
         `${apiBaseUrl}/collecte-juridique/stats`,
@@ -385,7 +385,7 @@ export function SourcesCollecteTab() {
     toast.info('Collecte des données en cours...');
 
     try {
-      const { projectId, publicAnonKey } = await import('../utils/supabase/info');
+      const { projectId, publicAnonKey } = await import('../utils/api/info');
       
       const response = await fetch(
         `${apiBaseUrl}/collecte-juridique/run`,
@@ -470,7 +470,7 @@ export function SourcesCollecteTab() {
     toast.info('Initialisation en cours...');
 
     try {
-      const { projectId, publicAnonKey } = await import('../utils/supabase/info');
+      const { projectId, publicAnonKey } = await import('../utils/api/info');
       
       const response = await fetch(
         `${apiBaseUrl}/regles/initialiser`,
@@ -570,7 +570,7 @@ export function SourcesCollecteTab() {
   const loadReglesSociales = async () => {
     setIsLoadingReglesSociales(true);
     try {
-      const { projectId, publicAnonKey } = await import('../utils/supabase/info');
+      const { projectId, publicAnonKey } = await import('../utils/api/info');
       
       const response = await fetch(
         `${apiBaseUrl}/extracteur-regles-sociales/regles`,
@@ -602,7 +602,7 @@ export function SourcesCollecteTab() {
     toast.info('Collecte des règles sociales en cours...');
 
     try {
-      const { projectId, publicAnonKey } = await import('../utils/supabase/info');
+      const { projectId, publicAnonKey } = await import('../utils/api/info');
       
       const response = await fetch(
         `${apiBaseUrl}/collecteur-social/run`,
@@ -712,7 +712,7 @@ export function SourcesCollecteTab() {
     toast.info('Initialisation en cours...');
 
     try {
-      const { projectId, publicAnonKey } = await import('../utils/supabase/info');
+      const { projectId, publicAnonKey } = await import('../utils/api/info');
       
       const response = await fetch(
         `${apiBaseUrl}/extracteur-regles-sociales/initialiser`,
@@ -745,7 +745,7 @@ export function SourcesCollecteTab() {
   const loadReglesRetraite = async () => {
     setIsLoadingReglesRetraite(true);
     try {
-      const { projectId, publicAnonKey } = await import('../utils/supabase/info');
+      const { projectId, publicAnonKey } = await import('../utils/api/info');
       
       const response = await fetch(
         `${apiBaseUrl}/extracteur-regles-retraite/regles`,
@@ -777,7 +777,7 @@ export function SourcesCollecteTab() {
     toast.info('Collecte des règles retraite en cours...');
 
     try {
-      const { projectId, publicAnonKey } = await import('../utils/supabase/info');
+      const { projectId, publicAnonKey } = await import('../utils/api/info');
       
       const response = await fetch(
         `${apiBaseUrl}/collecteur-retraite/run`,
@@ -821,7 +821,7 @@ export function SourcesCollecteTab() {
     toast.info('Initialisation en cours...');
 
     try {
-      const { projectId, publicAnonKey } = await import('../utils/supabase/info');
+      const { projectId, publicAnonKey } = await import('../utils/api/info');
       
       const response = await fetch(
         `${apiBaseUrl}/extracteur-regles-retraite/initialiser`,
@@ -886,7 +886,7 @@ export function SourcesCollecteTab() {
     toast.info('Simulation en cours...');
 
     try {
-      const { projectId, publicAnonKey } = await import('../utils/supabase/info');
+      const { projectId, publicAnonKey } = await import('../utils/api/info');
       
       const parametres = {
         montage_id: montageSelectionne,

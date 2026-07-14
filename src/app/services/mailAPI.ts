@@ -1,4 +1,4 @@
-import { apiBaseUrl, publicAnonKey } from '../utils/supabase/info';
+import { apiBaseUrl, publicAnonKey } from '../utils/api/info';
 
 const API_URL = `${apiBaseUrl}/make-server-cac859af`;
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Lock, Mail, Eye, EyeOff, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
-import { apiBaseUrl } from '../utils/supabase/info';
+import { apiBaseUrl } from '../utils/api/info';
 
 interface LoginViewProps {
   onLogin: () => void;

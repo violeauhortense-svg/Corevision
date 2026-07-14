@@ -2,9 +2,9 @@
 // HELPERS POUR LA GÉNÉRATION ET GESTION DER
 // ============================================
 
-import { supabase } from './supabase/client';
+import { supabase } from './api/client';
 import { clientAPI } from '../services/api';
-import { apiBaseUrl, publicAnonKey } from './supabase/info';
+import { apiBaseUrl, publicAnonKey } from './api/info';
 
 /**
  * Helper pour récupérer l'userId depuis la session Supabase

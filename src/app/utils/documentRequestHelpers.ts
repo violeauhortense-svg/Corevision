@@ -3,7 +3,7 @@
 // ============================================
 
 import { taskAPI, clientAPI } from '../services/api';
-import { apiBaseUrl, publicAnonKey } from './supabase/info';
+import { apiBaseUrl, publicAnonKey } from './api/info';
 
 export interface RequestedDocument {
   id: string;

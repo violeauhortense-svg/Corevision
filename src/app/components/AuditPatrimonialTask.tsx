@@ -3,7 +3,7 @@ import { CheckCircle2, FileText, AlertCircle, TrendingUp, ShoppingCart, Package,
 import { CoreVisionWorkflow } from './CoreVisionWorkflow';
 import { toast } from 'sonner';
 import type { Task } from '../types/client';
-import { supabase } from '../utils/supabase/client';
+import { supabase } from '../utils/api/client';
 
 interface AuditPatrimonialTaskProps {
   task: Task;

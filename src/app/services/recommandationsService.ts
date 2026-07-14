@@ -4,7 +4,7 @@
  * Gestion des recommandations patrimoniales automatiques
  */
 
-import { apiBaseUrl, publicAnonKey } from '../utils/supabase/info';
+import { apiBaseUrl, publicAnonKey } from '../utils/api/info';
 
 // ============================================
 // TYPES

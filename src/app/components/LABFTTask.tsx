@@ -4,7 +4,7 @@ import { LABFTQuestionnaire } from './LABFTQuestionnaire';
 import { clientAPI } from '../services/api';
 import { toast } from 'sonner';
 import type { Task } from '../types/client';
-import { supabase } from '../utils/supabase/client';
+import { supabase } from '../utils/api/client';
 
 interface LABFTTaskProps {
   task: Task;

@@ -7,7 +7,7 @@
  * - Cache intelligent pour éviter les recalculs
  */
 
-import { apiBaseUrl, publicAnonKey } from '../utils/supabase/info';
+import { apiBaseUrl, publicAnonKey } from '../utils/api/info';
 
 // ============================================
 // TYPES (synchronisés avec le serveur)
@@ -227,7 +227,7 @@ class CalculServiceClass {
 
   private async getAccessToken(): Promise<string | null> {
     try {
-      const { supabase } = await import('../utils/supabase/client');
+      const { supabase } = await import('../utils/api/client');
       const {
         data: { session },
       } = await supabase.auth.getSession();

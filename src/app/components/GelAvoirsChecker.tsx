@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Shield, AlertTriangle, CheckCircle2, Loader2, X, FileText, Download, Eye } from 'lucide-react';
 import { toast } from 'sonner';
-import { apiBaseUrl, publicAnonKey } from '../utils/supabase/info';
-import { supabase } from '../utils/supabase/client';
+import { apiBaseUrl, publicAnonKey } from '../utils/api/info';
+import { supabase } from '../utils/api/client';
 
 interface GelAvoirsCheckerProps {
   clientId: string;

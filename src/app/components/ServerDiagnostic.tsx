@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { CheckCircle2, XCircle, Loader2, AlertCircle } from 'lucide-react';
-import { apiBaseUrl, publicAnonKey } from '../utils/supabase/info';
+import { apiBaseUrl, publicAnonKey } from '../utils/api/info';
 
 export function ServerDiagnostic() {
   const [testing, setTesting] = useState(false);

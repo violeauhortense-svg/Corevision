@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FileText, ChevronRight, Edit3, Save, Check, Loader2, Sparkles, Clock, FolderOpen, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
-import { apiBaseUrl, publicAnonKey } from '../../utils/supabase/info';
+import { apiBaseUrl, publicAnonKey } from '../../utils/api/info';
 
 interface CompteRenduProgressifProps {
   clientId: string;

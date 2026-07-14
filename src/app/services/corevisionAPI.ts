@@ -3,8 +3,8 @@
  * Source unique : serveur. Pas de fallback localStorage.
  */
 
-import { apiBaseUrl } from '../utils/supabase/info';
-import { supabase } from '../utils/supabase/client';
+import { apiBaseUrl } from '../utils/api/info';
+import { supabase } from '../utils/api/client';
 
 interface CoreVisionOrder {
   orderId: string;

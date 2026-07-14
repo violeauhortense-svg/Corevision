@@ -10,7 +10,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Save, RefreshCw, AlertCircle, CheckCircle2, Info, ExternalLink } from 'lucide-react';
-import { apiBaseUrl, publicAnonKey } from '../../utils/supabase/info';
+import { apiBaseUrl, publicAnonKey } from '../../utils/api/info';
 import { useBaremesFiscaux } from '../../hooks/useBaremesFiscaux';
 
 interface BaremeIRRow {

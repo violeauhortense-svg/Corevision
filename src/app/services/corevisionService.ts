@@ -4,7 +4,7 @@
  * Architecture similaire à ClientService pour cohérence
  */
 
-import { apiBaseUrl, publicAnonKey } from '../utils/supabase/info';
+import { apiBaseUrl, publicAnonKey } from '../utils/api/info';
 
 // ============================================
 // TYPES

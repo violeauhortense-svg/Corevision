@@ -11,7 +11,7 @@
  * - IFI (Impôt sur la Fortune Immobilière)
  */
 
-import { apiBaseUrl, publicAnonKey } from '../utils/supabase/info';
+import { apiBaseUrl, publicAnonKey } from '../utils/api/info';
 
 // ============================================
 // INTERFACES

@@ -6,7 +6,7 @@ import {
   Building2, Briefcase, PiggyBank, Home, Shield, Gift, BarChart3, ShoppingCart
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { apiBaseUrl, publicAnonKey } from '../../utils/supabase/info';
+import { apiBaseUrl, publicAnonKey } from '../../utils/api/info';
 import type { Objectif } from './types';
 import { DetailPanelEnriched } from './DetailPanelEnriched';
 
