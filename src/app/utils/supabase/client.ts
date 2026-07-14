@@ -6,43 +6,35 @@ const SESSION_KEY = 'corevision_session';
 const BASE_AUTH = `${apiBaseUrl}/auth`;
 
 // ─── Session helpers ───────────────────────────────────────────────────────
+// ✨ DEPRECATED: Session storage moved to PostgreSQL
+// These functions kept for backward compatibility but do nothing
+
 function loadSession(): any | null {
-  try {
-    const raw = localStorage.getItem(SESSION_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
+  // Sessions now in DB, not localStorage
+  return null;
 }
 
 function saveSession(session: any) {
-  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  // Sessions now saved in PostgreSQL via /auth/signin
+  // No need to save in localStorage
+  console.log('🔐 [saveSession] Session stored in DB via HTTP-only cookie');
 }
 
 function clearSession() {
-  localStorage.removeItem(SESSION_KEY);
+  // Sessions now deleted from PostgreSQL via /auth/signout
+  // No need to clear localStorage
+  console.log('🔐 [clearSession] Session deleted from DB');
 }
 
 function getAuthToken(): string | null {
-  const SESSION_KEY = 'corevision_session';
-  try {
-    const raw = localStorage.getItem(SESSION_KEY);
-    console.log('🔑 [getAuthToken] localStorage.getItem("corevision_session"):', raw ? 'exists' : 'MISSING');
+  // ✨ REMOVED: localStorage no longer used
+  // Sessions are now stored in PostgreSQL
+  // SessionId is sent via HTTP-only cookie automatically
+  // No need for Authorization header anymore!
 
-    if (!raw) {
-      console.log('🔑 [getAuthToken] Session not found in localStorage!');
-      console.log('🔑 [getAuthToken] Available localStorage keys:', Object.keys(localStorage).join(', '));
-      return null;
-    }
-
-    const session = JSON.parse(raw);
-    const token = session?.access_token;
-    console.log('🔑 [getAuthToken] Token found:', token ? 'YES' : 'NO');
-    return token || null;
-  } catch (err) {
-    console.error('🔑 [getAuthToken] Error:', err);
-    return null;
-  }
+  console.log('🔐 [getAuthToken] Sessions now use HTTP-only cookies (not localStorage)');
+  console.log('🔐 [getAuthToken] sessionId is auto-sent by browser - no token needed');
+  return null;
 }
 
 // ─── Auth state listeners ──────────────────────────────────────────────────

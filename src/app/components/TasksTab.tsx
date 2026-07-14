@@ -6,7 +6,6 @@ import { ClientService } from '../services/ClientService';
 import type { Client } from '../services/ClientService';
 import type { Task } from '../types/client';
 import { apiBaseUrl } from '../utils/api/info';
-import { getAuthToken } from '../utils/supabase/client';
 import { toast } from 'sonner';
 
 const STATUSES = ['Prospect', 'Découverte', 'Simulation', 'Lettre Mission', 'Rapport/Audit', 'Suivi MEP', 'Suivi CSP', 'Arbitrage'];
@@ -70,7 +69,6 @@ export function TasksTab({ clientId }: TasksTabProps) {
     if (!client) return;
 
     try {
-      const token = getAuthToken();
       const url = `${apiBaseUrl}/clients/${clientId}/tache/${taskId}`;
 
       console.log('🔄 [handleTaskUpdate] Request starting:');
@@ -78,15 +76,15 @@ export function TasksTab({ clientId }: TasksTabProps) {
       console.log('   taskId:', taskId);
       console.log('   completed:', completed);
       console.log('   url:', url);
-      console.log('   token exists:', !!token);
+      console.log('   auth method: HTTP-only cookie (auto-sent by browser)');
 
       const payload = { completed, status: completed ? 'validated' : 'pending' };
       console.log('   payload:', JSON.stringify(payload));
 
       const response = await fetch(url, {
         method: 'PATCH',
+        credentials: 'include',  // ✨ Send cookies automatically (sessionId)
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
@@ -177,14 +175,13 @@ export function TasksTab({ clientId }: TasksTabProps) {
     if (!client) return;
 
     try {
-      const token = getAuthToken();
       const url = `${apiBaseUrl}/clients/${clientId}/tache/${taskId}`;
       console.log('⊘ Marquer N.A.:', { status, taskId, url });
 
       const response = await fetch(url, {
         method: 'PATCH',
+        credentials: 'include',  // ✨ Send cookies automatically (sessionId)
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ completed: false, status: 'na' }),
@@ -239,14 +236,13 @@ export function TasksTab({ clientId }: TasksTabProps) {
     if (!client) return;
 
     try {
-      const token = getAuthToken();
       const url = `${apiBaseUrl}/clients/${clientId}/progress`;
       console.log('➡️ Progression:', { currentStatus, nextStatus, url });
 
       const response = await fetch(url, {
         method: 'POST',
+        credentials: 'include',  // ✨ Send cookies automatically (sessionId)
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ fromStatus: currentStatus, toStatus: nextStatus }),
@@ -272,12 +268,11 @@ export function TasksTab({ clientId }: TasksTabProps) {
 
   const saveArbitrageFields = async () => {
     try {
-      const token = getAuthToken();
       const url = `/api/clients/${clientId}`;
       const response = await fetch(url, {
         method: 'PUT',
+        credentials: 'include',  // ✨ Send cookies automatically (sessionId)
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
