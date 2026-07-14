@@ -409,11 +409,7 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
       if (!bilanSignature) {
         return c.json({ bilanSignature: null });
       }
-      
-        emailSentAt: !!bilanSignature.emailSentAt,
-        signedAt: !!bilanSignature.signedAt,
-      });
-      
+
       return c.json({ bilanSignature });
     } catch (err) {
       console.error('❌ Error fetching bilan status:', err);
