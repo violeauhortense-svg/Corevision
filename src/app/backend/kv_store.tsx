@@ -1,42 +1,29 @@
 // KV Store - PostgreSQL (replaces Deno KV)
 // Persists data in PostgreSQL on Render
 
-import { Pool } from "https://deno.land/x/postgres@v0.17.0/mod.ts";
+import postgres from "npm:postgres";
 
 const DATABASE_URL = Deno.env.get("DATABASE_URL");
 
 if (!DATABASE_URL) {
-  console.error("❌ DATABASE_URL env var not set! Set it in Render dashboard.");
-  console.error("Format: postgresql://user:password@host:port/dbname");
+  console.error("DATABASE_URL env var not set");
 }
 
-let _pool: Pool | null = null;
+let _sql: any = null;
 let _dbReady = false;
 
 async function initializeDb(): Promise<void> {
   try {
     if (!DATABASE_URL) {
-      console.error("❌ DATABASE_URL env var NOT FOUND");
       throw new Error("DATABASE_URL not configured");
     }
 
+    _sql = postgres(DATABASE_URL);
 
-    const startTime = Date.now();
-
-    // Just create pool (don't connect yet - lazy init)
-    _pool = new Pool(DATABASE_URL, 10, true);
-
-    // Try to create table asynchronously (don't block init)
+    // Try to create table
     (async () => {
       try {
-        const conn = await Promise.race([
-          _pool!.connect(),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Connection timeout (30s)")), 30000)
-          )
-        ]) as any;
-
-        await conn.queryArray(`
+        await _sql`
           CREATE TABLE IF NOT EXISTS kv_store (
             key TEXT PRIMARY KEY,
             value JSONB NOT NULL,
@@ -44,18 +31,15 @@ async function initializeDb(): Promise<void> {
             updated_at TIMESTAMP DEFAULT NOW()
           );
           CREATE INDEX IF NOT EXISTS idx_key_prefix ON kv_store (key);
-        `);
-        conn.release();
+        `;
       } catch (err) {
-        console.error("⚠️ Could not create table:", (err as Error).message);
+        console.error("Could not create table:", (err as Error).message);
       }
     })();
 
     _dbReady = true;
-    const duration = Date.now() - startTime;
   } catch (err) {
-    console.error("❌ CRITICAL: PostgreSQL init failed:", err);
-    console.error("Error message:", (err as Error).message);
+    console.error("PostgreSQL init failed:", (err as Error).message);
     _dbReady = false;
   }
 }
@@ -63,155 +47,82 @@ async function initializeDb(): Promise<void> {
 // Launch init at startup
 initializeDb();
 
-// Log status after 5s
-setTimeout(() => {
-  if (_dbReady) {
-  } else {
-    console.error("⚠️ PostgreSQL still not ready after 5s - requests will fail");
-  }
-}, 5000);
-
-async function getPool(): Promise<Pool> {
-  if (!_dbReady || !_pool) {
+async function getSql() {
+  if (!_dbReady || !_sql) {
     let attempts = 0;
-    const maxAttempts = 300; // 30 seconds instead of 5
-    while (!_dbReady && attempts < maxAttempts) {
+    while (!_dbReady && attempts < 300) {
       await new Promise(resolve => setTimeout(resolve, 100));
       attempts++;
     }
 
     if (!_dbReady) {
-      const duration = attempts * 100;
-      console.error(`❌ DB timeout after ${duration}ms`);
-      throw new Error(`PostgreSQL non disponible (timeout d'initialisation après ${duration}ms)`);
+      throw new Error("PostgreSQL not available");
     }
   }
 
-  if (!_pool) {
-    throw new Error("PostgreSQL pool not initialized");
-  }
-
-  return _pool;
+  return _sql;
 }
 
 export const set = async (key: string, value: any): Promise<void> => {
-  const pool = await getPool();
-  const conn = await pool.connect();
-  try {
-    await conn.queryArray(
-      `INSERT INTO kv_store (key, value, updated_at)
-       VALUES ($1, $2, NOW())
-       ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = NOW()`,
-      [key, JSON.stringify(value)]
-    );
-  } finally {
-    conn.release();
-  }
+  const sql = await getSql();
+  await sql`
+    INSERT INTO kv_store (key, value, updated_at)
+    VALUES (${key}, ${JSON.stringify(value)}, NOW())
+    ON CONFLICT (key) DO UPDATE SET value = ${JSON.stringify(value)}, updated_at = NOW()
+  `;
 };
 
 export const get = async (key: string): Promise<any> => {
-  const pool = await getPool();
-  const conn = await pool.connect();
-  try {
-    const result = await conn.queryArray(
-      "SELECT value FROM kv_store WHERE key = $1",
-      [key]
-    );
-    if (result.rows.length === 0) return null;
-    // PostgreSQL JSONB is already parsed as object
-    const value = result.rows[0][0];
-    return typeof value === 'string' ? JSON.parse(value) : value;
-  } finally {
-    conn.release();
-  }
+  const sql = await getSql();
+  const result = await sql`SELECT value FROM kv_store WHERE key = ${key}`;
+  if (result.length === 0) return null;
+  const value = result[0].value;
+  return typeof value === 'string' ? JSON.parse(value) : value;
 };
 
 export const del = async (key: string): Promise<void> => {
-  const pool = await getPool();
-  const conn = await pool.connect();
-  try {
-    await conn.queryArray("DELETE FROM kv_store WHERE key = $1", [key]);
-  } finally {
-    conn.release();
-  }
+  const sql = await getSql();
+  await sql`DELETE FROM kv_store WHERE key = ${key}`;
 };
 
 export const mset = async (keys: string[], values: any[]): Promise<void> => {
-  const pool = await getPool();
-  const conn = await pool.connect();
-  try {
-    for (let i = 0; i < keys.length; i++) {
-      await conn.queryArray(
-        `INSERT INTO kv_store (key, value, updated_at)
-         VALUES ($1, $2, NOW())
-         ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = NOW()`,
-        [keys[i], JSON.stringify(values[i])]
-      );
-    }
-  } finally {
-    conn.release();
+  const sql = await getSql();
+  for (let i = 0; i < keys.length; i++) {
+    await sql`
+      INSERT INTO kv_store (key, value, updated_at)
+      VALUES (${keys[i]}, ${JSON.stringify(values[i])}, NOW())
+      ON CONFLICT (key) DO UPDATE SET value = ${JSON.stringify(values[i])}, updated_at = NOW()
+    `;
   }
 };
 
 export const mget = async (keys: string[]): Promise<any[]> => {
-  const pool = await getPool();
-  const conn = await pool.connect();
-  try {
-    const result = await conn.queryArray(
-      `SELECT value FROM kv_store WHERE key = ANY($1)`,
-      [keys]
-    );
-    return result.rows.map(row => {
-      const value = row[0];
-      return typeof value === 'string' ? JSON.parse(value) : value;
-    });
-  } finally {
-    conn.release();
-  }
+  const sql = await getSql();
+  const result = await sql`SELECT value FROM kv_store WHERE key = ANY(${keys})`;
+  return result.map(row => {
+    const value = row.value;
+    return typeof value === 'string' ? JSON.parse(value) : value;
+  });
 };
 
 export const mdel = async (keys: string[]): Promise<void> => {
-  const pool = await getPool();
-  const conn = await pool.connect();
-  try {
-    await conn.queryArray(
-      "DELETE FROM kv_store WHERE key = ANY($1)",
-      [keys]
-    );
-  } finally {
-    conn.release();
-  }
+  const sql = await getSql();
+  await sql`DELETE FROM kv_store WHERE key = ANY(${keys})`;
 };
 
 export const getByPrefix = async (prefix: string): Promise<any[]> => {
-  const pool = await getPool();
-  const conn = await pool.connect();
-  try {
-    const result = await conn.queryArray(
-      "SELECT value FROM kv_store WHERE key LIKE $1",
-      [`${prefix}%`]
-    );
-    return result.rows.map(row => {
-      const value = row[0];
-      return typeof value === 'string' ? JSON.parse(value) : value;
-    });
-  } finally {
-    conn.release();
-  }
+  const sql = await getSql();
+  const result = await sql`SELECT value FROM kv_store WHERE key LIKE ${prefix + '%'}`;
+  return result.map(row => {
+    const value = row.value;
+    return typeof value === 'string' ? JSON.parse(value) : value;
+  });
 };
 
 export const delByPrefix = async (prefix: string): Promise<number> => {
-  const pool = await getPool();
-  const conn = await pool.connect();
-  try {
-    const result = await conn.queryArray(
-      "DELETE FROM kv_store WHERE key LIKE $1",
-      [`${prefix}%`]
-    );
-    return result.rows.length;
-  } finally {
-    conn.release();
-  }
+  const sql = await getSql();
+  const result = await sql`DELETE FROM kv_store WHERE key LIKE ${prefix + '%'}`;
+  return result.count;
 };
 
 // Graceful shutdown
