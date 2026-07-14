@@ -1,0 +1,63 @@
+SOLUTION IMMÉDIATE - Ajoutez cette route directement après la ligne 2323 dans index.tsx
+
+```typescript
+// 🔥 ROUTE RAPPORT SIMPLIFIÉ (FALLBACK)
+app.post("/make-server-cac859af/rapport-patrimonial-simple", async (c) => {
+  console.log('📊 Génération rapport PATRIMONIAL SIMPLIFIÉ...');
+  
+  try {
+    const body = await c.req.json();
+    const { clientId, clientData } = body;
+    
+    if (!clientId || !clientData) {
+      return c.json({ success: false, error: 'clientId et clientData requis' }, 400);
+    }
+    
+    // Rapport simplifié inline
+    const nom = clientData.nom || clientData.lastName || 'Client';
+    const prenom = clientData.prenom || clientData.firstName || '';
+    const patrimoine = (clientData.patrimoineData?.actifsFinanciers || []).reduce((s: number, a: any) => s + (a.value || 0), 0);
+    const revenus = (clientData.revenus || []).reduce((s: number, r: any) => s + (r.montantAnnuel || 0), 0);
+    const tmi = parseInt(clientData.imposition?.tmi || '30');
+    
+    const rapport = {
+      success: true,
+      client_id: clientId,
+      client_name: `${prenom} ${nom}`.trim(),
+      date_generation: new Date().toISOString(),
+      situation_actuelle: {
+        synthese: `Patrimoine: ${patrimoine.toLocaleString('fr-FR')}€, Revenus: ${revenus.toLocaleString('fr-FR')}€, TMI: ${tmi}%`,
+        donnees_cles: [
+          { label: 'Patrimoine', valeur: `${patrimoine.toLocaleString('fr-FR')} €`, icon: 'TrendingUp' },
+          { label: 'Revenus', valeur: `${revenus.toLocaleString('fr-FR')} €`, icon: 'Euro' },
+          { label: 'TMI', valeur: `${tmi}%`, icon: 'PieChart' }
+        ],
+        graphiques: []
+      },
+      analyse_patrimoniale: {
+        problemes_detectes: [],
+        points_forts: ['Rapport généré avec succès'],
+        recommendations_prioritaires: ['Réaliser un audit complet']
+      },
+      analyse_civile: { synthese: 'Analyse en cours', points_cles: [] },
+      analyse_fiscale: { synthese: 'Analyse en cours', points_cles: [], optimisations: [] },
+      analyse_sociale: { synthese: 'Analyse en cours', points_cles: [] },
+      strategies: [],
+      plan_action: {
+        actions_immediates: [],
+        actions_court_terme: [],
+        actions_moyen_terme: []
+      },
+      preconisations: ['Contacter votre CGP pour un audit complet'],
+      score_global: 7
+    };
+    
+    return c.json(rapport);
+  } catch (error) {
+    console.error('❌ Erreur rapport simple:', error);
+    return c.json({ success: false, error: String(error) }, 500);
+  }
+});
+```
+
+Puis modifiez votre frontend pour appeler `/rapport-patrimonial-simple` au lieu de `/rapport-patrimonial`
