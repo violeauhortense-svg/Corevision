@@ -52,6 +52,35 @@ async function verifyJWT(token: string): Promise<Record<string, unknown> | null>
   }
 }
 
+// Verify auth from Cookie (new: DB sessions)
+export async function verifyAuthFromCookie(cookieHeader: string | undefined) {
+  if (!cookieHeader) {
+    console.log("🔐 No cookie header provided");
+    return { user: null, error: "No session cookie" };
+  }
+
+  const sessionId = sessions.getSessionIdFromCookie(cookieHeader);
+  if (!sessionId) {
+    console.log("🔐 No sessionId found in cookies");
+    return { user: null, error: "No session cookie" };
+  }
+
+  console.log(`🔐 [verifyAuthFromCookie] Validating sessionId: ${sessionId}`);
+
+  const session = await sessions.getSession(sessionId);
+  if (!session) {
+    console.log("🔐 [verifyAuthFromCookie] Session not found or expired");
+    return { user: null, error: "Session not found or expired" };
+  }
+
+  console.log(`✅ [verifyAuthFromCookie] Session valid for user: ${session.user_id}`);
+  return {
+    user: { id: session.user_id, email: session.email },
+    error: null,
+  };
+}
+
+// Verify auth from Authorization header (legacy: JWT)
 export async function verifyAuth(authHeader: string | undefined) {
   if (authHeader?.startsWith("Bearer ")) {
     const token = authHeader.slice(7);
@@ -140,4 +169,27 @@ async function hashPassword(password: string, salt: string): Promise<string> {
   );
   const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(salt));
   return base64url(new Uint8Array(sig));
+}
+
+// Verify auth from Hono request: try cookie first (DB sessions), then Authorization header (JWT fallback)
+export async function verifyAuthRequest(req: any) {
+  // ✨ Try DB session cookie first (new secure method)
+  const cookieHeader = req.header("Cookie");
+  if (cookieHeader) {
+    const result = await verifyAuthFromCookie(cookieHeader);
+    if (result.user) {
+      console.log(`✅ [verifyAuthRequest] Authenticated via DB session`);
+      return result;
+    }
+  }
+
+  // Fallback to Authorization header (JWT - legacy)
+  const authHeader = req.header("Authorization");
+  if (authHeader) {
+    console.log(`🔐 [verifyAuthRequest] Trying Authorization header (JWT fallback)`);
+    return await verifyAuth(authHeader);
+  }
+
+  console.log(`❌ [verifyAuthRequest] No auth method found (no cookie, no Authorization header)`);
+  return { user: null, error: "Unauthorized" };
 }
