@@ -1,7 +1,9 @@
 // Auth module - JWT standalone (remplace Supabase Auth)
 // Interface identique à l'original pour compatibilité totale
+// Sessions now stored in PostgreSQL (not localStorage)
 
 import * as kv from "./kv_store.tsx";
+import * as sessions from "./sessions.tsx";
 
 const JWT_SECRET = Deno.env.get("JWT_SECRET") ?? "change-me-in-production-min-32-chars!!";
 const DEV_MODE = Deno.env.get("NODE_ENV") !== "production";
@@ -116,10 +118,16 @@ export async function signInUser(email: string, password: string) {
   if (hash !== user.passwordHash) throw new Error("Email ou mot de passe incorrect");
 
   const token = await signJWT({ sub: user.id, email: user.email });
+
+  // ✨ Create session in PostgreSQL (replaces localStorage)
+  const sessionId = await sessions.createSession(user.id, user.email, token);
+  console.log(`✅ Session created in DB: ${sessionId}`);
+
   return {
     access_token: token,
     token_type: "bearer",
     expires_in: 604800,
+    sessionId,  // ← Return sessionId for cookie
     user: { id: user.id, email: user.email, user_metadata: user },
     session: { access_token: token, token_type: "bearer", user: { id: user.id, email: user.email } },
   };
