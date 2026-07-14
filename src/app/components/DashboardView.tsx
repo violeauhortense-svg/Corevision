@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { MetricsCard } from './MetricsCard';
 import { KanbanBoard } from './KanbanBoard';
 import { apiBaseUrl } from '../utils/api/info';
+import { getAuthToken } from '../utils/supabase/client';
 
 // Force rebuild - Cache bust
 

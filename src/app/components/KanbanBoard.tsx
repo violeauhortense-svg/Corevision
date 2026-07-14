@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { apiBaseUrl } from '../utils/api/info';
+import { getAuthToken } from '../utils/supabase/client';
 
 const STATUSES = [
   'Prospect',
