@@ -29,10 +29,6 @@ export function setupCalculRoutes(app: Hono) {
 
       const resultats = calculs.calculerPatrimoineComplet(input);
 
-        patrimoineNet: resultats.patrimoineNet,
-        scoreGlobal: resultats.scores.global,
-      });
-
       return c.json({
         success: true,
         calculs: resultats,
