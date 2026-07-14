@@ -4,6 +4,7 @@ import * as kv from "./kv_store.tsx";
 import * as sessions from "./sessions.tsx";
 import { supabaseAdminCompat, UPLOADS_DIR } from "./storage.tsx";
 import { verifyAuth, createUser, signInUser } from "./auth.tsx";
+import { schemas } from "./validation.tsx";
 // Feature routes
 import { setupBilanRoutes } from "./bilan_routes.tsx";
 import { setupClientRoutes } from "./client_routes.tsx";
@@ -177,12 +178,15 @@ app.delete("/make-server-cac859af/reset-user-data", async (c) => {
 
 app.post("/make-server-cac859af/auth/signup", async (c) => {
   try {
-    console.log("?? Signup endpoint called");
     const body = await c.req.json();
-    const { email, password, nom, prenom, specialite, certifications } = body;
 
-    console.log(`?? Signup attempt: ${email}`);
-    console.log(`?? Creating user with email: ${email}, nom: ${nom}, prenom: ${prenom}`);
+    // Validate email and password
+    const validation = schemas.signup(body);
+    if (!validation.valid) {
+      return c.json({ error: 'Validation failed', errors: validation.errors }, 400);
+    }
+
+    const { email, password, nom, prenom, specialite, certifications } = body;
 
     const user = await createUser(email, password, {
       nom: nom || '',
@@ -191,24 +195,29 @@ app.post("/make-server-cac859af/auth/signup", async (c) => {
       certifications: certifications || 'CIF, AMF',
     });
 
-    console.log(`? User created: ${email}`);
     return c.json({ user });
   } catch (error) {
     const msg = (error as Error).message;
-    console.error(`? SIGNUP FAILED: ${msg}`);
-    console.error(`Stack:`, (error as Error).stack);
-    return c.json({ error: msg, details: String(error) }, 400);
+    console.error('Signup error:', msg);
+    return c.json({ error: msg }, 400);
   }
 });
 
 app.post("/make-server-cac859af/auth/signin", async (c) => {
   try {
     const body = await c.req.json();
+
+    // Validate email and password
+    const validation = schemas.signup(body);
+    if (!validation.valid) {
+      return c.json({ error: 'Validation failed', errors: validation.errors }, 400);
+    }
+
     const { email, password } = body;
 
     const data = await signInUser(email, password);
 
-    // ✨ Set sessionId in HTTP-only cookie (replaces localStorage)
+    // Set sessionId in HTTP-only cookie
     const setCookieHeader = sessions.setSessionIdCookie(data.sessionId);
     c.header("Set-Cookie", setCookieHeader);
 
