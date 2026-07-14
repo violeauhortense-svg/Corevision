@@ -176,12 +176,16 @@ export function TasksTab({ clientId }: TasksTabProps) {
       });
 
       if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Progression successful:', result);
         toast.success(`✅ Passage à "${nextStatus}" complété`);
-        await loadClient();
+
+        // UPDATE STATE IMMEDIATELY
+        setClient(result.client);
       } else {
-        const error = await response.text();
-        console.error('❌ Erreur:', error);
-        toast.error('Erreur progression');
+        const error = await response.json();
+        console.error('❌ Erreur progression:', error);
+        toast.error(`Erreur: ${error.error}`);
       }
     } catch (err) {
       console.error('❌ Erreur progression:', err);
