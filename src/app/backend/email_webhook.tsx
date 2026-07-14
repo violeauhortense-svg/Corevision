@@ -135,7 +135,6 @@ export function setupEmailWebhookRoutes(app: any) {
       
       // Appeler le handler
       
-      // TODO: Appeler le handler du webhook ici
       
       return c.json({ 
         success: true, 

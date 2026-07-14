@@ -351,8 +351,6 @@ export function setupRDVRoutes(app: Hono) {
       await Deno.writeFile(filePath, new Uint8Array(buffer));
 
 
-      // TODO: Marquer le document comme reçu dans la tâche "Collecter documents..."
-      // TODO: Vérifier si tous les documents sont reçus → valider la tâche
 
       return c.json({
         success: true,

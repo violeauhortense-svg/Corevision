@@ -87,7 +87,6 @@ function chunkText(text: string, chunkSize: number, overlap: number): string[] {
 
 // Helper: Générer des embeddings (appel Mistral AI)
 async function generateEmbedding(text: string): Promise<number[]> {
-  // TODO: Appeler l'API Mistral pour générer l'embedding
   // const response = await fetch('https://api.mistral.ai/v1/embeddings', {
   //   method: 'POST',
   //   headers: {
