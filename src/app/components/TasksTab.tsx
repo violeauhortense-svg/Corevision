@@ -72,7 +72,16 @@ export function TasksTab({ clientId }: TasksTabProps) {
     try {
       const token = getAuthToken();
       const url = `${apiBaseUrl}/clients/${clientId}/tache/${taskId}`;
-      console.log('✅ Validation tâche:', { status, taskId, completed, url });
+
+      console.log('🔄 [handleTaskUpdate] Request starting:');
+      console.log('   status:', status);
+      console.log('   taskId:', taskId);
+      console.log('   completed:', completed);
+      console.log('   url:', url);
+      console.log('   token exists:', !!token);
+
+      const payload = { completed, status: completed ? 'validated' : 'pending' };
+      console.log('   payload:', JSON.stringify(payload));
 
       const response = await fetch(url, {
         method: 'PATCH',
@@ -80,50 +89,86 @@ export function TasksTab({ clientId }: TasksTabProps) {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ completed, status: completed ? 'validated' : 'pending' }),
+        body: JSON.stringify(payload),
       });
+
+      console.log('🔄 [handleTaskUpdate] Response received:');
+      console.log('   status code:', response.status);
+      console.log('   ok:', response.ok);
 
       if (response.ok) {
         const result = await response.json();
-        console.log('✅ Task update response:', result);
+        console.log('✅ [handleTaskUpdate] Success response:', JSON.stringify(result, null, 2));
+        console.log('   task.status:', result.task?.status);
+        console.log('   task.completed:', result.task?.completed);
+        console.log('   stats.allCompleted:', result.stats?.allCompleted);
+
         toast.success(completed ? '✅ Tâche validée' : '↩️ Validation annulée');
 
         // UPDATE STATE IMMEDIATELY
         setClient(prev => {
           if (!prev) return prev;
+
+          console.log('🔄 [setClient] Updating state for status:', status);
+
           const updatedClient = {
             ...prev,
             taches: {
               ...prev.taches,
-              [status]: (prev.taches?.[status] || []).map(t =>
-                (t.id === taskId || t.title === taskId) ? result.task : t
-              )
+              [status]: (prev.taches?.[status] || []).map(t => {
+                if (t.id === taskId || t.title === taskId) {
+                  console.log('   Found task to update:', t.title, '→ setting to:', result.task?.status);
+                  return result.task;
+                }
+                return t;
+              })
             }
           };
 
+          console.log('✅ [setClient] Updated task in state, new status:', updatedClient.taches[status]?.find((t: any) => t.id === taskId || t.title === taskId)?.status);
+
           // ✨ AUTO-PROGRESSION: Check if all tasks completed for current status
-          if (result.stats?.allCompleted && status === (prev.statusOuvert || prev.status || 'Prospect')) {
-            console.log(`🎯 All tasks completed for "${status}", auto-progressing...`);
+          const currentStatus = prev.statusOuvert || prev.status || 'Prospect';
+          console.log('🎯 [Auto-progression check]');
+          console.log('   result.stats?.allCompleted:', result.stats?.allCompleted);
+          console.log('   status === currentStatus:', status === currentStatus);
+
+          if (result.stats?.allCompleted && status === currentStatus) {
+            console.log(`🎯 ✨ All tasks completed for "${status}", triggering auto-progression...`);
             const STATUSES = ['Prospect', 'Découverte', 'Simulation', 'Lettre Mission', 'Rapport/Audit', 'Suivi MEP', 'Suivi CSP', 'Arbitrage'];
             const currentIdx = STATUSES.indexOf(status);
             const nextStatus = currentIdx < STATUSES.length - 1 ? STATUSES[currentIdx + 1] : null;
 
+            console.log('   nextStatus:', nextStatus);
+
             if (nextStatus) {
+              console.log(`   Scheduling progression from "${status}" to "${nextStatus}"`);
               setTimeout(() => {
+                console.log(`   ➡️ Executing auto-progression to "${nextStatus}"`);
                 handleProgressToNextStatus(status, nextStatus);
-              }, 800);  // Small delay for UX (let user see the last badge change)
+              }, 800);
             }
+          } else {
+            console.log('   No auto-progression: allCompleted=' + result.stats?.allCompleted + ', isCurrentStatus=' + (status === currentStatus));
           }
 
           return updatedClient;
         });
       } else {
-        const error = await response.text();
-        console.error('❌ Erreur:', error);
+        const errorText = await response.text();
+        console.error('❌ [handleTaskUpdate] Error response:');
+        console.error('   status code:', response.status);
+        console.error('   error text:', errorText);
+        try {
+          const errorJson = JSON.parse(errorText);
+          console.error('   error json:', errorJson);
+        } catch (e) {
+          console.error('   (not JSON)');
+        }
         toast.error('Erreur validation tâche');
       }
     } catch (err) {
-      console.error('❌ Erreur update tâche:', err);
+      console.error('❌ [handleTaskUpdate] Exception:', err);
       toast.error('Erreur réseau');
     }
   };
