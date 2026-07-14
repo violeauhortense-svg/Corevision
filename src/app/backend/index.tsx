@@ -65,22 +65,8 @@ app.use('*', logger(console.log));
 
 // ✨ CORS config updated for credentials (HTTP-only cookies)
 // When credentials: 'include', origin MUST be specific (not '*')
-const allowedOrigins = [
-  "https://corevision-main.vercel.app",  // Production frontend
-  "https://corevision-*.vercel.app",     // Preview deployments
-  "http://localhost:3000",                // Local dev
-  "http://localhost:3001",                // Local dev alt
-];
-
 app.use("/*", cors({
-  origin: (origin) => {
-    if (!origin) return "*";  // No origin = same-origin request
-    // Check if origin matches any allowed pattern
-    if (origin === "https://corevision-main.vercel.app") return origin;
-    if (origin.match(/^https:\/\/corevision-.+\.vercel\.app$/)) return origin;
-    if (origin.startsWith("http://localhost")) return origin;
-    return undefined;  // Reject unknown origins
-  },
+  origin: ["https://corevision-main.vercel.app", "http://localhost:3000", "http://localhost:3001"],
   credentials: true,  // ✨ Allow credentials (cookies)
   allowHeaders: ["Content-Type", "Authorization", "Cookie"],
   allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
