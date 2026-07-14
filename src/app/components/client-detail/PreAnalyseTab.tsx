@@ -111,26 +111,7 @@ export function PreAnalyseTab({
       pressionFiscale: totalRevenus > 0 ? (impotTotal / totalRevenus) * 100 : 0,
       rendementGlobal: patrimoineNet > 0 ? (totalRevenus / patrimoineNet) * 100 : 0,
     };
-    
-    // 🔍 Log pour debug imposition et revenus
-      revenus: {
-        traitementsSalaires: impositionData.traitementsSalairesPensions,
-        revenusTNS: impositionData.revenusTNS,
-        revenusFonciers: impositionData.revenusFonciers,
-        locationsMeubles: impositionData.locationsMeublesNonPro,
-        RVCM: impositionData.reveusValeursCapitauxMobiliers,
-        plusValues: impositionData.plusValueMobiliere,
-        totalRevenus,
-      },
-      imposition: {
-        impotRevenu: impositionData.impotRevenu,
-        prelevementsSociaux,
-        ifi: impositionData.ifi,
-        impotTotal,
-        pressionFiscale: totalRevenus > 0 ? (impotTotal / totalRevenus) * 100 : 0,
-      }
-    });
-    
+
     return calculsData;
   }, [actifsFinanciers, immobilier, passifs, revenus, impositionData]);
 
