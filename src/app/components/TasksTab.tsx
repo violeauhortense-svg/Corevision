@@ -319,18 +319,38 @@ export function TasksTab({ clientId }: TasksTabProps) {
                         blockState === 'COMPLETE' ? 'bg-gray-100 border-gray-300' : 'bg-white border-gray-200 hover:border-blue-300'
                       }`}
                     >
-                      {/* État de la tâche - Icône */}
-                      <div className="mt-1">
-                        {task.completed && <span className="text-lg">✅</span>}
-                        {task.status === 'na' && <span className="text-lg">⊘</span>}
-                        {!task.completed && task.status !== 'na' && <span className="text-lg">⭕</span>}
+                      {/* État de la tâche - Badge visuel */}
+                      <div className="flex items-start gap-2">
+                        <div className="mt-1">
+                          {task.completed && <span className="text-lg">✅</span>}
+                          {task.status === 'na' && <span className="text-lg">⊘</span>}
+                          {!task.completed && task.status !== 'na' && <span className="text-lg">⭕</span>}
+                        </div>
                       </div>
 
                       {/* Titre et description */}
                       <div className="flex-1">
-                        <p className={`text-sm font-medium ${task.completed ? 'line-through text-gray-500' : task.status === 'na' ? 'text-yellow-600' : 'text-gray-800'}`}>
-                          {task.title}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className={`text-sm font-medium ${task.completed ? 'line-through text-gray-500' : task.status === 'na' ? 'text-yellow-600' : 'text-gray-800'}`}>
+                            {task.title}
+                          </p>
+                          {/* Badge d'état visible */}
+                          {task.completed && (
+                            <span className="px-2 py-1 text-xs font-bold bg-green-100 text-green-700 rounded-full">
+                              ✅ VALIDÉE
+                            </span>
+                          )}
+                          {task.status === 'na' && (
+                            <span className="px-2 py-1 text-xs font-bold bg-yellow-100 text-yellow-700 rounded-full">
+                              ⊘ N/A
+                            </span>
+                          )}
+                          {!task.completed && task.status !== 'na' && (
+                            <span className="px-2 py-1 text-xs font-bold bg-gray-100 text-gray-700 rounded-full">
+                              ⏳ EN ATTENTE
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-gray-500 mt-1">{taskDef.description}</p>
                         {task.deadline && (
                           <p className="text-xs text-gray-500 mt-1">📅 {new Date(task.deadline).toLocaleDateString('fr-FR')}</p>
@@ -402,35 +422,42 @@ export function TasksTab({ clientId }: TasksTabProps) {
 
               {/* Bouton "Passez au statut suivant" */}
               {blockState === 'EN_COURS' && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="mt-4 pt-4 border-t-2 border-blue-300">
                   {(() => {
                     const currentIdx = STATUSES.indexOf(status);
                     const nextStatus = currentIdx < STATUSES.length - 1 ? STATUSES[currentIdx + 1] : null;
                     const allTasksCompleted = tasks.every((t: any) => t.completed || t.status === 'na');
+                    const remainingTasks = tasks.filter((t: any) => !t.completed && t.status !== 'na').length;
+
+                    console.log(`📊 Progression check for "${status}": completed=${allTasksCompleted}, remaining=${remainingTasks}, tasks=${tasks.length}`);
 
                     return (
                       <div className="flex gap-3 items-center justify-between">
-                        <div className="text-sm">
+                        <div className="text-sm flex-1">
                           {allTasksCompleted && nextStatus && (
-                            <p className="text-green-600 font-medium">✅ Toutes les tâches sont validées</p>
+                            <div className="bg-green-50 border border-green-300 p-3 rounded">
+                              <p className="text-green-700 font-bold">✅ Toutes les tâches sont validées!</p>
+                              <p className="text-green-600 text-xs mt-1">Vous pouvez maintenant passer à l'étape suivante</p>
+                            </div>
                           )}
                           {!allTasksCompleted && (
-                            <p className="text-orange-600 text-xs">
-                              ⏳ {tasks.filter((t: any) => !t.completed && t.status !== 'na').length} tâche(s) à valider
-                            </p>
+                            <div className="bg-orange-50 border border-orange-300 p-3 rounded">
+                              <p className="text-orange-700 font-bold">⏳ {remainingTasks} tâche(s) en attente</p>
+                              <p className="text-orange-600 text-xs mt-1">Validez ou marquez N/A pour continuer</p>
+                            </div>
                           )}
                         </div>
                         {allTasksCompleted && nextStatus && (
                           <button
                             onClick={() => handleProgressToNextStatus(status, nextStatus)}
-                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium whitespace-nowrap"
+                            className="px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 font-bold whitespace-nowrap shadow-lg transition-all"
                           >
-                            ➡️ Passez à {nextStatus}
+                            ➡️ Passez à<br/>{nextStatus}
                           </button>
                         )}
                         {!nextStatus && allTasksCompleted && (
-                          <div className="px-4 py-2 bg-green-100 text-green-700 rounded font-medium">
-                            🎉 Toutes les étapes complétées!
+                          <div className="px-4 py-3 bg-gradient-to-r from-green-100 to-green-200 text-green-700 rounded-lg font-bold border border-green-300">
+                            🎉 Bravo! Toutes étapes complétées!
                           </div>
                         )}
                       </div>
