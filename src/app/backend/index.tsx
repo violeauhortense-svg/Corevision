@@ -1,5 +1,4 @@
 import { Hono } from "npm:hono";
-import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
 import * as kv from "./kv_store.tsx";
 import * as sessions from "./sessions.tsx";
@@ -63,16 +62,34 @@ const supabaseAdmin = supabaseAdminCompat;
 // Middleware
 app.use('*', logger(console.log));
 
-// ✨ CORS config updated for credentials (HTTP-only cookies)
-// When credentials: 'include', origin MUST be specific (not '*')
-app.use("/*", cors({
-  origin: ["https://corevision-main.vercel.app", "http://localhost:3000", "http://localhost:3001"],
-  credentials: true,  // ✨ Allow credentials (cookies)
-  allowHeaders: ["Content-Type", "Authorization", "Cookie"],
-  allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  exposeHeaders: ["Content-Length", "Set-Cookie"],
-  maxAge: 600,
-}));
+// ✨ Custom CORS middleware for credentials support
+app.use("/*", async (c, next) => {
+  const origin = c.req.header("origin");
+  const allowedOrigins = [
+    "https://corevision-main.vercel.app",
+    "http://localhost:3000",
+    "http://localhost:3001",
+  ];
+
+  // Check if origin is allowed
+  const isAllowed = origin && allowedOrigins.includes(origin);
+
+  if (isAllowed) {
+    c.header("Access-Control-Allow-Origin", origin);
+    c.header("Access-Control-Allow-Credentials", "true");
+  }
+
+  c.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+  c.header("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie");
+  c.header("Access-Control-Expose-Headers", "Content-Length, Set-Cookie");
+  c.header("Access-Control-Max-Age", "600");
+
+  if (c.req.method === "OPTIONS") {
+    return c.text("OK");
+  }
+
+  await next();
+});
 
 // ============================================
 // BASIC ROUTES
