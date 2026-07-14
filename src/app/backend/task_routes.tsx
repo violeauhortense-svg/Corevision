@@ -4,7 +4,7 @@
 
 import type { Hono } from "npm:hono";
 import * as kv from "./kv_store.tsx";
-import { verifyAuth } from "./auth.tsx";
+import { verifyAuthRequest } from "./auth.tsx";
 import { getTasksWithIdsForStatus } from "./helpers.tsx";
 import {
   TASK_STATES,
@@ -20,7 +20,7 @@ import {
 export function setupTaskRoutes(app: Hono) {
   // Get tasks for a client
   app.get("/make-server-cac859af/clients/:clientId/tasks", async (c) => {
-    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error } = await verifyAuthRequest(c.req);
     
     if (error || !user) {
       return c.json({ error: error || 'Unauthorized' }, 401);
@@ -38,7 +38,7 @@ export function setupTaskRoutes(app: Hono) {
 
   // Create task for client
   app.post("/make-server-cac859af/clients/:clientId/tasks", async (c) => {
-    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error } = await verifyAuthRequest(c.req);
     
     if (error || !user) {
       return c.json({ error: error || 'Unauthorized' }, 401);
@@ -73,7 +73,7 @@ export function setupTaskRoutes(app: Hono) {
 
   // Get ALL tasks for authenticated user (toutes les tâches, tous les clients)
   app.get("/make-server-cac859af/client-tasks", async (c) => {
-    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error } = await verifyAuthRequest(c.req);
     if (error || !user) return c.json({ error: error || 'Unauthorized' }, 401);
     try {
       const tasks = await kv.getByPrefix(`task:${user.id}:`);
@@ -85,7 +85,7 @@ export function setupTaskRoutes(app: Hono) {
 
   // Delete task
   app.delete("/make-server-cac859af/tasks/:taskId", async (c) => {
-    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error } = await verifyAuthRequest(c.req);
     if (error || !user) return c.json({ error: error || 'Unauthorized' }, 401);
     try {
       const taskId = c.req.param('taskId');
@@ -101,7 +101,7 @@ export function setupTaskRoutes(app: Hono) {
 
   // Update task
   app.put("/make-server-cac859af/tasks/:taskId", async (c) => {
-    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error } = await verifyAuthRequest(c.req);
     
     if (error || !user) {
       return c.json({ error: error || 'Unauthorized' }, 401);
@@ -136,7 +136,7 @@ export function setupTaskRoutes(app: Hono) {
   // PATCH: Validate/NA a task in the 8-status pipeline
   // Accept either task index (legacy) or task ID (preferred)
   app.patch("/make-server-cac859af/clients/:clientId/tache/:taskId", async (c) => {
-    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error } = await verifyAuthRequest(c.req);
 
     if (error || !user) {
       console.error('❌ Auth error:', error);
@@ -241,7 +241,7 @@ export function setupTaskRoutes(app: Hono) {
 
   // POST: Progress to next status
   app.post("/make-server-cac859af/clients/:clientId/progress", async (c) => {
-    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error } = await verifyAuthRequest(c.req);
 
     if (error || !user) {
       console.error('❌ Auth error:', error);
