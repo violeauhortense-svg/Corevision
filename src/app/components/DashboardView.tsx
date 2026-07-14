@@ -24,7 +24,7 @@ export function DashboardView({ session }: DashboardViewProps) {
 
   const loadMetrics = async () => {
     try {
-      const token = session?.access_token || localStorage.getItem('auth_token');
+      const token = session?.access_token || getAuthToken();
       const response = await fetch(`${apiBaseUrl}/dashboard/metrics`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -110,7 +110,7 @@ export function DashboardView({ session }: DashboardViewProps) {
       <div className="mt-8">
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Pipeline par Statut</h2>
         <KanbanBoard
-          token={session?.access_token || localStorage.getItem('auth_token')}
+          token={session?.access_token || getAuthToken()}
           onClientClick={(clientId) => console.log('Click client:', clientId)}
         />
       </div>

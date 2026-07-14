@@ -6,6 +6,7 @@ import { ClientService } from '../services/ClientService';
 import type { Client } from '../services/ClientService';
 import type { Task } from '../types/client';
 import { apiBaseUrl } from '../utils/api/info';
+import { getAuthToken } from '../utils/supabase/client';
 import { toast } from 'sonner';
 
 const STATUSES = ['Prospect', 'Découverte', 'Simulation', 'Lettre Mission', 'Rapport/Audit', 'Suivi MEP', 'Suivi CSP', 'Arbitrage'];
@@ -69,7 +70,7 @@ export function TasksTab({ clientId }: TasksTabProps) {
     if (!client) return;
 
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = getAuthToken();
       const url = `${apiBaseUrl}/clients/${clientId}/tache/${taskId}`;
       console.log('✅ Validation tâche:', { status, taskId, completed, url });
 
@@ -100,7 +101,7 @@ export function TasksTab({ clientId }: TasksTabProps) {
     if (!client) return;
 
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = getAuthToken();
       const url = `${apiBaseUrl}/clients/${clientId}/tache/${taskId}`;
       console.log('⊘ Marquer N.A.:', { status, taskId, url });
 
@@ -131,7 +132,7 @@ export function TasksTab({ clientId }: TasksTabProps) {
     if (!client) return;
 
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = getAuthToken();
       const url = `${apiBaseUrl}/clients/${clientId}/progress`;
       console.log('➡️ Progression:', { currentStatus, nextStatus, url });
 
@@ -160,7 +161,7 @@ export function TasksTab({ clientId }: TasksTabProps) {
 
   const saveArbitrageFields = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = getAuthToken();
       const url = `/api/clients/${clientId}`;
       const response = await fetch(url, {
         method: 'PUT',

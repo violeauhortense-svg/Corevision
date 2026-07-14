@@ -23,6 +23,11 @@ function clearSession() {
   localStorage.removeItem(SESSION_KEY);
 }
 
+function getAuthToken(): string | null {
+  const session = loadSession();
+  return session?.access_token || null;
+}
+
 // ─── Auth state listeners ──────────────────────────────────────────────────
 type AuthChangeCallback = (event: string, session: any) => void;
 const listeners: AuthChangeCallback[] = [];
@@ -112,3 +117,4 @@ const auth = {
 
 // ─── Export compatible avec l'interface Supabase ───────────────────────────
 export const supabase = { auth };
+export { getAuthToken };
