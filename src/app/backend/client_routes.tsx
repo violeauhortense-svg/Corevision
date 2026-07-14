@@ -230,14 +230,12 @@ export function setupClientRoutes(app: Hono) {
     }
   });
 
-  // DEBUG: Inspect a specific client's tasks
+  // DEBUG: Inspect a specific client (INTERNAL USE ONLY - ADMIN ACCESS REQUIRED)
   app.get("/make-server-cac859af/admin/inspect/:clientId", async (c) => {
     const { user, error } = await verifyAuthRequest(c.req);
+    if (error || !user) return c.json({ error: error || 'Unauthorized' }, 401);
 
-    if (error || !user) {
-      return c.json({ error: error || 'Unauthorized' }, 401);
-    }
-
+    // Only allow if user owns the client
     try {
       const clientId = c.req.param('clientId');
       const client = await kv.get(`client:${user.id}:${clientId}`);
@@ -246,7 +244,6 @@ export function setupClientRoutes(app: Hono) {
         return c.json({ error: 'Client not found' }, 404);
       }
 
-      // Debug: Show complete client data
       return c.json({
         client: {
           id: client.id,
@@ -254,44 +251,10 @@ export function setupClientRoutes(app: Hono) {
           statusOuvert: client.statusOuvert,
           updated_at: client.updated_at,
           tachesStatuses: Object.keys(client.taches || {}),
-          tachesDetail: Object.entries(client.taches || {}).reduce((acc: any, [status, tasks]: any) => {
-            acc[status] = tasks.map((t: any) => ({
-              id: t.id,
-              title: t.title,
-              completed: t.completed,
-              status: t.status,
-              validated_at: t.validated_at,
-              validated_by: t.validated_by,
-              na_at: t.na_at,
-              na_by: t.na_by,
-            }));
-            return acc;
-          }, {}),
         }
       });
     } catch (err) {
-      console.error('Error inspecting client:', err);
-      return c.json({ error: 'Failed to inspect: ' + (err as Error).message }, 500);
-    }
-  });
-
-  // TEMP: Clear all clients and tasks (for testing/debugging)
-  app.delete("/make-server-cac859af/admin/clear-all", async (c) => {
-    try {
-      const clientsDeleted = await kv.delByPrefix('client:');
-      const tasksDeleted = await kv.delByPrefix('task:');
-
-      console.log(`🗑️ CLEARED: ${clientsDeleted} clients, ${tasksDeleted} tasks`);
-
-      return c.json({
-        success: true,
-        message: `Cleared ${clientsDeleted} clients and ${tasksDeleted} tasks`,
-        clientsDeleted,
-        tasksDeleted
-      });
-    } catch (err) {
-      console.error('❌ Error clearing data:', err);
-      return c.json({ error: 'Failed to clear data: ' + err.message }, 500);
+      return c.json({ error: 'Failed to inspect' }, 500);
     }
   });
 }
