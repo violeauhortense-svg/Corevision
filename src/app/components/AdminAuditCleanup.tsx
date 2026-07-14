@@ -14,7 +14,6 @@ export function AdminAuditCleanup() {
       setIsRunning(true);
       setAuditResult(null);
 
-      console.log('🔍 Lancement de l\'audit global...');
       const result = await auditAndCleanupOrphanedData();
 
       setAuditResult(result);

@@ -241,14 +241,12 @@ function validerRegle(regle: RegleFiscale): 'validé' | 'en_attente' | 'à_révi
  * Extraire une règle fiscale depuis un chunk
  */
 export async function extraireRegleDepuisChunk(chunk: ChunkJuridique): Promise<RegleFiscale | null> {
-  console.log(`📄 Extraction règle depuis chunk: ${chunk.id.substring(0, 50)}...`);
 
   try {
     // Identifier la règle principale
     const regle = identifierRegle(chunk.texte, chunk.sujet);
     
     if (!regle) {
-      console.log('   ⏭️  Aucune règle identifiable');
       return null;
     }
 
@@ -272,7 +270,6 @@ export async function extraireRegleDepuisChunk(chunk: ChunkJuridique): Promise<R
     // Valider la règle
     regleFiscale.statut_validation = validerRegle(regleFiscale);
 
-    console.log(`   ✅ Règle extraite (${regleFiscale.statut_validation}): ${regle.substring(0, 60)}...`);
 
     return regleFiscale;
 
@@ -298,13 +295,11 @@ export async function extraireToutesLesRegles(): Promise<{
   const startTime = Date.now();
   const errors: string[] = [];
 
-  console.log('🚀 Début de l\'extraction de toutes les règles fiscales...');
 
   try {
     // Récupérer tous les chunks
     const chunks = await parserJuridique.searchChunks();
 
-    console.log(`   📚 ${chunks.length} chunks à analyser`);
 
     let reglesExtraites = 0;
     let reglesValidees = 0;
@@ -351,12 +346,9 @@ export async function extraireToutesLesRegles(): Promise<{
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1) + 's';
 
-    console.log(`✅ Extraction terminée en ${duration}`);
     console.log(`   - Chunks analysés: ${chunks.length}`);
-    console.log(`   - Règles extraites: ${reglesExtraites}`);
     console.log(`   - Validées: ${reglesValidees}`);
     console.log(`   - En attente: ${reglesEnAttente}`);
-    console.log(`   - À réviser: ${reglesAReviser}`);
 
     return {
       success: true,
@@ -392,7 +384,6 @@ export async function searchRegles(
   statut?: string, 
   source?: string
 ): Promise<RegleFiscale[]> {
-  console.log(`🔍 Recherche de règles fiscales: query="${query}", statut="${statut}", source="${source}"`);
 
   try {
     // Récupérer toutes les règles
@@ -431,7 +422,6 @@ export async function searchRegles(
       return dateB - dateA;
     });
 
-    console.log(`✅ ${regles.length} règles trouvées`);
     return regles;
 
   } catch (error) {
@@ -498,7 +488,6 @@ export async function updateStatutValidation(
     regle.statut_validation = nouveauStatut;
     await kv.set(key, regle);
 
-    console.log(`✅ Statut de ${regleId} mis à jour: ${nouveauStatut}`);
     return { success: true, message: 'Statut mis à jour' };
 
   } catch (error) {
@@ -514,7 +503,6 @@ export async function updateStatutValidation(
  * Supprimer toutes les règles (utile pour réinitialiser)
  */
 export async function deleteAllRegles(): Promise<{ deleted: number }> {
-  console.log('🗑️  Suppression de toutes les règles fiscales...');
 
   try {
     const allItems = await kv.getByPrefix('regles_fiscales:');
@@ -523,7 +511,6 @@ export async function deleteAllRegles(): Promise<{ deleted: number }> {
       await kv.del(item.key);
     }
 
-    console.log(`✅ ${allItems.length} règles supprimées`);
     return { deleted: allItems.length };
 
   } catch (error) {

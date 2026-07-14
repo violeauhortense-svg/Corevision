@@ -72,12 +72,10 @@ export function AgendaView({ session }: AgendaViewProps) {
         }
       }
 
-      console.log('📅 Tâches avec échéance chargées:', tasksWithDeadline.length);
       setTasks(tasksWithDeadline);
 
       // Charger tous les RDV
       const allMeetings = await agendaAPI.getAll();
-      console.log('📅 RDV chargés:', allMeetings.length);
       setMeetings(allMeetings);
     } catch (error) {
       console.error('❌ Erreur chargement agenda:', error);

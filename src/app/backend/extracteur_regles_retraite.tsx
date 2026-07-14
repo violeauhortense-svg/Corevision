@@ -376,7 +376,6 @@ export async function initialiserReglesRetraite(): Promise<{
   error?: string;
 }> {
   try {
-    console.log('🔧 Initialisation règles retraite statiques...');
 
     const regles: RegleRetraite[] = REGLES_RETRAITE_STATIQUES.map((regle, index) => ({
       ...regle,
@@ -386,7 +385,6 @@ export async function initialiserReglesRetraite(): Promise<{
 
     await kv.set('regles_retraite', regles);
 
-    console.log(`✅ ${regles.length} règles retraite initialisées`);
 
     return {
       success: true,
@@ -416,12 +414,10 @@ export async function extraireReglesRetraite(): Promise<{
   const errors: string[] = [];
 
   try {
-    console.log('🔍 Démarrage extraction règles retraite...');
 
     // Récupérer les règles existantes (statiques)
     const reglesExistantes: RegleRetraite[] = await kv.get('regles_retraite') || [];
 
-    console.log(`📊 ${reglesExistantes.length} règles retraite déjà en base`);
 
     // Dans cette version, on garde uniquement les règles statiques
     // L'extraction IA pourrait être ajoutée plus tard

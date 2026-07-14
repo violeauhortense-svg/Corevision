@@ -37,7 +37,6 @@ export async function initializeSessions(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions (expires_at);
     `);
 
-    console.log("✅ Sessions table ready");
     conn.release();
   } catch (err) {
     console.error("❌ Error initializing sessions table:", err);
@@ -58,7 +57,6 @@ export async function createSession(userId: string, email: string, accessToken: 
       VALUES ($1, $2, $3, $4, $5, $6)
     `, [sessionId, userId, email, accessToken, 'bearer', expiresAt.toISOString()]);
 
-    console.log(`✅ Session created: ${sessionId} for user ${userId}`);
     conn.release();
 
     return sessionId;
@@ -118,7 +116,6 @@ export async function deleteSession(sessionId: string): Promise<void> {
       DELETE FROM sessions WHERE id = $1
     `, [sessionId]);
 
-    console.log(`✅ Session deleted: ${sessionId}`);
     conn.release();
   } catch (err) {
     console.error("❌ Error deleting session:", err);
@@ -135,7 +132,6 @@ export async function deleteUserSessions(userId: string): Promise<void> {
       DELETE FROM sessions WHERE user_id = $1
     `, [userId]);
 
-    console.log(`✅ All sessions deleted for user ${userId}`);
     conn.release();
   } catch (err) {
     console.error("❌ Error deleting user sessions:", err);
@@ -153,7 +149,6 @@ export async function cleanupExpiredSessions(): Promise<number> {
     `);
 
     const deleted = result.rowsAffected || 0;
-    console.log(`🧹 Cleaned up ${deleted} expired sessions`);
     conn.release();
 
     return deleted;

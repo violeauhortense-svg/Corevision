@@ -53,9 +53,7 @@ const supabaseAdmin = supabaseAdminCompat;
 (async () => {
   try {
     await Deno.mkdir(`${UPLOADS_DIR}/make-cac859af-documents`, { recursive: true });
-    console.log('? Dossier uploads initialis�:', UPLOADS_DIR);
   } catch {
-    console.log('? Dossier uploads d�j� existant');
   }
 })();
 
@@ -145,7 +143,6 @@ app.delete("/make-server-cac859af/reset-user-data", async (c) => {
   }
 
   try {
-    console.log('??? RESET: Suppression de toutes les donn�es pour user:', user.id);
     
     const clients = await kv.getByPrefix(`client:${user.id}:`);
     for (const client of clients) {
@@ -214,7 +211,6 @@ app.post("/make-server-cac859af/auth/signin", async (c) => {
     // ✨ Set sessionId in HTTP-only cookie (replaces localStorage)
     const setCookieHeader = sessions.setSessionIdCookie(data.sessionId);
     c.header("Set-Cookie", setCookieHeader);
-    console.log(`✅ signin: Set-Cookie header added for sessionId`);
 
     return c.json({ session: data.session, user: data.user });
   } catch (error) {
@@ -279,7 +275,6 @@ app.post("/make-server-cac859af/upload-document", async (c) => {
       .from('make-cac859af-documents')
       .createSignedUrl(filePath, 31536000);
 
-    console.log('? Fichier upload�:', uploadData.path);
     return c.json({
       success: true,
       fileUrl: signedUrlData.signedUrl,
@@ -349,7 +344,6 @@ console.log('? Calcul routes loaded');
 
 // ?? Incoh�rences routes
 setupIncoherencesRoutes(app);
-console.log('? Incoh�rences routes loaded');
 
 // ?? Recommandations routes
 setupRecommandationsRoutes(app);
@@ -361,7 +355,6 @@ console.log('? Section rapport progressif routes loaded');
 
 // ?? Bar�mes fiscaux routes
 setupBaremesRoutes(app);
-console.log('? Bar�mes fiscaux routes loaded');
 
 // ?? Mail routes
 app.route('/make-server-cac859af', mailRoutes);
@@ -376,7 +369,6 @@ console.log('? Collecteur juridique routes loaded');
 setupParserJuridiqueRoutes(app);
 console.log('? Parser juridique routes loaded');
 setupExtracteurReglesRoutes(app);
-console.log('? Extracteur r�gles routes loaded');
 setupCollecteurSocialRoutes(app);
 console.log('? Collecteur social + social + retraite routes loaded');
 setupCollecteurRetraiteRoutes(app);
@@ -390,7 +382,6 @@ console.log('? Moteur patrimonial IA routes loaded');
 setupSimulateurPatrimonialRoutes(app);
 console.log('? Simulateur patrimonial routes loaded');
 setupReglesFiscalesRoutes(app);
-console.log('? R�gles fiscales routes loaded');
 setupAuditPatrimonialRoutes(app);
 console.log('? Audit patrimonial routes loaded');
 
@@ -400,7 +391,6 @@ console.log('? Audit patrimonial routes loaded');
 // INITIALISATION AUTOMATIQUE AU D�MARRAGE
 // ============================================
 
-console.log('?? Initialisation automatique des donn�es au d�marrage...');
 
 // ?? D�SACTIV� : Les calculs fiscaux sont maintenant faits en frontend via /services/fiscalCalculator.ts
 // Les r�gles fiscales en base de donn�es ne sont plus n�cessaires au d�marrage
@@ -413,11 +403,8 @@ console.log('?? Initialisation automatique des donn�es au d�marrage...');
     const reglesExistantes = await reglesFiscalesDB.getToutesRegles();
     
     if (reglesExistantes.length === 0) {
-      console.log('?? Aucune r�gle fiscale trouv�e. Initialisation en cours...');
       const result = await reglesFiscalesDB.initialiserReglesFiscales();
-      console.log(`? ${result.count} r�gles fiscales initialis�es avec succ�s`);
     } else {
-      console.log(`? ${reglesExistantes.length} r�gles fiscales d�j� pr�sentes`);
     }
   } catch (error) {
     console.error('? Erreur lors de l\'initialisation des r�gles fiscales:', error);
@@ -425,12 +412,9 @@ console.log('?? Initialisation automatique des donn�es au d�marrage...');
 })();
 */
 
-console.log('?? Initialisation des r�gles fiscales d�sactiv�e (calculs maintenant en frontend)');
 
 // ✨ Initialize PostgreSQL sessions table (replaces localStorage)
-console.log('🔐 Initializing PostgreSQL sessions table...');
 await sessions.initializeSessions();
-console.log('✅ Sessions table ready - No localStorage needed!');
 
 console.log(`? Server initialized - Version ${SERVER_VERSION} - Modular architecture`);
 

@@ -291,12 +291,10 @@ export function MeetingProposalModal({
         spouseName: sendToSpouse ? `${familyInfo?.spouse?.firstName} ${familyInfo?.spouse?.lastName}` : undefined,
       });
 
-      console.log('✅ Proposition de RDV créée:', result);
 
       // ===== CRÉER L'ÉVÉNEMENT D'AGENDA =====
       if (result.agendaEvent) {
         await agendaAPI.create(result.agendaEvent);
-        console.log('✅ Événement d\'agenda créé');
       }
 
       // ===== METTRE À JOUR LES TÂCHES =====
@@ -311,7 +309,6 @@ export function MeetingProposalModal({
         );
         if (contactTask) {
           await taskAPI.update(contactTask.id, { ...contactTask, completed: true });
-          console.log('✅ Tâche "Contacter le client..." validée');
         }
 
         // 2. CRÉER/METTRE À JOUR "Collecter documents et infos..."
@@ -350,7 +347,6 @@ export function MeetingProposalModal({
             },
             description: `📋 ${requestedDocuments.length} document(s) demandé(s) - 0 reçu(s)`,
           });
-          console.log('✅ Tâche "Collecter documents..." mise à jour');
         } else {
           // Pas de documents demandés: valider ou supprimer la tâche
           const collectTask = clientTasks.find((t: any) =>
@@ -359,7 +355,6 @@ export function MeetingProposalModal({
           if (collectTask) {
             // Marquer comme complétée puisqu'il n'y a pas de documents à collecter
             await taskAPI.update(collectTask.id, { ...collectTask, completed: true });
-            console.log('✅ Tâche "Collecter documents..." auto-validée (pas de documents)');
           }
         }
 
@@ -376,7 +371,6 @@ export function MeetingProposalModal({
             deadline: deadlineDate.toISOString(),
             rdvId,
           });
-          console.log('✅ Tâche "RDV découverte..." mise à jour avec date et RDV');
         }
       } catch (error) {
         console.warn('⚠️ Erreur lors de la mise à jour des tâches:', error);
@@ -406,7 +400,6 @@ export function MeetingProposalModal({
             );
           }
 
-          console.log('✅ Historique d\'emails enregistré');
         } catch (error) {
           console.warn('⚠️ Erreur lors de l\'enregistrement de l\'historique d\'email:', error);
           // Ne pas bloquer le flux si l'historique ne s'enregistre pas

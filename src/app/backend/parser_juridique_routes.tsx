@@ -3,7 +3,6 @@ import * as parserJuridique from "./parser_juridique.tsx";
 
 export function setupParserJuridiqueRoutes(app: Hono) {
   app.post("/make-server-cac859af/parser-juridique/run", async (c) => {
-    console.log('🚀 Lancement du parsing de tous les documents...');
     try {
       const result = await parserJuridique.parserTousLesDocuments();
       return c.json(result);
@@ -14,7 +13,6 @@ export function setupParserJuridiqueRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/parser-juridique/chunks", async (c) => {
-    console.log('🔍 Recherche de chunks juridiques...');
     try {
       const query = c.req.query('q');
       const sujet = c.req.query('sujet');
@@ -28,7 +26,6 @@ export function setupParserJuridiqueRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/parser-juridique/stats", async (c) => {
-    console.log('📊 Récupération des stats de parsing...');
     try {
       const stats = await parserJuridique.getParsingStats();
       return c.json({ success: true, stats });
@@ -39,7 +36,6 @@ export function setupParserJuridiqueRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/parser-juridique/sujets", async (c) => {
-    console.log('📋 Récupération des sujets uniques...');
     try {
       const sujets = await parserJuridique.getSujetsUniques();
       return c.json({ success: true, sujets });
@@ -50,7 +46,6 @@ export function setupParserJuridiqueRoutes(app: Hono) {
   });
 
   app.delete("/make-server-cac859af/parser-juridique/chunks", async (c) => {
-    console.log('🗑️  Suppression de tous les chunks...');
     try {
       const result = await parserJuridique.deleteAllChunks();
       return c.json({ success: true, deleted: result.deleted });

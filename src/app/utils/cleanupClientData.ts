@@ -19,7 +19,6 @@ export async function cleanupClientData(clientId: string): Promise<{ success: bo
   };
 
   try {
-    console.log('🧹 Nettoyage des données du client:', clientId);
 
     // 1️⃣ Supprimer tous les RDV du client
     try {
@@ -31,7 +30,6 @@ export async function cleanupClientData(clientId: string): Promise<{ success: bo
         summary.rdvRemoved++;
       });
 
-      console.log(`✅ ${summary.rdvRemoved} RDV supprimés`);
     } catch (error) {
       const msg = `Erreur suppression RDV: ${error}`;
       summary.errors.push(msg);
@@ -52,7 +50,6 @@ export async function cleanupClientData(clientId: string): Promise<{ success: bo
         }
       }
 
-      console.log(`✅ ${summary.tasksRemoved} tâches supprimées`);
     } catch (error) {
       const msg = `Erreur suppression tâches: ${error}`;
       summary.errors.push(msg);
@@ -74,12 +71,10 @@ export async function cleanupClientData(clientId: string): Promise<{ success: bo
         }
       });
 
-      console.log('✅ Données localStorage supprimées');
     } catch (error) {
       console.warn('⚠️ Erreur suppression localStorage:', error);
     }
 
-    console.log('✅ Nettoyage du client terminé:', summary);
     return { success: true, summary };
   } catch (error) {
     console.error('❌ Erreur critique pendant le nettoyage:', error);
@@ -102,14 +97,12 @@ export async function auditAndCleanupOrphanedData(): Promise<{ success: boolean;
   };
 
   try {
-    console.log('🔍 Audit global des données orphelines...');
 
     // Récupérer tous les clients pour vérifier qu'ils existent
     let allClients: any[] = [];
     try {
       allClients = await clientAPI.getAll();
       summary.totalClientsChecked = allClients.length;
-      console.log(`📋 ${allClients.length} clients trouvés`);
     } catch (error) {
       const msg = `Erreur récupération clients: ${error}`;
       summary.errors.push(msg);
@@ -133,7 +126,6 @@ export async function auditAndCleanupOrphanedData(): Promise<{ success: boolean;
       }
 
       if (summary.orphanedRdvRemoved > 0) {
-        console.log(`✅ ${summary.orphanedRdvRemoved} RDV orphelins supprimés`);
       }
     } catch (error) {
       const msg = `Erreur audit RDV: ${error}`;
@@ -156,7 +148,6 @@ export async function auditAndCleanupOrphanedData(): Promise<{ success: boolean;
       }
 
       if (summary.orphanedTasksRemoved > 0) {
-        console.log(`✅ ${summary.orphanedTasksRemoved} tâches orphelines supprimées`);
       }
     } catch (error) {
       const msg = `Erreur audit tâches: ${error}`;
@@ -192,7 +183,6 @@ export async function auditAndCleanupOrphanedData(): Promise<{ success: boolean;
       }
 
       if (summary.orphanedEntriesRemovedFromStorage > 0) {
-        console.log(`✅ ${summary.orphanedEntriesRemovedFromStorage} entrées localStorage orphelines supprimées`);
       }
     } catch (error) {
       const msg = `Erreur audit localStorage: ${error}`;
@@ -200,7 +190,6 @@ export async function auditAndCleanupOrphanedData(): Promise<{ success: boolean;
       console.error(msg);
     }
 
-    console.log('✅ Audit terminé:', summary);
     return { success: true, summary };
   } catch (error) {
     console.error('❌ Erreur critique pendant l\'audit:', error);
@@ -215,7 +204,6 @@ export function displayAuditReport(summary: any): void {
   console.group('📊 Rapport d\'audit');
   console.log('Clients vérifiés:', summary.totalClientsChecked);
   console.log('RDV orphelins supprimés:', summary.orphanedRdvRemoved);
-  console.log('Tâches orphelines supprimées:', summary.orphanedTasksRemoved);
   console.log('Documents orphelins supprimés:', summary.orphanedDocumentsRemoved);
   console.log('Entrées localStorage orphelines supprimées:', summary.orphanedEntriesRemovedFromStorage);
   if (summary.errors.length > 0) {

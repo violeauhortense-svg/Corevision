@@ -3,4 +3,3 @@ export const apiBaseUrl = "https://corevision-api.onrender.com/make-server-cac85
 export const projectId = "self-hosted"
 export const publicAnonKey = "local-auth"
 
-console.log(`✅ API Base URL loaded: ${apiBaseUrl}`);

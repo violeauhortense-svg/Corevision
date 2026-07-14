@@ -16,17 +16,14 @@ export async function genererRapportPatrimonial(
   rapport?: any;
   error?: string;
 }> {
-  console.log(`📊 Génération du rapport patrimonial pour ${clientData.clientName}...`);
 
   try {
     const startTime = Date.now();
 
     // 1. ANALYSE IA DU PROFIL
-    console.log('   🤖 Étape 1/3 : Analyse IA du profil...');
     const analyse = await moteurPatrimonialIA.analyserProfilClient(clientData.profil);
 
     // 2. SIMULATIONS DES TOP MONTAGES RECOMMANDÉS
-    console.log('   📊 Étape 2/3 : Simulations des montages recommandés...');
     const simulations: any[] = [];
     
     // Prendre les 5 meilleurs montages recommandés
@@ -56,10 +53,8 @@ export async function genererRapportPatrimonial(
       }
     }
 
-    console.log(`   ✅ ${simulations.length} simulation(s) réalisée(s)`);
 
     // 3. GÉNÉRATION DE LA SYNTHÈSE EXÉCUTIVE VIA IA
-    console.log('   📝 Étape 3/3 : Génération de la synthèse exécutive...');
     const syntheseExecutive = await genererSyntheseExecutive(
       clientData,
       analyse,
@@ -145,7 +140,6 @@ export async function genererRapportPatrimonial(
     };
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-    console.log(`✅ Rapport généré en ${duration}s`);
 
     return {
       success: true,

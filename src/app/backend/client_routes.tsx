@@ -18,7 +18,6 @@ export function setupClientRoutes(app: Hono) {
 
     try {
       const clients = await kv.getByPrefix(`client:${user.id}:`);
-      console.log(`✅ ${clients.length} clients trouvés pour l'utilisateur ${user.id}`);
       return c.json({ clients });
     } catch (err) {
       console.error('Error fetching clients:', err);
@@ -47,7 +46,6 @@ export function setupClientRoutes(app: Hono) {
       const currentStatus = client.statusOuvert || 'Prospect';
       const currentStatusIdx = STATUSES.indexOf(currentStatus);
 
-      console.log(`📋 Loading client ${clientId} at status: "${currentStatus}" (index: ${currentStatusIdx})`);
 
       // Initialiser client.taches si absent
       if (!client.taches) {
@@ -61,7 +59,6 @@ export function setupClientRoutes(app: Hono) {
         const status = STATUSES[i];
 
         if (!client.taches[status]) {
-          console.log(`📝 Initializing missing tasks for status "${status}"`);
 
           const taskTemplates = getTasksWithIdsForStatus(status);
           client.taches[status] = taskTemplates.map((def: any, idx: number) => ({
@@ -87,10 +84,8 @@ export function setupClientRoutes(app: Hono) {
       // Sauvegarder si des tâches ont été initialisées
       if (tasksSaved) {
         await kv.set(`client:${user.id}:${clientId}`, client);
-        console.log(`✅ Initialized all missing statuses up to "${currentStatus}"`);
       }
 
-      console.log(`📊 Client taches statuses:`, Object.keys(client.taches).join(', '));
 
       return c.json({ client });
     } catch (err) {
@@ -128,7 +123,6 @@ export function setupClientRoutes(app: Hono) {
       };
 
       await kv.set(`client:${user.id}:${clientId}`, client);
-      console.log(`✅ Client ${clientId} créé pour l'utilisateur ${user.id}`);
 
       // Créer les tâches initiales avec le nouveau statut
       const newStatus = statusOuvert || 'Prospect';
@@ -168,8 +162,6 @@ export function setupClientRoutes(app: Hono) {
       client.taches = tasksByStatus;
       await kv.set(`client:${user.id}:${clientId}`, client);
 
-      console.log(`✅ ${tasks.length} tâches créées pour le client ${clientId} dans le statut "${newStatus}"`);
-      console.log(`📋 Tâches sauvegardées:`, JSON.stringify(client.taches, null, 2));
 
       return c.json({ client, tasks }, 201);
     } catch (err) {

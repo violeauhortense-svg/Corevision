@@ -16,7 +16,6 @@ async function ensureDERBucketExists() {
     const bucketExists = buckets?.some(bucket => bucket.name === DER_BUCKET_NAME);
     
     if (!bucketExists) {
-      console.log('🪣 Création du bucket DER public...');
       const { data, error } = await supabaseAdmin.storage.createBucket(DER_BUCKET_NAME, {
         public: true, // BUCKET PUBLIC - pas besoin d'auth pour lire
         fileSizeLimit: 5242880, // 5MB
@@ -25,15 +24,12 @@ async function ensureDERBucketExists() {
       if (error) {
         // Ignorer l'erreur 409 (bucket déjà existant)
         if (error.statusCode === '409' || error.message?.includes('already exists')) {
-          console.log('✅ Bucket DER existe déjà (conflit ignoré)');
         } else {
           console.error('❌ Erreur création bucket:', error);
         }
       } else {
-        console.log('✅ Bucket DER créé avec succès');
       }
     } else {
-      console.log('✅ Bucket DER existe déjà');
     }
   } catch (err) {
     console.error('❌ Erreur initialisation bucket:', err);
@@ -236,7 +232,6 @@ export function setupDERRoutes(app: Hono, verifyAuth: Function) {
       }
       await kv.set(`der_signature:client:${clientId}`, derSignature);
 
-      console.log('✅ DER signature tokens générés pour client:', clientId);
 
       return c.json({ 
         clientToken, 
@@ -358,7 +353,6 @@ export function setupDERRoutes(app: Hono, verifyAuth: Function) {
 
       // Si tout le monde a signé, valider automatiquement la tâche
       if (updatedDER.fullySigned) {
-        console.log('✅ DER complètement signé, validation automatique de la tâche');
         const clientTasks = await kv.getByPrefix(`task:${updatedDER.userId}:${updatedDER.clientId}:`);
         
         for (const task of clientTasks) {
@@ -371,12 +365,10 @@ export function setupDERRoutes(app: Hono, verifyAuth: Function) {
             };
             
             await kv.set(`task:${updatedDER.userId}:${updatedDER.clientId}:${task.id}`, updatedTask);
-            console.log('✅ Tâche DER validée automatiquement');
           }
         }
         
         // ✅ NOUVEAU : Enregistrer le DER dans les documents réglementaires du client
-        console.log('📋 Enregistrement du DER dans les documents réglementaires...');
         const client = await kv.get(`client:${updatedDER.userId}:${updatedDER.clientId}`);
         
         if (client) {
@@ -457,10 +449,7 @@ export function setupDERRoutes(app: Hono, verifyAuth: Function) {
           };
           
           await kv.set(`client:${updatedDER.userId}:${updatedDER.clientId}`, updatedClient);
-          console.log('✅ DER enregistré dans les documents réglementaires');
-          console.log('📅 Date de signature client:', updatedDER.clientSignedAt);
           if (updatedDER.spouseSigned) {
-            console.log('📅 Date de signature conjoint:', updatedDER.spouseSignedAt);
           }
         } else {
           console.warn('⚠️ Client non trouvé, impossible d\'enregistrer le DER dans les documents réglementaires');
@@ -516,7 +505,6 @@ export function setupDERRoutes(app: Hono, verifyAuth: Function) {
       await kv.del(`der_signature:${token}`);
       await kv.del(`der_signature:client:${derSignature.clientId}`);
       
-      console.log(`✅ DER supprimé pour le client ${derSignature.clientId}`);
       
       return c.json({ success: true });
     } catch (err) {
@@ -530,17 +518,14 @@ export function setupDERRoutes(app: Hono, verifyAuth: Function) {
     console.log(' GET /der-document/:token - Route appelée');
     try {
       const token = c.req.param('token');
-      console.log('🔑 Token reçu:', token);
       
       const derSignature = await kv.get(`der_signature:${token}`);
-      console.log('📦 DER trouvé:', !!derSignature);
       
       if (!derSignature) {
         console.error('❌ DER non trouvé pour token:', token);
         return c.json({ error: 'DER not found' }, 404);
       }
 
-      console.log('✅ Génération du HTML pour:', derSignature.clientName);
       const derHTML = generateDERDocumentHTML(derSignature);
       
       return c.html(derHTML);
@@ -627,12 +612,10 @@ export function setupDERRoutes(app: Hono, verifyAuth: Function) {
       const body = await c.req.json();
       const { clientName, clientEmail, spouseName, spouseEmail } = body;
 
-      console.log('🔐 Génération lien DER pour client:', clientId, 'userId:', userId);
 
       // Vérifier si un DER existe déjà pour ce client
       const existingDER = await kv.get(`der_signature:client:${clientId}`);
       if (existingDER) {
-        console.log('✅ DER existant trouvé, retour du lien existant');
         // Retourner le lien existant avec le bon format (query params)
         // IMPORTANT : Utiliser l'URL de production, pas l'URL de preview iframe
         const baseUrl = Deno.env.get('APP_URL') || 'https://jaw-karate-78155897.figma.site';
@@ -654,7 +637,6 @@ export function setupDERRoutes(app: Hono, verifyAuth: Function) {
         
         if (client && cgpProfile) {
           derContent = generateDERTextContent(client, cgpProfile);
-          console.log('✅ Contenu DER généré:', derContent.length, 'caractères');
         } else {
           console.warn('⚠️ Client ou profil CGP non trouvé, DER sans contenu');
         }
@@ -693,7 +675,6 @@ export function setupDERRoutes(app: Hono, verifyAuth: Function) {
       }
       await kv.set(`der_signature:client:${clientId}`, derSignature);
 
-      console.log('✅ DER signature link generated for client:', clientId);
 
       // Construire les URLs de signature avec le bon format (query params)
       // Format attendu par App.tsx : ?page=sign-der&token=xxx

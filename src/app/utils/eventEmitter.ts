@@ -110,7 +110,6 @@ class EventEmitter {
       globalCallbacks.forEach(callback => callback(event));
     }
 
-    console.log('📢 Event emitted:', event.type, event);
   }
 
   /**

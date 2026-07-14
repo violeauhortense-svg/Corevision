@@ -81,7 +81,6 @@ export function TodoView({ session, onNavigateToClient }: TodoViewProps) {
   const loadTasks = async () => {
     try {
       const allTasks = await getAllOpenTasks();
-      console.log('📋 Tâches ouvertes chargées:', allTasks);
       setTasks(allTasks);
     } catch (error) {
       console.error('❌ Erreur chargement tâches:', error);

@@ -113,7 +113,6 @@ export function PreAnalyseTab({
     };
     
     // 🔍 Log pour debug imposition et revenus
-    console.log('📊 PreAnalyse - Calculs détaillés:', {
       revenus: {
         traitementsSalaires: impositionData.traitementsSalairesPensions,
         revenusTNS: impositionData.revenusTNS,

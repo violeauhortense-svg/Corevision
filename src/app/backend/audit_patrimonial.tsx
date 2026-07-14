@@ -212,29 +212,23 @@ export interface AuditPatrimonial {
 // ============================================
 
 export async function collecterDonneesClient(clientId: string, clientDataFromFrontend?: any): Promise<DonneesClient | null> {
-  console.log(`📊 Collecte des données client: ${clientId}`);
   
   try {
     let client = clientDataFromFrontend;
     
     // Si pas de données fournies, essayer de les récupérer du KV store
     if (!client) {
-      console.log('🔍 Recherche du client dans le KV store...');
       const allClients = await kv.getByPrefix('client:');
-      console.log(`📋 ${allClients.length} clients trouvés dans le KV store`);
       
       client = allClients.find((c: any) => c.id === clientId);
       
       if (!client) {
         console.warn(`⚠️ Client non trouvé: ${clientId}`);
-        console.log('📋 IDs disponibles:', allClients.slice(0, 5).map((c: any) => c.id));
         return null;
       }
     } else {
-      console.log('✅ Données client reçues du frontend');
     }
     
-    console.log(`✅ Client trouvé:`, {
       id: client.id,
       nom: client.lastName || client.nom,
       prenom: client.firstName || client.prenom,
@@ -246,7 +240,6 @@ export async function collecterDonneesClient(clientId: string, clientDataFromFro
     });
     
     // 🔥 AJOUT DE LOGS DÉTAILLÉS POUR DÉBOGUER
-    console.log('📦 Structure complète du client:', {
       keys: Object.keys(client),
       // Patrimoine Perso
       patrimoineData: client.patrimoineData ? {
@@ -310,7 +303,6 @@ export async function collecterDonneesClient(clientId: string, clientDataFromFro
     const ageClient = calculateAge(client.birthDate);
     const ageConjoint = familyInfo.spouse?.birthDate ? calculateAge(familyInfo.spouse.birthDate) : 0;
     
-    console.log(`👨‍👩‍👧‍👦 FOYER: ${maritalStatus}, ${regimeMatrimonial}, ${nbChildren} enfant(s), Client ${ageClient}ans, Conjoint ${ageConjoint}ans`);
     
     // 💰 REVENUS (depuis revenus array + imposition)
     const revenusArray = client.revenus || [];
@@ -398,7 +390,6 @@ export async function collecterDonneesClient(clientId: string, clientDataFromFro
       })
       .reduce((sum: number, i: any) => sum + (i.loyerAnnuel || 0), 0);
     
-    console.log(`💰 Revenus fonciers calculés depuis les biens : ${revenus_fonciers.toLocaleString('fr-FR')}€`);
     
     const immobilier_pp = immobilier
       .filter((i: any) => {
@@ -439,7 +430,6 @@ export async function collecterDonneesClient(clientId: string, clientDataFromFro
     const passifs = patrimoineData.passifs || [];
     const totalPassifs = passifs.reduce((sum: number, p: any) => sum + (p.value || 0), 0);
     
-    console.log(`🏠 PATRIMOINE PERSO: Liquidités ${liquidites}€, AV ${assurance_vie}€, PER ${per}€, Portefeuille ${portefeuille_financier}€, RP ${immobilier_pp}€, RS ${immobilier_secondaire}€, Locatif ${immobilier_locatif}€, SCI ${sci}€, SCPI ${scpi}€, Passifs ${totalPassifs}€`);
     
     // 🏢 PATRIMOINE PROFESSIONNEL (depuis entreprises)
     const entreprises = client.entreprises || [];
@@ -449,7 +439,6 @@ export async function collecterDonneesClient(clientId: string, clientDataFromFro
     let statut_professionnel = 'salarie';
     
     if (entreprises.length > 0) {
-      console.log(`🏢 PATRIMOINE PRO: ${entreprises.length} entreprise(s) détectée(s)`);
       
       entreprises.forEach((ent: any) => {
         const valorisation = ent.valorisation || 0;
@@ -460,7 +449,6 @@ export async function collecterDonneesClient(clientId: string, clientDataFromFro
         valorisation_entreprises += valorisation;
         ca_total_entreprises += ent.chiffreAffaires || 0;
         
-        console.log(`  📊 ${ent.nom}: ${ent.formeJuridique}, ${ent.participation}%, Valorisation ${valorisation}€, CA ${ent.chiffreAffaires}€`);
       });
       
       // Déterminer le statut professionnel
@@ -473,7 +461,6 @@ export async function collecterDonneesClient(clientId: string, clientDataFromFro
         statut_professionnel = 'tns';
       }
       
-      console.log(`💼 STATUT PRO: ${statut_professionnel}, Titres société ${titres_societe}€, Valorisation totale ${valorisation_entreprises}€, CA total ${ca_total_entreprises}€`);
     }
     
     // Calculer le patrimoine total
@@ -484,14 +471,12 @@ export async function collecterDonneesClient(clientId: string, clientDataFromFro
     
     const patrimoineNet = patrimoineTotalActifs - totalPassifs;
     
-    console.log(`💰 PATRIMOINE TOTAL: ${patrimoineNet.toLocaleString('fr-FR')} € (Actifs: ${patrimoineTotalActifs.toLocaleString('fr-FR')} €, Passifs: ${totalPassifs.toLocaleString('fr-FR')} €)`);
     
     // 🎯 OBJECTIFS
     const objectifs = (client.objectifs || [])
       .filter((obj: any) => obj.included !== false)
       .map((obj: any) => obj.description || obj.title || obj.nom || '');
     
-    console.log(`🎯 OBJECTIFS: ${objectifs.length} objectif(s) - ${objectifs.slice(0, 3).join(', ')}${objectifs.length > 3 ? '...' : ''}`);
     
     // Extraire les données pertinentes dans le format attendu
     const donnees: DonneesClient = {
@@ -539,7 +524,6 @@ export async function collecterDonneesClient(clientId: string, clientDataFromFro
     
     const revenusTotaux = donnees.revenus_salaires + donnees.revenus_dividendes + donnees.revenus_fonciers + donnees.revenus_autres;
     
-    console.log(`✅ Données collectées pour ${client.firstName} ${client.lastName}:`, {
       patrimoine_total: patrimoineNet,
       revenus_total: revenusTotaux,
       objectifs_count: donnees.objectifs?.length || 0,
@@ -567,7 +551,6 @@ export async function collecterDonneesClient(clientId: string, clientDataFromFro
 // ============================================
 
 export async function analyserCivil(donnees: DonneesClient): Promise<AnalyseCivile> {
-  console.log(`⚖️ Analyse civile en cours...`);
   
   const analyse: AnalyseCivile = {
     regime_matrimonial_analyse: '',
@@ -632,7 +615,6 @@ export async function analyserCivil(donnees: DonneesClient): Promise<AnalyseCivi
   try {
     const reglesTransmission = await reglesFiscalesDB.getReglesParDomaine('transmission');
     if (reglesTransmission.length > 0) {
-      console.log(`📚 ${reglesTransmission.length} règles de transmission trouvées`);
       
       // Extraire les dispositifs les plus pertinents
       const reglesApplicables = reglesTransmission.filter((regle: any) => {
@@ -666,11 +648,9 @@ export async function analyserCivil(donnees: DonneesClient): Promise<AnalyseCivi
     
     // 📚 NOUVEAU : Rechercher dans les documents IA pour enrichir l'analyse
     try {
-      console.log(`📚 Recherche dans la base de connaissances (transmission)...`);
       const documentsTransmission = await indexIA.rechercherDocuments('transmission patrimoine succession donation', 2);
       
       if (documentsTransmission.length > 0) {
-        console.log(`📄 ${documentsTransmission.length} documents trouvés sur la transmission`);
         
         const sourcesDocs = documentsTransmission
           .map((doc: any) => doc.titre || doc.nom_fichier)
@@ -695,7 +675,6 @@ export async function analyserCivil(donnees: DonneesClient): Promise<AnalyseCivi
   
   analyse.score = Math.min(10, score);
   
-  console.log(`✅ Analyse civile terminée - Score: ${analyse.score}/10`);
   return analyse;
 }
 
@@ -704,7 +683,6 @@ export async function analyserCivil(donnees: DonneesClient): Promise<AnalyseCivi
 // ============================================
 
 export async function analyserFiscal(donnees: DonneesClient): Promise<AnalyseFiscale> {
-  console.log(`💰 Analyse fiscale en cours...`);
   
   const revenus_total = 
     (donnees.revenus_salaires || 0) +
@@ -726,7 +704,6 @@ export async function analyserFiscal(donnees: DonneesClient): Promise<AnalyseFis
   const ps_estimees = donnees.prelevements_sociaux || (revenus_total * 0.172); // Fallback 17,2% PS
   const ifi_estime = donnees.ifi || 0;
   
-  console.log(`💰 Fiscalité - IR: ${ir_estime.toLocaleString('fr-FR')}€ (depuis onglet Revenus), PS: ${ps_estimees.toLocaleString('fr-FR')}€, IFI: ${ifi_estime.toLocaleString('fr-FR')}€, TMI: ${tmi}%, Parts: ${donnees.nombre_parts || 1}`);
   
   // Estimation IFI (pour l'analyse seulement)
   const patrimoine_immobilier_net = 
@@ -795,7 +772,6 @@ export async function analyserFiscal(donnees: DonneesClient): Promise<AnalyseFis
   try {
     const reglesOptimisation = await reglesFiscalesDB.rechercherRegles('optimisation');
     if (reglesOptimisation.length > 0) {
-      console.log(`📚 ${reglesOptimisation.length} règles d'optimisation fiscale trouvées`);
       
       // Extraire les dispositifs les plus pertinents
       const reglesApplicables = reglesOptimisation.filter((regle: any) => {
@@ -843,7 +819,6 @@ export async function analyserFiscal(donnees: DonneesClient): Promise<AnalyseFis
   
   analyse.score = Math.min(10, score);
   
-  console.log(`✅ Analyse fiscale terminée - Score: ${analyse.score}/10`);
   return analyse;
 }
 
@@ -852,7 +827,6 @@ export async function analyserFiscal(donnees: DonneesClient): Promise<AnalyseFis
 // ============================================
 
 export async function analyserSocial(donnees: DonneesClient): Promise<AnalyseSociale> {
-  console.log(`🏥 Analyse sociale en cours...`);
   
   const statut = donnees.statut || 'salarie';
   let cotisations_estimees = 0;
@@ -919,7 +893,6 @@ export async function analyserSocial(donnees: DonneesClient): Promise<AnalyseSoc
   
   analyse.score = Math.min(10, score);
   
-  console.log(`✅ Analyse sociale terminée - Score: ${analyse.score}/10`);
   return analyse;
 }
 
@@ -928,7 +901,6 @@ export async function analyserSocial(donnees: DonneesClient): Promise<AnalyseSoc
 // ============================================
 
 export async function analyserPatrimoine(donnees: DonneesClient): Promise<AnalysePatrimonialeGlobale> {
-  console.log(`🏛️ Analyse patrimoniale globale en cours...`);
   
   // 🔥 CORRECTION : Utiliser le patrimoine NET (actifs - passifs)
   // Calculer d'abord le patrimoine BRUT (tous les actifs)
@@ -948,7 +920,6 @@ export async function analyserPatrimoine(donnees: DonneesClient): Promise<Analys
   const passifs_total = donnees.passifs || 0;
   const patrimoine_total = donnees.patrimoine_net || (patrimoine_brut - passifs_total);
   
-  console.log(`💰 Analyse patrimoine: Brut ${patrimoine_brut.toLocaleString('fr-FR')}€ - Passifs ${passifs_total.toLocaleString('fr-FR')}€ = Net ${patrimoine_total.toLocaleString('fr-FR')}€`);
   
   // 🔥 CORRECTION : Calculer les pourcentages sur le patrimoine BRUT pour la répartition
   // (car on veut voir la répartition des actifs, pas du net)
@@ -1017,7 +988,6 @@ export async function analyserPatrimoine(donnees: DonneesClient): Promise<Analys
     score: Math.max(0, score_diversification)
   };
   
-  console.log(`✅ Analyse patrimoniale terminée - Score: ${analyse.score}/10`);
   return analyse;
 }
 
@@ -1032,17 +1002,14 @@ export async function rechercherStrategies(
   analyse_sociale: AnalyseSociale,
   analyse_patrimoniale: AnalysePatrimonialeGlobale
 ): Promise<StrategiePatrimoniale[]> {
-  console.log(`🔍 Recherche de stratégies patrimoniales...`);
   
   const strategies: StrategiePatrimoniale[] = [];
   
   // 🔥 NOUVEAU : Récupérer tous les montages avec enrichissement IA
   const tousLesMontages = await montagesPatrimoniaux.getAllMontages();
-  console.log(`📚 ${tousLesMontages.length} montages patrimoniaux disponibles`);
   
   // 🤖 NOUVEAU : Appeler le moteur IA pour des recommandations personnalisées
   try {
-    console.log(`🤖 Appel du moteur IA patrimonial...`);
     
     // Préparer le contexte client pour l'IA
     const contexteClient = {
@@ -1069,11 +1036,9 @@ export async function rechercherStrategies(
       'audit_patrimonial'
     );
     
-    console.log(`✅ Moteur IA : ${recommandationsIA.recommandations?.length || 0} recommandations générées`);
     
     // 📚 NOUVEAU : Rechercher dans les documents pertinents
     if (recommandationsIA.recommandations && recommandationsIA.recommandations.length > 0) {
-      console.log(`📚 Recherche dans la base de connaissances...`);
       
       for (const reco of recommandationsIA.recommandations.slice(0, 3)) {
         try {
@@ -1081,7 +1046,6 @@ export async function rechercherStrategies(
           const documentsRelevants = await indexIA.rechercherDocuments(reco.titre || reco.strategie, 3);
           
           if (documentsRelevants.length > 0) {
-            console.log(`📄 ${documentsRelevants.length} documents trouvés pour "${reco.titre}"`);
             
             // Enrichir la recommandation avec les documents
             const sourcesDocuments = documentsRelevants
@@ -1185,7 +1149,6 @@ export async function rechercherStrategies(
   const strategiesTop = strategies.slice(0, 10);
   
   const nbStrategiesIA = strategies.filter(s => s.montage_id.startsWith('ia_')).length;
-  console.log(`✅ ${strategiesTop.length} stratégies identifiées (dont ${nbStrategiesIA} recommandations IA)`);
   return strategiesTop;
 }
 
@@ -1197,7 +1160,6 @@ export async function simulerStrategies(
   strategies: StrategiePatrimoniale[],
   donnees: DonneesClient
 ): Promise<StrategiePatrimoniale[]> {
-  console.log(`📊 Simulation des stratégies...`);
   
   const strategiesAvecSimulation = strategies.map(strategie => {
     // Simulation simplifiée (à affiner selon le montage)
@@ -1232,7 +1194,6 @@ export async function simulerStrategies(
     };
   });
   
-  console.log(`✅ Simulations terminées`);
   return strategiesAvecSimulation;
 }
 
@@ -1241,7 +1202,6 @@ export async function simulerStrategies(
 // ============================================
 
 export async function genererAuditComplet(clientId: string, commandeId?: string, clientDataFromFrontend?: any): Promise<AuditPatrimonial | null> {
-  console.log(`🎯 Génération audit patrimonial complet pour client ${clientId}`);
   
   try {
     // 1️⃣ Collecte des données
@@ -1318,7 +1278,6 @@ export async function genererAuditComplet(clientId: string, commandeId?: string,
     // Sauvegarder l'audit
     await kv.set(`audit_patrimonial:${audit.id}`, audit);
     
-    console.log(`✅ Audit patrimonial généré avec succès - Score global: ${audit.score_global}/10`);
     return audit;
     
   } catch (error) {
@@ -1333,40 +1292,26 @@ export async function genererAuditComplet(clientId: string, commandeId?: string,
 
 // 🔥 NOUVEAU : Génération rapport LIVE sans stockage
 export async function genererRapportLive(clientId: string, clientDataFromFrontend?: any): Promise<any | null> {
-  console.log(`📄 Génération rapport LIVE pour client ${clientId}`);
   
   try {
     // 1️⃣ Collecte des données fraîches
-    console.log('📊 ÉTAPE 1/6 : Collecte des données client...');
     const donnees = await collecterDonneesClient(clientId, clientDataFromFrontend);
     if (!donnees) {
       console.error('❌ [ÉTAPE 1/6] Impossible de collecter les données client');
       return null;
     }
-    console.log('✅ [ÉTAPE 1/6] Données client collectées');
     
     // 2️⃣ Analyses
-    console.log('📊 ÉTAPE 2/6 : Analyse civile...');
     const analyse_civile = await analyserCivil(donnees);
-    console.log('✅ [ÉTAPE 2/6] Analyse civile terminée');
     
-    console.log('📊 ÉTAPE 2/6 : Analyse fiscale...');
     const analyse_fiscale = await analyserFiscal(donnees);
-    console.log('✅ [ÉTAPE 2/6] Analyse fiscale terminée');
     
-    console.log('📊 ÉTAPE 2/6 : Analyse sociale...');
     const analyse_sociale = await analyserSocial(donnees);
-    console.log('✅ [ÉTAPE 2/6] Analyse sociale terminée');
     
-    console.log('📊 ÉTAPE 2/6 : Analyse patrimoniale...');
     const analyse_patrimoniale = await analyserPatrimoine(donnees);
-    console.log('✅ [ÉTAPE 2/6] Analyse patrimoniale terminée');
     
     // 3️⃣ Stratégies - DÉSACTIVÉES TEMPORAIREMENT (trop gourmand en ressources)
-    console.log('📊 ÉTAPE 3/6 : Recherche de stratégies DÉSACTIVÉE...');
-    console.log('⚡ MODE ULTRA-RAPIDE : Skip des appels lourds pour éviter les timeouts');
     const strategies: any[] = []; // Array vide - Réactiver rechercherStrategies() si nécessaire
-    console.log(`✅ [ÉTAPE 3/6] Mode rapide activé`);
     
     // 4️⃣ Score global
     const score_global = (
@@ -1375,10 +1320,8 @@ export async function genererRapportLive(clientId: string, clientDataFromFronten
       analyse_sociale.score +
       analyse_patrimoniale.score
     ) / 4;
-    console.log(`📊 Score global calculé : ${Math.round(score_global * 10) / 10}/10`);
     
     // 5️⃣ Génération du rapport structuré
-    console.log('📊 ÉTAPE 5/6 : Génération du rapport structuré...');
     const rapport = await genererRapportStructure(
       donnees,
       analyse_civile,
@@ -1388,12 +1331,8 @@ export async function genererRapportLive(clientId: string, clientDataFromFronten
       strategies,
       score_global
     );
-    console.log('✅ [ÉTAPE 5/6] Rapport structuré généré');
     
     // 6️⃣ 🔥 ANALYSE AVANCÉE 7 ÉTAPES IA - DÉSACTIVÉE
-    console.log('📊 ÉTAPE 6/6 : Analyse avancée 7 étapes IA DÉSACTIVÉE (ressources insuffisantes)...');
-    console.log('⚠️ L\'analyse avancée consomme trop de ressources pour les Edge Functions Supabase');
-    console.log('💡 Le rapport structuré classique reste disponible avec toutes les analyses A-B-C-D');
     
     // DÉSACTIVÉ TEMPORAIREMENT - Consomme trop de ressources (7 appels IA séquentiels)
     // Pour réactiver : décommenter le code ci-dessous et augmenter les limites Edge Function
@@ -1411,7 +1350,6 @@ export async function genererRapportLive(clientId: string, clientDataFromFronten
       );
       
       if (analyseAvancee) {
-        console.log('✅ [ÉTAPE 6/6] Analyse avancée 7 étapes complétée !');
         rapport.analyse_avancee = analyseAvancee;
       } else {
         console.warn('⚠️ [ÉTAPE 6/6] Analyse avancée non disponible, rapport classique retourné');
@@ -1425,7 +1363,6 @@ export async function genererRapportLive(clientId: string, clientDataFromFronten
     }
     */
     
-    console.log(`✅✅✅ Rapport LIVE généré avec succès - Score: ${Math.round(score_global * 10) / 10}/10`);
     return rapport;
     
   } catch (error) {

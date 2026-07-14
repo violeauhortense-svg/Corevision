@@ -28,7 +28,6 @@ const ensureBucketExists = async (supabase: any) => {
     if (createError) {
       // Ignorer l'erreur 409 (bucket déjà existant)
       if (createError.statusCode === '409' || createError.message?.includes('already exists')) {
-        console.log('✅ Bucket existe déjà (conflit ignoré)');
       } else {
         throw new Error(`Failed to create bucket: ${createError.message}`);
       }

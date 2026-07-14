@@ -51,7 +51,6 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
       await kv.set(`bilan_signature:${token}`, bilanSignature);
       await kv.set(`bilan_signature:client:${clientId}`, { token, clientId });
       
-      console.log(`✅ Bilan signature token généré pour le client ${clientId}${spouseName ? ' et conjoint ' + spouseName : ''}`);
       
       return c.json({ token, signatureUrl: `?page=sign-bilan&token=${token}` });
     } catch (err) {
@@ -102,7 +101,6 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
         bilanSignature.clientSigned = true;
         bilanSignature.clientSignedAt = new Date().toISOString();
         bilanSignature.clientSignatureData = signatureData;
-        console.log(`✅ Bilan signé par le client ${bilanSignature.clientName}`);
       } else if (signerType === 'spouse') {
         if (bilanSignature.spouseSigned) {
           return c.json({ error: 'Spouse already signed' }, 400);
@@ -111,7 +109,6 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
         bilanSignature.spouseSigned = true;
         bilanSignature.spouseSignedAt = new Date().toISOString();
         bilanSignature.spouseSignatureData = signatureData;
-        console.log(`✅ Bilan signé par le conjoint ${bilanSignature.spouseName}`);
       }
       
       // Si les deux ont signé (ou pas de conjoint), marquer comme complètement signé
@@ -120,14 +117,11 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
       
       if (isFullySigned) {
         bilanSignature.signedAt = new Date().toISOString();
-        console.log(`✅ Bilan complètement signé pour ${bilanSignature.clientName}`);
         
         // 🎯 VALIDATION AUTOMATIQUE DE LA TÂCHE
-        console.log('🎯 Recherche de la tâche "Compte rendu de RDV" pour validation...');
         
         // Récupérer toutes les tâches du client
         const clientTasks = await kv.getByPrefix(`task:${bilanSignature.userId}:${bilanSignature.clientId}:`);
-        console.log(`📦 ${clientTasks.length} tâches trouvées pour le client ${bilanSignature.clientId}`);
         
         // Chercher la tâche de compte rendu de RDV
         for (const taskEntry of clientTasks) {
@@ -138,7 +132,6 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
             task.title.toLowerCase().includes('bilan patrimonial') ||
             task.title.toLowerCase().includes('rdv')
           )) {
-            console.log('✅ Tâche trouvée:', task.title);
             
             // Ne valider QUE si pas déjà validée
             if (!task.completed) {
@@ -151,14 +144,11 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
               };
               
               await kv.set(`task:${bilanSignature.userId}:${bilanSignature.clientId}:${task.id}`, updatedTask);
-              console.log(`✅ Tâche "${task.title}" validée automatiquement`);
             } else {
-              console.log(`ℹ️ Tâche "${task.title}" déjà validée`);
             }
           }
         }
       } else {
-        console.log(`⏳ En attente de la signature ${hasSpouse && !bilanSignature.spouseSigned ? 'du conjoint' : 'du client'}`);
       }
       
       await kv.set(`bilan_signature:${token}`, bilanSignature);
@@ -172,7 +162,6 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
 
   // Send bilan signature email via Brevo (PROTECTED)
   app.post("/make-server-cac859af/bilan-signatures/send-email", async (c) => {
-    console.log('📧 POST /bilan-signatures/send-email - Route appelée');
     
     const { user, error } = await verifyAuthRequest(c.req);
     
@@ -183,7 +172,6 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
 
     try {
       const { token, clientEmail, clientName, spouseEmail, spouseName, senderName, senderEmail, customMessage } = await c.req.json();
-      console.log('📨 Paramètres reçus:', { token, clientEmail, clientName, spouseEmail, spouseName, senderName, senderEmail, hasCustomMessage: !!customMessage });
       
       if (!token || !clientEmail || !clientName) {
         console.error('❌ Paramètres manquants');
@@ -191,7 +179,6 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
       }
 
       const bilanSignature = await kv.get(`bilan_signature:${token}`);
-      console.log('📦 Bilan trouvé:', !!bilanSignature);
       
       if (!bilanSignature) {
         console.error('❌ Bilan non trouvé pour token:', token);
@@ -200,10 +187,8 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
 
       // Générer le lien de signature
       const signatureUrl = `https://jaw-karate-78155897.figma.site/?page=sign-bilan&token=${token}`;
-      console.log('🔗 Lien de signature:', signatureUrl);
 
       const emailService = getEmailService();
-      console.log('📧 Service email prêt');
 
       // Récupérer les objectifs depuis bilanData (SEULEMENT ceux inclus)
       const objectifs = (bilanSignature.bilanData?.objectifsData || []).filter((obj: any) => obj.inclus);
@@ -323,7 +308,6 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
         htmlContent: generateEmailHTML(clientName).replace(signatureUrl, clientSignatureUrl),
       };
 
-      console.log('📬 Envoi email client à:', clientEmail);
 
       await emailService.sendEmail({
         to: clientEmail,
@@ -332,13 +316,11 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
         from: clientEmailData.sender,
       });
 
-      console.log('✅ Email client envoyé');
       emailsSent.push({ email: clientEmail, type: 'client' });
 
       // Envoyer au conjoint si existe
       let spouseResult = null;
       if (spouseEmail && spouseName) {
-        console.log('👥 Envoi également au conjoint:', spouseEmail);
         
         const spouseSignatureUrl = `${signatureUrl}&signer=spouse`;
         
@@ -359,7 +341,6 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
           from: spouseEmailData.sender,
         });
 
-        console.log('✅ Email conjoint envoyé');
         emailsSent.push({ email: spouseEmail, type: 'spouse' });
       }
 
@@ -367,7 +348,6 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
       bilanSignature.emailSentAt = new Date().toISOString();
       await kv.set(`bilan_signature:${token}`, bilanSignature);
 
-      console.log(`✅ Email(s) de bilan envoyé(s) à ${emailsSent.map(e => e.email).join(' et ')}`);
 
       return c.json({
         success: true,
@@ -382,35 +362,27 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
 
   // Get all bilan signatures for user (PROTECTED)
   app.get("/make-server-cac859af/bilan-signatures/all", async (c) => {
-    console.log('📋 GET /bilan-signatures/all - Route appelée');
-    console.log('🔐 Authorization header:', c.req.header('Authorization'));
     
     const { user, error } = await verifyAuthRequest(c.req);
     
-    console.log('✅ User après verifyAuth:', user);
-    console.log('❌ Error après verifyAuth:', error);
     
     if (error || !user) {
       console.error('❌ Auth failed, returning 401');
       return c.json({ error: error || 'Unauthorized' }, 401);
     }
 
-    console.log('✅ Auth réussie, user ID:', user.id);
 
     try {
       const allBilans = await kv.getByPrefix('bilan_signature:');
-      console.log('📦 Tous les bilans récupérés:', allBilans?.length || 0);
       
       // Filtrer uniquement ceux de l'utilisateur (exclure les clés "client:")
       const userBilans = allBilans.filter((b: any) => 
         b.value?.userId === user.id && b.value?.token
       );
       
-      console.log('👤 Bilans de l\'utilisateur:', userBilans?.length || 0);
       
       const bilanSignatures = userBilans.map((b: any) => b.value);
       
-      console.log('✅ Retour de', bilanSignatures.length, 'bilans');
       
       return c.json({ bilanSignatures });
     } catch (err) {
@@ -421,29 +393,23 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
 
   // Get bilan status by client ID (PUBLIC - no auth)
   app.get("/make-server-cac859af/bilan-signature/status/:clientId", async (c) => {
-    console.log('📋 GET /bilan-signature/status/:clientId - Route appelée');
     try {
       const clientId = c.req.param('clientId');
-      console.log('🔍 Recherche bilan pour client:', clientId);
       
       // Chercher le mapping client -> token
       const clientMapping = await kv.get(`bilan_signature:client:${clientId}`);
-      console.log('📦 Mapping trouvé:', !!clientMapping);
       
       if (!clientMapping || !clientMapping.token) {
-        console.log('❌ Aucun bilan trouvé pour ce client');
         return c.json({ bilanSignature: null });
       }
       
       // Récupérer le bilan complet
       const bilanSignature = await kv.get(`bilan_signature:${clientMapping.token}`);
-      console.log('✅ Bilan trouvé:', !!bilanSignature);
       
       if (!bilanSignature) {
         return c.json({ bilanSignature: null });
       }
       
-      console.log('✅ Statut bilan:', {
         emailSentAt: !!bilanSignature.emailSentAt,
         signedAt: !!bilanSignature.signedAt,
       });
@@ -480,7 +446,6 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
       await kv.del(`bilan_signature:${token}`);
       await kv.del(`bilan_signature:client:${bilanSignature.clientId}`);
       
-      console.log(`✅ Bilan supprimé pour le client ${bilanSignature.clientId}`);
       
       return c.json({ success: true });
     } catch (err) {
@@ -491,20 +456,16 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
 
   // Get bilan document as HTML (PUBLIC - no auth required)
   app.get("/make-server-cac859af/bilan-document/:token", async (c) => {
-    console.log('📄 GET /bilan-document/:token - Route appelée');
     try {
       const token = c.req.param('token');
-      console.log('🔑 Token reçu:', token);
       
       const bilanSignature = await kv.get(`bilan_signature:${token}`);
-      console.log('📦 Bilan trouvé:', !!bilanSignature);
       
       if (!bilanSignature) {
         console.error('❌ Bilan non trouvé pour token:', token);
         return c.json({ error: 'Bilan not found' }, 404);
       }
 
-      console.log('✅ Génération du HTML pour:', bilanSignature.clientName);
       // Générer le HTML du bilan complet avec signature
       const bilanHTML = generateBilanDocumentHTML(bilanSignature);
       

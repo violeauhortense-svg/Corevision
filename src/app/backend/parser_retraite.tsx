@@ -39,7 +39,6 @@ export async function parserDocumentsRetraite(): Promise<{
   const errors: string[] = [];
 
   try {
-    console.log('📄 Démarrage parsing documents retraite...');
 
     // Récupérer les documents
     const documents: DocumentRetraite[] = await kv.get('documents_retraite') || [];
@@ -48,7 +47,6 @@ export async function parserDocumentsRetraite(): Promise<{
       throw new Error('Aucun document retraite à parser');
     }
 
-    console.log(`📚 ${documents.length} documents à parser`);
 
     // Parser chaque document
     const sections: SectionRetraite[] = documents.map((doc, index) => ({
@@ -65,7 +63,6 @@ export async function parserDocumentsRetraite(): Promise<{
     // Stocker les sections
     await kv.set('sections_retraite', sections);
 
-    console.log(`✅ ${sections.length} sections parsées et stockées`);
 
     const duration = `${((Date.now() - startTime) / 1000).toFixed(1)}s`;
 

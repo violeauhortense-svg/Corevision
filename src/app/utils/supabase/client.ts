@@ -17,13 +17,11 @@ function loadSession(): any | null {
 function saveSession(session: any) {
   // Sessions now saved in PostgreSQL via /auth/signin
   // No need to save in localStorage
-  console.log('🔐 [saveSession] Session stored in DB via HTTP-only cookie');
 }
 
 function clearSession() {
   // Sessions now deleted from PostgreSQL via /auth/signout
   // No need to clear localStorage
-  console.log('🔐 [clearSession] Session deleted from DB');
 }
 
 function getAuthToken(): string | null {
@@ -32,8 +30,6 @@ function getAuthToken(): string | null {
   // SessionId is sent via HTTP-only cookie automatically
   // No need for Authorization header anymore!
 
-  console.log('🔐 [getAuthToken] Sessions now use HTTP-only cookies (not localStorage)');
-  console.log('🔐 [getAuthToken] sessionId is auto-sent by browser - no token needed');
   return null;
 }
 

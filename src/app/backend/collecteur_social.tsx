@@ -35,7 +35,6 @@ export async function collecterDocumentsURSSAF(): Promise<{
   stats: CollecteStats;
   errors: string[];
 }> {
-  console.log('🔵 COLLECTE URSSAF : Démarrage...');
   
   const documents: DocumentSocial[] = [];
   const errors: string[] = [];
@@ -232,7 +231,6 @@ export async function collecterDocumentsURSSAF(): Promise<{
       documents.push(docWithId);
     }
 
-    console.log(`✅ ${documents.length} documents URSSAF collectés`);
 
     // Sauvegarder les stats de collecte
     const stats: CollecteStats = {

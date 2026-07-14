@@ -456,7 +456,6 @@ function extraireDonneesClient(clientData: any): any {
 }
 
 export function genererRecommandations(clientData: any): RapportRecommandations {
-  console.log('🎯 Génération recommandations...');
   
   const donnees = extraireDonneesClient(clientData);
   const recommandations: Recommandation[] = [];
@@ -469,9 +468,7 @@ export function genererRecommandations(clientData: any): RapportRecommandations 
       recommandation.scorePertinence = applicabilite.scorePertinence;
       recommandations.push(recommandation);
       
-      console.log(`✅ Recommandation: ${strategie.nom} (score: ${applicabilite.scorePertinence}/10)`);
     } else {
-      console.log(`❌ Stratégie ${strategie.nom} non applicable (score: ${applicabilite.scorePertinence}/10)`);
     }
   }
   
@@ -493,7 +490,6 @@ export function genererRecommandations(clientData: any): RapportRecommandations 
     0
   );
   
-  console.log(`✅ ${recommandations.length} recommandation(s) générée(s), gain potentiel: ${gainFiscalPotentiel.toLocaleString('fr-FR')} €/an`);
   
   return {
     clientId: clientData.id,

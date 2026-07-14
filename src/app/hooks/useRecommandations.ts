@@ -43,7 +43,6 @@ export function useRecommandations(clientId: string): UseRecommandationsResult {
     setError(null);
 
     try {
-      console.log(`🎯 [useRecommandations] Génération pour client ${clientId}`);
       
       const result = await recommandationsService.genererRecommandations(clientId, clientData);
       
@@ -52,7 +51,6 @@ export function useRecommandations(clientId: string): UseRecommandationsResult {
       }
 
       setRapport(result.rapport || null);
-      console.log('✅ [useRecommandations] Rapport généré:', result.rapport);
     } catch (err: any) {
       console.error('❌ [useRecommandations] Erreur:', err);
       setError(err);
@@ -74,14 +72,12 @@ export function useRecommandations(clientId: string): UseRecommandationsResult {
     setError(null);
 
     try {
-      console.log(`📥 [useRecommandations] Chargement pour client ${clientId}`);
       
       const result = await recommandationsService.getRecommandations(clientId);
       
       if (!result.success) {
         // Si pas de rapport existant, ce n'est pas une erreur
         if (result.error?.includes('Aucun rapport')) {
-          console.log('ℹ️ [useRecommandations] Aucun rapport existant');
           setRapport(null);
           return;
         }
@@ -90,7 +86,6 @@ export function useRecommandations(clientId: string): UseRecommandationsResult {
       }
 
       setRapport(result.rapport || null);
-      console.log('✅ [useRecommandations] Rapport chargé:', result.rapport);
     } catch (err: any) {
       console.error('❌ [useRecommandations] Erreur:', err);
       setError(err);

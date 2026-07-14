@@ -19,7 +19,6 @@ export const agendaAPI = {
       }
       
       const events = JSON.parse(stored);
-      console.log(`✅ ${events.length} événements chargés depuis l'agenda`);
       return events;
     } catch (error) {
       console.error('❌ Erreur chargement événements agenda:', error);
@@ -73,7 +72,6 @@ export const agendaAPI = {
       events.push(newEvent);
       localStorage.setItem(key, JSON.stringify(events));
       
-      console.log('✅ Événement agenda créé:', newEvent.title);
       return newEvent;
     } catch (error) {
       console.error('❌ Erreur création événement agenda:', error);
@@ -105,7 +103,6 @@ export const agendaAPI = {
       
       localStorage.setItem(key, JSON.stringify(events));
       
-      console.log('✅ Événement agenda mis à jour:', events[eventIndex].title);
       return events[eventIndex];
     } catch (error) {
       console.error('❌ Erreur mise à jour événement agenda:', error);
@@ -131,7 +128,6 @@ export const agendaAPI = {
       
       localStorage.setItem(key, JSON.stringify(filteredEvents));
       
-      console.log('✅ Événement agenda supprimé');
       return true;
     } catch (error) {
       console.error('❌ Erreur suppression événement agenda:', error);

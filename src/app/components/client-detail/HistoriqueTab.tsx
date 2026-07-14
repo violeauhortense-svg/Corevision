@@ -26,7 +26,6 @@ export function HistoriqueTab({ clientId }: HistoriqueTabProps) {
       try {
         const tasks = await taskSyncService.getCompletedTasks(clientId);
         setCompletedTasks(tasks);
-        console.log('✅ Tâches complétées chargées:', tasks.length);
       } catch (error) {
         console.error('❌ Erreur chargement tâches complétées:', error);
       }

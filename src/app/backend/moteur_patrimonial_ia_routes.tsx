@@ -3,7 +3,6 @@ import * as moteurPatrimonialIA from "./moteur_patrimonial_ia.tsx";
 
 export function setupMoteurPatrimonialIARoutes(app: Hono) {
   app.post("/make-server-cac859af/moteur-patrimonial-ia/analyser", async (c) => {
-    console.log('🤖 Analyse patrimoniale IA...');
     try {
       const body = await c.req.json();
       const { profil, sauvegarder, clientId } = body;
@@ -20,7 +19,6 @@ export function setupMoteurPatrimonialIARoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/moteur-patrimonial-ia/analyses/:clientId", async (c) => {
-    console.log('📚 Récupération des analyses d\'un client...');
     try {
       const clientId = c.req.param('clientId');
       const analyses = await moteurPatrimonialIA.getAnalysesClient(clientId);
@@ -32,7 +30,6 @@ export function setupMoteurPatrimonialIARoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/moteur-patrimonial-ia/stats", async (c) => {
-    console.log('📊 Récupération des stats du moteur...');
     try {
       const stats = await moteurPatrimonialIA.getMoteurStats();
       return c.json({ success: true, stats });

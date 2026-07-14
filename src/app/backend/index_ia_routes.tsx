@@ -3,7 +3,6 @@ import * as indexIA from "./index_ia.tsx";
 
 export function setupIndexIARoutes(app: Hono) {
   app.get("/make-server-cac859af/index-ia/test-config", async (c) => {
-    console.log('🧪 Test de configuration OpenAI...');
     try {
       const result = await indexIA.testerConfigurationOpenAI();
       return c.json(result);
@@ -14,7 +13,6 @@ export function setupIndexIARoutes(app: Hono) {
   });
 
   app.post("/make-server-cac859af/index-ia/run", async (c) => {
-    console.log('🚀 Lancement de l\'indexation de toutes les règles...');
     try {
       const result = await indexIA.indexerToutesLesRegles();
       return c.json(result);
@@ -25,7 +23,6 @@ export function setupIndexIARoutes(app: Hono) {
   });
 
   app.post("/make-server-cac859af/index-ia/search", async (c) => {
-    console.log('🔍 Recherche sémantique...');
     try {
       const body = await c.req.json();
       const { query, limit, seuil } = body;
@@ -39,7 +36,6 @@ export function setupIndexIARoutes(app: Hono) {
   });
 
   app.post("/make-server-cac859af/index-ia/assistant", async (c) => {
-    console.log('🤖 Recherche pour assistant IA...');
     try {
       const body = await c.req.json();
       const { question, contexte, limit } = body;
@@ -53,7 +49,6 @@ export function setupIndexIARoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/index-ia/similaires/:regleId", async (c) => {
-    console.log('🔗 Recherche de règles similaires...');
     try {
       const regleId = c.req.param('regleId');
       const limit = parseInt(c.req.query('limit') || '5');
@@ -66,7 +61,6 @@ export function setupIndexIARoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/index-ia/stats", async (c) => {
-    console.log('📊 Récupération des stats d\'indexation...');
     try {
       const stats = await indexIA.getIndexationStats();
       return c.json({ success: true, stats });
@@ -77,7 +71,6 @@ export function setupIndexIARoutes(app: Hono) {
   });
 
   app.delete("/make-server-cac859af/index-ia/vecteurs", async (c) => {
-    console.log('🗑️  Suppression de tous les vecteurs...');
     try {
       const result = await indexIA.deleteAllVecteurs();
       return c.json({ success: true, deleted: result.deleted });

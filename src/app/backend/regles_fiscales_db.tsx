@@ -45,7 +45,6 @@ export async function creerRegleFiscale(regle: Omit<RegleFiscale, 'id' | 'date_m
   };
 
   await kv.set(`regle_fiscale:${nouvelleRegle.id}`, nouvelleRegle);
-  console.log(`✅ Règle fiscale créée: ${nouvelleRegle.id}`);
 
   return nouvelleRegle;
 }
@@ -121,7 +120,6 @@ export async function modifierRegleFiscale(
   };
 
   await kv.set(`regle_fiscale:${id}`, regleModifiee);
-  console.log(`✅ Règle fiscale modifiée: ${id}`);
 
   return regleModifiee;
 }
@@ -133,7 +131,6 @@ export async function modifierRegleFiscale(
 export async function supprimerRegleFiscale(id: string): Promise<boolean> {
   try {
     await kv.del(`regle_fiscale:${id}`);
-    console.log(`✅ Règle fiscale supprimée: ${id}`);
     return true;
   } catch (error) {
     console.error(`❌ Erreur suppression règle ${id}:`, error);
@@ -186,12 +183,10 @@ export async function getStatistiquesRegles() {
 // ============================================
 
 export async function initialiserReglesFiscales(): Promise<{ success: boolean; count: number }> {
-  console.log('🚀 Initialisation de la base de règles fiscales...');
   
   const reglesExistantes = await getToutesRegles();
   
   if (reglesExistantes.length > 0) {
-    console.log(`⚠️ ${reglesExistantes.length} règles déjà existantes. Suppression pour réinitialisation...`);
     for (const regle of reglesExistantes) {
       await supprimerRegleFiscale(regle.id);
     }
@@ -1339,7 +1334,6 @@ export async function initialiserReglesFiscales(): Promise<{ success: boolean; c
     count++;
   }
 
-  console.log(`✅ ${count} règles fiscales initialisées avec succès`);
 
   return { success: true, count };
 }

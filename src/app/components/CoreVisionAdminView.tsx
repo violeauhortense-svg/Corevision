@@ -21,10 +21,6 @@ export function CoreVisionAdminView() {
   } = useCoreVision();
 
   // 🐛 DEBUG : Afficher ce qui est chargé
-  console.log('🔍 CoreVisionAdminView - orders:', orders);
-  console.log('🔍 CoreVisionAdminView - loading:', loading);
-  console.log('🔍 CoreVisionAdminView - error:', error);
-  console.log('🔍 CoreVisionAdminView - fromCache:', fromCache);
 
   // Afficher les erreurs
   if (error && orders.length === 0) {

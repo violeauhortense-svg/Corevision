@@ -8,7 +8,6 @@
  * Supprime toutes les données clients et conserve uniquement le profil utilisateur
  */
 export function clearAllTestData(): void {
-  console.log('🗑️ NETTOYAGE COMPLET DES DONNÉES DE TEST...');
   
   try {
     const keysToRemove: string[] = [];
@@ -64,14 +63,8 @@ export function clearAllTestData(): void {
     // Supprimer toutes les clés identifiées
     keysToRemove.forEach(key => {
       localStorage.removeItem(key);
-      console.log(`✅ Supprimé: ${key}`);
     });
     
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log(`✅ ${keysToRemove.length} clés de données de test supprimées`);
-    console.log(`🔑 ${keysToKeep.length} clés essentielles conservées`);
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🎯 CRM prêt pour de vraies données clients !');
     
   } catch (error) {
     console.error('❌ Erreur lors du nettoyage:', error);
@@ -83,7 +76,6 @@ export function clearAllTestData(): void {
  * Nettoyer toutes les données de l'application
  */
 export function clearAllApplicationData(userId?: string): void {
-  console.log('🧹 Nettoyage de toutes les données...');
   
   try {
     // Si aucun userId n'est fourni, nettoyer toutes les clés liées à l'app
@@ -108,10 +100,8 @@ export function clearAllApplicationData(userId?: string): void {
       
       keysToRemove.forEach(key => {
         localStorage.removeItem(key);
-        console.log(`✅ Supprimé: ${key}`);
       });
       
-      console.log(`✅ ${keysToRemove.length} clés supprimées`);
     } else {
       // Nettoyer uniquement pour l'utilisateur spécifié
       const keys = [
@@ -126,13 +116,10 @@ export function clearAllApplicationData(userId?: string): void {
       
       keys.forEach(key => {
         localStorage.removeItem(key);
-        console.log(`✅ Supprimé: ${key}`);
       });
       
-      console.log(`✅ Toutes les données de l'utilisateur ${userId} ont été supprimées`);
     }
     
-    console.log('✅ Nettoyage terminé avec succès !');
     return;
   } catch (error) {
     console.error('❌ Erreur lors du nettoyage:', error);
@@ -145,7 +132,6 @@ export function clearAllApplicationData(userId?: string): void {
  */
 export function clearClients(userId: string): void {
   localStorage.removeItem(`clients_${userId}`);
-  console.log('✅ Clients supprimés');
 }
 
 /**
@@ -153,14 +139,12 @@ export function clearClients(userId: string): void {
  */
 export function clearTasks(userId: string): void {
   localStorage.removeItem(`client_tasks_${userId}`);
-  console.log('✅ Tâches supprimées');
 }
 
 /**
  * Obtenir un résumé des données stockées
  */
 export function getDataSummary(userId?: string): void {
-  console.log('📊 Résumé des données stockées:');
   console.log('================================');
   
   if (userId) {
@@ -172,7 +156,6 @@ export function getDataSummary(userId?: string): void {
     const tasks = localStorage.getItem(tasksKey);
     
     console.log(`Clients (${clientsKey}):`, clients ? JSON.parse(clients).length : 0);
-    console.log(`Tâches (${tasksKey}):`, tasks ? JSON.parse(tasks).length : 0);
   } else {
     // Résumé complet
     const allKeys: string[] = [];

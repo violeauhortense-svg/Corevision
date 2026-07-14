@@ -101,7 +101,6 @@ export function AccountantRequestModal({
         emailContent: emailContent,
       });
 
-      console.log('✅ Demande comptable créée et email envoyé:', result);
 
       // ===== METTRE À JOUR LES TÂCHES =====
       try {
@@ -148,7 +147,6 @@ export function AccountantRequestModal({
           description: `📋 ${mergedDocs.length} document(s) demandé(s) - 0 reçu(s)`,
         });
 
-        console.log('✅ Tâche "Collecter documents..." mise à jour');
       } catch (error) {
         console.warn('⚠️ Erreur lors de la mise à jour des tâches:', error);
       }
@@ -162,7 +160,6 @@ export function AccountantRequestModal({
           `Demande documents comptables - ${selectedCompany.name || selectedCompany.raison_sociale}`,
           emailContent
         );
-        console.log('✅ Historique d\'email enregistré');
       } catch (error) {
         console.warn('⚠️ Erreur lors de l\'enregistrement de l\'historique:', error);
       }

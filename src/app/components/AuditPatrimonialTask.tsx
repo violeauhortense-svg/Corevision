@@ -32,8 +32,6 @@ export function AuditPatrimonialTask({ task, clientId, onToggle, onUpdate }: Aud
         const { data: { session } } = await supabase.auth.getSession();
         const userId = session?.user?.id || 'default';
         const clientDetailKey = `client_detail_${userId}_${clientId}`;
-        console.log('🔑 Clé localStorage utilisée:', clientDetailKey);
-        console.log('👤 User ID:', userId);
         const storedData = localStorage.getItem(clientDetailKey);
 
         if (storedData) {
@@ -48,13 +46,11 @@ export function AuditPatrimonialTask({ task, clientId, onToggle, onUpdate }: Aud
         );
         
         if (clientOrder) {
-          console.log('✅ Commande d\'audit trouvée pour le client:', clientId);
           setOrderValidated(true);
           
           // Déterminer le statut de l'audit en vérifiant les commandes CoreVision
           checkAuditProgress();
         } else {
-          console.log('⚠️ Aucune commande d\'audit validée pour ce client');
           setOrderValidated(false);
           setAuditStatus('none');
         }
@@ -68,7 +64,6 @@ export function AuditPatrimonialTask({ task, clientId, onToggle, onUpdate }: Aud
     // Écouter l'événement de validation de commande
     const handleOrderValidated = (event: CustomEvent) => {
       if (event.detail && event.detail.clientId === clientId) {
-        console.log('🎉 Événement orderValidated reçu pour le client:', clientId);
         setOrderValidated(true);
         checkAuditProgress();
       }

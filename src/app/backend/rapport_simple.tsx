@@ -8,7 +8,6 @@
  */
 
 export async function genererRapportSimple(clientId: string, clientData: any): Promise<any> {
-  console.log(`📄 Génération rapport SIMPLE pour client ${clientId}`);
   
   try {
     // Extraire les données de base
@@ -187,7 +186,6 @@ export async function genererRapportSimple(clientId: string, clientData: any): P
       }
     };
     
-    console.log(`✅ Rapport SIMPLE généré pour ${fullName}`);
     return rapport;
     
   } catch (error) {

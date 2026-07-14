@@ -55,25 +55,20 @@ async function verifyJWT(token: string): Promise<Record<string, unknown> | null>
 // Verify auth from Cookie (new: DB sessions)
 export async function verifyAuthFromCookie(cookieHeader: string | undefined) {
   if (!cookieHeader) {
-    console.log("🔐 No cookie header provided");
     return { user: null, error: "No session cookie" };
   }
 
   const sessionId = sessions.getSessionIdFromCookie(cookieHeader);
   if (!sessionId) {
-    console.log("🔐 No sessionId found in cookies");
     return { user: null, error: "No session cookie" };
   }
 
-  console.log(`🔐 [verifyAuthFromCookie] Validating sessionId: ${sessionId}`);
 
   const session = await sessions.getSession(sessionId);
   if (!session) {
-    console.log("🔐 [verifyAuthFromCookie] Session not found or expired");
     return { user: null, error: "Session not found or expired" };
   }
 
-  console.log(`✅ [verifyAuthFromCookie] Session valid for user: ${session.user_id}`);
   return {
     user: { id: session.user_id, email: session.email },
     error: null,
@@ -150,7 +145,6 @@ export async function signInUser(email: string, password: string) {
 
   // ✨ Create session in PostgreSQL (replaces localStorage)
   const sessionId = await sessions.createSession(user.id, user.email, token);
-  console.log(`✅ Session created in DB: ${sessionId}`);
 
   return {
     access_token: token,
@@ -178,7 +172,6 @@ export async function verifyAuthRequest(req: any) {
   if (cookieHeader) {
     const result = await verifyAuthFromCookie(cookieHeader);
     if (result.user) {
-      console.log(`✅ [verifyAuthRequest] Authenticated via DB session`);
       return result;
     }
   }
@@ -186,10 +179,8 @@ export async function verifyAuthRequest(req: any) {
   // Fallback to Authorization header (JWT - legacy)
   const authHeader = req.header("Authorization");
   if (authHeader) {
-    console.log(`🔐 [verifyAuthRequest] Trying Authorization header (JWT fallback)`);
     return await verifyAuth(authHeader);
   }
 
-  console.log(`❌ [verifyAuthRequest] No auth method found (no cookie, no Authorization header)`);
   return { user: null, error: "Unauthorized" };
 }

@@ -4,7 +4,6 @@
 const OLLAMA_URL = Deno.env.get("OLLAMA_URL") ?? "http://localhost:11434";
 const OLLAMA_MODEL = Deno.env.get("OLLAMA_MODEL") ?? "mistral:7b-instruct";
 
-console.log(`🤖 GPT Client initialisé → Ollama local (${OLLAMA_URL}, modèle: ${OLLAMA_MODEL})`);
 
 export interface GPTMessage {
   role: "system" | "user" | "assistant";
@@ -41,7 +40,6 @@ export async function appelGPT4o(
   }
 
   try {
-    console.log(`🤖 Appel Ollama local - Modèle: ${OLLAMA_MODEL}, temp: ${temperature}`);
 
     const response = await fetch(`${OLLAMA_URL}/api/chat`, {
       method: "POST",
@@ -58,7 +56,6 @@ export async function appelGPT4o(
     const data = await response.json();
     const content: string = data.message?.content ?? "";
 
-    console.log(`✅ Ollama OK - ${content.length} caractères générés`);
     return content;
   } catch (error) {
     console.error("❌ Erreur Ollama:", error instanceof Error ? error.message : String(error));

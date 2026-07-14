@@ -385,12 +385,10 @@ export async function updateTaskWithDERStatus(
     
     // Essayer chaque clé jusqu'à en trouver une qui fonctionne
     for (const key of possibleKeys) {
-      console.log('?? Recherche tâches dans:', key);
       const data = localStorage.getItem(key);
       if (data) {
         storedTasks = data;
         tasksKey = key;
-        console.log('? Tâches trouvées dans:', key);
         break;
       }
     }
@@ -402,7 +400,6 @@ export async function updateTaskWithDERStatus(
       console.error('   ClientId:', clientId);
       
       // ?? Au lieu de retourner false, émettre un événement pour forcer le rechargement
-      console.log('?? Tentative de rechargement des tâches...');
       return false;
     }
     
@@ -416,7 +413,6 @@ export async function updateTaskWithDERStatus(
     }
     
     const task = tasks[taskIndex];
-    console.log('?? Tâche trouvée:', task.title || task.titre);
     
     // Mettre à jour selon le statut
     switch (status) {
@@ -491,7 +487,6 @@ export async function updateTaskWithDERStatus(
     tasks[taskIndex] = task;
     localStorage.setItem(tasksKey, JSON.stringify(tasks));
     
-    console.log('? Tâche mise à jour avec statut DER:', status);
     return true;
   } catch (error) {
     console.error('? Erreur mise à jour tâche DER:', error);
@@ -508,7 +503,6 @@ export async function updateDERTaskByClientId(
   hasSpouse: boolean
 ): Promise<boolean> {
   try {
-    console.log(`?? Recherche de la tâche DER pour client: ${clientId}, signataire: ${signerType}`);
     
     // Récupérer toutes les tâches depuis localStorage
     const userId = await getUserId();
@@ -516,7 +510,6 @@ export async function updateDERTaskByClientId(
     const storedTasks = localStorage.getItem(tasksKey);
     
     if (!storedTasks) {
-      console.log('?? Aucune tâche trouvée pour ce client (normal si client nouveau):', tasksKey);
       return false;
     }
     
@@ -534,7 +527,6 @@ export async function updateDERTaskByClientId(
     }
     
     const task = tasks[taskIndex];
-    console.log(`? Tâche DER trouvée:`, task.titre);
     
     // Initialiser derStatus si inexistant
     if (!task.derStatus) {
@@ -602,7 +594,6 @@ export async function updateDERTaskByClientId(
     tasks[taskIndex] = task;
     localStorage.setItem(tasksKey, JSON.stringify(tasks));
     
-    console.log(`? Tâche DER mise à jour pour ${signerType}:`, task);
     return true;
   } catch (error) {
     console.error('? Erreur mise à jour tâche DER par clientId:', error);

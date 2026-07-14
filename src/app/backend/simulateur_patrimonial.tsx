@@ -184,7 +184,6 @@ function calculerFraisGestion(capital: number, params: ParametresSimulation): nu
 export async function simulerMontage(
   params: ParametresSimulation
 ): Promise<ResultatSimulation> {
-  console.log(`📊 Simulation du montage ${params.montage_id}...`);
   
   try {
     // Récupérer le montage
@@ -294,7 +293,6 @@ export async function simulerMontage(
       economie_fiscale_vs_bareme = fiscalite_bareme - total_fiscalite;
     }
     
-    console.log(`✅ Simulation terminée - Capital final: ${capital_final.toLocaleString('fr-FR')}€`);
     
     return {
       montage,
@@ -324,7 +322,6 @@ export async function simulerMontage(
 export async function comparerScenarios(
   scenarios_params: ParametresSimulation[]
 ): Promise<ComparaisonScenarios> {
-  console.log(`📊 Comparaison de ${scenarios_params.length} scénarios...`);
   
   try {
     // Simuler tous les scénarios
@@ -352,7 +349,6 @@ export async function comparerScenarios(
       total_fiscalite: s.total_fiscalite
     }));
     
-    console.log(`✅ Comparaison terminée - Meilleur: ${meilleur_scenario.montage.nom_montage}`);
     
     return {
       scenarios,
@@ -404,7 +400,6 @@ export async function sauvegarderSimulation(
       simulation_id: simulationId
     });
     
-    console.log(`✅ Simulation sauvegardée: ${simulationId}`);
     
     return {
       success: true,

@@ -20,14 +20,11 @@ async function initializeDb(): Promise<void> {
       throw new Error("DATABASE_URL not configured");
     }
 
-    console.log("🔄 Initializing PostgreSQL connection pool...");
-    console.log(`📍 Database host: ${DATABASE_URL.split('@')[1]?.split(':')[0] || 'unknown'}`);
 
     const startTime = Date.now();
 
     // Just create pool (don't connect yet - lazy init)
     _pool = new Pool(DATABASE_URL, 10, true);
-    console.log("✅ Pool created");
 
     // Try to create table asynchronously (don't block init)
     (async () => {
@@ -49,7 +46,6 @@ async function initializeDb(): Promise<void> {
           CREATE INDEX IF NOT EXISTS idx_key_prefix ON kv_store (key);
         `);
         conn.release();
-        console.log("✅ Table created/verified");
       } catch (err) {
         console.error("⚠️ Could not create table:", (err as Error).message);
       }
@@ -57,7 +53,6 @@ async function initializeDb(): Promise<void> {
 
     _dbReady = true;
     const duration = Date.now() - startTime;
-    console.log(`✅ PostgreSQL pool ready (${duration}ms)`);
   } catch (err) {
     console.error("❌ CRITICAL: PostgreSQL init failed:", err);
     console.error("Error message:", (err as Error).message);
@@ -71,7 +66,6 @@ initializeDb();
 // Log status after 5s
 setTimeout(() => {
   if (_dbReady) {
-    console.log("✅ PostgreSQL is ready for requests");
   } else {
     console.error("⚠️ PostgreSQL still not ready after 5s - requests will fail");
   }
@@ -225,7 +219,6 @@ if (typeof Deno !== "undefined" && "unload" in Deno) {
   (Deno as any).unload = async () => {
     if (_pool) {
       await _pool.end();
-      console.log("✅ PostgreSQL pool closed");
     }
   };
 }

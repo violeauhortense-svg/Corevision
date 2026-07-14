@@ -436,7 +436,6 @@ function extraireDonneesDetection(clientData: any): any {
  * Détecte toutes les incohérences pour un client
  */
 export function detecterIncoherences(clientData: any): RapportIncoherences {
-  console.log('🔍 Détection des incohérences...');
   
   const donnees = extraireDonneesDetection(clientData);
   const incoherences: Incoherence[] = [];
@@ -446,7 +445,6 @@ export function detecterIncoherences(clientData: any): RapportIncoherences {
     const incoherence = regle.verifier(donnees);
     if (incoherence) {
       incoherences.push(incoherence);
-      console.log(`⚠️ Incohérence détectée: ${regle.nom}`);
     }
   }
   
@@ -476,7 +474,6 @@ export function detecterIncoherences(clientData: any): RapportIncoherences {
       parGravite.faible * 5
   );
   
-  console.log(`✅ ${incoherences.length} incohérence(s) détectée(s), score: ${scoreCoherence}/100`);
   
   return {
     clientId: clientData.id,
@@ -509,7 +506,6 @@ export function validerIncoherence(
   incoherence.utilisateurResolution = utilisateur;
   incoherence.commentaireResolution = commentaire || 'Validée par l\'administrateur';
   
-  console.log(`✅ Incohérence ${incoherenceId} validée par ${utilisateur}`);
   
   return rapport;
 }
@@ -534,7 +530,6 @@ export function ignorerIncoherence(
   incoherence.utilisateurResolution = utilisateur;
   incoherence.commentaireResolution = raison;
   
-  console.log(`⏭️ Incohérence ${incoherenceId} ignorée: ${raison}`);
   
   return rapport;
 }
@@ -559,7 +554,6 @@ export function marquerCorrigee(
   incoherence.utilisateurResolution = utilisateur;
   incoherence.commentaireResolution = commentaire || 'Corrigée';
   
-  console.log(`🔧 Incohérence ${incoherenceId} corrigée par ${utilisateur}`);
   
   return rapport;
 }

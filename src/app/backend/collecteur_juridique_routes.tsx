@@ -6,7 +6,6 @@ import { MONTAGES_60_PROFESSIONNELS } from "./montages_60_patrimoniaux.tsx";
 
 export function setupCollecteurJuridiqueRoutes(app: Hono) {
   app.post("/make-server-cac859af/collecte-juridique/run", async (c) => {
-    console.log('🚀 Lancement manuel de la collecte juridique...');
     try {
       const result = await collecteurJuridique.runCollecte();
       return c.json(result);
@@ -17,7 +16,6 @@ export function setupCollecteurJuridiqueRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/collecte-juridique/documents", async (c) => {
-    console.log('📚 Récupération des documents juridiques...');
     try {
       const source = c.req.query('source');
       const documents = await collecteurJuridique.searchDocuments(undefined, source);
@@ -29,7 +27,6 @@ export function setupCollecteurJuridiqueRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/collecte-juridique/search", async (c) => {
-    console.log('🔍 Recherche de documents juridiques...');
     try {
       const query = c.req.query('q') || '';
       const source = c.req.query('source');
@@ -42,7 +39,6 @@ export function setupCollecteurJuridiqueRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/collecte-juridique/stats", async (c) => {
-    console.log('📊 Récupération des stats de collecte...');
     try {
       const stats = await collecteurJuridique.getCollecteStats();
       return c.json({ success: true, stats });
@@ -53,7 +49,6 @@ export function setupCollecteurJuridiqueRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/collecte-juridique/regles", async (c) => {
-    console.log('📋 Récupération des règles collectées...');
     try {
       const regles = await collecteurJuridique.getReglesCollectees();
       return c.json({ success: true, regles, total: regles.length });
@@ -64,7 +59,6 @@ export function setupCollecteurJuridiqueRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/regles/toutes", async (c) => {
-    console.log('📋 Récupération de TOUTES les règles (statiques + collectées)...');
     try {
       const reglesStatiques = await reglesFiscalesDb.getToutesRegles();
       const reglesCollectees = await collecteurJuridique.getReglesCollectees();
@@ -84,7 +78,6 @@ export function setupCollecteurJuridiqueRoutes(app: Hono) {
   });
 
   app.post("/make-server-cac859af/regles/initialiser", async (c) => {
-    console.log('🚀 Initialisation des 110 règles fiscales...');
     try {
       const result = await reglesFiscalesDb.initialiserReglesFiscales();
       return c.json({ success: true, message: `${result.count} règles fiscales initialisées avec succès`, count: result.count });
@@ -95,7 +88,6 @@ export function setupCollecteurJuridiqueRoutes(app: Hono) {
   });
 
   app.post("/make-server-cac859af/montages/generer", async (c) => {
-    console.log('🏗️ Génération automatique des montages patrimoniaux...');
     try {
       const result = await generateurMontages.genererMontagesAutomatiques();
       return c.json({ success: result.success, montages_generes: result.montages_generes, montages: result.montages, errors: result.errors });
@@ -106,7 +98,6 @@ export function setupCollecteurJuridiqueRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/montages/collectes", async (c) => {
-    console.log('📋 Récupération des montages collectés...');
     try {
       const montages = await generateurMontages.getMontagesCollectes();
       return c.json({ success: true, montages, total: montages.length });
@@ -117,7 +108,6 @@ export function setupCollecteurJuridiqueRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/montages/tous", async (c) => {
-    console.log('📋 Récupération de TOUS les montages (statiques + collectés)...');
     try {
       const montagesStatiques = MONTAGES_60_PROFESSIONNELS || [];
       const montagesCollectes = await generateurMontages.getMontagesCollectes();
@@ -133,7 +123,6 @@ export function setupCollecteurJuridiqueRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/montages/stats", async (c) => {
-    console.log('📊 Récupération des stats de génération...');
     try {
       const stats = await generateurMontages.getStatsGeneration();
       return c.json({ success: true, stats });

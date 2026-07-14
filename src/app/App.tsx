@@ -52,12 +52,10 @@ export default function App() {
     const cleanupFlag = localStorage.getItem('test_data_cleanup_done');
     
     if (!cleanupFlag) {
-      console.log('🗑️ Nettoyage complet des données de test...');
       
       clearAllTestData();
       localStorage.setItem('test_data_cleanup_done', 'true');
       
-      console.log('✅ Nettoyage des données de test terminé !');
     }
   }, []);
 
@@ -66,7 +64,6 @@ export default function App() {
     const cleanupFlag = localStorage.getItem('obsolete_tasks_cleanup_done');
 
     if (!cleanupFlag && isAuthenticated) {
-      console.log('🗑️ Nettoyage des tâches obsolètes...');
 
       cleanupObsoleteTasks().then(() => {
         localStorage.setItem('obsolete_tasks_cleanup_done', 'true');
@@ -79,10 +76,8 @@ export default function App() {
   // 🧹 AUDIT ET NETTOYAGE DES DONNÉES ORPHELINES (une seule fois à l'authentification)
   useEffect(() => {
     if (isAuthenticated) {
-      console.log('🧹 Lancement de l\'audit des données orphelines...');
       auditAndCleanupOrphanedData().then((result) => {
         if (result.success) {
-          console.log('✅ Audit et nettoyage des données orphelines terminé:', result.summary);
         } else {
           console.warn('⚠️ Audit terminé avec des erreurs:', result.summary.errors);
         }

@@ -508,8 +508,6 @@ Génère une synthèse stratégique personnalisée en 3-4 phrases maximum. Expli
  * MOTEUR PRINCIPAL: Analyser un profil et générer des recommandations
  */
 export async function analyserProfilClient(profil: ProfilClient): Promise<AnalysePatrimoniale> {
-  console.log('🤖 Démarrage de l\'analyse patrimoniale IA...');
-  console.log('   👤 Client:', genererResumeProfil(profil));
   
   const startTime = Date.now();
   
@@ -519,11 +517,8 @@ export async function analyserProfilClient(profil: ProfilClient): Promise<Analys
     const nbParts = calculerNbParts(profil);
     const trancheMarginal = determinerTrancheMarginalIR(revenus, nbParts);
     
-    console.log(`   💰 Revenus: ${revenus.toLocaleString('fr-FR')}€`);
-    console.log(`   📊 Tranche marginale: ${trancheMarginal.tranche}`);
     
     // 2. RECHERCHE DES RÈGLES FISCALES PERTINENTES
-    console.log('   🔍 Recherche de règles fiscales pertinentes...');
     const requeteRegles = construireRequeteRegles(profil);
     
     let reglesFiscales: any[] = [];
@@ -536,23 +531,19 @@ export async function analyserProfilClient(profil: ProfilClient): Promise<Analys
         source: r.source,
         pertinence: r.pertinence
       }));
-      console.log(`   ✅ ${reglesFiscales.length} règles fiscales trouvées`);
     } catch (error) {
       console.warn('   ⚠️ Recherche de règles ignorée (index IA non disponible)');
     }
     
     // 3. RÉCUPÉRATION DE TOUS LES MONTAGES
-    console.log('   📚 Récupération des montages patrimoniaux...');
     const tousMontages = await montagesPatrimoniaux.searchMontages(
       undefined, 
       undefined, 
       undefined, 
       'actif' // Seulement les montages actifs
     );
-    console.log(`   ✅ ${tousMontages.length} montages disponibles`);
     
     // 4. SCORING ET FILTRAGE DES MONTAGES
-    console.log('   🎯 Scoring des montages...');
     const recommandations: RecommandationMontage[] = [];
     
     for (const montage of tousMontages) {
@@ -605,10 +596,8 @@ export async function analyserProfilClient(profil: ProfilClient): Promise<Analys
     // Limiter aux 10 meilleurs
     const topRecommandations = recommandations.slice(0, 10);
     
-    console.log(`   ✅ ${topRecommandations.length} montages recommandés (score > 30)`);
     
     // 5. GÉNÉRER LA SYNTHÈSE GÉNÉRALE
-    console.log('   📝 Génération de la synthèse...');
     const synthese = await genererSyntheseGenerale(profil, topRecommandations);
     
     // 6. CONSTRUIRE L'ANALYSE FINALE
@@ -624,7 +613,6 @@ export async function analyserProfilClient(profil: ProfilClient): Promise<Analys
     };
     
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-    console.log(`✅ Analyse terminée en ${duration}s - ${topRecommandations.length} recommandations générées`);
     
     return analyse;
     
@@ -651,7 +639,6 @@ export async function sauvegarderAnalyse(
       analyse_id: analyseId
     });
     
-    console.log(`✅ Analyse sauvegardée: ${analyseId}`);
     
     return {
       success: true,

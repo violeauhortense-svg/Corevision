@@ -74,7 +74,6 @@ export async function createMeetingRDV(
     };
 
     await clientAPI.update(clientId, updatedClient);
-    console.log('✅ RDV créé:', rdv.id);
 
     return rdv;
   } catch (error) {
@@ -138,7 +137,6 @@ export async function createDocumentRequests(
     };
 
     await taskAPI.update(task.id, updatedTask);
-    console.log('✅ Documents demandés créés:', documentsRequested.length);
 
     return true;
   } catch (error) {
@@ -183,7 +181,6 @@ export async function updateDiscoveryMeetingDeadline(
     };
 
     await taskAPI.update(task.id, updatedTask);
-    console.log('✅ Échéance "RDV découverte..." mise à jour:', rdvDate, rdvTime);
 
     return true;
   } catch (error) {
@@ -227,7 +224,6 @@ export async function recordEmailHistory(
       };
 
       await taskAPI.update(task.id, updatedTask);
-      console.log('✅ Historique email enregistré avec copie du contenu');
     }
 
     return true;

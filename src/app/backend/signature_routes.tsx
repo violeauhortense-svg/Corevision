@@ -22,14 +22,12 @@ export function setupSignatureRoutes(app: any, supabaseAdmin: any, kv: any) {
         return c.json({ error: "Données manquantes" }, 400);
       }
 
-      console.log(`📧 Envoi signature - Client: ${clientName}, Destinataire: ${recipient}`);
 
       // Parser le message personnalisé si fourni
       let customMessage = null;
       if (customMessageStr && typeof customMessageStr === 'string') {
         try {
           customMessage = JSON.parse(customMessageStr);
-          console.log('📝 Message personnalisé reçu:', customMessage);
         } catch (e) {
           console.warn('⚠️ Impossible de parser customMessage, utilisation du message par défaut');
         }
@@ -82,7 +80,6 @@ export function setupSignatureRoutes(app: any, supabaseAdmin: any, kv: any) {
         }
       }
 
-      console.log(`📄 Documents parsés: ${documents.length}`);
 
       // Envoyer pour le client
       if (recipient === 'client' || recipient === 'both') {
@@ -110,7 +107,6 @@ export function setupSignatureRoutes(app: any, supabaseAdmin: any, kv: any) {
           customMessage
         });
 
-        console.log(`✅ Email envoyé à ${clientEmail}`);
       }
 
       // Envoyer pour le conjoint
@@ -143,7 +139,6 @@ export function setupSignatureRoutes(app: any, supabaseAdmin: any, kv: any) {
           customMessage
         });
 
-        console.log(`✅ Email envoyé à ${conjointEmail}`);
       }
 
       return c.json({ 
@@ -234,7 +229,6 @@ export function setupSignatureRoutes(app: any, supabaseAdmin: any, kv: any) {
         signedAt: signatureDate,
       });
 
-      console.log(`✅ Signature validée pour ${data.signataireNom}`);
 
       return c.json({ 
         success: true,
@@ -276,7 +270,6 @@ export function setupSignatureRoutes(app: any, supabaseAdmin: any, kv: any) {
     }
   });
 
-  console.log("✅ Routes de signature électronique configurées");
 }
 
 // Fonction pour envoyer l'email de signature
@@ -406,7 +399,6 @@ async function sendSignatureEmail({ to, signataireNom, cgpName, documents, signa
     from: { email: 'contact@cvh-patrimoine.com', name: cgpName },
   });
 
-  console.log(`✅ Email envoyé avec succès à ${to}`);
 }
 
 // Fonction pour envoyer la notification au CGP
@@ -464,7 +456,6 @@ async function sendCGPNotificationEmail({ cgpEmail, cgpName, signataireNom, clie
       from: { email: 'contact@cvh-patrimoine.com', name: 'CRM Patrimoine' },
     });
 
-    console.log(`✅ Notification CGP envoyée à ${cgpEmail}`);
   } catch (error) {
     console.error('❌ Erreur envoi notification CGP:', error);
   }

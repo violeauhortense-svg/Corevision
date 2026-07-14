@@ -111,7 +111,6 @@ interface ControleQualite {
 export async function etape1_normalisation(
   donneesClient: any
 ): Promise<DonneesNormalisees> {
-  console.log('🔄 [ÉTAPE 1/7] IA NORMALISATION - Démarrage...');
   
   const systemPrompt = `Tu es un expert en structuration de données patrimoniales.
 
@@ -138,7 +137,6 @@ Format de sortie JSON obligatoire :
   try {
     const reponse = await appelGPT4oJSON<DonneesNormalisees>(messages, 0.3, 2000);
     
-    console.log(`✅ [ÉTAPE 1/7] Normalisation terminée - Complétude: ${reponse.completude}%`);
     return reponse;
   } catch (error) {
     console.error('❌ [ÉTAPE 1/7] Erreur lors de la normalisation:', error);
@@ -157,7 +155,6 @@ Format de sortie JSON obligatoire :
 export async function etape2_diagnostic_factuel(
   donneesNormalisees: DonneesNormalisees
 ): Promise<DiagnosticFactuel> {
-  console.log('🔄 [ÉTAPE 2/7] IA DIAGNOSTIC FACTUEL - Démarrage...');
   
   const donnees = donneesNormalisees.donnees_validees;
   
@@ -195,7 +192,6 @@ Format de sortie JSON obligatoire :
   try {
     const reponse = await appelGPT4oJSON<DiagnosticFactuel>(messages, 0.3, 2000);
     
-    console.log('✅ [ÉTAPE 2/7] Diagnostic factuel terminé');
     return reponse;
   } catch (error) {
     console.error('❌ [ÉTAPE 2/7] Erreur lors du diagnostic factuel:', error);
@@ -225,7 +221,6 @@ export async function etape3_analyse_critique(
   diagnostic: DiagnosticFactuel,
   analyses: any
 ): Promise<AnalyseCritique> {
-  console.log('🔄 [ÉTAPE 3/7] IA ANALYSE CRITIQUE - Démarrage...');
   
   const systemPrompt = `Tu es un ingénieur patrimonial expert.
 
@@ -264,7 +259,6 @@ Format de sortie JSON obligatoire :
   try {
     const reponse = await appelGPT4oJSON<AnalyseCritique>(messages, 0.5, 2500);
     
-    console.log(`✅ [ÉTAPE 3/7] Analyse critique terminée - Score SWOT: ${reponse.score_swot.toFixed(1)}/10`);
     return reponse;
   } catch (error) {
     console.error('❌ [ÉTAPE 3/7] Erreur lors de l\'analyse critique:', error);
@@ -306,7 +300,6 @@ export async function etape4_identification_enjeux(
   analyse_critique: AnalyseCritique,
   donnees: any
 ): Promise<Enjeux> {
-  console.log('🔄 [ÉTAPE 4/7] IA IDENTIFICATION DES ENJEUX - Démarrage...');
   
   const systemPrompt = `À partir de l'analyse critique, identifie les enjeux patrimoniaux.
 
@@ -345,7 +338,6 @@ Format de sortie JSON obligatoire :
   try {
     const reponse = await appelGPT4oJSON<Enjeux>(messages, 0.6, 2500);
     
-    console.log(`✅ [ÉTAPE 4/7] Identification des enjeux terminée - ${reponse.enjeux_prioritaires.length} enjeux`);
     return reponse;
   } catch (error) {
     console.error('❌ [ÉTAPE 4/7] Erreur lors de l\'identification des enjeux:', error);
@@ -378,7 +370,6 @@ export async function etape5_strategies(
   enjeux: Enjeux,
   strategies_base: any[]
 ): Promise<Strategies> {
-  console.log('🔄 [ÉTAPE 5/7] IA STRATÉGIES - Démarrage...');
   
   const systemPrompt = `Pour chaque enjeu identifié, propose des stratégies.
 
@@ -425,7 +416,6 @@ Format de sortie JSON obligatoire :
   try {
     const reponse = await appelGPT4oJSON<Strategies>(messages, 0.7, 4000);
     
-    console.log(`✅ [ÉTAPE 5/7] Stratégies générées - ${reponse.strategies_proposees.length} propositions`);
     return reponse;
   } catch (error) {
     console.error('❌ [ÉTAPE 5/7] Erreur lors de la génération des stratégies:', error);
@@ -477,7 +467,6 @@ export async function etape6_redaction_finale(
   strategies: Strategies,
   donnees_contexte: any
 ): Promise<RapportFinal> {
-  console.log('🔄 [ÉTAPE 6/7] IA RÉDACTION FINALE - Démarrage...');
   
   const systemPrompt = `Tu es un expert en rédaction patrimoniale.
 
@@ -524,7 +513,6 @@ Format de sortie JSON obligatoire :
   try {
     const reponse = await appelGPT4oJSON<RapportFinal>(messages, 0.7, 4000);
     
-    console.log(`✅ [ÉTAPE 6/7] Rédaction finale terminée - ${reponse.chapitres.length} chapitres`);
     return reponse;
   } catch (error) {
     console.error('❌ [ÉTAPE 6/7] Erreur lors de la rédaction finale:', error);
@@ -563,7 +551,6 @@ export async function etape7_controle_qualite(
   rapport: RapportFinal,
   analyse_complete: any
 ): Promise<ControleQualite> {
-  console.log('🔄 [ÉTAPE 7/7] IA CONTRÔLE QUALITÉ - Démarrage...');
   
   const systemPrompt = `Tu es un auditeur patrimonial senior.
 
@@ -608,7 +595,6 @@ Format de sortie JSON obligatoire :
   try {
     const reponse = await appelGPT4oJSON<ControleQualite>(messages, 0.6, 3000);
     
-    console.log(`✅ [ÉTAPE 7/7] Contrôle qualité terminé - Score: ${reponse.score_qualite.toFixed(1)}/10`);
     return reponse;
   } catch (error) {
     console.error('❌ [ÉTAPE 7/7] Erreur lors du contrôle qualité:', error);
@@ -640,55 +626,35 @@ export async function analyseAvancee7Etapes(
   analysesExistantes: any,
   strategiesBase: any[]
 ): Promise<any> {
-  console.log('🚀 ========================================');
-  console.log('🚀 DÉMARRAGE ANALYSE AVANCÉE 7 ÉTAPES IA');
-  console.log('🚀 ========================================');
   
   const startTime = Date.now();
   
   try {
     // ÉTAPE 1 : Normalisation
-    console.log('🔄 [IA 1/7] Normalisation des données...');
     const etape1 = await etape1_normalisation(clientData);
-    console.log('✅ [IA 1/7] Normalisation complétée');
     
     // ÉTAPE 2 : Diagnostic factuel
-    console.log('🔄 [IA 2/7] Diagnostic factuel...');
     const etape2 = await etape2_diagnostic_factuel(etape1);
-    console.log('✅ [IA 2/7] Diagnostic factuel complété');
     
     // ÉTAPE 3 : Analyse critique
-    console.log('🔄 [IA 3/7] Analyse critique...');
     const etape3 = await etape3_analyse_critique(etape2, analysesExistantes);
-    console.log('✅ [IA 3/7] Analyse critique complétée');
     
     // ÉTAPE 4 : Identification des enjeux
-    console.log('🔄 [IA 4/7] Identification des enjeux...');
     const etape4 = await etape4_identification_enjeux(etape3, clientData);
-    console.log('✅ [IA 4/7] Identification des enjeux complétée');
     
     // ÉTAPE 5 : Stratégies
-    console.log('🔄 [IA 5/7] Élaboration des stratégies...');
     const etape5 = await etape5_strategies(etape4, strategiesBase);
-    console.log('✅ [IA 5/7] Stratégies élaborées');
     
     // ÉTAPE 6 : Rédaction finale
-    console.log('🔄 [IA 6/7] Rédaction finale du rapport...');
     const etape6 = await etape6_redaction_finale(etape4, etape5, clientData);
-    console.log('✅ [IA 6/7] Rédaction finale complétée');
     
     // ÉTAPE 7 : Contrôle qualité
-    console.log('🔄 [IA 7/7] Contrôle qualité...');
     const etape7 = await etape7_controle_qualite(etape6, {
       etape1, etape2, etape3, etape4, etape5, etape6
     });
-    console.log('✅ [IA 7/7] Contrôle qualité complété');
     
     const duration = Date.now() - startTime;
     
-    console.log('✅ ========================================');
-    console.log(`✅ ANALYSE COMPLÈTE TERMINÉE EN ${(duration / 1000).toFixed(1)}s`);
-    console.log('✅ ========================================');
     
     return {
       etape1_normalisation: etape1,

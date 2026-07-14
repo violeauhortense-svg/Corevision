@@ -118,7 +118,6 @@ export async function genererRecommandations(
     }
 
     console.log(`? ${data.rapport.totalRecommandations} recommandation(s) générée(s)`);
-    console.log(`?? Gain potentiel: ${data.rapport.gainFiscalPotentielAnnuel.toLocaleString('fr-FR')} €/an`);
     
     return {
       success: true,

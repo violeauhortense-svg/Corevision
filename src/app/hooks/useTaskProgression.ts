@@ -39,12 +39,10 @@ export function useTaskProgression() {
     const nextStage = nextStageMap[currentClientStatus];
     
     if (!nextStage) {
-      console.log('✅ Toutes les tâches complétées - Dernier statut atteint');
       return; // Pas de statut suivant
     }
 
     try {
-      console.log(`🚀 Toutes les tâches de ${currentClientStatus} complétées, passage à ${nextStage}`);
       
       // Mettre à jour le statut du client
       await clientAPI.update(clientId, { status: nextStage });
@@ -75,7 +73,6 @@ export function useTaskProgression() {
             stage: nextStage,
           });
           
-          console.log(`✅ Ajoutée tâche template \"${templateTitle}\" pour le statut ${nextStage}`);
         } catch (error) {
           console.error(`Erreur création tâche \"${templateTitle}\":`, error);
         }
@@ -108,7 +105,6 @@ export function useTaskProgression() {
     const taskStage = task.stage;
     
     if (!taskStage) {
-      console.log('❌ Tâche sans stage défini - Pas de régression');
       return;
     }
 
@@ -119,12 +115,10 @@ export function useTaskProgression() {
 
     if (taskStageIndex >= currentStageIndex) {
       // La tâche n'appartient pas à un statut antérieur, pas de régression
-      console.log(`✅ Tâche du statut ${taskStage} (actuel: ${currentClientStatus}) - Pas de régression`);
       return;
     }
 
     try {
-      console.log(`🔙 Tâche décochée du statut ${taskStage}, régression au statut ${taskStage}`);
       
       // Mettre à jour le statut du client pour revenir au statut de la tâche décochée
       await clientAPI.update(clientId, { status: taskStage });

@@ -20,7 +20,6 @@ export function setupBaremesRoutes(app: Hono) {
   app.get("/make-server-cac859af/baremes/:annee", async (c) => {
     try {
       const annee = c.req.param("annee");
-      console.log(`📊 Récupération des barèmes pour ${annee}`);
       
       // Récupérer tous les barèmes de l'année
       const [baremeIR, baremeIFI, prelevementsSociaux, abattements] = await Promise.all([
@@ -32,7 +31,6 @@ export function setupBaremesRoutes(app: Hono) {
       
       // Si aucun barème n'existe, initialiser avec les valeurs par défaut
       if (!baremeIR) {
-        console.log(`⚠️ Barèmes ${annee} non trouvés, initialisation...`);
         await initBaremes2026();
         
         // Récupérer à nouveau après initialisation
@@ -77,7 +75,6 @@ export function setupBaremesRoutes(app: Hono) {
       const annee = c.req.param("annee");
       const body = await c.req.json();
       
-      console.log(`💾 Mise à jour des barèmes ${annee}`);
       
       const { baremeIR, baremeIFI, prelevementsSociaux, abattements } = body;
       
@@ -92,7 +89,6 @@ export function setupBaremesRoutes(app: Hono) {
       // Sauvegarder la date de dernière modification
       await kv.set(`bareme_${annee}_updated`, new Date().toISOString());
       
-      console.log(`✅ Barèmes ${annee} mis à jour avec succès`);
       
       return c.json({
         success: true,
@@ -112,7 +108,6 @@ export function setupBaremesRoutes(app: Hono) {
   
   app.get("/make-server-cac859af/baremes", async (c) => {
     try {
-      console.log("📋 Liste des barèmes disponibles");
       
       // Récupérer tous les barèmes IR (pour identifier les années)
       const allBaremes = await kv.getByPrefix("bareme_ir_");
@@ -143,7 +138,6 @@ export function setupBaremesRoutes(app: Hono) {
 // ============================================
 
 async function initBaremes2026() {
-  console.log("🔧 Initialisation des barèmes 2026...");
   
   // ⚠️ BARÈME IR 2025 OFFICIEL (source : service-public.fr)
   // https://www.service-public.fr/particuliers/vosdroits/F1419
@@ -195,5 +189,4 @@ async function initBaremes2026() {
     kv.set("bareme_2026_created", new Date().toISOString()),
   ]);
   
-  console.log("✅ Barèmes 2026 initialisés avec succès");
 }

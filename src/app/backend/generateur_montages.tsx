@@ -404,7 +404,6 @@ export async function genererMontagesAutomatiques(): Promise<{
   montages: MontageGenere[];
   errors: string[];
 }> {
-  console.log('🤖 Génération automatique de montages patrimoniaux...');
   
   const errors: string[] = [];
   const montagesGeneres: MontageGenere[] = [];
@@ -414,7 +413,6 @@ export async function genererMontagesAutomatiques(): Promise<{
     const reglesCollectees = await kv.getByPrefix('regle_collectee:');
     
     if (reglesCollectees.length === 0) {
-      console.log('⚠️ Aucune règle collectée trouvée');
       return {
         success: true,
         montages_generes: 0,
@@ -424,11 +422,9 @@ export async function genererMontagesAutomatiques(): Promise<{
     }
     
     const regles: RegleFiscale[] = reglesCollectees.map(item => item.value);
-    console.log(`📊 ${regles.length} règles collectées trouvées`);
     
     // 2. Trouver les groupes de règles compatibles
     const groupesCompatibles = trouverGroupesCompatibles(regles);
-    console.log(`🔍 ${groupesCompatibles.length} groupes compatibles identifiés`);
     
     // 3. Générer un montage pour chaque groupe
     for (const groupe of groupesCompatibles) {
@@ -441,7 +437,6 @@ export async function genererMontagesAutomatiques(): Promise<{
           await kv.set(key, montage);
           
           montagesGeneres.push(montage);
-          console.log(`✅ Montage généré: ${montage.nom} (score: ${montage.score_confiance})`);
         }
       } catch (error) {
         const errorMsg = `Erreur génération montage: ${error instanceof Error ? error.message : 'Unknown'}`;
@@ -459,7 +454,6 @@ export async function genererMontagesAutomatiques(): Promise<{
       errors
     });
     
-    console.log(`✅ Génération terminée: ${montagesGeneres.length} montages créés`);
     
     return {
       success: true,

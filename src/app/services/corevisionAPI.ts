@@ -45,7 +45,6 @@ export const corevisionAPI = {
 
       const data = await response.json();
       const orders = data.orders ?? [];
-      console.log(`📡 ${orders.length} commande(s) chargée(s) depuis le serveur`);
       return orders;
     } catch (error) {
       console.error('❌ Erreur chargement commandes CoreVision:', error);
@@ -60,9 +59,6 @@ export const corevisionAPI = {
     try {
       const orders = await corevisionAPI.getAll();
       const pending = orders.filter(o => o.status === 'pending' || o.status === 'in_progress');
-      console.log('🔍 DEBUG getPendingCount - Total commandes:', orders.length);
-      console.log('🔍 DEBUG getPendingCount - Commandes pending/in_progress:', pending.length);
-      console.log('🔍 DEBUG getPendingCount - Statuts:', orders.map(o => o.status));
       return pending.length;
     } catch (error) {
       console.error('❌ Erreur comptage commandes en attente:', error);

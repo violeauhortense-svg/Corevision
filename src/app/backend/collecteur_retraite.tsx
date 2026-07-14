@@ -211,7 +211,6 @@ export async function collecterDocumentsRetraite(): Promise<{
   const errors: string[] = [];
 
   try {
-    console.log('🏛️ Démarrage collecte documents retraite...');
 
     // Générer les documents avec IDs et date
     const documents: DocumentRetraite[] = DOCUMENTS_RETRAITE_STATIQUES.map((doc, index) => ({
@@ -224,7 +223,6 @@ export async function collecterDocumentsRetraite(): Promise<{
     const storeKey = 'documents_retraite';
     await kv.set(storeKey, documents);
 
-    console.log(`✅ ${documents.length} documents retraite stockés`);
 
     // Compter par source
     const cnav_count = documents.filter(d => d.source === 'CNAV').length;

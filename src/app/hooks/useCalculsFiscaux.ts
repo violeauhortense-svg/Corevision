@@ -56,7 +56,6 @@ export function useCalculsFiscaux({
       .then((result) => {
         if (!cancelled) {
           setCalculIR(result);
-          console.log('🧮 Calcul IR effectué:', {
             TMI: result.TMI,
             impotFinal: result.impotFinal,
           });
@@ -98,7 +97,6 @@ export function useCalculsFiscaux({
       .then((result) => {
         if (!cancelled) {
           setCalculPS(result);
-          console.log('💰 Calcul PS effectué:', {
             total: result.prelevementsSociauxTotal,
           });
         }
@@ -143,7 +141,6 @@ export function useCalculsFiscaux({
       .then((result) => {
         if (!cancelled) {
           setCalculIFI(result);
-          console.log('🏠 Calcul IFI effectué:', {
             patrimoine: patrimoineImmobilierNet,
             ifiFinal: result.ifiFinal,
           });

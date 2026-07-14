@@ -3,7 +3,6 @@ import * as extracteurRegles from "./extracteur_regles.tsx";
 
 export function setupExtracteurReglesRoutes(app: Hono) {
   app.post("/make-server-cac859af/extracteur-regles/run", async (c) => {
-    console.log('🚀 Lancement de l\'extraction de toutes les règles...');
     try {
       const result = await extracteurRegles.extraireToutesLesRegles();
       return c.json(result);
@@ -14,7 +13,6 @@ export function setupExtracteurReglesRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/extracteur-regles/regles", async (c) => {
-    console.log('🔍 Recherche de règles fiscales...');
     try {
       const query = c.req.query('q');
       const statut = c.req.query('statut');
@@ -28,7 +26,6 @@ export function setupExtracteurReglesRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/extracteur-regles/stats", async (c) => {
-    console.log('📊 Récupération des stats d\'extraction...');
     try {
       const stats = await extracteurRegles.getExtractionStats();
       return c.json({ success: true, stats });
@@ -39,7 +36,6 @@ export function setupExtracteurReglesRoutes(app: Hono) {
   });
 
   app.put("/make-server-cac859af/extracteur-regles/regles/:regleId/statut", async (c) => {
-    console.log('🔄 Mise à jour statut règle...');
     try {
       const regleId = c.req.param('regleId');
       const body = await c.req.json();
@@ -56,7 +52,6 @@ export function setupExtracteurReglesRoutes(app: Hono) {
   });
 
   app.delete("/make-server-cac859af/extracteur-regles/regles", async (c) => {
-    console.log('🗑️  Suppression de toutes les règles...');
     try {
       const result = await extracteurRegles.deleteAllRegles();
       return c.json({ success: true, deleted: result.deleted });

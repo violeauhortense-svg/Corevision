@@ -11,7 +11,6 @@ import type { Task } from '../types/client';
  */
 export async function getAllTasks(accessToken: string): Promise<Task[]> {
   try {
-    console.log('🔍 getAllTasks - Récupération depuis localStorage');
     
     // Extraire le user ID du token
     let userId = 'default-user';
@@ -27,12 +26,10 @@ export async function getAllTasks(accessToken: string): Promise<Task[]> {
     const storedClients = localStorage.getItem(clientsKey);
     
     if (!storedClients) {
-      console.log('ℹ️ Aucun client trouvé');
       return [];
     }
     
     const clients = JSON.parse(storedClients);
-    console.log(`✅ ${clients.length} clients récupérés`);
 
     // Récupérer les tâches pour chaque client
     const allTasks: Task[] = [];
@@ -46,7 +43,6 @@ export async function getAllTasks(accessToken: string): Promise<Task[]> {
       }
     }
 
-    console.log(`📊 Total tâches récupérées: ${allTasks.length}`);
     return allTasks;
   } catch (error) {
     console.error('❌ Erreur lors de la récupération des tâches:', error);
@@ -88,7 +84,6 @@ export async function updateTask(accessToken: string, taskId: string, updates: P
           // Mettre à jour la tâche
           tasks[taskIndex] = { ...tasks[taskIndex], ...updates };
           localStorage.setItem(tasksKey, JSON.stringify(tasks));
-          console.log('✅ Tâche mise à jour avec succès');
           return true;
         }
       }
@@ -135,7 +130,6 @@ export async function addTask(accessToken: string, clientId: string, task: Parti
     tasks.push(newTask);
     localStorage.setItem(tasksKey, JSON.stringify(tasks));
     
-    console.log('✅ Tâche ajoutée avec succès');
     return newTask;
   } catch (error) {
     console.error('❌ Erreur lors de l\'ajout de la tâche:', error);
@@ -175,7 +169,6 @@ export async function deleteTask(accessToken: string, taskId: string): Promise<b
         
         if (filteredTasks.length < tasks.length) {
           localStorage.setItem(tasksKey, JSON.stringify(filteredTasks));
-          console.log('✅ Tâche supprimée avec succès');
           return true;
         }
       }

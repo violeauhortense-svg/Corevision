@@ -18,7 +18,6 @@ export function setupIncoherencesRoutes(app: Hono) {
       const clientId = c.req.param('clientId');
       const body = await c.req.json().catch(() => ({}));
       
-      console.log(`🔍 Détection incohérences client ${clientId}`);
       
       // Récupérer les données client
       let clientData = body.clientData;
@@ -44,7 +43,6 @@ export function setupIncoherencesRoutes(app: Hono) {
       // Sauvegarder le rapport
       await kv.set(`incoherences:${clientId}:latest`, rapport);
       
-      console.log(`✅ ${rapport.totalIncoherences} incohérence(s) détectée(s)`);
       
       return c.json({
         success: true,
@@ -134,7 +132,6 @@ export function setupIncoherencesRoutes(app: Hono) {
       // Sauvegarder
       await kv.set(`incoherences:${clientId}:latest`, rapport);
       
-      console.log(`✅ Incohérence ${incoherenceId} validée`);
       
       return c.json({
         success: true,
@@ -198,7 +195,6 @@ export function setupIncoherencesRoutes(app: Hono) {
       // Sauvegarder
       await kv.set(`incoherences:${clientId}:latest`, rapport);
       
-      console.log(`⏭️ Incohérence ${incoherenceId} ignorée`);
       
       return c.json({
         success: true,
@@ -252,7 +248,6 @@ export function setupIncoherencesRoutes(app: Hono) {
       // Sauvegarder
       await kv.set(`incoherences:${clientId}:latest`, rapport);
       
-      console.log(`🔧 Incohérence ${incoherenceId} corrigée`);
       
       return c.json({
         success: true,

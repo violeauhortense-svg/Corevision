@@ -90,7 +90,6 @@ export function CoreVisionWorkflow({
             if (!alreadyCompleted) {
               localStorage.setItem(taskKey, 'true');
               onTaskCompleted();
-              console.log(`? Tâche \"${taskTitle}\" validée automatiquement suite à validation admin`);
             }
           }
         }
@@ -205,7 +204,6 @@ export function CoreVisionWorkflow({
           console.log('?? Commande locale trouvée pour élaboration/préparation:', clientId, localOrder);
           
           if (localOrder.validatedByAdmin) {
-            console.log('? Audit validé par admin (localStorage) - Tâche auto-complétée');
             setAuditValidatedByAdmin(true);
             
             // Valider automatiquement la tâche si la callback est fournie
@@ -216,7 +214,6 @@ export function CoreVisionWorkflow({
               if (!alreadyCompleted) {
                 localStorage.setItem(taskKey, 'true');
                 onTaskCompleted();
-                console.log(`? Tâche \"${taskTitle}\" validée automatiquement`);
               }
             }
             return; // ? Sortir ici, pas besoin de vérifier le serveur
@@ -249,7 +246,6 @@ export function CoreVisionWorkflow({
               if (!alreadyCompleted) {
                 localStorage.setItem(taskKey, 'true');
                 onTaskCompleted();
-                console.log(`? Tâche \"${taskTitle}\" validée automatiquement`);
               }
             }
           }
@@ -289,7 +285,6 @@ export function CoreVisionWorkflow({
               if (!alreadyCompleted) {
                 localStorage.setItem(taskKey, 'true');
                 onTaskCompleted();
-                console.log(`? Tâche \"${taskTitle}\" validée automatiquement`);
               }
             }
             return; // ? Sortir ici, pas besoin de vérifier le serveur
@@ -321,7 +316,6 @@ export function CoreVisionWorkflow({
               if (!alreadyCompleted) {
                 localStorage.setItem(taskKey, 'true');
                 onTaskCompleted();
-                console.log(`? Tâche \"${taskTitle}\" validée automatiquement`);
               }
             }
           }

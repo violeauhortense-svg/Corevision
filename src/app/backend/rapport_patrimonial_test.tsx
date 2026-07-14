@@ -7,13 +7,11 @@ export function setupRapportPatrimonialTestRoutes(app: any, auditPatrimonial: an
   
   // Route de test : Vérifier que les données arrivent correctement
   app.post("/make-server-cac859af/rapport-patrimonial-test-data", async (c: any) => {
-    console.log('🧪 TEST - Vérification des données reçues');
     
     try {
       const body = await c.req.json();
       const { clientId, clientData } = body;
       
-      console.log('📦 Données reçues:', {
         hasClientId: !!clientId,
         clientId: clientId,
         hasClientData: !!clientData,
@@ -40,13 +38,11 @@ export function setupRapportPatrimonialTestRoutes(app: any, auditPatrimonial: an
   
   // Route de test : Tester uniquement la collecte de données
   app.post("/make-server-cac859af/rapport-patrimonial-test-collecte", async (c: any) => {
-    console.log('🧪 TEST - Collecte des données');
     
     try {
       const body = await c.req.json();
       const { clientId, clientData } = body;
       
-      console.log('🔄 Appel de collecterDonneesClient...');
       const donnees = await auditPatrimonial.collecterDonneesClient(clientId, clientData);
       
       if (!donnees) {
@@ -73,7 +69,6 @@ export function setupRapportPatrimonialTestRoutes(app: any, auditPatrimonial: an
   
   // Route de test : Génération rapport minimal sans IA
   app.post("/make-server-cac859af/rapport-patrimonial-test-minimal", async (c: any) => {
-    console.log('🧪 TEST - Génération rapport minimal');
     
     try {
       const body = await c.req.json();

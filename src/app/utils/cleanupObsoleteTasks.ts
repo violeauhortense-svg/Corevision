@@ -4,7 +4,6 @@
  */
 
 export const cleanupObsoleteTasks = async (): Promise<void> => {
-  console.log('🧹 Début du nettoyage des tâches obsolètes...');
   
   const obsoleteTasks = [
     "Envoyer le DER (Document d'Entrée en Relation)",
@@ -18,7 +17,6 @@ export const cleanupObsoleteTasks = async (): Promise<void> => {
   const storedClients = localStorage.getItem(clientsKey);
   
   if (!storedClients) {
-    console.log('ℹ️ Aucun client trouvé');
     return;
   }
   
@@ -41,7 +39,6 @@ export const cleanupObsoleteTasks = async (): Promise<void> => {
     const filteredTasks = tasks.filter((task: any) => {
       const isObsolete = obsoleteTasks.includes(task.title);
       if (isObsolete) {
-        console.log(`🗑️ Suppression de "${task.title}" pour le client ${client.prenom} ${client.nom}`);
       }
       return !isObsolete;
     });
@@ -52,13 +49,10 @@ export const cleanupObsoleteTasks = async (): Promise<void> => {
       // Sauvegarder les tâches nettoyées
       localStorage.setItem(tasksKey, JSON.stringify(filteredTasks));
       totalDeleted += deletedCount;
-      console.log(`✅ ${deletedCount} tâche(s) supprimée(s) pour ${client.prenom} ${client.nom}`);
     }
   }
   
-  console.log(`✅ Nettoyage terminé : ${totalDeleted} tâche(s) obsolète(s) supprimée(s) au total`);
   
   if (totalDeleted > 0) {
-    console.log('✅ Les tâches obsolètes ont été supprimées. Rechargez la page si nécessaire.');
   }
 };

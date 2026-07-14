@@ -39,7 +39,6 @@ export function setupCoreVisionRoutes(app: any, supabaseAdmin: any, kv: any) {
 
       await kv.set(`corevision_order_${orderId}`, orderData);
 
-      console.log(`✅ Commande CoreVision créée: ${orderId} pour client ${clientName} par CGP ${cgpName}`);
 
       return c.json({ 
         success: true, 
@@ -63,7 +62,6 @@ export function setupCoreVisionRoutes(app: any, supabaseAdmin: any, kv: any) {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
 
-      console.log(`📋 ${sortedOrders.length} commande(s) CoreVision récupérée(s)`);
 
       return c.json({ 
         success: true,
@@ -109,11 +107,6 @@ export function setupCoreVisionRoutes(app: any, supabaseAdmin: any, kv: any) {
 
       await kv.set(`corevision_order_${orderId}`, updatedOrder);
 
-      console.log(`✅ Commande ${orderId} mise à jour`);
-      if (audit !== undefined) console.log(`  → Audit: ${audit.substring(0, 50)}...`);
-      if (preconisations !== undefined) console.log(`  → Préconisations: ${preconisations.length}`);
-      if (presentationClient !== undefined) console.log(`  → Présentation: ${presentationClient.substring(0, 50)}...`);
-      if (status !== undefined) console.log(`  → Status: ${status}`);
 
       return c.json({ 
         success: true,
@@ -136,7 +129,6 @@ export function setupCoreVisionRoutes(app: any, supabaseAdmin: any, kv: any) {
 
       await kv.del(`corevision_order_${orderId}`);
 
-      console.log(`✅ Commande ${orderId} supprimée`);
 
       return c.json({ 
         success: true,
@@ -162,7 +154,6 @@ export function setupCoreVisionRoutes(app: any, supabaseAdmin: any, kv: any) {
         return c.json({ error: "Données manquantes (clientId, clientName, profil requis)" }, 400);
       }
 
-      console.log(`📊 Génération rapport patrimonial pour commande CoreVision: ${clientName}`);
 
       // Générer le rapport
       const result = await rapportPatrimonial.genererRapportPatrimonial({
@@ -188,11 +179,9 @@ export function setupCoreVisionRoutes(app: any, supabaseAdmin: any, kv: any) {
             rapport_patrimonial_id: rapportId,
             rapport_generated_at: new Date().toISOString(),
           });
-          console.log(`  → Commande ${orderId} mise à jour avec rapport ${rapportId}`);
         }
       }
 
-      console.log(`✅ Rapport patrimonial généré: ${rapportId}`);
 
       return c.json({
         success: true,
@@ -220,7 +209,6 @@ export function setupCoreVisionRoutes(app: any, supabaseAdmin: any, kv: any) {
         return c.json({ error: "Rapport non trouvé" }, 404);
       }
 
-      console.log(`📄 Rapport ${rapportId} récupéré`);
 
       return c.json({
         success: true,
@@ -247,7 +235,6 @@ export function setupCoreVisionRoutes(app: any, supabaseAdmin: any, kv: any) {
         return c.json({ error: "Rapport non trouvé" }, 404);
       }
 
-      console.log(`📄 Génération PDF pour rapport ${rapportId}`);
 
       const pdfContent = rapportPatrimonial.genererRapportPDF(rapport);
 
@@ -281,7 +268,6 @@ export function setupCoreVisionRoutes(app: any, supabaseAdmin: any, kv: any) {
           return new Date(b.date_generation).getTime() - new Date(a.date_generation).getTime();
         });
 
-      console.log(`📚 ${rapportsClient.length} rapport(s) trouvé(s) pour client ${clientId}`);
 
       return c.json({
         success: true,
@@ -294,5 +280,4 @@ export function setupCoreVisionRoutes(app: any, supabaseAdmin: any, kv: any) {
     }
   });
 
-  console.log("✅ CoreVision routes configurées");
 }

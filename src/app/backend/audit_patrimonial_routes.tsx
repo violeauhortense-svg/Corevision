@@ -4,7 +4,6 @@ import * as kv from "./kv_store.tsx";
 
 export function setupAuditPatrimonialRoutes(app: Hono) {
   app.post("/make-server-cac859af/audit-patrimonial/generer/:clientId", async (c) => {
-    console.log('🎯 Génération d\'un audit patrimonial complet...');
     try {
       const clientId = c.req.param('clientId');
       const body = await c.req.json().catch(() => ({}));
@@ -21,7 +20,6 @@ export function setupAuditPatrimonialRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/audit-patrimonial/client/:clientId", async (c) => {
-    console.log('📚 Récupération des audits d\'un client...');
     try {
       const clientId = c.req.param('clientId');
       const audits = await auditPatrimonial.getAuditsClient(clientId);
@@ -33,7 +31,6 @@ export function setupAuditPatrimonialRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/audit-patrimonial/client/:clientId/rapport-live", async (c) => {
-    console.log('📄 Génération rapport LIVE avec données actuelles...');
     try {
       const clientId = c.req.param('clientId');
       const allClients = await kv.getByPrefix('client:');
@@ -51,7 +48,6 @@ export function setupAuditPatrimonialRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/audit-patrimonial/:auditId", async (c) => {
-    console.log('🔍 Récupération d\'un audit patrimonial...');
     try {
       const auditId = c.req.param('auditId');
       const audit = await auditPatrimonial.getAudit(auditId);
@@ -64,7 +60,6 @@ export function setupAuditPatrimonialRoutes(app: Hono) {
   });
 
   app.post("/make-server-cac859af/audit-patrimonial/:auditId/valider", async (c) => {
-    console.log('✅ Validation d\'un audit patrimonial...');
     try {
       const auditId = c.req.param('auditId');
       const success = await auditPatrimonial.validerAudit(auditId);
@@ -77,7 +72,6 @@ export function setupAuditPatrimonialRoutes(app: Hono) {
   });
 
   app.put("/make-server-cac859af/audit-patrimonial/:auditId", async (c) => {
-    console.log('✏️ Modification d\'un audit patrimonial...');
     try {
       const auditId = c.req.param('auditId');
       const body = await c.req.json();
@@ -91,7 +85,6 @@ export function setupAuditPatrimonialRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/rapport-patrimonial/:clientId", async (c) => {
-    console.log('📊 Génération rapport PATRIMONIAL avec analyse avancée...');
     try {
       const clientId = c.req.param('clientId');
       const allClients = await kv.getByPrefix('client:');
@@ -109,7 +102,6 @@ export function setupAuditPatrimonialRoutes(app: Hono) {
   });
 
   app.post("/make-server-cac859af/rapport-patrimonial", async (c) => {
-    console.log('📊 Génération rapport PATRIMONIAL (POST avec données client)...');
     try {
       const body = await c.req.json();
       const { clientId, clientData } = body;

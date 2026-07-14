@@ -44,7 +44,6 @@ export function LABFTTask({ task, clientId, onToggle, onUpdate }: LABFTTaskProps
 
   const handleSaveQuestionnaire = async (data: any) => {
     try {
-      console.log('💾 Enregistrement questionnaire LAB-FT:', data);
 
       // 1. Ajouter la date de validation
       const questionnaireWithDate = {
@@ -63,8 +62,6 @@ export function LABFTTask({ task, clientId, onToggle, onUpdate }: LABFTTaskProps
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id || 'default';
       const clientDetailKey = `client_detail_${userId}_${clientId}`;
-      console.log('🔑 Clé localStorage utilisée:', clientDetailKey);
-      console.log('👤 User ID:', userId);
       const stored = localStorage.getItem(clientDetailKey);
 
       if (stored) {
@@ -96,13 +93,11 @@ export function LABFTTask({ task, clientId, onToggle, onUpdate }: LABFTTaskProps
 
         // Sauvegarder dans localStorage
         localStorage.setItem(clientDetailKey, JSON.stringify(clientDetails));
-        console.log('✅ Document LAB-FT enregistré dans les documents réglementaires');
 
         // 🔥 Émettre un événement pour notifier la mise à jour des documents
         window.dispatchEvent(new CustomEvent('documentsUpdated', { 
           detail: { clientId, documentType: 'LAB-FT' } 
         }));
-        console.log('📢 Événement documentsUpdated émis');
       }
 
       setLabftData(questionnaireWithDate);

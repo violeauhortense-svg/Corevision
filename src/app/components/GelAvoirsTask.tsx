@@ -45,7 +45,6 @@ export function GelAvoirsTask({ task, clientId, onToggle, onUpdate }: GelAvoirsT
 
   // Gestionnaire pour la génération du rapport
   const handleReportGenerated = async (reportData: any) => {
-    console.log('📄 Rapport Gel des Avoirs généré:', reportData);
 
     try {
       setLoading(true);
@@ -89,9 +88,7 @@ export function GelAvoirsTask({ task, clientId, onToggle, onUpdate }: GelAvoirsT
         window.dispatchEvent(new CustomEvent('documentsUpdated', { 
           detail: { clientId, documentType: 'GelAvoirs' } 
         }));
-        console.log('📢 Événement documentsUpdated émis');
 
-        console.log('✅ Document Gel des Avoirs sauvegardé dans regulatoryDocs');
 
         // 2. Valider automatiquement la tâche
         await onUpdate(task.id, {

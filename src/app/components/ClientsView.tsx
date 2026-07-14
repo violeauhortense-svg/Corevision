@@ -53,7 +53,6 @@ export function ClientsView({ session, selectedClientId: initialClientId, openTa
   // Afficher un indicateur si les données viennent du cache
   useEffect(() => {
     if (fromCache && clients.length > 0) {
-      console.log('💾 Clients chargés depuis le cache');
     }
   }, [fromCache, clients]);
 
@@ -117,7 +116,6 @@ export function ClientsView({ session, selectedClientId: initialClientId, openTa
       setClientToDelete(null);
       
       toast.success(`✅ Client ${clientToDelete.prenom} ${clientToDelete.nom} supprimé avec succès`);
-      console.log(`🗑️ Client ${clientToDelete.id} et ses données associées supprimés`);
     } catch (error) {
       console.error('Erreur suppression client:', error);
       toast.error('Erreur lors de la suppression du client');

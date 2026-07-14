@@ -84,9 +84,6 @@ export function LoginView({ onLogin }: LoginViewProps) {
     }
 
     try {
-      console.log('🚀 Tentative de création de compte...');
-      console.log('📧 Email:', email);
-      console.log('👤 Nom:', nom, prenom);
 
       const response = await fetch(`${apiBaseUrl}/auth/signup`, {
         method: 'POST',
@@ -112,7 +109,6 @@ export function LoginView({ onLogin }: LoginViewProps) {
         return;
       }
 
-      console.log('✅ Compte créé avec succès !');
       toast.success('Compte créé avec succès ! Bienvenue !');
 
       // Se connecter automatiquement

@@ -71,7 +71,6 @@ export function TasksTab({ clientId }: TasksTabProps) {
     try {
       const url = `${apiBaseUrl}/clients/${clientId}/tache/${taskId}`;
 
-      console.log('🔄 [handleTaskUpdate] Request starting:');
       console.log('   status:', status);
       console.log('   taskId:', taskId);
       console.log('   completed:', completed);
@@ -90,13 +89,11 @@ export function TasksTab({ clientId }: TasksTabProps) {
         body: JSON.stringify(payload),
       });
 
-      console.log('🔄 [handleTaskUpdate] Response received:');
       console.log('   status code:', response.status);
       console.log('   ok:', response.ok);
 
       if (response.ok) {
         const result = await response.json();
-        console.log('✅ [handleTaskUpdate] Success response:', JSON.stringify(result, null, 2));
         console.log('   task.status:', result.task?.status);
         console.log('   task.completed:', result.task?.completed);
         console.log('   stats.allCompleted:', result.stats?.allCompleted);
@@ -107,7 +104,6 @@ export function TasksTab({ clientId }: TasksTabProps) {
         setClient(prev => {
           if (!prev) return prev;
 
-          console.log('🔄 [setClient] Updating state for status:', status);
 
           const updatedClient = {
             ...prev,
@@ -115,7 +111,6 @@ export function TasksTab({ clientId }: TasksTabProps) {
               ...prev.taches,
               [status]: (prev.taches?.[status] || []).map(t => {
                 if (t.id === taskId || t.title === taskId) {
-                  console.log('   Found task to update:', t.title, '→ setting to:', result.task?.status);
                   return result.task;
                 }
                 return t;
@@ -123,16 +118,13 @@ export function TasksTab({ clientId }: TasksTabProps) {
             }
           };
 
-          console.log('✅ [setClient] Updated task in state, new status:', updatedClient.taches[status]?.find((t: any) => t.id === taskId || t.title === taskId)?.status);
 
           // ✨ AUTO-PROGRESSION: Check if all tasks completed for current status
           const currentStatus = prev.statusOuvert || prev.status || 'Prospect';
-          console.log('🎯 [Auto-progression check]');
           console.log('   result.stats?.allCompleted:', result.stats?.allCompleted);
           console.log('   status === currentStatus:', status === currentStatus);
 
           if (result.stats?.allCompleted && status === currentStatus) {
-            console.log(`🎯 ✨ All tasks completed for "${status}", triggering auto-progression...`);
             const STATUSES = ['Prospect', 'Découverte', 'Simulation', 'Lettre Mission', 'Rapport/Audit', 'Suivi MEP', 'Suivi CSP', 'Arbitrage'];
             const currentIdx = STATUSES.indexOf(status);
             const nextStatus = currentIdx < STATUSES.length - 1 ? STATUSES[currentIdx + 1] : null;
@@ -142,7 +134,6 @@ export function TasksTab({ clientId }: TasksTabProps) {
             if (nextStatus) {
               console.log(`   Scheduling progression from "${status}" to "${nextStatus}"`);
               setTimeout(() => {
-                console.log(`   ➡️ Executing auto-progression to "${nextStatus}"`);
                 handleProgressToNextStatus(status, nextStatus);
               }, 800);
             }
@@ -176,7 +167,6 @@ export function TasksTab({ clientId }: TasksTabProps) {
 
     try {
       const url = `${apiBaseUrl}/clients/${clientId}/tache/${taskId}`;
-      console.log('⊘ Marquer N.A.:', { status, taskId, url });
 
       const response = await fetch(url, {
         method: 'PATCH',
@@ -189,7 +179,6 @@ export function TasksTab({ clientId }: TasksTabProps) {
 
       if (response.ok) {
         const result = await response.json();
-        console.log('✅ Task N/A response:', result);
         toast.success('⊘ Tâche marquée N.A.');
 
         // UPDATE STATE IMMEDIATELY
@@ -207,7 +196,6 @@ export function TasksTab({ clientId }: TasksTabProps) {
 
           // ✨ AUTO-PROGRESSION: Check if all tasks completed for current status
           if (result.stats?.allCompleted && status === (prev.statusOuvert || prev.status || 'Prospect')) {
-            console.log(`🎯 All tasks completed for "${status}", auto-progressing...`);
             const STATUSES = ['Prospect', 'Découverte', 'Simulation', 'Lettre Mission', 'Rapport/Audit', 'Suivi MEP', 'Suivi CSP', 'Arbitrage'];
             const currentIdx = STATUSES.indexOf(status);
             const nextStatus = currentIdx < STATUSES.length - 1 ? STATUSES[currentIdx + 1] : null;
@@ -237,7 +225,6 @@ export function TasksTab({ clientId }: TasksTabProps) {
 
     try {
       const url = `${apiBaseUrl}/clients/${clientId}/progress`;
-      console.log('➡️ Progression:', { currentStatus, nextStatus, url });
 
       const response = await fetch(url, {
         method: 'POST',
@@ -250,7 +237,6 @@ export function TasksTab({ clientId }: TasksTabProps) {
 
       if (response.ok) {
         const result = await response.json();
-        console.log('✅ Progression successful:', result);
         toast.success(`✅ Passage à "${nextStatus}" complété`);
 
         // UPDATE STATE IMMEDIATELY
@@ -304,7 +290,6 @@ export function TasksTab({ clientId }: TasksTabProps) {
   const clientStatus = client?.statusOuvert || client?.status || 'Prospect';
 
   // Debug
-  console.log('🔍 TasksTab Debug:', {
     clientId,
     clientStatus,
     hasStatusOuvert: !!client?.statusOuvert,
@@ -533,7 +518,6 @@ export function TasksTab({ clientId }: TasksTabProps) {
                     const allTasksCompleted = tasks.every((t: any) => t.completed || t.status === 'na');
                     const remainingTasks = tasks.filter((t: any) => !t.completed && t.status !== 'na').length;
 
-                    console.log(`📊 Progress check for "${status}": ${allTasksCompleted ? 'COMPLETE' : `${remainingTasks} pending`}`);
 
                     return (
                       <div className="text-sm">

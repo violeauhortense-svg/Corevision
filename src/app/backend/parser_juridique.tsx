@@ -152,7 +152,6 @@ function decouperEnParagraphes(texte: string): string[] {
  * Parser un document juridique en chunks
  */
 export async function parserDocument(doc: DocumentJuridique): Promise<ChunkJuridique[]> {
-  console.log(`📄 Parsing document: ${doc.titre} (${doc.source})`);
 
   const chunks: ChunkJuridique[] = [];
 
@@ -165,9 +164,6 @@ export async function parserDocument(doc: DocumentJuridique): Promise<ChunkJurid
   // Découper le texte en paragraphes
   const paragraphes = decouperEnParagraphes(doc.texte);
 
-  console.log(`   → Sujet: ${sujet}`);
-  console.log(`   → Référence: ${reference}`);
-  console.log(`   → ${paragraphes.length} chunks créés`);
 
   // Créer un chunk pour chaque paragraphe
   for (let i = 0; i < paragraphes.length; i++) {
@@ -199,13 +195,11 @@ export async function parserTousLesDocuments(): Promise<{
   const startTime = Date.now();
   const errors: string[] = [];
 
-  console.log('🚀 Début du parsing de tous les documents juridiques...');
 
   try {
     // Récupérer tous les documents juridiques
     const documents = await collecteurJuridique.searchDocuments();
 
-    console.log(`   📚 ${documents.length} documents à traiter`);
 
     let totalChunks = 0;
     let documentsTraites = 0;
@@ -224,7 +218,6 @@ export async function parserTousLesDocuments(): Promise<{
         totalChunks += chunks.length;
         documentsTraites++;
 
-        console.log(`   ✅ ${doc.titre.substring(0, 50)}... → ${chunks.length} chunks`);
 
       } catch (error) {
         const errorMsg = `Erreur parsing ${doc.id}: ${error instanceof Error ? error.message : 'Unknown error'}`;
@@ -245,7 +238,6 @@ export async function parserTousLesDocuments(): Promise<{
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1) + 's';
 
-    console.log(`✅ Parsing terminé en ${duration}`);
     console.log(`   - Documents traités: ${documentsTraites}`);
     console.log(`   - Chunks créés: ${totalChunks}`);
     console.log(`   - Erreurs: ${errors.length}`);
@@ -274,7 +266,6 @@ export async function parserTousLesDocuments(): Promise<{
  * Rechercher des chunks juridiques
  */
 export async function searchChunks(query?: string, sujet?: string, source?: string): Promise<ChunkJuridique[]> {
-  console.log(`🔍 Recherche de chunks: query="${query}", sujet="${sujet}", source="${source}"`);
 
   try {
     // Récupérer tous les chunks
@@ -312,7 +303,6 @@ export async function searchChunks(query?: string, sujet?: string, source?: stri
       return dateB - dateA;
     });
 
-    console.log(`✅ ${chunks.length} chunks trouvés`);
     return chunks;
 
   } catch (error) {
@@ -382,7 +372,6 @@ export async function getSujetsUniques(): Promise<string[]> {
  * Supprimer tous les chunks (utile pour réinitialiser)
  */
 export async function deleteAllChunks(): Promise<{ deleted: number }> {
-  console.log('🗑️  Suppression de tous les chunks...');
 
   try {
     const allItems = await kv.getByPrefix('chunks_juridiques:');
@@ -391,7 +380,6 @@ export async function deleteAllChunks(): Promise<{ deleted: number }> {
       await kv.del(item.key);
     }
 
-    console.log(`✅ ${allItems.length} chunks supprimés`);
     return { deleted: allItems.length };
 
   } catch (error) {

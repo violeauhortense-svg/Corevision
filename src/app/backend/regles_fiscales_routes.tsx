@@ -3,7 +3,6 @@ import * as reglesFiscalesDB from "./regles_fiscales_db.tsx";
 
 export function setupReglesFiscalesRoutes(app: Hono) {
   app.post("/make-server-cac859af/regles-fiscales/initialiser", async (c) => {
-    console.log('🚀 Initialisation de la base de règles fiscales...');
     try {
       const result = await reglesFiscalesDB.initialiserReglesFiscales();
       return c.json(result);
@@ -14,7 +13,6 @@ export function setupReglesFiscalesRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/regles-fiscales", async (c) => {
-    console.log('📚 Récupération de toutes les règles fiscales...');
     try {
       const regles = await reglesFiscalesDB.getToutesRegles();
       return c.json({ success: true, count: regles.length, regles });
@@ -25,7 +23,6 @@ export function setupReglesFiscalesRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/regles-fiscales/domaine/:domaine", async (c) => {
-    console.log('🔍 Récupération des règles par domaine...');
     try {
       const domaine = c.req.param('domaine');
       const regles = await reglesFiscalesDB.getReglesParDomaine(domaine as any);
@@ -37,7 +34,6 @@ export function setupReglesFiscalesRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/regles-fiscales/recherche/:query", async (c) => {
-    console.log('🔍 Recherche de règles fiscales...');
     try {
       const query = c.req.param('query');
       const regles = await reglesFiscalesDB.rechercherRegles(query);
@@ -49,7 +45,6 @@ export function setupReglesFiscalesRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/regles-fiscales/:id", async (c) => {
-    console.log('🔍 Récupération d\'une règle fiscale...');
     try {
       const id = c.req.param('id');
       const regle = await reglesFiscalesDB.getRegleFiscale(id);
@@ -62,7 +57,6 @@ export function setupReglesFiscalesRoutes(app: Hono) {
   });
 
   app.post("/make-server-cac859af/regles-fiscales", async (c) => {
-    console.log('➕ Création d\'une nouvelle règle fiscale...');
     try {
       const body = await c.req.json();
       const regle = await reglesFiscalesDB.creerRegleFiscale(body);
@@ -74,7 +68,6 @@ export function setupReglesFiscalesRoutes(app: Hono) {
   });
 
   app.put("/make-server-cac859af/regles-fiscales/:id", async (c) => {
-    console.log('✏️ Modification d\'une règle fiscale...');
     try {
       const id = c.req.param('id');
       const body = await c.req.json();
@@ -88,7 +81,6 @@ export function setupReglesFiscalesRoutes(app: Hono) {
   });
 
   app.delete("/make-server-cac859af/regles-fiscales/:id", async (c) => {
-    console.log('🗑️ Suppression d\'une règle fiscale...');
     try {
       const id = c.req.param('id');
       const success = await reglesFiscalesDB.supprimerRegleFiscale(id);
@@ -101,7 +93,6 @@ export function setupReglesFiscalesRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/regles-fiscales-stats", async (c) => {
-    console.log('📊 Récupération des stats règles fiscales...');
     try {
       const stats = await reglesFiscalesDB.getStatistiquesRegles();
       return c.json({ success: true, stats });

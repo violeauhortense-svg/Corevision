@@ -26,7 +26,6 @@ export function RapportSection({ clientId, clientName }: RapportSectionProps) {
             const clients = JSON.parse(storedClients);
             const client = clients.find((c: any) => c.id === clientId);
             if (client) {
-              console.log('✅ Client trouvé pour rapport progressif:', client);
               setClientData(client);
               setLoading(false);
               return;
@@ -47,7 +46,6 @@ export function RapportSection({ clientId, clientName }: RapportSectionProps) {
           const data = localStorage.getItem(key);
           if (data) {
             const client = JSON.parse(data);
-            console.log('✅ Client trouvé via client_detail:', client);
             setClientData(client);
             setLoading(false);
             return;

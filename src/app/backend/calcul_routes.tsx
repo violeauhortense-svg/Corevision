@@ -18,7 +18,6 @@ export function setupCalculRoutes(app: Hono) {
     try {
       const body = await c.req.json();
 
-      console.log('📊 Calcul patrimoine complet...');
 
       const input: calculs.CalculsPatrimoniauxInput = {
         actifsFinanciers: body.actifsFinanciers || [],
@@ -30,7 +29,6 @@ export function setupCalculRoutes(app: Hono) {
 
       const resultats = calculs.calculerPatrimoineComplet(input);
 
-      console.log('✅ Calculs effectués:', {
         patrimoineNet: resultats.patrimoineNet,
         scoreGlobal: resultats.scores.global,
       });
@@ -59,7 +57,6 @@ export function setupCalculRoutes(app: Hono) {
     try {
       const body = await c.req.json();
 
-      console.log('📈 Simulation patrimoine...');
 
       const input: calculs.SimulationInput = {
         patrimoineInitial: body.patrimoineInitial || 0,
@@ -72,7 +69,6 @@ export function setupCalculRoutes(app: Hono) {
 
       const simulation = calculs.simulerPatrimoine(input);
 
-      console.log('✅ Simulation effectuée:', {
         duree: input.dureeAnnees,
         patrimoneFinal: simulation.patrimoneFinal,
       });
@@ -101,7 +97,6 @@ export function setupCalculRoutes(app: Hono) {
     try {
       const body = await c.req.json();
 
-      console.log('🔍 Détection problèmes...');
 
       // D'abord calculer le patrimoine complet
       const input: calculs.CalculsPatrimoniauxInput = {
@@ -115,7 +110,6 @@ export function setupCalculRoutes(app: Hono) {
       const resultats = calculs.calculerPatrimoineComplet(input);
       const problemes = calculs.detecterProblemes(resultats);
 
-      console.log(`✅ ${problemes.length} problème(s) détecté(s)`);
 
       return c.json({
         success: true,

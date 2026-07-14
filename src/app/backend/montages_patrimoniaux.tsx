@@ -27,7 +27,6 @@ export async function creerMontage(montage: Omit<MontagePatrimonial, 'id' | 'dat
   montage?: MontagePatrimonial;
   error?: string;
 }> {
-  console.log('➕ Création d\'un nouveau montage patrimonial:', montage.nom_montage);
 
   try {
     // Générer un ID unique
@@ -49,7 +48,6 @@ export async function creerMontage(montage: Omit<MontagePatrimonial, 'id' | 'dat
     const key = `montage_patrimonial:${id}`;
     await kv.set(key, nouveauMontage);
 
-    console.log(`✅ Montage créé avec succès: ${id}`);
 
     return {
       success: true,
@@ -69,7 +67,6 @@ export async function creerMontage(montage: Omit<MontagePatrimonial, 'id' | 'dat
  * Obtenir un montage par son ID ou son nom
  */
 export async function getMontage(montageIdOrName: string): Promise<MontagePatrimonial | null> {
-  console.log('🔍 Récupération du montage:', montageIdOrName);
 
   try {
     // 1. Essayer de récupérer par ID dans le KV store
@@ -77,12 +74,10 @@ export async function getMontage(montageIdOrName: string): Promise<MontagePatrim
     const montageFromKV = await kv.get(key) as MontagePatrimonial | null;
 
     if (montageFromKV) {
-      console.log(`✅ Montage trouvé dans KV: ${montageFromKV.nom_montage}`);
       return montageFromKV;
     }
 
     // 2. Si non trouvé, chercher dans les montages statiques par nom
-    console.log('🔍 Recherche dans les montages statiques...');
     const montageStatique = MONTAGES_60_PROFESSIONNELS.find(
       m => m.nom_montage === montageIdOrName || m.nom_montage.toLowerCase() === montageIdOrName.toLowerCase()
     );
@@ -95,11 +90,9 @@ export async function getMontage(montageIdOrName: string): Promise<MontagePatrim
         date_creation: new Date().toISOString(),
         date_modification: new Date().toISOString(),
       };
-      console.log(`✅ Montage statique trouvé: ${montageComplet.nom_montage}`);
       return montageComplet;
     }
 
-    console.log('⚠️ Montage non trouvé:', montageIdOrName);
     return null;
 
   } catch (error) {
@@ -119,7 +112,6 @@ export async function updateMontage(
   montage?: MontagePatrimonial;
   error?: string;
 }> {
-  console.log('✏️ Mise à jour du montage:', montageId);
 
   try {
     const montageExistant = await getMontage(montageId);
@@ -142,7 +134,6 @@ export async function updateMontage(
     const key = `montage_patrimonial:${montageId}`;
     await kv.set(key, montageModifie);
 
-    console.log(`✅ Montage mis à jour: ${montageModifie.nom_montage}`);
 
     return {
       success: true,
@@ -165,7 +156,6 @@ export async function deleteMontage(montageId: string): Promise<{
   success: boolean;
   error?: string;
 }> {
-  console.log('🗑️ Suppression du montage:', montageId);
 
   try {
     const montageExistant = await getMontage(montageId);
@@ -180,7 +170,6 @@ export async function deleteMontage(montageId: string): Promise<{
     const key = `montage_patrimonial:${montageId}`;
     await kv.del(key);
 
-    console.log(`✅ Montage supprimé: ${montageExistant.nom_montage}`);
 
     return { success: true };
 
@@ -203,7 +192,6 @@ export async function searchMontages(
   statut?: string,
   tags?: string[]
 ): Promise<MontagePatrimonial[]> {
-  console.log('🔍 Recherche de montages patrimoniaux...');
 
   try {
     // Récupérer tous les montages
@@ -259,7 +247,6 @@ export async function searchMontages(
       return dateB - dateA;
     });
 
-    console.log(`✅ ${montages.length} montages trouvés`);
     return montages;
 
   } catch (error) {
@@ -355,7 +342,6 @@ export async function getAllTags(): Promise<string[]> {
 
     const tags = Array.from(tagsSet).sort();
 
-    console.log(`✅ ${tags.length} tags uniques trouvés`);
     return tags;
 
   } catch (error) {
@@ -372,7 +358,6 @@ export async function importerMontages(montages: Omit<MontagePatrimonial, 'id' |
   imported: number;
   errors: string[];
 }> {
-  console.log(`📥 Import de ${montages.length} montages patrimoniaux...`);
 
   const errors: string[] = [];
   let imported = 0;
@@ -392,7 +377,6 @@ export async function importerMontages(montages: Omit<MontagePatrimonial, 'id' |
     }
   }
 
-  console.log(`✅ Import terminé: ${imported}/${montages.length} montages importés`);
 
   return {
     success: errors.length === 0,
@@ -405,7 +389,6 @@ export async function importerMontages(montages: Omit<MontagePatrimonial, 'id' |
  * Supprimer tous les montages (pour réinitialiser)
  */
 export async function deleteAllMontages(): Promise<{ deleted: number }> {
-  console.log('🗑️ Suppression de tous les montages...');
 
   try {
     const allItems = await kv.getByPrefix('montage_patrimonial:');
@@ -414,7 +397,6 @@ export async function deleteAllMontages(): Promise<{ deleted: number }> {
       await kv.del(item.key);
     }
 
-    console.log(`✅ ${allItems.length} montages supprimés`);
     return { deleted: allItems.length };
 
   } catch (error) {

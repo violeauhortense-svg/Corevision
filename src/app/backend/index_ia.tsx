@@ -40,7 +40,6 @@ async function genererEmbedding(texte: string): Promise<number[]> {
   }
 
   try {
-    console.log(`🤖 Génération embedding pour texte de ${texte.length} caractères...`);
 
     const response = await fetch('https://api.openai.com/v1/embeddings', {
       method: 'POST',
@@ -62,7 +61,6 @@ async function genererEmbedding(texte: string): Promise<number[]> {
     const data = await response.json();
     const embedding = data.data[0].embedding;
 
-    console.log(`✅ Embedding généré: ${embedding.length} dimensions`);
     return embedding;
 
   } catch (error) {
@@ -106,7 +104,6 @@ function preparerTexteEmbedding(regle: RegleFiscale): string {
  * Indexer une règle fiscale (créer son embedding)
  */
 export async function indexerRegle(regle: RegleFiscale): Promise<VecteurRegle | null> {
-  console.log(`📇 Indexation de la règle: ${regle.id}`);
 
   try {
     // Préparer le texte pour l'embedding
@@ -127,7 +124,6 @@ export async function indexerRegle(regle: RegleFiscale): Promise<VecteurRegle | 
       date_indexation: new Date().toISOString(),
     };
 
-    console.log(`✅ Règle indexée: ${regle.id}`);
     return vecteur;
 
   } catch (error) {
@@ -149,13 +145,11 @@ export async function indexerToutesLesRegles(): Promise<{
   const startTime = Date.now();
   const errors: string[] = [];
 
-  console.log('🚀 Début de l\'indexation de toutes les règles validées...');
 
   try {
     // Récupérer toutes les règles validées
     const reglesValidees = await extracteurRegles.searchRegles(undefined, 'validé');
 
-    console.log(`   📚 ${reglesValidees.length} règles validées à indexer`);
 
     let reglesIndexees = 0;
     let reglesEchouees = 0;
@@ -171,7 +165,6 @@ export async function indexerToutesLesRegles(): Promise<{
           await kv.set(key, vecteur);
           reglesIndexees++;
 
-          console.log(`   ✅ [${reglesIndexees}/${reglesValidees.length}] ${regle.regle.substring(0, 60)}...`);
         } else {
           reglesEchouees++;
         }
@@ -200,9 +193,6 @@ export async function indexerToutesLesRegles(): Promise<{
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1) + 's';
 
-    console.log(`✅ Indexation terminée en ${duration}`);
-    console.log(`   - Règles indexées: ${reglesIndexees}`);
-    console.log(`   - Règles échouées: ${reglesEchouees}`);
 
     return {
       success: true,
@@ -259,7 +249,6 @@ export async function rechercherRegles(
   limit: number = 10,
   seuilSimilarite: number = 0.5
 ): Promise<RechercheResult[]> {
-  console.log(`🔍 Recherche sémantique: "${query}"`);
 
   try {
     // Générer l'embedding de la query
@@ -272,7 +261,6 @@ export async function rechercherRegles(
       .filter(item => item.key !== 'index_ia:last_indexation')
       .map(item => item.value as VecteurRegle);
 
-    console.log(`   📚 ${vecteurs.length} règles indexées trouvées`);
 
     // Calculer la similarité pour chaque vecteur
     const resultats: RechercheResult[] = [];
@@ -298,7 +286,6 @@ export async function rechercherRegles(
     // Limiter les résultats
     const resultatsFiltres = resultats.slice(0, limit);
 
-    console.log(`✅ ${resultatsFiltres.length} règles pertinentes trouvées`);
 
     return resultatsFiltres;
 
@@ -326,7 +313,6 @@ export async function rechercherPourAssistant(
     pertinence: number;
   }>;
 }> {
-  console.log(`🤖 Recherche pour assistant IA: "${question}"`);
 
   // Enrichir la question avec le contexte
   let queryEnrichie = question;
@@ -346,7 +332,6 @@ export async function rechercherPourAssistant(
     pertinence: Math.round(r.score * 100) / 100
   }));
 
-  console.log(`✅ ${reglesFormatees.length} règles retournées pour l'assistant`);
 
   return {
     question,
@@ -389,7 +374,6 @@ export async function getIndexationStats() {
  * Supprimer tous les vecteurs (utile pour réindexer)
  */
 export async function deleteAllVecteurs(): Promise<{ deleted: number }> {
-  console.log('🗑️  Suppression de tous les vecteurs...');
 
   try {
     const allItems = await kv.getByPrefix('index_ia:');
@@ -398,7 +382,6 @@ export async function deleteAllVecteurs(): Promise<{ deleted: number }> {
       await kv.del(item.key);
     }
 
-    console.log(`✅ ${allItems.length} vecteurs supprimés`);
     return { deleted: allItems.length };
 
   } catch (error) {
@@ -414,7 +397,6 @@ export async function trouverReglesSimilaires(
   regleId: string,
   limit: number = 5
 ): Promise<RechercheResult[]> {
-  console.log(`🔗 Recherche de règles similaires à: ${regleId}`);
 
   try {
     // Récupérer le vecteur de la règle source
@@ -445,7 +427,6 @@ export async function trouverReglesSimilaires(
     // Trier et limiter
     resultats.sort((a, b) => b.score - a.score);
 
-    console.log(`✅ ${Math.min(limit, resultats.length)} règles similaires trouvées`);
 
     return resultats.slice(0, limit);
 

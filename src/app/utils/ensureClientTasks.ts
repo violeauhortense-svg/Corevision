@@ -48,10 +48,8 @@ export async function ensureClientTasks(clientId: string, clientStatus: Pipeline
   const storedTasks = localStorage.getItem(tasksKey);
   
   if (!storedTasks) {
-    console.log(`📝 Création automatique des tâches pour le client ${clientId} (statut: ${clientStatus})`);
     await createTasksForClient(clientId, clientStatus);
   } else {
-    console.log(`✅ Tâches existantes trouvées pour le client ${clientId}`);
   }
 }
 
@@ -82,7 +80,6 @@ async function createTasksForClient(clientId: string, clientStatus: PipelineStag
   // Sauvegarder dans localStorage
   localStorage.setItem(tasksKey, JSON.stringify(tasks));
   
-  console.log(`✅ ${tasks.length} tâches créées pour le client ${clientId}`);
 }
 
 /**
@@ -93,5 +90,4 @@ export function reloadClientTasks(clientId: string): void {
     detail: { clientId }
   });
   window.dispatchEvent(event);
-  console.log(`🔄 Événement de rechargement des tâches émis pour client ${clientId}`);
 }

@@ -3,7 +3,6 @@ import * as montagesPatrimoniaux from "./montages_patrimoniaux.tsx";
 
 export function setupMontagesPatrimoniauxRoutes(app: Hono) {
   app.post("/make-server-cac859af/montages-patrimoniaux", async (c) => {
-    console.log('➕ Création d\'un nouveau montage patrimonial...');
     try {
       const body = await c.req.json();
       const result = await montagesPatrimoniaux.creerMontage(body);
@@ -16,7 +15,6 @@ export function setupMontagesPatrimoniauxRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/montages-patrimoniaux", async (c) => {
-    console.log('🔍 Recherche de montages patrimoniaux...');
     try {
       const query = c.req.query('q');
       const objectif = c.req.query('objectif');
@@ -33,7 +31,6 @@ export function setupMontagesPatrimoniauxRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/montages-patrimoniaux/:montageId", async (c) => {
-    console.log('🔍 Récupération d\'un montage patrimonial...');
     try {
       const montageId = c.req.param('montageId');
       const montage = await montagesPatrimoniaux.getMontage(montageId);
@@ -46,7 +43,6 @@ export function setupMontagesPatrimoniauxRoutes(app: Hono) {
   });
 
   app.put("/make-server-cac859af/montages-patrimoniaux/:montageId", async (c) => {
-    console.log('✏️ Mise à jour d\'un montage patrimonial...');
     try {
       const montageId = c.req.param('montageId');
       const body = await c.req.json();
@@ -60,7 +56,6 @@ export function setupMontagesPatrimoniauxRoutes(app: Hono) {
   });
 
   app.delete("/make-server-cac859af/montages-patrimoniaux/:montageId", async (c) => {
-    console.log('🗑️ Suppression d\'un montage patrimonial...');
     try {
       const montageId = c.req.param('montageId');
       const result = await montagesPatrimoniaux.deleteMontage(montageId);
@@ -73,7 +68,6 @@ export function setupMontagesPatrimoniauxRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/montages-patrimoniaux-stats", async (c) => {
-    console.log('📊 Récupération des stats montages...');
     try {
       const stats = await montagesPatrimoniaux.getMontagesStats();
       return c.json({ success: true, stats });
@@ -84,7 +78,6 @@ export function setupMontagesPatrimoniauxRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/montages-patrimoniaux-tags", async (c) => {
-    console.log('🏷️ Récupération des tags...');
     try {
       const tags = await montagesPatrimoniaux.getAllTags();
       return c.json({ success: true, count: tags.length, tags });
@@ -95,7 +88,6 @@ export function setupMontagesPatrimoniauxRoutes(app: Hono) {
   });
 
   app.post("/make-server-cac859af/montages-patrimoniaux-import-exemple", async (c) => {
-    console.log('📥 Import des montages exemple...');
     try {
       const result = await montagesPatrimoniaux.importerMontages(montagesPatrimoniaux.MONTAGES_EXEMPLE);
       return c.json(result);
@@ -106,7 +98,6 @@ export function setupMontagesPatrimoniauxRoutes(app: Hono) {
   });
 
   app.post("/make-server-cac859af/montages-patrimoniaux-import", async (c) => {
-    console.log('📥 Import de montages personnalisés...');
     try {
       const body = await c.req.json();
       const { montages } = body;
@@ -122,7 +113,6 @@ export function setupMontagesPatrimoniauxRoutes(app: Hono) {
   });
 
   app.delete("/make-server-cac859af/montages-patrimoniaux-all", async (c) => {
-    console.log('🗑️ Suppression de tous les montages...');
     try {
       const result = await montagesPatrimoniaux.deleteAllMontages();
       return c.json({ success: true, deleted: result.deleted });

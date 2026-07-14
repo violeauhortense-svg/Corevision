@@ -72,7 +72,6 @@ export function useTaskTemplates() {
       const duplicateTasks = tasks.filter(t => t.title === title);
       
       if (duplicateTasks.length > 1) {
-        console.log(`⚠️ ${duplicateTasks.length} doublons de "${title}" détectés`);
         
         // Stratégie de choix de la tâche à garder :
         // 1. Priorité : Tâche avec documentRequests (pour "Réception des documents clients")
@@ -100,7 +99,6 @@ export function useTaskTemplates() {
         // Supprimer les doublons
         for (const task of duplicateTasks) {
           if (task.id !== taskToKeep.id) {
-            console.log(`🗑️ Suppression du doublon: "${task.title}" (ID: ${task.id}, Stage: ${task.stage})`);
             try {
               await taskAPI.delete(task.id);
               hasChanges = true;
@@ -137,7 +135,6 @@ export function useTaskTemplates() {
     const migratedTasks = await Promise.all(workingTasks.map(async (task) => {
       // Supprimer les tâches obsolètes
       if (obsoleteTasks.includes(task.title)) {
-        console.log(`🗑️ Suppression de la tâche obsolète: "${task.title}"`);
         try {
           await taskAPI.delete(task.id);
           return null; // Marquer pour suppression
@@ -150,7 +147,6 @@ export function useTaskTemplates() {
       // Corriger les tâches Audit patrimonial qui sont au mauvais endroit (pas en R1)
       // ⚠️ CORRECTION : Au lieu de supprimer, on corrige le stage
       if (auditOnlyTasks.includes(task.title) && task.stage && task.stage !== 'R1') {
-        console.log(`🔧 Correction du stage de "${task.title}" : ${task.stage} → R1`);
         hasChanges = true;
         try {
           const correctedTask = { ...task, stage: 'R1' as PipelineStage };
@@ -165,7 +161,6 @@ export function useTaskTemplates() {
       // Corriger les tâches qui doivent être en R1 (Audit patrimonial)
       // ⚠️ CORRECTION : Au lieu de supprimer, on corrige le stage
       if (auditReceptionTasks.includes(task.title) && task.stage && task.stage !== 'R1') {
-        console.log(`🔧 Correction du stage de "${task.title}" : ${task.stage} → R1`);
         hasChanges = true;
         try {
           const correctedTask = { ...task, stage: 'R1' as PipelineStage };
@@ -187,7 +182,6 @@ export function useTaskTemplates() {
       // 1. Vérifier d'abord le mapping spécifique
       if (taskStageMapping[task.title]) {
         foundStage = taskStageMapping[task.title];
-        console.log(`🔄 Migration tâche "${task.title}" vers stage ${foundStage} (mapping spécifique)`);
       } else {
         // 2. Trouver le stage qui contient cette tâche dans ses templates
         for (const stage of allStages) {
@@ -199,7 +193,6 @@ export function useTaskTemplates() {
         }
         
         if (foundStage) {
-          console.log(`🔄 Migration tâche "${task.title}" vers stage ${foundStage} (trouvé dans templates)`);
         }
       }
       
@@ -235,16 +228,13 @@ export function useTaskTemplates() {
     const filteredTasks = migratedTasks.filter(task => task !== null) as Task[];
     
     if (hasChanges) {
-      console.log('✅ Migration des tâches terminée');
     }
     
     const deletedCount = migratedTasks.length - filteredTasks.length;
     if (deletedCount > 0) {
-      console.log(`🗑️ ${deletedCount} tâche(s) obsolète(s) supprimée(s)`);
     }
     
     // 📊 Afficher un récapitulatif des tâches par stage
-    console.log('📊 Récapitulatif des tâches par stage:');
     const stageGroups = filteredTasks.reduce((acc, task) => {
       const stage = task.stage || 'Sans stage';
       if (!acc[stage]) acc[stage] = [];
@@ -253,7 +243,6 @@ export function useTaskTemplates() {
     }, {} as Record<string, string[]>);
     
     Object.entries(stageGroups).forEach(([stage, titles]) => {
-      console.log(`  ${stage}: ${titles.length} tâche(s) - ${titles.join(', ')}`);
     });
     
     return filteredTasks;
@@ -313,7 +302,6 @@ export function useTaskTemplates() {
           await taskAPI.update(createdTask.id, taskWithStage);
         }
         
-        console.log(`✅ Ajoutée tche template "${templateTitle}" pour le stage ${clientStatus}`);
         clientTasks.push(taskWithStage);
       } catch (error) {
         console.error(`Erreur création tâche "${templateTitle}":`, error);
@@ -322,7 +310,6 @@ export function useTaskTemplates() {
 
     // Si des modifications ont été faites, retourner true
     if (missingTemplates.length > 0) {
-      console.log(`🔄 Migration des tâches : ${missingTemplates.length} ajoutées pour le stage ${clientStatus}`);
       return true;
     }
     return false;
@@ -335,7 +322,6 @@ export function useTaskTemplates() {
     clientId: string,
     clientStatus: PipelineStage
   ): Promise<Task[]> => {
-    console.log('⚠️ Aucune tâche trouvée, création automatique des tâches...');
     const taskTemplates = getTasksForStatus(clientStatus);
     const createdTasks: Task[] = [];
     
@@ -358,7 +344,6 @@ export function useTaskTemplates() {
         
         await taskAPI.update(createdTask.id, taskWithStage);
         createdTasks.push(taskWithStage);
-        console.log(`✅ Tâche créée: "${templateTitle}" pour le stage ${clientStatus}`);
       } catch (error) {
         console.error(`❌ Erreur création tâche "${templateTitle}":`, error);
       }

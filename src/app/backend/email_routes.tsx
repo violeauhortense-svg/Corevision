@@ -74,7 +74,6 @@ async function sendDERSignatureEmail(params: {
   const replyToName = conseillerName || 'Votre Conseiller';
 
   // Send email to client
-  console.log('📧 Envoi email signature DER au client:', clientEmail);
   const clientEmailHtml = generateEmailHTML(clientName, signatureLink, !!spouseEmail, false);
 
   await emailService.sendEmail({
@@ -85,11 +84,9 @@ async function sendDERSignatureEmail(params: {
     from: { email: 'contact@cvh-patrimoine.com', name: 'CRM-CoreVision' },
   });
 
-  console.log('✅ Email signature DER envoyé au client:', clientEmail);
 
   // Send email to spouse if present
   if (spouseEmail && spouseName && spouseSignatureLink) {
-    console.log('📧 Envoi email signature DER au conjoint:', spouseEmail);
 
     const spouseEmailHtml = generateEmailHTML(spouseName, spouseSignatureLink, true, true);
 
@@ -103,7 +100,6 @@ async function sendDERSignatureEmail(params: {
       console.error('⚠️ Erreur envoi email conjoint (non bloquant):', err);
     });
 
-    console.log('✅ Email signature DER envoyé au conjoint:', spouseEmail);
   }
 
   // Mettre à jour le statut d'envoi
@@ -150,7 +146,6 @@ export function setupEmailRoutes(app: Hono, verifyAuth: Function) {
         spouseName
       } = body;
 
-      console.log('📧 Requête d\'envoi email de présentation reçue');
       console.log('  - Client Email:', clientEmail);
       console.log('  - Client Name:', clientName);
       console.log('  - Spouse Email:', spouseEmail);
@@ -169,7 +164,6 @@ export function setupEmailRoutes(app: Hono, verifyAuth: Function) {
       // Générer un token DER si c'est un email de présentation
       let finalEmailContent = emailContent;
       if (emailType === 'presentation' && clientId) {
-        console.log('🔐 Génération du token DER...');
         
         const clientToken = derToken || crypto.randomUUID();
         const spouseToken = spouseEmail && spouseName ? crypto.randomUUID() : null;
@@ -213,12 +207,10 @@ export function setupEmailRoutes(app: Hono, verifyAuth: Function) {
         const regexQuery = /https?:\/\/[^\s]+[?].*page=sign-der.*token=[^\s&]+/g;
         finalEmailContent = emailContent.replace(regexHash, clientSignatureLink).replace(regexQuery, clientSignatureLink);
         
-        console.log('✅ Token DER généré:', clientToken);
       }
 
       const emailService = getEmailService();
 
-      console.log('📧 Envoi email de présentation...');
 
       let htmlContent = finalEmailContent.replace(/\n/g, '<br>');
 
@@ -243,13 +235,11 @@ export function setupEmailRoutes(app: Hono, verifyAuth: Function) {
         from: { email: 'contact@cvh-patrimoine.com', name: 'CRM-CoreVision' },
       });
 
-      console.log('✅ Email de présentation envoyé au client');
 
       let spouseEmailSentTo: string | null = null;
 
       // Send to spouse if applicable
       if (emailType === 'presentation' && clientId && spouseEmail && spouseName) {
-        console.log('📧 Envoi du MÊME email de présentation au conjoint...');
 
         const derSig = await kv.get(`der_signature:client:${clientId}`);
 
@@ -282,7 +272,6 @@ export function setupEmailRoutes(app: Hono, verifyAuth: Function) {
             console.error('⚠️ Erreur envoi email au conjoint:', err);
           });
 
-          console.log('✅ Email de présentation envoyé au conjoint:', spouseEmail);
           spouseEmailSentTo = spouseEmail;
         } else {
           console.error('❌ spouseToken manquant dans derSig');
@@ -303,7 +292,6 @@ export function setupEmailRoutes(app: Hono, verifyAuth: Function) {
 
   // Send meeting confirmation email with DER link
   app.post("/make-server-cac859af/send-email", async (c) => {
-    console.log('📧 POST /send-email - Route appelée');
     
     const { user, error } = await verifyAuthRequest(c.req);
     
@@ -322,7 +310,6 @@ export function setupEmailRoutes(app: Hono, verifyAuth: Function) {
         emailType
       } = body;
 
-      console.log('📧 Requête d\'envoi email reçue');
       console.log('  - Destinataire:', to);
       console.log('  - Sujet:', subject);
       console.log('  - Type:', emailType);
@@ -352,7 +339,6 @@ export function setupEmailRoutes(app: Hono, verifyAuth: Function) {
 
       const emailService = getEmailService();
 
-      console.log('📧 Envoi email via service email...');
 
       await emailService.sendEmail({
         to: to,
@@ -362,7 +348,6 @@ export function setupEmailRoutes(app: Hono, verifyAuth: Function) {
         from: { email: 'contact@cvh-patrimoine.com', name: 'CRM-CoreVision' },
       });
 
-      console.log('✅ Email envoyé:', to);
 
       return c.json({
         success: true,

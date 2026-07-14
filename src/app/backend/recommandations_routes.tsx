@@ -18,7 +18,6 @@ export function setupRecommandationsRoutes(app: Hono) {
       const clientId = c.req.param('clientId');
       const body = await c.req.json().catch(() => ({}));
       
-      console.log(`🎯 Génération recommandations client ${clientId}`);
       
       // Récupérer les données client
       let clientData = body.clientData;
@@ -44,8 +43,6 @@ export function setupRecommandationsRoutes(app: Hono) {
       // Sauvegarder le rapport
       await kv.set(`recommandations:${clientId}:latest`, rapport);
       
-      console.log(`✅ ${rapport.totalRecommandations} recommandation(s) générée(s)`);
-      console.log(`💰 Gain potentiel: ${rapport.gainFiscalPotentielAnnuel.toLocaleString('fr-FR')} €/an`);
       
       return c.json({
         success: true,

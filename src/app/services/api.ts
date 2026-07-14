@@ -3,7 +3,6 @@ import { supabase } from '../utils/api/client';
 
 const BASE_URL = apiBaseUrl;
 
-console.log('🔗 API Base URL:', BASE_URL);
 
 // ─── Session ───────────────────────────────────────────────────────────────
 

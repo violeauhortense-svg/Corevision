@@ -219,13 +219,11 @@ class ClientServiceClass {
   }> {
     try {
       // 1️⃣ Nettoyer TOUTES les données associées au client
-      console.log('🧹 Nettoyage des données du client...');
       const cleanupResult = await cleanupClientData(clientId);
 
       if (!cleanupResult.success) {
         console.warn('⚠️ Le nettoyage a rencontré des erreurs, mais on continue la suppression');
       } else {
-        console.log('✅ Nettoyage des données terminé:', cleanupResult.summary);
       }
 
       // 2️⃣ Supprimer le client du serveur

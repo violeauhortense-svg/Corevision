@@ -8,7 +8,6 @@ export function setupRapportSimpleRoute(app: any) {
   
   // Route principale : Rapport simple
   app.post("/make-server-cac859af/rapport-patrimonial-simple", async (c: any) => {
-    console.log('📊 Génération rapport PATRIMONIAL SIMPLIFIÉ...');
     
     try {
       const body = await c.req.json();
@@ -22,10 +21,8 @@ export function setupRapportSimpleRoute(app: any) {
         }, 400);
       }
       
-      console.log(`✅ Données client reçues: ${clientData.nom || 'N/A'} ${clientData.prenom || ''}`);
       
       // Générer le rapport simplifié
-      console.log('🔄 Appel de genererRapportSimple...');
       const rapport = await genererRapportSimple(clientId, clientData);
       
       if (!rapport) {
@@ -36,7 +33,6 @@ export function setupRapportSimpleRoute(app: any) {
         }, 500);
       }
       
-      console.log('✅ Rapport SIMPLE généré avec succès');
       
       return c.json({ 
         ...rapport,
@@ -57,5 +53,4 @@ export function setupRapportSimpleRoute(app: any) {
     }
   });
   
-  console.log('✅ Rapport simple route loaded');
 }

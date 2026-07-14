@@ -9,7 +9,6 @@ export function setupSanctionsRoutes(app: any, supabaseAdmin: any, kv: any) {
       const body = await c.req.json();
       const { clientId, searchData } = body;
 
-      console.log(`🔍 Vérification sanctions pour client ${clientId}`);
 
       const matches: any[] = [];
       const checkedLists: string[] = [];
@@ -25,7 +24,6 @@ export function setupSanctionsRoutes(app: any, supabaseAdmin: any, kv: any) {
         // Dans un environnement de production, utiliser l'API officielle ou télécharger les fichiers XML
         // https://www.tresor.economie.gouv.fr/services-aux-entreprises/sanctions-economiques
         
-        console.log('✓ Liste Trésor FR vérifiée');
       } catch (error) {
         console.error('❌ Erreur vérification Trésor:', error);
       }
@@ -42,7 +40,6 @@ export function setupSanctionsRoutes(app: any, supabaseAdmin: any, kv: any) {
         // Pour éviter les problèmes CORS et de performance, on ne fait pas d'appel direct
         // En production, télécharger et parser le fichier XML localement
         
-        console.log('✓ Liste UE vérifiée');
       } catch (error) {
         console.error('❌ Erreur vérification UE:', error);
       }
@@ -59,7 +56,6 @@ export function setupSanctionsRoutes(app: any, supabaseAdmin: any, kv: any) {
         // Pour éviter les problèmes CORS et de performance, on ne fait pas d'appel direct
         // En production, télécharger et parser le fichier CSV localement
         
-        console.log('✓ Liste OFAC vérifiée');
       } catch (error) {
         console.error('❌ Erreur vérification OFAC:', error);
       }
@@ -98,7 +94,6 @@ export function setupSanctionsRoutes(app: any, supabaseAdmin: any, kv: any) {
       
       if (commonNames.includes(lastName)) {
         // Pour les noms très courants, on nécessite une correspondance plus précise
-        console.log(`⚠️ Nom courant détecté: ${lastName} - vérification renforcée nécessaire`);
       }
 
       // Sauvegarde de la vérification dans la base
@@ -111,7 +106,6 @@ export function setupSanctionsRoutes(app: any, supabaseAdmin: any, kv: any) {
         status: matches.length > 0 ? 'alert' : 'clean',
       });
 
-      console.log(`✅ Vérification terminée - ${matches.length} correspondance(s) trouvée(s)`);
 
       return c.json({
         success: true,
@@ -148,7 +142,6 @@ export function setupSanctionsRoutes(app: any, supabaseAdmin: any, kv: any) {
     }
   });
 
-  console.log("✅ Routes de vérification gel des avoirs configurées");
 }
 
 // Fonction pour calculer la similarité entre deux chaînes (score de 0 à 100)

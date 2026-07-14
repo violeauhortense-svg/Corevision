@@ -36,7 +36,6 @@ export async function createDocumentRequests(
     const allTasks = await taskAPI.getAll();
     const clientTasks = allTasks.filter((t: any) => t.clientId === clientId);
     
-    console.log('?? Tâches trouvées pour ce client:', clientTasks.length);
     
     // 3. Trouver la tâche "Réception des documents clients"
     let task = clientTasks.find((t: any) => 
@@ -45,7 +44,6 @@ export async function createDocumentRequests(
     
     // Si la tâche n'existe pas, créer une tâche au stage actuel du client
     if (!task) {
-      console.log(`?? Tâche "Réception des documents clients" non trouvée, création au stage ${currentStage}...`);
       
       // Créer une tâche au stage actuel du client
       const newTask = await taskAPI.create(clientId, {
@@ -57,9 +55,7 @@ export async function createDocumentRequests(
       });
       
       task = newTask;
-      console.log('? Tâche créée au stage:', currentStage, 'avec ID:', task.id);
     } else {
-      console.log('? Tâche trouvée:', task.title);
     }
     
     // 4. Créer la structure des documents demandés
@@ -225,7 +221,6 @@ export async function uploadRequestedDocument(
       taskUpdates.description = `? Tous les documents ont été reçus (${totalReceived}/${updatedDocumentRequests.totalRequested})`;
     }
     
-    console.log('?? Sauvegarde de la tâche avec:', taskUpdates);
     
     // 6. Sauvegarder via l'API avec un merge explicite
     const updatedTask = {
@@ -233,7 +228,6 @@ export async function uploadRequestedDocument(
       ...taskUpdates,
     };
     
-    console.log('?? Tâche complète avant sauvegarde:', JSON.stringify(updatedTask, null, 2));
     
     await taskAPI.update(task.id, updatedTask);
     
@@ -243,7 +237,6 @@ export async function uploadRequestedDocument(
     const verificationTasks = await taskAPI.getAll();
     const verifiedTask = verificationTasks.find((t: any) => t.id === task.id);
     
-    console.log('?? Vérification de la tâche rechargée:', JSON.stringify(verifiedTask?.documentRequests, null, 2));
     
     if (verifiedTask?.documentRequests?.requestedDocuments[docIndex]?.status === 'received') {
       console.log('? Vérification réussie : le document est bien enregistré comme "received"');

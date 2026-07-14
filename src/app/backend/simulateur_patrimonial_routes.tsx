@@ -4,7 +4,6 @@ import * as montagesPatrimoniaux from "./montages_patrimoniaux.tsx";
 
 export function setupSimulateurPatrimonialRoutes(app: Hono) {
   app.post("/make-server-cac859af/simulateur-patrimonial/simuler", async (c) => {
-    console.log('📊 Simulation d\'un montage...');
     try {
       const body = await c.req.json();
       const { parametres, sauvegarder, clientId } = body;
@@ -21,7 +20,6 @@ export function setupSimulateurPatrimonialRoutes(app: Hono) {
   });
 
   app.post("/make-server-cac859af/simulateur-patrimonial/comparer", async (c) => {
-    console.log('📊 Comparaison de scénarios...');
     try {
       const body = await c.req.json();
       const { scenarios } = body;
@@ -37,7 +35,6 @@ export function setupSimulateurPatrimonialRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/simulateur-patrimonial/parametres-defaut/:montageId", async (c) => {
-    console.log('🔧 Génération de paramètres par défaut...');
     try {
       const montageId = c.req.param('montageId');
       const capital = parseInt(c.req.query('capital') || '100000');
@@ -54,7 +51,6 @@ export function setupSimulateurPatrimonialRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/simulateur-patrimonial/simulations/:clientId", async (c) => {
-    console.log('📚 Récupération des simulations d\'un client...');
     try {
       const clientId = c.req.param('clientId');
       const simulations = await simulateurPatrimonial.getSimulationsClient(clientId);
@@ -66,7 +62,6 @@ export function setupSimulateurPatrimonialRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/simulateur-patrimonial/stats", async (c) => {
-    console.log('📊 Récupération des stats du simulateur...');
     try {
       const stats = await simulateurPatrimonial.getSimulateurStats();
       return c.json({ success: true, stats });

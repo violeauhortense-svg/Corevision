@@ -24,7 +24,6 @@ export const taskSyncService = {
 
       // Récupérer les tâches du client
       const tasks = await taskAPI.getByClientId(clientId);
-      console.log(`🔄 Synchronisation de ${tasks.length} tâches pour le client ${clientId}`);
 
       // Ajouter/mettre à jour les tâches dans localStorage pour TodoView
       await taskSyncService.syncToTodoList(tasks, userId);
@@ -53,7 +52,6 @@ export const taskSyncService = {
         task.completed !== true && task.completed !== 'Terminé'
       );
 
-      console.log(`📝 Mise à jour TodoList: ${openTasks.length} tâches ouvertes`);
 
       localStorage.setItem(key, JSON.stringify(openTasks));
       return { success: true, count: openTasks.length };
@@ -73,7 +71,6 @@ export const taskSyncService = {
       // Filtrer les tâches avec deadline pour affichage
       const tasksWithDeadline = tasks.filter(task => task.deadline);
 
-      console.log(`📅 Détecté: ${tasksWithDeadline.length} tâches avec deadline`);
 
       // Note: L'agenda devrait afficher les tâches avec deadline de manière read-only
       // pour que les utilisateurs sachent quand les tâches doivent être complétées
@@ -124,7 +121,6 @@ export const taskSyncService = {
       // Synchroniser les tâches du client
       await taskSyncService.syncClientTasks({ clientId, userId });
 
-      console.log(`✅ Tâche ${taskId} marquée comme complétée et synchronisée`);
       return true;
     } catch (error) {
       console.error('❌ Erreur completion tâche:', error);

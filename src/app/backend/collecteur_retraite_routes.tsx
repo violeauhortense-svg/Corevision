@@ -5,7 +5,6 @@ import * as extracteurReglesRetraite from "./extracteur_regles_retraite.tsx";
 
 export function setupCollecteurRetraiteRoutes(app: Hono) {
   app.post("/make-server-cac859af/collecteur-retraite/run", async (c) => {
-    console.log('🏛️ Lancement collecte documents retraite...');
     try {
       const result = await collecteurRetraite.collecterDocumentsRetraite();
       return c.json(result);
@@ -16,7 +15,6 @@ export function setupCollecteurRetraiteRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/collecteur-retraite/documents", async (c) => {
-    console.log('📋 Récupération documents retraite...');
     try {
       const documents = await collecteurRetraite.getDocumentsRetraite();
       return c.json({ success: true, count: documents.length, documents });
@@ -27,7 +25,6 @@ export function setupCollecteurRetraiteRoutes(app: Hono) {
   });
 
   app.post("/make-server-cac859af/parser-retraite/run", async (c) => {
-    console.log('🏛️ Lancement parsing documents retraite...');
     try {
       const result = await parserRetraite.parserDocumentsRetraite();
       return c.json(result);
@@ -38,7 +35,6 @@ export function setupCollecteurRetraiteRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/parser-retraite/sections", async (c) => {
-    console.log('📋 Récupération sections retraite...');
     try {
       const sections = await parserRetraite.getSectionsRetraite();
       return c.json({ success: true, count: sections.length, sections });
@@ -49,7 +45,6 @@ export function setupCollecteurRetraiteRoutes(app: Hono) {
   });
 
   app.post("/make-server-cac859af/extracteur-regles-retraite/run", async (c) => {
-    console.log('🏛️ Lancement extraction règles retraite...');
     try {
       const result = await extracteurReglesRetraite.extraireReglesRetraite();
       return c.json(result);
@@ -60,7 +55,6 @@ export function setupCollecteurRetraiteRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/extracteur-regles-retraite/regles", async (c) => {
-    console.log('📋 Récupération règles retraite...');
     try {
       const regles = await extracteurReglesRetraite.getReglesRetraite();
       return c.json({ success: true, count: regles.length, regles });
@@ -71,7 +65,6 @@ export function setupCollecteurRetraiteRoutes(app: Hono) {
   });
 
   app.post("/make-server-cac859af/extracteur-regles-retraite/initialiser", async (c) => {
-    console.log('🏛️ Initialisation règles retraite statiques...');
     try {
       const result = await extracteurReglesRetraite.initialiserReglesRetraite();
       return c.json(result);
@@ -82,7 +75,6 @@ export function setupCollecteurRetraiteRoutes(app: Hono) {
   });
 
   app.get("/make-server-cac859af/extracteur-regles-retraite/stats", async (c) => {
-    console.log('📊 Récupération stats règles retraite...');
     try {
       const stats = await extracteurReglesRetraite.getStatsReglesRetraite();
       return c.json({ success: true, stats });

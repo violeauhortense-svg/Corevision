@@ -705,7 +705,6 @@ Fiscalité : ${strat.fiscalite}
       
       if (storedTasks) {
         const tasks = JSON.parse(storedTasks);
-        console.log('?? Tâches chargées:', tasks);
 
         // Trouver et valider les tâches R1-R2
         tasks.forEach((task: any) => {
@@ -714,7 +713,6 @@ Fiscalité : ${strat.fiscalite}
             task.completed = true;
             task.notes = '? Stratégie établie par CoreVision - Analyse terminée';
             task.completedAt = new Date().toISOString();
-            console.log('? Tâche "Élaboration de la stratégie" validée');
           }
 
           // Tâche 2 : "Préparation du bilan détaillé"
@@ -722,19 +720,16 @@ Fiscalité : ${strat.fiscalite}
             task.completed = true;
             task.notes = `? Bilan préparé par CoreVision\n\n${audit}`;
             task.completedAt = new Date().toISOString();
-            console.log('? Tâche "Préparation du bilan" validée avec copie audit');
           }
 
           // Tâche 3 : "Validation des recommandations" ? Ajouter les recommandations
           if (task.title === 'Validation des recommandations' && task.stage === 'R1-R2') {
             // Ne pas marquer comme complétée, juste ajouter les recommandations dans les notes
             task.notes = `?? ${preconisations.length} recommandation(s) CoreVision reçues. Consultez-les dans l'onglet Audit pour validation.`;
-            console.log('?? Tâche "Validation des recommandations" mise à jour');
           }
         });
 
         localStorage.setItem(tasksKey, JSON.stringify(tasks));
-        console.log('? Tâches mises à jour');
       }
 
       // ?? ÉTAPE 6 : Sauvegarder le client

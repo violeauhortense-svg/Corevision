@@ -125,7 +125,6 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
   // Écouter les événements de mise à jour des documents
   useEffect(() => {
     const handleDocumentsUpdate = () => {
-      console.log('📢 Événement de mise à jour des documents détecté');
       reloadDocuments();
     };
 
@@ -140,7 +139,6 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
   useEffect(() => {
     const handleAdminValidation = (event: CustomEvent) => {
       if (event.detail && event.detail.clientId === clientId) {
-        console.log('📢 Validation admin CoreVision détectée - Rechargement des données...');
         loadClientData(); // Recharger toutes les données pour avoir les nouvelles infos CoreVision
         toast.success('📋 Données CoreVision mises à jour !');
       }
@@ -156,7 +154,6 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
   // Reload documents from API
   const reloadDocuments = async () => {
     try {
-      console.log('🔄 Rechargement des documents depuis l\'API...');
       const client = await clientAPI.getById(clientId);
       if (client) {
         const initializedRegulatoryDocs = initializeRequiredDocuments(client.status, client.regulatoryDocs || []);

@@ -94,7 +94,6 @@ export function RevenusImpositionForm({
   totalLoyersMeubles
 }: RevenusImpositionFormProps) {
   const [revenus, setRevenus] = useState<RevenuItem[]>(initialRevenus);
-  console.log('🔵 RevenusImpositionForm - Rendu du composant');
   
   const [imposition, setImposition] = useState<ImpositionData>(initialImposition);
   const [showAddRevenu, setShowAddRevenu] = useState(false);
@@ -112,12 +111,10 @@ export function RevenusImpositionForm({
 
   // 🔥 SYNCHRONISATION : Mettre à jour l'état local quand les props changent
   useEffect(() => {
-    console.log('🔄 Synchronisation revenus depuis props:', initialRevenus.length, 'revenus');
     setRevenus(initialRevenus);
   }, [initialRevenus]);
 
   useEffect(() => {
-    console.log('🔄 Synchronisation imposition depuis props');
     setImposition(initialImposition);
   }, [initialImposition]);
 
@@ -209,7 +206,6 @@ export function RevenusImpositionForm({
     
     try {
       const parts = calculerNombreParts(familyInfo);
-      console.log('📊 Calcul nombre de parts:', {
         maritalStatus: familyInfo.maritalStatus,
         children: familyInfo.children?.length || 0,
         childrenFiscaux: familyInfo.children?.filter((e: any) => e.isChargeFiscale || e.aChargeFiscalement).length || 0,
@@ -232,7 +228,6 @@ export function RevenusImpositionForm({
   // Synchroniser le nombre de parts calculé avec l'état imposition
   useEffect(() => {
     if (nombrePartsCalcule > 0 && Math.abs(imposition.nombreParts - nombrePartsCalcule) > 0.01 && !calculEnCoursRef.current) {
-      console.log('🔄 Mise à jour nombre de parts:', imposition.nombreParts, '→', nombrePartsCalcule);
       calculEnCoursRef.current = true;
       setImposition(prev => {
         calculEnCoursRef.current = false;
@@ -254,7 +249,6 @@ export function RevenusImpositionForm({
       }
     });
 
-    console.log('💰 Calcul revenus salariés/TNS:', { traitements, tns });
     return { traitements, tns };
   }, [JSON.stringify(revenus.map(r => ({ cat: r.categorie, montant: r.montantAnnuel })))]);
 
@@ -278,7 +272,6 @@ export function RevenusImpositionForm({
   // 🔄 Synchroniser les revenus calculés avec l'état imposition (UNIQUEMENT quand les DONNÉES changent)
   useEffect(() => {
     if (calculEnCoursRef.current) {
-      console.log('⏸️ Calcul en cours, skip synchronisation revenus');
       return;
     }
 
@@ -312,7 +305,6 @@ export function RevenusImpositionForm({
         updates.push(`foncier: ${imposition.revenusFonciers} → ${revenuFoncierCalcule} (régime: ${regimeActuel})`);
       }
       
-      console.log('🔄 Mise à jour revenus:', updates.join(', '));
       
       calculEnCoursRef.current = true;
       setImposition(prev => {
@@ -442,7 +434,6 @@ export function RevenusImpositionForm({
       
       // ✅ Version SYNC pour affichage immédiat
       const detailIR = calculerImpotRevenuSync(revenusFiscal, partsEffectives);
-      console.log('🧮 Calcul IR (SYNC):', { 
         revenus: revenusFiscal, 
         parts: partsEffectives,
         TMI: detailIR.TMI,
@@ -486,7 +477,6 @@ export function RevenusImpositionForm({
     
     calculerImpotRevenu(revenusFiscal, partsEffectives)
       .then(detailIR => {
-        console.log('🧮 Calcul IR (ASYNC - barèmes dynamiques):', detailIR);
         // On met à jour seulement si le résultat est différent
         if (calculIR?.impotFinal !== detailIR.impotFinal) {
           setCalculIR(detailIR);
@@ -519,7 +509,6 @@ export function RevenusImpositionForm({
       
       // ✅ Version SYNC pour affichage immédiat
       const detailPS = calculerPrelevementsSociauxSync(revenusFiscal);
-      console.log('💰 Calcul PS (SYNC):', detailPS);
       return detailPS;
     } catch (error) {
       console.error('❌ Erreur calcul PS:', error);
@@ -554,7 +543,6 @@ export function RevenusImpositionForm({
     
     calculerPrelevementsSociaux(revenusFiscal)
       .then(detailPS => {
-        console.log('💰 Calcul PS (ASYNC - barèmes dynamiques):', detailPS);
         if (calculPS?.prelevementsSociauxTotal !== detailPS.prelevementsSociauxTotal) {
           setCalculPS(detailPS);
         }
@@ -578,7 +566,6 @@ export function RevenusImpositionForm({
     try {
       // ✅ Version SYNC pour affichage immédiat
       const detailIFI = calculerIFISync(patrimoineImmobilierNet, 0);
-      console.log('🏠 Calcul IFI (SYNC):', { patrimoine: patrimoineImmobilierNet, ifi: detailIFI.ifiFinal });
       return detailIFI;
     } catch (error) {
       console.error('❌ Erreur calcul IFI:', error);
@@ -595,7 +582,6 @@ export function RevenusImpositionForm({
     
     calculerIFI(patrimoineImmobilierNet, 0)
       .then(detailIFI => {
-        console.log('🏠 Calcul IFI (ASYNC - barèmes dynamiques):', detailIFI);
         if (calculIFI?.ifiFinal !== detailIFI.ifiFinal) {
           setCalculIFI(detailIFI);
         }
@@ -616,7 +602,6 @@ export function RevenusImpositionForm({
   const calculIFIDisplay = calculIFI || calculIFIStable;
   
   // 🐛 DEBUG : Logs pour voir ce qui est défini
-  console.log('🐛 DEBUG Module Calcul:', {
     calculIRStable: calculIRStable ? 'DÉFINI' : 'NULL',
     calculIR: calculIR ? 'DÉFINI' : 'NULL',
     calculIRDisplay: calculIRDisplay ? 'DÉFINI' : 'NULL',
@@ -669,7 +654,6 @@ export function RevenusImpositionForm({
         updates.push(`PS: ${imposition.prelevementsSociaux || 0} → ${calculPSStable.prelevementsSociauxTotal}`);
       }
       
-      console.log('🔄 Mise à jour impôts:', updates.join(', '));
       
       calculEnCoursRef.current = true;
       setImposition(prev => {

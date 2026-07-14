@@ -45,14 +45,12 @@ const SOURCES_CONFIG = {
  * Récupère les bulletins officiels des finances publiques
  */
 async function scrapeBOFiP(): Promise<DocumentJuridique[]> {
-  console.log('🔍 Début du scraping BOFiP...');
   const documents: DocumentJuridique[] = [];
 
   try {
     // Pour chaque catégorie du BOFiP
     for (const categoryPath of SOURCES_CONFIG.bofip.categories) {
       const url = `${SOURCES_CONFIG.bofip.base_url}${categoryPath}`;
-      console.log(`📄 Scraping: ${url}`);
 
       try {
         const response = await fetch(url, {
@@ -103,7 +101,6 @@ async function scrapeBOFiP(): Promise<DocumentJuridique[]> {
             };
 
             documents.push(doc);
-            console.log(`✅ Document BOFiP extrait: ${titre.substring(0, 50)}...`);
           }
         });
 
@@ -115,7 +112,6 @@ async function scrapeBOFiP(): Promise<DocumentJuridique[]> {
       }
     }
 
-    console.log(`✅ BOFiP: ${documents.length} documents récupérés`);
     return documents;
 
   } catch (error) {
@@ -129,13 +125,11 @@ async function scrapeBOFiP(): Promise<DocumentJuridique[]> {
  * Récupère les articles du Code général des impôts
  */
 async function scrapeLegifrance(): Promise<DocumentJuridique[]> {
-  console.log('🔍 Début du scraping Legifrance...');
   const documents: DocumentJuridique[] = [];
 
   try {
     for (const codePath of SOURCES_CONFIG.legifrance.codes) {
       const url = `${SOURCES_CONFIG.legifrance.base_url}${codePath}`;
-      console.log(`📄 Scraping: ${url}`);
 
       try {
         const response = await fetch(url, {
@@ -190,7 +184,6 @@ async function scrapeLegifrance(): Promise<DocumentJuridique[]> {
             };
 
             documents.push(doc);
-            console.log(`✅ Document Legifrance extrait: ${titre.substring(0, 50)}...`);
           }
         });
 
@@ -201,7 +194,6 @@ async function scrapeLegifrance(): Promise<DocumentJuridique[]> {
       }
     }
 
-    console.log(`✅ Legifrance: ${documents.length} documents récupérés`);
     return documents;
 
   } catch (error) {
@@ -250,13 +242,11 @@ export async function runCollecte(): Promise<{
   const startTime = Date.now();
   const errors: string[] = [];
 
-  console.log('🚀 Lancement de la collecte juridique automatique...');
 
   try {
     // ÉTAPE 1 : Scraper BOFiP
     let bofipDocs: DocumentJuridique[] = [];
     try {
-      console.log('📥 [1/5] Collecte BOFiP...');
       bofipDocs = await scrapeBOFiP();
     } catch (error) {
       const errorMsg = `Erreur BOFiP: ${error instanceof Error ? error.message : 'Unknown error'}`;
@@ -267,7 +257,6 @@ export async function runCollecte(): Promise<{
     // ÉTAPE 2 : Scraper Legifrance
     let legifranceDocs: DocumentJuridique[] = [];
     try {
-      console.log('📥 [2/5] Collecte Legifrance...');
       legifranceDocs = await scrapeLegifrance();
     } catch (error) {
       const errorMsg = `Erreur Legifrance: ${error instanceof Error ? error.message : 'Unknown error'}`;
@@ -290,7 +279,6 @@ export async function runCollecte(): Promise<{
     }
 
     // ÉTAPE 3 : Parser les documents collectés
-    console.log('📝 [3/5] Parsing des documents...');
     let documentsParsed = [];
     try {
       for (const doc of allDocs) {
@@ -302,7 +290,6 @@ export async function runCollecte(): Promise<{
           });
         }
       }
-      console.log(`✅ ${documentsParsed.length} documents parsés`);
     } catch (error) {
       const errorMsg = `Erreur parsing: ${error instanceof Error ? error.message : 'Unknown error'}`;
       console.error(errorMsg);
@@ -310,7 +297,6 @@ export async function runCollecte(): Promise<{
     }
 
     // ÉTAPE 4 : Extraire les règles fiscales
-    console.log('🔍 [4/5] Extraction des règles fiscales...');
     let reglesExtraites: any[] = [];
     let reglesAjoutees = 0;
     try {
@@ -331,7 +317,6 @@ export async function runCollecte(): Promise<{
           }
         }
       }
-      console.log(`✅ ${reglesExtraites.length} règles fiscales extraites et ${reglesAjoutees} sauvegardées`);
     } catch (error) {
       const errorMsg = `Erreur extraction règles: ${error instanceof Error ? error.message : 'Unknown error'}`;
       console.error(errorMsg);
@@ -339,18 +324,15 @@ export async function runCollecte(): Promise<{
     }
 
     // ÉTAPE 5 : Réindexer avec l'IA
-    console.log('🤖 [5/6] Réindexation IA...');
     try {
       // Note: L'indexation IA peut être lancée en arrière-plan car elle est longue
       // On ne bloque pas la réponse sur cette étape
       setTimeout(() => {
         indexIA.indexerToutesLesRegles().then(() => {
-          console.log('✅ Réindexation IA terminée');
         }).catch((error) => {
           console.error('❌ Erreur réindexation IA:', error);
         });
       }, 1000);
-      console.log('✅ Réindexation IA lancée en arrière-plan');
     } catch (error) {
       const errorMsg = `Erreur réindexation: ${error instanceof Error ? error.message : 'Unknown error'}`;
       console.error(errorMsg);
@@ -358,18 +340,15 @@ export async function runCollecte(): Promise<{
     }
 
     // ÉTAPE 6 : Générer les montages patrimoniaux automatiquement
-    console.log('🏗️ [6/6] Génération automatique des montages patrimoniaux...');
     let montagesGeneres = 0;
     try {
       setTimeout(async () => {
         const result = await generateurMontages.genererMontagesAutomatiques();
         if (result.success) {
-          console.log(`✅ Génération montages terminée: ${result.montages_generes} montages créés`);
         } else {
           console.error('❌ Erreur génération montages:', result.errors);
         }
       }, 2000);
-      console.log('✅ Génération de montages lancée en arrière-plan');
     } catch (error) {
       const errorMsg = `Erreur génération montages: ${error instanceof Error ? error.message : 'Unknown error'}`;
       console.error(errorMsg);
@@ -391,12 +370,9 @@ export async function runCollecte(): Promise<{
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1) + 's';
 
-    console.log(`✅ Collecte complète terminée en ${duration}`);
     console.log(`   - BOFiP: ${bofipDocs.length} documents`);
     console.log(`   - Legifrance: ${legifranceDocs.length} documents`);
     console.log(`   - Total: ${allDocs.length} documents`);
-    console.log(`   - Règles extraites: ${reglesExtraites.length}`);
-    console.log(`   - Règles ajoutées: ${reglesAjoutees}`);
 
     return {
       success: true,
@@ -426,7 +402,6 @@ export async function runCollecte(): Promise<{
  * Rechercher des documents juridiques
  */
 export async function searchDocuments(query?: string, source?: string): Promise<DocumentJuridique[]> {
-  console.log(`🔍 Recherche de documents juridiques: query="${query}", source="${source}"`);
 
   try {
     // Récupérer tous les documents juridiques
@@ -455,7 +430,6 @@ export async function searchDocuments(query?: string, source?: string): Promise<
       return dateB - dateA;
     });
 
-    console.log(`✅ ${documents.length} documents trouvés`);
     return documents;
 
   } catch (error) {
@@ -515,7 +489,6 @@ export async function getReglesCollectees(): Promise<any[]> {
  * À appeler via un cron job ou au démarrage du serveur
  */
 export async function scheduleWeeklyCollecte() {
-  console.log('⏰ Initialisation du scheduler hebdomadaire...');
 
   // Vérifier la dernière collecte
   const stats = await getCollecteStats();
@@ -526,16 +499,12 @@ export async function scheduleWeeklyCollecte() {
     const now = new Date();
     const daysSinceLastCollecte = (now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24);
 
-    console.log(`   Dernière collecte: ${lastDate.toISOString()}`);
-    console.log(`   Jours depuis dernière collecte: ${daysSinceLastCollecte.toFixed(1)}`);
 
     if (daysSinceLastCollecte < 7) {
-      console.log('   ⏭️  Collecte déjà effectuée cette semaine, passage à la prochaine');
       return;
     }
   }
 
-  console.log('   ▶️  Lancement de la collecte hebdomadaire...');
   await runCollecte();
 }
 

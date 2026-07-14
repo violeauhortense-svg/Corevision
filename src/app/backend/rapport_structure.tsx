@@ -137,7 +137,6 @@ export async function genererRapportStructure(
   strategies: any[],
   score_global: number
 ): Promise<RapportStructure> {
-  console.log('📋 Génération du rapport structuré...');
   
   // 🔥 CORRECTION : Calcul du patrimoine BRUT (tous les actifs)
   const patrimoine_brut = 
@@ -156,7 +155,6 @@ export async function genererRapportStructure(
   const passifs_total = donnees.passifs || 0;
   const patrimoine_total = donnees.patrimoine_net || (patrimoine_brut - passifs_total);
   
-  console.log(`💰 Patrimoine calculé: Brut ${patrimoine_brut.toLocaleString('fr-FR')}€ - Passifs ${passifs_total.toLocaleString('fr-FR')}€ = Net ${patrimoine_total.toLocaleString('fr-FR')}€`);
   
   const revenus_totaux = 
     (donnees.revenus_salaires || 0) +
@@ -561,6 +559,5 @@ export async function genererRapportStructure(
     preconisations
   };
   
-  console.log('✅ Rapport structuré généré');
   return rapport;
 }

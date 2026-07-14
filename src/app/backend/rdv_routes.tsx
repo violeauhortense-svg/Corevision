@@ -201,7 +201,6 @@ export function setupRDVRoutes(app: Hono) {
     try {
       const body = (await c.req.json()) as RDVProposal;
 
-      console.log('📋 Création proposition de RDV:', body.clientId);
 
       // Générer les IDs
       const rdvId = `rdv_${Date.now()}`;
@@ -223,7 +222,6 @@ export function setupRDVRoutes(app: Hono) {
 
       // Sauvegarder le RDV dans KV store
       await kv.set(`rdv:${rdvId}`, rdvData);
-      console.log('✅ RDV sauvegardé:', rdvId);
 
       // Préparer les emails
       const emailService = getEmailService();
@@ -246,7 +244,6 @@ export function setupRDVRoutes(app: Hono) {
         spouseName: body.spouseName,
       });
 
-      console.log('📧 Envoi email client:', body.clientEmail);
       await emailService.sendEmail({
         to: body.clientEmail,
         subject: `Confirmation de votre rendez-vous - ${new Date(body.date).toLocaleDateString('fr-FR')}`,
@@ -270,7 +267,6 @@ export function setupRDVRoutes(app: Hono) {
           spouseName: body.clientName,
         });
 
-        console.log('📧 Envoi email conjoint:', body.spouseEmail);
         await emailService.sendEmail({
           to: body.spouseEmail,
           subject: `Confirmation de votre rendez-vous - ${new Date(body.date).toLocaleDateString('fr-FR')}`,
@@ -279,7 +275,6 @@ export function setupRDVRoutes(app: Hono) {
         });
       }
 
-      console.log('✅ Emails de proposition envoyés');
 
       // Préparer les infos du RDV pour créer l'événement d'agenda
       const agendaEvent = {
@@ -355,7 +350,6 @@ export function setupRDVRoutes(app: Hono) {
       const buffer = await file.arrayBuffer();
       await Deno.writeFile(filePath, new Uint8Array(buffer));
 
-      console.log('✅ Document uploadé:', filePath);
 
       // TODO: Marquer le document comme reçu dans la tâche "Collecter documents..."
       // TODO: Vérifier si tous les documents sont reçus → valider la tâche
@@ -454,12 +448,10 @@ export function setupRDVRoutes(app: Hono) {
           text: emailContent,
           html: htmlEmail,
         });
-        console.log('✅ Email de demande comptable envoyé:', accountantEmail);
       } catch (emailError) {
         console.warn('⚠️ Erreur lors de l\'envoi de l\'email:', emailError);
       }
 
-      console.log('✅ Demande comptable créée:', { requestId, accountantEmail, companyName });
 
       return c.json({
         success: true,
@@ -511,7 +503,6 @@ export function setupRDVRoutes(app: Hono) {
       try {
         await Deno.mkdir(uploadDir, { recursive: true });
       } catch (e) {
-        console.log('Répertoire déjà existant ou erreur:', e);
       }
 
       // Sauvegarder le fichier
@@ -532,7 +523,6 @@ export function setupRDVRoutes(app: Hono) {
         await kv.set(`accountant_request:${requestId}`, requestData);
       }
 
-      console.log('✅ Document uploadé:', { fileName, requestId, accountantEmail });
 
       return c.json({
         success: true,

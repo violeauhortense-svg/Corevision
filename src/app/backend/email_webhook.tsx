@@ -20,14 +20,12 @@ export function setupEmailWebhookRoutes(app: any) {
     });
     try {
       const body = await c.req.json();
-      console.log('📧 Webhook Brevo reçu:', JSON.stringify(body, null, 2));
       
       const event = body.event; // 'delivered', 'opened', 'click', 'bounce', 'soft_bounce', etc.
       const email = body.email; // Email du destinataire
       const messageId = body['message-id']; // ID du message Brevo
       const timestamp = body.date || new Date().toISOString();
       
-      console.log(`📧 Événement: ${event} pour ${email} (messageId: ${messageId})`);
       
       // Mapper les événements Brevo vers nos statuts
       const statusMapping: Record<string, 'delivered' | 'opened' | 'clicked' | 'bounced' | 'error'> = {
@@ -45,12 +43,10 @@ export function setupEmailWebhookRoutes(app: any) {
       const newStatus = statusMapping[event];
       
       if (!newStatus) {
-        console.log(`⚠️ Événement non géré: ${event}`);
         return c.json({ success: true, message: 'Event not tracked' });
       }
       
       // ✅ Mettre à jour toutes les tâches qui ont envoyé un email à cette adresse
-      console.log('🔍 Recherche des tâches avec email envoyé à:', email);
       
       // Récupérer tous les clients
       const allClients = await kv.getByPrefix('client:');
@@ -75,7 +71,6 @@ export function setupEmailWebhookRoutes(app: any) {
               const newPriority = statusPriority.indexOf(newStatus);
               
               if (newPriority > currentPriority || (newStatus === 'bounced' || newStatus === 'error')) {
-                console.log(`✅ Mise à jour statut: ${emailEntry.status} → ${newStatus}`);
                 hasUpdates = true;
                 return {
                   ...emailEntry,
@@ -104,12 +99,10 @@ export function setupEmailWebhookRoutes(app: any) {
             
             await kv.set(`task:${client.conseiller_id}:${client.id}:${task.id}`, updatedTask);
             updatedCount++;
-            console.log(`✅ Tâche ${task.id} mise à jour (${task.title})`);
           }
         }
       }
       
-      console.log(`✅ ${updatedCount} tâche(s) mise(s) à jour`);
       
       return c.json({ 
         success: true, 
@@ -141,7 +134,6 @@ export function setupEmailWebhookRoutes(app: any) {
       };
       
       // Appeler le handler
-      console.log('🧪 Test webhook avec:', simulatedWebhook);
       
       // TODO: Appeler le handler du webhook ici
       

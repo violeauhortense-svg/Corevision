@@ -148,7 +148,6 @@ export function setupTaskRoutes(app: Hono) {
       const taskIdParam = c.req.param('taskId');
       const body = await c.req.json();
 
-      console.log(`🔄 Task validation request:`);
       console.log(`   userId: ${user.id}`);
       console.log(`   clientId: ${clientId}`);
       console.log(`   taskId (ID or index): ${taskIdParam}`);
@@ -163,20 +162,17 @@ export function setupTaskRoutes(app: Hono) {
 
       // Fetch the client
       const kvKey = `client:${user.id}:${clientId}`;
-      console.log(`🔍 Searching for client with key: ${kvKey}`);
       const client = await kv.get(kvKey);
 
       if (!client) {
         console.error(`❌ Client not found with key: ${kvKey}`);
         const allClientKeys = await kv.getByPrefix(`client:${user.id}:`);
-        console.log(`📋 All client keys for user ${user.id}: ${allClientKeys.length} found`);
         allClientKeys.forEach((c: any, i: number) => {
           console.log(`   [${i}] id=${c.id}, nom=${c.nom}`);
         });
         return c.json({ error: 'Client not found' }, 404);
       }
 
-      console.log(`✅ Client found: id=${client.id}, nom=${client.nom}`);
 
       const currentStatus = client.statusOuvert || 'Prospect';
       const tasks = client.taches?.[currentStatus] || [];
@@ -202,7 +198,6 @@ export function setupTaskRoutes(app: Hono) {
       }
 
       const taskBefore = tasks[taskIdx];
-      console.log(`   📋 Task before:`);
       console.log(`      id=${taskBefore?.id}, status=${taskBefore?.status} (${TASK_STATE_LABELS[taskBefore?.status as TaskState]})`);
 
       // Appliquer la mise à jour validée
@@ -218,9 +213,6 @@ export function setupTaskRoutes(app: Hono) {
       const stats = countTasksByState(tasks);
       const allCompleted = areAllTasksCompleted(tasks);
 
-      console.log(`   ✅ Task after: status=${taskAfter.status} (${TASK_STATE_LABELS[taskAfter.status]})`);
-      console.log(`   📊 Status stats: ${stats.validated} validées, ${stats.na} N/A, ${stats.pending} pending`);
-      console.log(`   ✨ All completed? ${allCompleted ? 'OUI ✓' : 'NON ✗'}`);
 
       return c.json({
         success: true,
@@ -253,14 +245,11 @@ export function setupTaskRoutes(app: Hono) {
       const body = await c.req.json();
       const { fromStatus, toStatus } = body;
 
-      console.log(`➡️ Progress request:`);
       console.log(`   userId: ${user.id}`);
       console.log(`   clientId: ${clientId}`);
-      console.log(`   from: ${fromStatus} → ${toStatus}`);
 
       // Fetch the client
       const kvKey = `client:${user.id}:${clientId}`;
-      console.log(`🔍 Searching for client with key: ${kvKey}`);
       const client = await kv.get(kvKey);
 
       if (!client) {
@@ -268,7 +257,6 @@ export function setupTaskRoutes(app: Hono) {
         return c.json({ error: 'Client not found' }, 404);
       }
 
-      console.log(`✅ Client found: id=${client.id}, nom=${client.nom}`);
 
       // Validate current status matches
       if (client.statusOuvert !== fromStatus) {
@@ -297,7 +285,6 @@ export function setupTaskRoutes(app: Hono) {
         }, 422); // 422 Unprocessable Entity
       }
 
-      console.log(`✅ All tasks in "${fromStatus}" are completed (${currentTasks.length})`);
 
       // Initialize tasks for next status if not exists
       if (!client.taches[toStatus]) {
@@ -311,7 +298,6 @@ export function setupTaskRoutes(app: Hono) {
           clientId: clientId,
           statusPipeline: toStatus,
         }));
-        console.log(`📝 Initialized ${nextTaskDefs.length} tasks for "${toStatus}"`);
       }
 
       // Update client status
@@ -319,7 +305,6 @@ export function setupTaskRoutes(app: Hono) {
       client.updated_at = new Date().toISOString();
       await kv.set(`client:${user.id}:${clientId}`, client);
 
-      console.log(`✅ Client progressed to "${toStatus}"`);
 
       return c.json({
         success: true,

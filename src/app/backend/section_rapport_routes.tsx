@@ -11,7 +11,6 @@ export function setupSectionRapportRoutes(app: any) {
   
   // Générer une section individuelle du rapport
   app.post("/make-server-cac859af/generer-section-rapport", async (c: any) => {
-    console.log('📊 Génération section individuelle du rapport...');
     
     try {
       const body = await c.req.json();
@@ -24,8 +23,6 @@ export function setupSectionRapportRoutes(app: any) {
         }, 400);
       }
       
-      console.log(`🎯 Section à générer: ${sectionKey}`);
-      console.log(`📝 Prompt: ${prompt.substring(0, 100)}...`);
       
       // Préparer le contexte pour l'IA
       const contexteComplet = `
@@ -83,7 +80,6 @@ ${prompt}
       const mistralData = await mistralResponse.json();
       const contenu = mistralData.choices[0]?.message?.content || '';
       
-      console.log(`✅ Section ${sectionKey} générée (${contenu.length} caractères)`);
       
       return c.json({
         success: true,

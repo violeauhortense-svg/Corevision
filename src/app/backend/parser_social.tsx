@@ -30,7 +30,6 @@ export async function parserTousLesDocumentsSociaux(): Promise<{
     erreurs: string[];
   };
 }> {
-  console.log('🔵 PARSER SOCIAL : Démarrage...');
   
   const sections: SectionSociale[] = [];
   const errors: string[] = [];
@@ -39,7 +38,6 @@ export async function parserTousLesDocumentsSociaux(): Promise<{
   try {
     // Récupérer tous les documents sociaux
     const documents = await kv.getByPrefix('documents_sociaux:') as DocumentSocial[];
-    console.log(`📄 ${documents.length} documents à parser`);
 
     for (const doc of documents) {
       try {
@@ -73,7 +71,6 @@ export async function parserTousLesDocumentsSociaux(): Promise<{
       }
     }
 
-    console.log(`✅ ${sections.length} sections créées depuis ${documentsTraites} documents`);
 
     return {
       success: true,

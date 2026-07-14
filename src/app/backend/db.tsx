@@ -25,7 +25,6 @@ export async function query(sql: string, params: any[] = []) {
 
 // ─── Initialize tables ─────────────────────────────────────────────────────
 export async function initializeTables() {
-  console.log('🗄️  Initializing PostgreSQL tables...');
 
   await query(`
     CREATE TABLE IF NOT EXISTS users (
@@ -153,7 +152,6 @@ export async function initializeTables() {
     CREATE INDEX IF NOT EXISTS idx_recommendations_client ON recommendations(client_id);
   `);
 
-  console.log('✅ All tables initialized');
 }
 
 // ─── Helper functions ─────────────────────────────────────────────────────
@@ -193,5 +191,4 @@ export async function deleteExpiredSessions() {
     'DELETE FROM sessions WHERE expires_at < CURRENT_TIMESTAMP',
     []
   );
-  console.log('🧹 Expired sessions cleaned up');
 }

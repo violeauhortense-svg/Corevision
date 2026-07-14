@@ -36,7 +36,6 @@ export async function extraireReglesSociales(): Promise<{
     erreurs: string[];
   };
 }> {
-  console.log('🔵 EXTRACTEUR RÈGLES SOCIALES : Démarrage...');
   
   const regles: RegleSociale[] = [];
   const errors: string[] = [];
@@ -45,7 +44,6 @@ export async function extraireReglesSociales(): Promise<{
   try {
     // Récupérer toutes les sections parsées
     const sections = await kv.getByPrefix('sections_sociales:') as SectionSociale[];
-    console.log(`📋 ${sections.length} sections à analyser`);
 
     for (const section of sections) {
       try {
@@ -64,7 +62,6 @@ export async function extraireReglesSociales(): Promise<{
       }
     }
 
-    console.log(`✅ ${regles.length} règles extraites depuis ${sectionsAnalysees} sections`);
 
     return {
       success: true,
@@ -161,7 +158,6 @@ function detecterCondition(texte: string): string {
 export async function getToutesLesReglesSociales(): Promise<RegleSociale[]> {
   try {
     const regles = await kv.getByPrefix('regles_sociales:');
-    console.log(`📊 Récupération de ${regles.length} règles sociales`);
     return regles as RegleSociale[];
   } catch (error) {
     console.error('❌ Erreur récupération règles sociales:', error);
@@ -177,7 +173,6 @@ export async function initialiserReglesSocialesStatiques(): Promise<{
   count: number;
   regles: RegleSociale[];
 }> {
-  console.log('🔵 Initialisation des règles sociales statiques...');
   
   const reglesStatiques: Omit<RegleSociale, 'id'>[] = [
     {
@@ -389,7 +384,6 @@ export async function initialiserReglesSocialesStatiques(): Promise<{
     regles.push(regle);
   }
 
-  console.log(`✅ ${regles.length} règles sociales statiques initialisées`);
 
   return {
     success: true,
