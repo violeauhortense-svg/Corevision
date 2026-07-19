@@ -69,18 +69,21 @@ app.use("/*", async (c, next) => {
     "http://localhost:3001",
   ];
 
-  // Check if origin is allowed
+  // ALWAYS set CORS headers to prevent browser fallback to wildcard
   const isAllowed = origin && allowedOrigins.includes(origin);
 
   if (isAllowed) {
     c.header("Access-Control-Allow-Origin", origin);
     c.header("Access-Control-Allow-Credentials", "true");
+    c.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+    c.header("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie");
+    c.header("Access-Control-Expose-Headers", "Content-Length, Set-Cookie");
+    c.header("Access-Control-Max-Age", "600");
+  } else {
+    // Still set headers but for non-allowed origins without credentials
+    c.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+    c.header("Access-Control-Allow-Headers", "Content-Type");
   }
-
-  c.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-  c.header("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie");
-  c.header("Access-Control-Expose-Headers", "Content-Length, Set-Cookie");
-  c.header("Access-Control-Max-Age", "600");
 
   if (c.req.method === "OPTIONS") {
     return c.text("OK");

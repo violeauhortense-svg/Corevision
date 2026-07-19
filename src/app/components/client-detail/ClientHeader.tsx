@@ -21,7 +21,7 @@ export function ClientHeader({
   useEffect(() => {
     const loadMeetingDates = async () => {
       try {
-        const agendaEvents = agendaAPI.getAll();
+        const agendaEvents = await agendaAPI.getAll();
         const clientEvents = agendaEvents.filter((event: any) => event.clientId === clientData.id);
 
         if (clientEvents.length === 0) return;
