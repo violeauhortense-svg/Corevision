@@ -1,0 +1,41 @@
+name: Domain Boundary Check
+
+on:
+  pull_request:
+    paths:
+      - 'src/app/backend/**/*.{ts,tsx}'
+      - 'scripts/check-domains.js'
+      - 'package.json'
+      - '.github/workflows/domain-boundary-check.yml'
+
+jobs:
+  check_domains:
+    runs-on: ubuntu-latest
+    name: Check Domain Boundaries
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run domain boundary checker
+        run: npm run lint:domains
+
+      - name: Generate domain violation report (on failure)
+        if: failure()
+        run: |
+          npm run lint:domains 2>&1 | tee domain-violations.txt
+          echo "## Domain Boundary Violations Detected" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat domain-violations.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "See [DOMAINS.md](../DOMAINS.md) and [DOMAIN_ENFORCEMENT_PRU74.md](../DOMAIN_ENFORCEMENT_PRU74.md) for refactoring plan." >> $GITHUB_STEP_SUMMARY

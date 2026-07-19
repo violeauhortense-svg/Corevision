@@ -1,12 +1,15 @@
 import * as kv from './kv_store.tsx';
+import { rulesStore } from './rules_store.tsx';
 
 /**
  * ============================================
  * BASE DE DONNÉES RÈGLES FISCALES
  * ============================================
- * 
+ *
  * Module de gestion des règles fiscales pour l'ingénierie patrimoniale
  * Stockage via KV Store avec préfixe: regle_fiscale:
+ *
+ * NOTE: getToutesRegles now delegates to rulesStore to break god node coupling
  */
 
 // Types
@@ -60,13 +63,10 @@ export async function getRegleFiscale(id: string): Promise<RegleFiscale | null> 
 
 export async function getToutesRegles(): Promise<RegleFiscale[]> {
   try {
-    const items = await kv.getByPrefix('regle_fiscale:');
-    // ⚠️ getByPrefix retourne déjà les valeurs directement (pas d'objet {key, value})
-    return items
-      .filter(regle => regle !== null && regle !== undefined);
+    const items = await rulesStore.getToutesRegles();
+    return items as any as RegleFiscale[];
   } catch (error) {
     console.error('❌ Erreur lors de la récupération des règles fiscales:', error);
-    // Retourner un tableau vide en cas d'erreur au lieu de faire crasher le serveur
     return [];
   }
 }
