@@ -65,10 +65,6 @@ export function setupCalculRoutes(app: Hono) {
 
       const simulation = calculs.simulerPatrimoine(input);
 
-        duree: input.dureeAnnees,
-        patrimoneFinal: simulation.patrimoneFinal,
-      });
-
       return c.json({
         success: true,
         simulation,
