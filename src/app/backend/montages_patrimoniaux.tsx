@@ -1,23 +1,8 @@
 import * as kv from './kv_store.tsx';
 import { MONTAGES_60_PROFESSIONNELS } from './montages_60_patrimoniaux.tsx';
+import { MontagePatrimonial } from './shared/montage_types.ts';
 
-// Types
-export interface MontagePatrimonial {
-  id: string;
-  nom_montage: string;
-  objectif: string;
-  conditions: string;
-  avantages: string;
-  risques: string;
-  etapes_juridiques: string;
-  fiscalite: string;
-  source: string;
-  date_creation: string;
-  date_modification: string;
-  tags?: string[]; // Pour catégoriser les montages
-  complexite?: 'simple' | 'moyen' | 'complexe';
-  statut?: 'actif' | 'obsolète' | 'à_vérifier';
-}
+export { MontagePatrimonial } from './shared/montage_types.ts';
 
 /**
  * Créer un nouveau montage patrimonial

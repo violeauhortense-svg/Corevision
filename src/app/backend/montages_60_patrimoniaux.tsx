@@ -1,4 +1,4 @@
-import { MontagePatrimonial } from './montages_patrimoniaux.tsx';
+import { MontagePatrimonial } from './shared/montage_types.ts';
 
 /**
  * ============================================

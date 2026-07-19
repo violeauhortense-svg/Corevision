@@ -2,7 +2,7 @@ import type { Hono } from "npm:hono";
 import * as collecteurJuridique from "./collecteur_juridique.tsx";
 import * as reglesFiscalesDb from "./regles_fiscales_db.tsx";
 import * as generateurMontages from "./generateur_montages.tsx";
-import { MONTAGES_60_PROFESSIONNELS } from "./montages_60_patrimoniaux.tsx";
+import { MONTAGES_60_PROFESSIONNELS } from "./shared/montage_data.ts";
 
 export function setupCollecteurJuridiqueRoutes(app: Hono) {
   app.post("/make-server-cac859af/collecte-juridique/run", async (c) => {
