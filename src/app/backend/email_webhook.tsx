@@ -7,6 +7,7 @@
 // This webhook is kept for backwards compatibility but is no longer active.
 
 import * as kv from "./kv_store.tsx";
+import { clientsStore } from "./clients_store.tsx";
 
 export function setupEmailWebhookRoutes(app: any) {
   // ⚠️ DEPRECATED: Brevo webhook - no longer used
@@ -47,11 +48,11 @@ export function setupEmailWebhookRoutes(app: any) {
       }
       
       // ✅ Mettre à jour toutes les tâches qui ont envoyé un email à cette adresse
-      
+
       // Récupérer tous les clients
-      const allClients = await kv.getByPrefix('client:');
+      const allClients = await clientsStore.getAllClients();
       let updatedCount = 0;
-      
+
       for (const client of allClients) {
         // Récupérer toutes les tâches de ce client
         const clientTasks = await kv.getByPrefix(`task:${client.conseiller_id}:${client.id}:`);

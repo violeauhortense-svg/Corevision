@@ -1,5 +1,6 @@
 import * as kv from './kv_store.tsx';
 import * as extracteurRegles from './extracteur_regles.tsx';
+import { vectorsStore } from './vectors_store.tsx';
 
 // Types
 interface RegleFiscale {
@@ -255,11 +256,10 @@ export async function rechercherRegles(
     const queryEmbedding = await genererEmbedding(query);
 
     // Récupérer tous les vecteurs indexés
-    const allItems = await kv.getByPrefix('index_ia:');
+    const allVectors = await vectorsStore.getAllVectors();
 
-    const vecteurs: VecteurRegle[] = allItems
-      .filter(item => item.key !== 'index_ia:last_indexation')
-      .map(item => item.value as VecteurRegle);
+    const vecteurs: VecteurRegle[] = allVectors
+      .map(item => item as VecteurRegle);
 
 
     // Calculer la similarité pour chaque vecteur
@@ -345,12 +345,8 @@ export async function rechercherPourAssistant(
  */
 export async function getIndexationStats() {
   try {
-    const lastIndexation = await kv.get('index_ia:last_indexation');
-    const allVecteurs = await kv.getByPrefix('index_ia:');
-
-    const vecteursCount = allVecteurs.filter(
-      item => item.key !== 'index_ia:last_indexation'
-    ).length;
+    const lastIndexation = await vectorsStore.getIndexMetadata();
+    const vecteursCount = await vectorsStore.getVectorCount();
 
     return {
       last_indexation: lastIndexation || null,

@@ -1,4 +1,6 @@
 import * as kv from './kv_store.tsx';
+import { rulesStore } from './rules_store.tsx';
+import { montagesStore } from './montages_store.tsx';
 
 /**
  * GÉNÉRATEUR AUTOMATIQUE DE MONTAGES PATRIMONIAUX
@@ -410,8 +412,8 @@ export async function genererMontagesAutomatiques(): Promise<{
   
   try {
     // 1. Récupérer toutes les règles collectées
-    const reglesCollectees = await kv.getByPrefix('regle_collectee:');
-    
+    const reglesCollectees = await rulesStore.getCollectedRules();
+
     if (reglesCollectees.length === 0) {
       return {
         success: true,
@@ -420,8 +422,8 @@ export async function genererMontagesAutomatiques(): Promise<{
         errors: ['Aucune règle collectée disponible']
       };
     }
-    
-    const regles: RegleFiscale[] = reglesCollectees.map(item => item.value);
+
+    const regles: RegleFiscale[] = reglesCollectees;
     
     // 2. Trouver les groupes de règles compatibles
     const groupesCompatibles = trouverGroupesCompatibles(regles);
@@ -478,10 +480,10 @@ export async function genererMontagesAutomatiques(): Promise<{
  */
 export async function getMontagesCollectes(): Promise<MontageGenere[]> {
   try {
-    const montages = await kv.getByPrefix('montage_collecte:');
-    return montages.map(item => item.value).sort((a: any, b: any) => {
-      const dateA = new Date(a.date_generation || 0).getTime();
-      const dateB = new Date(b.date_generation || 0).getTime();
+    const montages = await montagesStore.getMontagesCollectes();
+    return montages.sort((a: any, b: any) => {
+      const dateA = new Date(a.created_at || 0).getTime();
+      const dateB = new Date(b.created_at || 0).getTime();
       return dateB - dateA; // Plus récent d'abord
     });
   } catch (error) {

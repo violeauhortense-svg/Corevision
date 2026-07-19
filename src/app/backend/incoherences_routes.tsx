@@ -5,6 +5,7 @@
 import { Hono } from 'npm:hono';
 import * as incoherences from './incoherences.tsx';
 import * as kv from './kv_store.tsx';
+import { clientsStore } from './clients_store.tsx';
 
 export function setupIncoherencesRoutes(app: Hono) {
   const incoherencesRoutes = new Hono();
@@ -24,8 +25,7 @@ export function setupIncoherencesRoutes(app: Hono) {
       
       if (!clientData) {
         // Chercher dans KV store
-        const allClients = await kv.getByPrefix('client:');
-        clientData = allClients.find((c: any) => c.id === clientId);
+        clientData = await clientsStore.getClient(clientId);
         
         if (!clientData) {
           return c.json(

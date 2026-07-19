@@ -1,6 +1,7 @@
 import type { Hono } from "npm:hono";
 import * as auditPatrimonial from "./audit_patrimonial.tsx";
 import * as kv from "./kv_store.tsx";
+import { clientsStore } from "./clients_store.tsx";
 
 export function setupAuditPatrimonialRoutes(app: Hono) {
   app.post("/make-server-cac859af/audit-patrimonial/generer/:clientId", async (c) => {
@@ -33,10 +34,9 @@ export function setupAuditPatrimonialRoutes(app: Hono) {
   app.get("/make-server-cac859af/audit-patrimonial/client/:clientId/rapport-live", async (c) => {
     try {
       const clientId = c.req.param('clientId');
-      const allClients = await kv.getByPrefix('client:');
-      const clientData = allClients.find((c: any) => c && c.id === clientId);
+      const clientData = await clientsStore.getClient(clientId);
       if (!clientData) {
-        return c.json({ success: false, error: 'Client non trouvé', debug: { searchedId: clientId, availableIds: allClients.slice(0, 10).map((c: any) => c?.id), totalClients: allClients.length } }, 404);
+        return c.json({ success: false, error: 'Client non trouvé', debug: { searchedId: clientId } }, 404);
       }
       const rapport = await auditPatrimonial.genererRapportLive(clientId, clientData);
       if (!rapport) return c.json({ success: false, error: 'Impossible de générer le rapport' }, 500);
@@ -87,10 +87,9 @@ export function setupAuditPatrimonialRoutes(app: Hono) {
   app.get("/make-server-cac859af/rapport-patrimonial/:clientId", async (c) => {
     try {
       const clientId = c.req.param('clientId');
-      const allClients = await kv.getByPrefix('client:');
-      const clientData = allClients.find((c: any) => c && c.id === clientId);
+      const clientData = await clientsStore.getClient(clientId);
       if (!clientData) {
-        return c.json({ success: false, error: 'Client non trouvé', debug: { searchedId: clientId, availableIds: allClients.slice(0, 10).map((c: any) => c?.id), totalClients: allClients.length } }, 404);
+        return c.json({ success: false, error: 'Client non trouvé', debug: { searchedId: clientId } }, 404);
       }
       const rapport = await auditPatrimonial.genererRapportLive(clientId, clientData);
       if (!rapport) return c.json({ success: false, error: 'Impossible de générer le rapport' }, 500);
@@ -119,7 +118,7 @@ export function setupAuditPatrimonialRoutes(app: Hono) {
 
   app.get("/make-server-cac859af/debug/clients", async (c) => {
     try {
-      const allClients = await kv.getByPrefix('client:');
+      const allClients = await clientsStore.getAllClients();
       return c.json({ success: true, totalClients: allClients.length, clients: allClients.map((client: any) => ({ id: client?.id, nom: client?.nom, prenom: client?.prenom, email: client?.email })) });
     } catch (error) {
       return c.json({ error: (error as Error).message }, 500);

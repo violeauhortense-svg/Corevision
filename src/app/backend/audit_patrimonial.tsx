@@ -6,6 +6,7 @@ import * as indexIA from './index_ia.tsx';
 import * as simulateurPatrimonial from './simulateur_patrimonial.tsx';
 import { genererRapportStructure, type RapportStructure } from './rapport_structure.tsx';
 import { analyseAvancee7Etapes } from './ia_analyse_avancee.tsx';
+import { clientsStore } from './clients_store.tsx';
 
 /**
  * ============================================
@@ -218,9 +219,7 @@ export async function collecterDonneesClient(clientId: string, clientDataFromFro
     
     // Si pas de données fournies, essayer de les récupérer du KV store
     if (!client) {
-      const allClients = await kv.getByPrefix('client:');
-      
-      client = allClients.find((c: any) => c.id === clientId);
+      client = await clientsStore.getClient(clientId);
       
       if (!client) {
         console.warn(`⚠️ Client non trouvé: ${clientId}`);
