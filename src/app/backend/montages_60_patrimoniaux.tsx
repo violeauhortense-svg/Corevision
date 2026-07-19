@@ -1,4 +1,5 @@
 import { MontagePatrimonial } from './shared/montage_types.ts';
+import { registerMontageTemplates } from './montages_core.tsx';
 
 /**
  * ============================================
@@ -825,3 +826,5 @@ export const MONTAGES_60_PROFESSIONNELS: Omit<MontagePatrimonial, 'id' | 'date_c
     statut: "actif"
   },
 ];
+
+registerMontageTemplates('patrimoine-60', () => MONTAGES_60_PROFESSIONNELS);
