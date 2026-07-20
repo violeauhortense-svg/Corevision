@@ -29,10 +29,26 @@ export interface DocumentSocial {
   created_at: string;
 }
 
+export interface DocumentCollecte {
+  id: string;
+  source: 'BOFiP' | 'Legifrance';
+  titre: string;
+  section: string;
+  texte: string;
+  date_publication: string;
+  date_collecte: string;
+  metadata: {
+    url: string;
+    categorie: string;
+    mots_cles: string[];
+  };
+}
+
 class DocumentsStore {
   private readonly CHUNKS_PREFIX = 'chunks_juridiques:';
   private readonly KB_PREFIX = 'kb_doc_';
   private readonly SOCIAUX_PREFIX = 'documents_sociaux:';
+  private readonly COLLECTES_PREFIX = 'juridique:';
 
   // Get all document chunks
   async getAllChunks(): Promise<DocumentChunk[]> {
@@ -130,6 +146,64 @@ class DocumentsStore {
     }
   }
 
+  // Get all collected juridical documents
+  async getAllCollectedDocuments(): Promise<DocumentCollecte[]> {
+    try {
+      const items = await kv.getByPrefix(this.COLLECTES_PREFIX);
+      return items
+        .filter(item => item.key !== `${this.COLLECTES_PREFIX}last_collecte` && item !== null && item !== undefined)
+        .map(item => item.value as DocumentCollecte);
+    } catch (error) {
+      console.error('❌ DocumentsStore.getAllCollectedDocuments() failed:', error);
+      return [];
+    }
+  }
+
+  // Get collected documents by source
+  async getCollectedDocumentsBySource(source: string): Promise<DocumentCollecte[]> {
+    try {
+      const prefix = `${this.COLLECTES_PREFIX}${source.toLowerCase()}:`;
+      const items = await kv.getByPrefix(prefix);
+      return items
+        .filter(item => item !== null && item !== undefined)
+        .map(item => item.value as DocumentCollecte);
+    } catch (error) {
+      console.error(`❌ DocumentsStore.getCollectedDocumentsBySource(${source}) failed:`, error);
+      return [];
+    }
+  }
+
+  // Search collected documents
+  async searchCollectedDocuments(query?: string, source?: string): Promise<DocumentCollecte[]> {
+    try {
+      let documents = source
+        ? await this.getCollectedDocumentsBySource(source)
+        : await this.getAllCollectedDocuments();
+
+      if (query && query.trim()) {
+        const queryLower = query.toLowerCase();
+        documents = documents.filter(doc =>
+          doc.titre.toLowerCase().includes(queryLower) ||
+          doc.texte.toLowerCase().includes(queryLower) ||
+          doc.section.toLowerCase().includes(queryLower) ||
+          doc.metadata.mots_cles.some(kw => kw.toLowerCase().includes(queryLower))
+        );
+      }
+
+      // Sort by publication date (newest first)
+      documents.sort((a, b) => {
+        const dateA = new Date(a.date_publication).getTime();
+        const dateB = new Date(b.date_publication).getTime();
+        return dateB - dateA;
+      });
+
+      return documents;
+    } catch (error) {
+      console.error('❌ DocumentsStore.searchCollectedDocuments() failed:', error);
+      return [];
+    }
+  }
+
   // Store a chunk
   async storeChunk(id: string, chunk: DocumentChunk): Promise<void> {
     try {
@@ -154,6 +228,35 @@ class DocumentsStore {
       await kv.set(`${this.SOCIAUX_PREFIX}${id}`, doc);
     } catch (error) {
       console.error(`❌ DocumentsStore.storeSocialDocument(${id}) failed:`, error);
+    }
+  }
+
+  // Store a collected juridical document
+  async storeCollectedDocument(id: string, doc: DocumentCollecte): Promise<void> {
+    try {
+      const source = doc.source.toLowerCase();
+      await kv.set(`${this.COLLECTES_PREFIX}${source}:${id}`, doc);
+    } catch (error) {
+      console.error(`❌ DocumentsStore.storeCollectedDocument(${id}) failed:`, error);
+    }
+  }
+
+  // Update last collection timestamp
+  async updateLastCollectionTimestamp(timestamp: string): Promise<void> {
+    try {
+      await kv.set(`${this.COLLECTES_PREFIX}last_collecte`, { date: timestamp });
+    } catch (error) {
+      console.error('❌ DocumentsStore.updateLastCollectionTimestamp() failed:', error);
+    }
+  }
+
+  // Get last collection timestamp
+  async getLastCollectionTimestamp(): Promise<any> {
+    try {
+      return await kv.get(`${this.COLLECTES_PREFIX}last_collecte`);
+    } catch (error) {
+      console.error('❌ DocumentsStore.getLastCollectionTimestamp() failed:', error);
+      return null;
     }
   }
 
@@ -208,6 +311,25 @@ class DocumentsStore {
       await kv.delByPrefix(this.SOCIAUX_PREFIX);
     } catch (error) {
       console.error('❌ DocumentsStore.deleteAllSocialDocuments() failed:', error);
+    }
+  }
+
+  // Delete collected document
+  async deleteCollectedDocument(id: string, source: string): Promise<void> {
+    try {
+      const sourceKey = source.toLowerCase();
+      await kv.del(`${this.COLLECTES_PREFIX}${sourceKey}:${id}`);
+    } catch (error) {
+      console.error(`❌ DocumentsStore.deleteCollectedDocument(${id}) failed:`, error);
+    }
+  }
+
+  // Delete all collected documents
+  async deleteAllCollectedDocuments(): Promise<void> {
+    try {
+      await kv.delByPrefix(this.COLLECTES_PREFIX);
+    } catch (error) {
+      console.error('❌ DocumentsStore.deleteAllCollectedDocuments() failed:', error);
     }
   }
 }

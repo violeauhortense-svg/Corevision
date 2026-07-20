@@ -1,4 +1,5 @@
 import * as kv from './kv_store.tsx';
+import { rulesStore } from './rules_store.tsx';
 import * as parserJuridique from './parser_juridique.tsx';
 
 // Types
@@ -380,48 +381,14 @@ export async function extraireToutesLesRegles(): Promise<{
  * Rechercher des règles fiscales
  */
 export async function searchRegles(
-  query?: string, 
-  statut?: string, 
+  query?: string,
+  statut?: string,
   source?: string
 ): Promise<RegleFiscale[]> {
 
   try {
-    // Récupérer toutes les règles
-    const allItems = await kv.getByPrefix('regles_fiscales:');
-
-    let regles: RegleFiscale[] = allItems
-      .filter(item => item.key !== 'regles_fiscales:last_extraction')
-      .map(item => item.value as RegleFiscale);
-
-    // Filtrer par statut
-    if (statut) {
-      regles = regles.filter(r => r.statut_validation === statut);
-    }
-
-    // Filtrer par source
-    if (source) {
-      const sourceLower = source.toLowerCase();
-      regles = regles.filter(r => r.source.toLowerCase().includes(sourceLower));
-    }
-
-    // Filtrer par query
-    if (query && query.trim()) {
-      const queryLower = query.toLowerCase();
-      regles = regles.filter(r =>
-        r.regle.toLowerCase().includes(queryLower) ||
-        r.condition.toLowerCase().includes(queryLower) ||
-        r.exception.toLowerCase().includes(queryLower) ||
-        r.consequence.toLowerCase().includes(queryLower)
-      );
-    }
-
-    // Trier par date (plus récent d'abord)
-    regles.sort((a, b) => {
-      const dateA = new Date(a.date).getTime();
-      const dateB = new Date(b.date).getTime();
-      return dateB - dateA;
-    });
-
+    // Use rulesStore facade which handles filtering and sorting
+    const regles: RegleFiscale[] = (await rulesStore.searchRegles(query, statut, source)) as any;
     return regles;
 
   } catch (error) {
@@ -505,13 +472,10 @@ export async function updateStatutValidation(
 export async function deleteAllRegles(): Promise<{ deleted: number }> {
 
   try {
-    const allItems = await kv.getByPrefix('regles_fiscales:');
-    
-    for (const item of allItems) {
-      await kv.del(item.key);
-    }
-
-    return { deleted: allItems.length };
+    const allItems = await rulesStore.getToutesRegles();
+    const count = allItems.length;
+    await rulesStore.deleteAllRules();
+    return { deleted: count };
 
   } catch (error) {
     console.error('❌ Erreur suppression règles:', error);

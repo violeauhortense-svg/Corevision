@@ -1,4 +1,5 @@
 import * as kv from './kv_store.tsx';
+import { montagesStore } from './montages_store.tsx';
 import { MontagePatrimonial } from './shared/montage_types.ts';
 
 // Registry of template providers by version
@@ -178,9 +179,7 @@ export async function searchMontages(
   tags?: string[]
 ): Promise<MontagePatrimonial[]> {
   try {
-    const allItems = await kv.getByPrefix('montage_patrimonial:');
-
-    let montages: MontagePatrimonial[] = allItems.map(item => item.value as MontagePatrimonial);
+    let montages: MontagePatrimonial[] = await montagesStore.getMontagesPatrimoniaux() as any;
 
     if (statut) {
       montages = montages.filter(m => m.statut === statut);
@@ -357,13 +356,10 @@ export async function importerMontages(montages: Omit<MontagePatrimonial, 'id' |
  */
 export async function deleteAllMontages(): Promise<{ deleted: number }> {
   try {
-    const allItems = await kv.getByPrefix('montage_patrimonial:');
-
-    for (const item of allItems) {
-      await kv.del(item.key);
-    }
-
-    return { deleted: allItems.length };
+    const allItems = await montagesStore.getMontagesPatrimoniaux();
+    const count = allItems.length;
+    await montagesStore.deleteAllMontages();
+    return { deleted: count };
   } catch (error) {
     console.error('❌ Erreur suppression montages:', error);
     return { deleted: 0 };

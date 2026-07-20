@@ -1,4 +1,5 @@
 import * as kv from './kv_store.tsx';
+import { documentsStore } from './documents_store.tsx';
 import * as collecteurJuridique from './collecteur_juridique.tsx';
 
 // Types
@@ -268,12 +269,8 @@ export async function parserTousLesDocuments(): Promise<{
 export async function searchChunks(query?: string, sujet?: string, source?: string): Promise<ChunkJuridique[]> {
 
   try {
-    // Récupérer tous les chunks
-    const allItems = await kv.getByPrefix('chunks_juridiques:');
-
-    let chunks: ChunkJuridique[] = allItems
-      .filter(item => item.key !== 'chunks_juridiques:last_parsing')
-      .map(item => item.value as ChunkJuridique);
+    // Récupérer tous les chunks via facade
+    let chunks: ChunkJuridique[] = (await documentsStore.getAllChunks()) as any;
 
     // Filtrer par source
     if (source) {
@@ -374,13 +371,10 @@ export async function getSujetsUniques(): Promise<string[]> {
 export async function deleteAllChunks(): Promise<{ deleted: number }> {
 
   try {
-    const allItems = await kv.getByPrefix('chunks_juridiques:');
-    
-    for (const item of allItems) {
-      await kv.del(item.key);
-    }
-
-    return { deleted: allItems.length };
+    const allItems = await documentsStore.getAllChunks();
+    const count = allItems.length;
+    await documentsStore.deleteAllChunks();
+    return { deleted: count };
 
   } catch (error) {
     console.error('❌ Erreur suppression chunks:', error);
