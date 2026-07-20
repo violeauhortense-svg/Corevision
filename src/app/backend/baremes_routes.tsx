@@ -1,5 +1,6 @@
 import { Hono } from "npm:hono";
 import * as kv from "./kv_store.tsx";
+import { baremesStore } from "./baremes_store.tsx";
 
 /**
  * 🧮 ROUTES DE GESTION DES BARÈMES FISCAUX
@@ -80,14 +81,11 @@ export function setupBaremesRoutes(app: Hono) {
       
       // Sauvegarder tous les barèmes
       await Promise.all([
-        baremeIR && kv.set(`bareme_ir_${annee}`, baremeIR),
+        baremeIR && baremesStore.storeBaremeIR(annee, baremeIR),
         baremeIFI && kv.set(`bareme_ifi_${annee}`, baremeIFI),
         prelevementsSociaux && kv.set(`prelevements_sociaux_${annee}`, prelevementsSociaux),
         abattements && kv.set(`abattements_${annee}`, abattements),
       ].filter(Boolean));
-      
-      // Sauvegarder la date de dernière modification
-      await kv.set(`bareme_${annee}_updated`, new Date().toISOString());
       
       
       return c.json({
@@ -110,13 +108,10 @@ export function setupBaremesRoutes(app: Hono) {
     try {
       
       // Récupérer tous les barèmes IR (pour identifier les années)
-      const allBaremes = await kv.getByPrefix("bareme_ir_");
-      
+      const allBaremes = await baremesStore.getBaremesIR();
+
       const annees = allBaremes
-        .map((item: any) => {
-          const match = item.key.match(/bareme_ir_(\d{4})/);
-          return match ? match[1] : null;
-        })
+        .map((item: any) => item.annee?.toString())
         .filter(Boolean)
         .sort()
         .reverse();

@@ -1,6 +1,6 @@
 // Routes pour les bilans patrimoniaux avec signature électronique
 import { Hono } from "npm:hono";
-import * as kv from "./kv_store.tsx";
+import { bilanStore } from "./bilan_store.tsx";
 import { getEmailService, wrapEmailHtml, type EmailMessage } from "./emailService.ts";
 
 export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
@@ -48,10 +48,9 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
         emailSentAt: null,
       };
       
-      await kv.set(`bilan_signature:${token}`, bilanSignature);
-      await kv.set(`bilan_signature:client:${clientId}`, { token, clientId });
-      
-      
+      await bilanStore.storeBilan(bilanSignature);
+
+
       return c.json({ token, signatureUrl: `?page=sign-bilan&token=${token}` });
     } catch (err) {
       console.error('Error generating bilan signature:', err);
@@ -63,12 +62,12 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
   app.get("/make-server-cac859af/bilan-signature/:token", async (c) => {
     try {
       const token = c.req.param('token');
-      const bilanSignature = await kv.get(`bilan_signature:${token}`);
-      
+      const bilanSignature = await bilanStore.getBilan(token);
+
       if (!bilanSignature) {
         return c.json({ error: 'Bilan not found' }, 404);
       }
-      
+
       return c.json({ bilanSignature });
     } catch (err) {
       console.error('Error fetching bilan signature:', err);
@@ -86,12 +85,12 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
         return c.json({ error: 'Missing signature data' }, 400);
       }
       
-      const bilanSignature = await kv.get(`bilan_signature:${token}`);
-      
+      const bilanSignature = await bilanStore.getBilan(token);
+
       if (!bilanSignature) {
         return c.json({ error: 'Bilan not found' }, 404);
       }
-      
+
       // Vérifier selon le signataire
       if (signerType === 'client') {
         if (bilanSignature.clientSigned) {
@@ -121,38 +120,32 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
         // 🎯 VALIDATION AUTOMATIQUE DE LA TÂCHE
         
         // Récupérer toutes les tâches du client
-        const clientTasks = await kv.getByPrefix(`task:${bilanSignature.userId}:${bilanSignature.clientId}:`);
-        
+        const clientTasks = await bilanStore.getTasksForBilan(bilanSignature.userId, bilanSignature.clientId);
+
         // Chercher la tâche de compte rendu de RDV
-        for (const taskEntry of clientTasks) {
-          const task = taskEntry.value;
-          
+        for (const task of clientTasks) {
           if (task.title && (
             task.title.toLowerCase().includes('compte rendu') ||
             task.title.toLowerCase().includes('bilan patrimonial') ||
             task.title.toLowerCase().includes('rdv')
           )) {
-            
-            // Ne valider QUE si pas déjà validée
             if (!task.completed) {
               const updatedTask = {
                 ...task,
                 completed: true,
                 completedAt: new Date().toISOString(),
                 completedBy: hasSpouse ? 'both_signed' : 'client_signed',
-                bilanToken: token, // Garder une référence au bilan
+                bilanToken: token,
               };
-              
-              await kv.set(`task:${bilanSignature.userId}:${bilanSignature.clientId}:${task.id}`, updatedTask);
-            } else {
+              await bilanStore.updateTask(bilanSignature.userId, bilanSignature.clientId, task.id, updatedTask);
             }
           }
         }
       } else {
       }
       
-      await kv.set(`bilan_signature:${token}`, bilanSignature);
-      
+      await bilanStore.updateBilan(token, bilanSignature);
+
       return c.json({ success: true, bilanSignature });
     } catch (err) {
       console.error('Error signing bilan:', err);
@@ -178,8 +171,8 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
         return c.json({ error: 'Missing required fields' }, 400);
       }
 
-      const bilanSignature = await kv.get(`bilan_signature:${token}`);
-      
+      const bilanSignature = await bilanStore.getBilan(token);
+
       if (!bilanSignature) {
         console.error('❌ Bilan non trouvé pour token:', token);
         return c.json({ error: 'Bilan not found' }, 404);
@@ -345,8 +338,7 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
       }
 
       // Mettre à jour la date d'envoi
-      bilanSignature.emailSentAt = new Date().toISOString();
-      await kv.set(`bilan_signature:${token}`, bilanSignature);
+      await bilanStore.updateBilan(token, { emailSentAt: new Date().toISOString() });
 
 
       return c.json({
@@ -373,15 +365,10 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
 
 
     try {
-      const allBilans = await kv.getByPrefix('bilan_signature:');
-      
-      // Filtrer uniquement ceux de l'utilisateur (exclure les clés "client:")
-      const userBilans = allBilans.filter((b: any) => 
-        b.value?.userId === user.id && b.value?.token
-      );
-      
-      
-      const bilanSignatures = userBilans.map((b: any) => b.value);
+      const allBilans = await bilanStore.getAllBilans();
+
+      // Filtrer uniquement ceux de l'utilisateur
+      const bilanSignatures = allBilans.filter(b => b.userId === user.id && b.token);
       
       
       return c.json({ bilanSignatures });
@@ -396,16 +383,9 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
     try {
       const clientId = c.req.param('clientId');
       
-      // Chercher le mapping client -> token
-      const clientMapping = await kv.get(`bilan_signature:client:${clientId}`);
-      
-      if (!clientMapping || !clientMapping.token) {
-        return c.json({ bilanSignature: null });
-      }
-      
-      // Récupérer le bilan complet
-      const bilanSignature = await kv.get(`bilan_signature:${clientMapping.token}`);
-      
+      // Récupérer le bilan via l'index client
+      const bilanSignature = await bilanStore.getBilanByClient(clientId);
+
       if (!bilanSignature) {
         return c.json({ bilanSignature: null });
       }
@@ -427,20 +407,19 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
 
     try {
       const token = c.req.param('token');
-      const bilanSignature = await kv.get(`bilan_signature:${token}`);
-      
+      const bilanSignature = await bilanStore.getBilan(token);
+
       if (!bilanSignature) {
         return c.json({ error: 'Bilan not found' }, 404);
       }
-      
+
       // Vérifier que le bilan appartient à l'utilisateur
       if (bilanSignature.userId !== user.id) {
         return c.json({ error: 'Unauthorized' }, 403);
       }
-      
-      // Supprimer le bilan
-      await kv.del(`bilan_signature:${token}`);
-      await kv.del(`bilan_signature:client:${bilanSignature.clientId}`);
+
+      // Supprimer le bilan (index client supprimé automatiquement)
+      await bilanStore.deleteBilan(token);
       
       
       return c.json({ success: true });
@@ -455,8 +434,8 @@ export function setupBilanRoutes(app: Hono, verifyAuth: Function) {
     try {
       const token = c.req.param('token');
       
-      const bilanSignature = await kv.get(`bilan_signature:${token}`);
-      
+      const bilanSignature = await bilanStore.getBilan(token);
+
       if (!bilanSignature) {
         console.error('❌ Bilan non trouvé pour token:', token);
         return c.json({ error: 'Bilan not found' }, 404);

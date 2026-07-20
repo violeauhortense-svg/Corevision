@@ -1,5 +1,5 @@
-import * as kv from './kv_store.tsx';
 import * as reglesFiscalesDB from './regles_fiscales_db.tsx';
+import { auditStore } from './audit_store.tsx';
 import * as montagesPatrimoniaux from './montages_patrimoniaux.tsx';
 import * as moteurPatrimonialIA from './moteur_patrimonial_ia.tsx';
 import * as indexIA from './index_ia.tsx';
@@ -1275,7 +1275,7 @@ export async function genererAuditComplet(clientId: string, commandeId?: string,
     };
     
     // Sauvegarder l'audit
-    await kv.set(`audit_patrimonial:${audit.id}`, audit);
+    await auditStore.storeAudit(audit);
     
     return audit;
     
@@ -1375,41 +1375,26 @@ export async function genererRapportLive(clientId: string, clientDataFromFronten
 }
 
 export async function getAudit(auditId: string): Promise<AuditPatrimonial | null> {
-  const audit = await kv.get(`audit_patrimonial:${auditId}`);
-  return audit as AuditPatrimonial | null;
+  return auditStore.getAudit(auditId) as Promise<AuditPatrimonial | null>;
 }
 
 export async function getAuditsClient(clientId: string): Promise<AuditPatrimonial[]> {
-  const allItems = await kv.getByPrefix('audit_patrimonial:');
-  const audits = allItems
-    .filter((audit): audit is AuditPatrimonial => audit && typeof audit === 'object' && audit.client_id === clientId)
+  const audits = await auditStore.getAllAudits();
+  return audits
+    .filter(audit => audit.client_id === clientId)
     .sort((a, b) => new Date(b.date_creation).getTime() - new Date(a.date_creation).getTime());
-  
-  return audits;
 }
 
 export async function validerAudit(auditId: string): Promise<boolean> {
   const audit = await getAudit(auditId);
   if (!audit) return false;
-  
-  audit.statut = 'valide';
-  audit.date_modification = new Date().toISOString();
-  
-  await kv.set(`audit_patrimonial:${auditId}`, audit);
+  await auditStore.updateAudit(auditId, { statut: 'valide', date_modification: new Date().toISOString() });
   return true;
 }
 
 export async function modifierAudit(auditId: string, modifications: Partial<AuditPatrimonial>): Promise<boolean> {
   const audit = await getAudit(auditId);
   if (!audit) return false;
-  
-  const auditModifie = {
-    ...audit,
-    ...modifications,
-    id: audit.id,
-    date_modification: new Date().toISOString()
-  };
-  
-  await kv.set(`audit_patrimonial:${auditId}`, auditModifie);
+  await auditStore.updateAudit(auditId, { ...modifications, id: audit.id, date_modification: new Date().toISOString() });
   return true;
 }
