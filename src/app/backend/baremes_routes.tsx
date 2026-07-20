@@ -1,5 +1,4 @@
 import { Hono } from "npm:hono";
-import * as kv from "./kv_store.tsx";
 import { baremesStore } from "./baremes_store.tsx";
 
 /**
@@ -23,31 +22,21 @@ export function setupBaremesRoutes(app: Hono) {
       const annee = c.req.param("annee");
       
       // Récupérer tous les barèmes de l'année
-      const [baremeIR, baremeIFI, prelevementsSociaux, abattements] = await Promise.all([
-        kv.get(`bareme_ir_${annee}`),
-        kv.get(`bareme_ifi_${annee}`),
-        kv.get(`prelevements_sociaux_${annee}`),
-        kv.get(`abattements_${annee}`),
-      ]);
-      
+      let { baremeIR, baremeIFI, prelevementsSociaux, abattements } = await baremesStore.getBaremesAnnee(annee);
+
       // Si aucun barème n'existe, initialiser avec les valeurs par défaut
       if (!baremeIR) {
         await initBaremes2026();
-        
+
         // Récupérer à nouveau après initialisation
-        const [baremeIRInit, baremeIFIInit, prelevementsSociauxInit, abattementsInit] = await Promise.all([
-          kv.get(`bareme_ir_${annee}`),
-          kv.get(`bareme_ifi_${annee}`),
-          kv.get(`prelevements_sociaux_${annee}`),
-          kv.get(`abattements_${annee}`),
-        ]);
-        
+        ({ baremeIR, baremeIFI, prelevementsSociaux, abattements } = await baremesStore.getBaremesAnnee(annee));
+
         return c.json({
           annee,
-          baremeIR: baremeIRInit,
-          baremeIFI: baremeIFIInit,
-          prelevementsSociaux: prelevementsSociauxInit,
-          abattements: abattementsInit,
+          baremeIR,
+          baremeIFI,
+          prelevementsSociaux,
+          abattements,
           initialise: true,
         });
       }
@@ -80,12 +69,7 @@ export function setupBaremesRoutes(app: Hono) {
       const { baremeIR, baremeIFI, prelevementsSociaux, abattements } = body;
       
       // Sauvegarder tous les barèmes
-      await Promise.all([
-        baremeIR && baremesStore.storeBaremeIR(annee, baremeIR),
-        baremeIFI && kv.set(`bareme_ifi_${annee}`, baremeIFI),
-        prelevementsSociaux && kv.set(`prelevements_sociaux_${annee}`, prelevementsSociaux),
-        abattements && kv.set(`abattements_${annee}`, abattements),
-      ].filter(Boolean));
+      await baremesStore.storeBaremesAnnee(annee, { baremeIR, baremeIFI, prelevementsSociaux, abattements });
       
       
       return c.json({
@@ -176,12 +160,11 @@ async function initBaremes2026() {
     microFoncierAbattement: 0.30, // Abattement micro-foncier 30%
   };
   
-  await Promise.all([
-    kv.set("bareme_ir_2026", baremeIR2026),
-    kv.set("bareme_ifi_2026", baremeIFI2026),
-    kv.set("prelevements_sociaux_2026", prelevementsSociaux2026),
-    kv.set("abattements_2026", abattements2026),
-    kv.set("bareme_2026_created", new Date().toISOString()),
-  ]);
+  await baremesStore.storeBaremesAnnee("2026", {
+    baremeIR: baremeIR2026,
+    baremeIFI: baremeIFI2026,
+    prelevementsSociaux: prelevementsSociaux2026,
+    abattements: abattements2026,
+  });
   
 }
