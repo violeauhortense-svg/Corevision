@@ -107,6 +107,21 @@ class RulesStore {
     }
   }
 
+  // Store a collected rule (automatically generated from documents)
+  async storeCollectedRule(regle: any, metadata?: Record<string, any>): Promise<void> {
+    try {
+      const id = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const key = `${this.COLLECTEES_PREFIX}${id}`;
+      await kv.set(key, {
+        ...regle,
+        ...(metadata || {}),
+        date_extraction: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('❌ RulesStore.storeCollectedRule() failed:', error);
+    }
+  }
+
   // Delete collected rules by prefix
   async deleteCollectedRules(prefix?: string): Promise<number> {
     try {

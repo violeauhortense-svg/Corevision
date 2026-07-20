@@ -1,12 +1,12 @@
-# Graph Report - Corevision-main  (2026-07-19)
+# Graph Report - Corevision-main  (2026-07-20)
 
 ## Corpus Check
-- 287 files · ~286,102 words
+- 293 files · ~292,581 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1249 nodes · 1559 edges · 40 communities detected
-- Extraction: 88% EXTRACTED · 12% INFERRED · 0% AMBIGUOUS · INFERRED: 193 edges (avg confidence: 0.8)
+- 1346 nodes · 1775 edges · 39 communities detected
+- Extraction: 84% EXTRACTED · 16% INFERRED · 0% AMBIGUOUS · INFERRED: 283 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -29,39 +29,38 @@
 - [[_COMMUNITY_Community 16|Community 16]]
 - [[_COMMUNITY_Community 17|Community 17]]
 - [[_COMMUNITY_Community 18|Community 18]]
-- [[_COMMUNITY_Community 20|Community 20]]
-- [[_COMMUNITY_Community 22|Community 22]]
+- [[_COMMUNITY_Community 19|Community 19]]
+- [[_COMMUNITY_Community 21|Community 21]]
 - [[_COMMUNITY_Community 23|Community 23]]
-- [[_COMMUNITY_Community 25|Community 25]]
+- [[_COMMUNITY_Community 24|Community 24]]
 - [[_COMMUNITY_Community 26|Community 26]]
 - [[_COMMUNITY_Community 28|Community 28]]
 - [[_COMMUNITY_Community 29|Community 29]]
 - [[_COMMUNITY_Community 30|Community 30]]
 - [[_COMMUNITY_Community 31|Community 31]]
 - [[_COMMUNITY_Community 34|Community 34]]
-- [[_COMMUNITY_Community 35|Community 35]]
+- [[_COMMUNITY_Community 40|Community 40]]
 - [[_COMMUNITY_Community 41|Community 41]]
 - [[_COMMUNITY_Community 42|Community 42]]
-- [[_COMMUNITY_Community 43|Community 43]]
-- [[_COMMUNITY_Community 47|Community 47]]
-- [[_COMMUNITY_Community 51|Community 51]]
-- [[_COMMUNITY_Community 53|Community 53]]
-- [[_COMMUNITY_Community 57|Community 57]]
-- [[_COMMUNITY_Community 65|Community 65]]
-- [[_COMMUNITY_Community 69|Community 69]]
-- [[_COMMUNITY_Community 85|Community 85]]
+- [[_COMMUNITY_Community 46|Community 46]]
+- [[_COMMUNITY_Community 50|Community 50]]
+- [[_COMMUNITY_Community 52|Community 52]]
+- [[_COMMUNITY_Community 56|Community 56]]
+- [[_COMMUNITY_Community 64|Community 64]]
+- [[_COMMUNITY_Community 68|Community 68]]
+- [[_COMMUNITY_Community 84|Community 84]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `getByPrefix()` - 29 edges
-2. `getSession()` - 18 edges
-3. `analyserProfilClient()` - 14 edges
-4. `EventEmitter` - 11 edges
-5. `genererAuditComplet()` - 10 edges
-6. `getSql()` - 9 edges
-7. `CalculServiceClass` - 9 edges
-8. `genererMontageDepuisRegles()` - 8 edges
-9. `analyseAvancee7Etapes()` - 8 edges
-10. `del()` - 8 edges
+1. `getByPrefix()` - 45 edges
+2. `DocumentsStore` - 26 edges
+3. `del()` - 19 edges
+4. `getSession()` - 18 edges
+5. `delByPrefix()` - 16 edges
+6. `StatsStore` - 15 edges
+7. `analyserProfilClient()` - 14 edges
+8. `RulesStore` - 14 edges
+9. `ClientsStore` - 13 edges
+10. `MontagesStore` - 12 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `getByPrefix()` --calls--> `getSimulationsClient()`  [INFERRED]
@@ -70,104 +69,104 @@
   src\app\backend\kv_store.tsx → src\app\backend\simulateur_patrimonial.tsx
 - `collecterDonneesClient()` --calls--> `getByPrefix()`  [INFERRED]
   src\app\backend\audit_patrimonial.tsx → src\app\backend\kv_store.tsx
-- `rechercherStrategies()` --calls--> `getAllMontages()`  [INFERRED]
-  src\app\backend\audit_patrimonial.tsx → src\app\backend\montages_core.tsx
-- `getAuditsClient()` --calls--> `getByPrefix()`  [INFERRED]
-  src\app\backend\audit_patrimonial.tsx → src\app\backend\kv_store.tsx
+- `analyserCivil()` --calls--> `getReglesParDomaine()`  [INFERRED]
+  src\app\backend\audit_patrimonial.tsx → src\app\backend\regles_fiscales_db.tsx
+- `analyserFiscal()` --calls--> `rechercherRegles()`  [INFERRED]
+  src\app\backend\audit_patrimonial.tsx → src\app\backend\regles_fiscales_db.tsx
 
 ## Communities
 
 ### Community 0 - "Community 0"
-Cohesion: 0.04
-Nodes (83): App(), getAudit(), getAuditsClient(), modifierAudit(), validerAudit(), initBaremes2026(), setupBaremesRoutes(), getCollecteStats() (+75 more)
+Cohesion: 0.03
+Nodes (54): getAuditsClient(), getCollecteStats(), getReglesCollectees(), runCollecte(), scheduleWeeklyCollecte(), scrapeBOFiP(), scrapeLegifrance(), searchDocuments() (+46 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.05
-Nodes (26): base64url(), base64urlDecode(), createUser(), hashPassword(), signInUser(), signJWT(), verifyAuth(), verifyAuthFromCookie() (+18 more)
+Cohesion: 0.03
+Nodes (44): App(), setupAuditPatrimonialRoutes(), initBaremes2026(), setupBaremesRoutes(), setupBilanRoutes(), setupClientRoutes(), collecterDocumentsRetraite(), getDocumentsRetraite() (+36 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.04
-Nodes (29): checkAuditProgress(), handleOrderValidated(), loadData(), detectIncoh(), handleSaveAudit(), handleSavePreconisations(), handleSavePresentation(), handleValidateAndSend() (+21 more)
+Nodes (35): handleAdminValidation(), handleDocumentsUpdate(), handleSwitchTab(), loadClientData(), reloadDocuments(), checkAuditProgress(), handleOrderValidated(), loadData() (+27 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.07
-Nodes (32): analyserCivil(), analyserFiscal(), analyserPatrimoine(), analyserSocial(), collecterDonneesClient(), genererAuditComplet(), genererRapportLive(), rechercherStrategies() (+24 more)
+Cohesion: 0.09
+Nodes (24): analyserCivil(), analyserFiscal(), analyserPatrimoine(), analyserSocial(), collecterDonneesClient(), genererAuditComplet(), genererRapportLive(), getAudit() (+16 more)
 
 ### Community 4 - "Community 4"
 Cohesion: 0.08
 Nodes (19): getMeetingsForDate(), getTasksForDate(), getTodayItems(), handleCreateMeeting(), loadAgendaData(), toggleMeeting(), toggleTask(), completeTask() (+11 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.1
-Nodes (26): setupCoreVisionRoutes(), setupMontagesPatrimoniauxRoutes(), analyserProfilClient(), calculerNbParts(), calculerRevenusTotaux(), construireRequeteRegles(), determinerTrancheMarginalIR(), estimerEconomiesFiscales() (+18 more)
-
-### Community 6 - "Community 6"
 Cohesion: 0.07
 Nodes (15): genererRapport(), handleRunAudit(), handleCreateClient(), handleDeleteClient(), async(), handleTaskUpdate(), loadClient(), saveArbitrageFields() (+7 more)
+
+### Community 6 - "Community 6"
+Cohesion: 0.09
+Nodes (22): extraireRegleDepuisChunk(), extraireToutesLesRegles(), getExtractionStats(), identifierConditions(), identifierConsequences(), identifierExceptions(), identifierRegle(), setupExtracteurReglesRoutes() (+14 more)
 
 ### Community 7 - "Community 7"
 Cohesion: 0.08
 Nodes (13): calculateValorisation(), getAnalyseSituation(), getBFR(), getComptesAssocies(), getCouvertureBFR(), getFinancementParAssocies(), getTotalActif(), getTotalPassif() (+5 more)
 
 ### Community 8 - "Community 8"
+Cohesion: 0.11
+Nodes (24): setupMontagesPatrimoniauxRoutes(), analyserProfilClient(), calculerNbParts(), calculerRevenusTotaux(), construireRequeteRegles(), determinerTrancheMarginalIR(), estimerEconomiesFiscales(), genererExplicationIA() (+16 more)
+
+### Community 9 - "Community 9"
 Cohesion: 0.07
 Nodes (13): handleReinitialiser(), handleSubmit(), handleSubmit(), confirmAction(), getGraviteBadge(), getStatutBadge(), handleSubmit(), handleSave() (+5 more)
 
-### Community 9 - "Community 9"
+### Community 10 - "Community 10"
+Cohesion: 0.11
+Nodes (24): setupCollecteurJuridiqueRoutes(), calculerCompatibilite(), estimerEconomie(), genererEtapesMontage(), genererMontageDepuisRegles(), genererMontagesAutomatiques(), genererNomMontage(), genererObjectif() (+16 more)
+
+### Community 11 - "Community 11"
 Cohesion: 0.1
 Nodes (7): handleDeleteOrder(), updateOrderStatus(), CalculServiceClass, getCacheKey(), getFromCache(), setCache(), CoreVisionServiceClass
 
-### Community 10 - "Community 10"
-Cohesion: 0.1
-Nodes (11): detecterIncoherences(), extraireDonneesDetection(), setupIncoherencesRoutes(), extraireDonneesClient(), genererRecommandations(), setupRecommandationsRoutes(), calculateAge(), removeChild() (+3 more)
+### Community 12 - "Community 12"
+Cohesion: 0.19
+Nodes (18): base64url(), base64urlDecode(), createUser(), hashPassword(), signInUser(), signJWT(), verifyAuth(), verifyAuthFromCookie() (+10 more)
 
-### Community 11 - "Community 11"
+### Community 13 - "Community 13"
 Cohesion: 0.14
 Nodes (10): handleInitialiserRegles(), handleInitialiserReglesRetraite(), handleInitialiserReglesSociales(), handleLaunchCollecte(), handleLaunchCollecteRetraite(), handleLaunchCollecteSocial(), loadReglesCollectees(), loadReglesRetraite() (+2 more)
 
-### Community 12 - "Community 12"
-Cohesion: 0.18
-Nodes (9): setupBilanRoutes(), sendDERSignatureEmail(), EmailServiceFactory, getEmailService(), StubEmailService, wrapEmailHtml(), sendCGPNotificationEmail(), sendSignatureEmail() (+1 more)
-
-### Community 13 - "Community 13"
-Cohesion: 0.15
-Nodes (2): EventEmitter, useTaskEvents()
-
 ### Community 14 - "Community 14"
+Cohesion: 0.12
+Nodes (9): detecterIncoherences(), extraireDonneesDetection(), extraireDonneesClient(), genererRecommandations(), calculateAge(), removeChild(), downloadReport(), generateReportContent() (+1 more)
+
+### Community 15 - "Community 15"
 Cohesion: 0.11
 Nodes (3): handleSendRequest(), handleSendProposal(), recordEmailHistory()
 
-### Community 15 - "Community 15"
-Cohesion: 0.2
-Nodes (14): setupCollecteurJuridiqueRoutes(), calculerCompatibilite(), estimerEconomie(), genererEtapesMontage(), genererMontageDepuisRegles(), genererMontagesAutomatiques(), genererNomMontage(), genererObjectif() (+6 more)
-
 ### Community 16 - "Community 16"
-Cohesion: 0.18
-Nodes (8): isSCI(), handleOptimiser(), SimulationsProjections(), calculerIR(), calculerPlafondDividendesTNS(), calculerScenario(), formatEuro(), optimiserRemuneration()
+Cohesion: 0.15
+Nodes (2): EventEmitter, useTaskEvents()
 
 ### Community 17 - "Community 17"
-Cohesion: 0.23
-Nodes (11): creerMontage(), deleteMontage(), getAllMontages(), getAllTags(), getAllTemplates(), getMontage(), getMontagesStats(), importerMontages() (+3 more)
+Cohesion: 0.18
+Nodes (8): isSCI(), handleOptimiser(), SimulationsProjections(), calculerIR(), calculerPlafondDividendesTNS(), calculerScenario(), formatEuro(), optimiserRemuneration()
 
 ### Community 18 - "Community 18"
 Cohesion: 0.16
 Nodes (3): addLog(), handleIndexDocument(), loadDocuments()
 
-### Community 20 - "Community 20"
+### Community 19 - "Community 19"
+Cohesion: 0.26
+Nodes (1): ClientsStore
+
+### Community 21 - "Community 21"
 Cohesion: 0.24
 Nodes (5): calculerMontantDevis(), genererDevis(), handleOpenDetail(), handleToggleObjectif(), isObjectifSelected()
 
-### Community 22 - "Community 22"
+### Community 23 - "Community 23"
 Cohesion: 0.2
 Nodes (3): loadMetrics(), loadKanban(), getAuthToken()
 
-### Community 23 - "Community 23"
+### Community 24 - "Community 24"
 Cohesion: 0.22
 Nodes (2): SidebarMenuButton(), useSidebar()
-
-### Community 25 - "Community 25"
-Cohesion: 0.31
-Nodes (6): handleAdminValidation(), handleDocumentsUpdate(), handleSwitchTab(), loadClientData(), reloadDocuments(), initializeRequiredDocuments()
 
 ### Community 26 - "Community 26"
 Cohesion: 0.25
@@ -190,57 +189,55 @@ Cohesion: 0.29
 Nodes (2): chargerParametresDefaut(), handleMontageChange()
 
 ### Community 34 - "Community 34"
-Cohesion: 0.33
-Nodes (2): isValidTaskState(), validateTaskUpdate()
-
-### Community 35 - "Community 35"
 Cohesion: 0.52
 Nodes (6): chargerOuCreerDossier(), genererSection(), initialiserPrompts(), modifierContenuSection(), sauvegarderDossier(), validerDossier()
 
-### Community 41 - "Community 41"
+### Community 40 - "Community 40"
 Cohesion: 0.48
 Nodes (5): calculerIFI(), calculerImpotRevenu(), calculerPrelevementsSociaux(), getDefaultBaremes(), loadBaremes()
 
-### Community 42 - "Community 42"
+### Community 41 - "Community 41"
 Cohesion: 0.62
 Nodes (6): generateDetentionSummary(), getDetentionContext(), isAcquisitionAvantMariage(), isRegimeCommunautaire(), isRegimeSeparatiste(), validateDetention()
 
-### Community 43 - "Community 43"
+### Community 42 - "Community 42"
 Cohesion: 0.47
 Nodes (3): resetToDefault(), saveEdit(), saveRegles()
 
-### Community 47 - "Community 47"
+### Community 46 - "Community 46"
 Cohesion: 0.53
 Nodes (4): FormControl(), FormDescription(), FormMessage(), useFormField()
 
-### Community 51 - "Community 51"
+### Community 50 - "Community 50"
 Cohesion: 0.6
 Nodes (3): extractImports(), getDomain(), scanFiles()
 
-### Community 53 - "Community 53"
+### Community 52 - "Community 52"
 Cohesion: 0.5
 Nodes (2): loadMeetings(), toggleMeetingCompleted()
 
-### Community 57 - "Community 57"
+### Community 56 - "Community 56"
 Cohesion: 0.5
 Nodes (2): CarouselNext(), useCarousel()
 
-### Community 65 - "Community 65"
+### Community 64 - "Community 64"
 Cohesion: 0.67
 Nodes (2): checkFile(), getDomain()
 
-### Community 69 - "Community 69"
+### Community 68 - "Community 68"
 Cohesion: 0.67
 Nodes (2): getSession(), handleReportGenerated()
 
-### Community 85 - "Community 85"
+### Community 84 - "Community 84"
 Cohesion: 0.67
 Nodes (2): createTasksForClient(), ensureClientTasks()
 
 ## Knowledge Gaps
-- **Thin community `Community 13`** (18 nodes): `eventEmitter.ts`, `taskEvents.ts`, `EventEmitter`, `.clearHistory()`, `.createEvent()`, `.emit()`, `.getAllEvents()`, `.getClientEvents()`, `.loadFromLocalStorage()`, `.off()`, `.on()`, `.onAny()`, `.saveToLocalStorage()`, `emitTaskCreated()`, `emitTaskDeleted()`, `emitTasksBulkUpdated()`, `emitTaskUpdated()`, `useTaskEvents()`
+- **Thin community `Community 16`** (18 nodes): `eventEmitter.ts`, `taskEvents.ts`, `EventEmitter`, `.clearHistory()`, `.createEvent()`, `.emit()`, `.getAllEvents()`, `.getClientEvents()`, `.loadFromLocalStorage()`, `.off()`, `.on()`, `.onAny()`, `.saveToLocalStorage()`, `emitTaskCreated()`, `emitTaskDeleted()`, `emitTasksBulkUpdated()`, `emitTaskUpdated()`, `useTaskEvents()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 23`** (10 nodes): `sidebar.tsx`, `cn()`, `handleKeyDown()`, `SidebarFooter()`, `SidebarHeader()`, `SidebarMenu()`, `SidebarMenuButton()`, `SidebarMenuItem()`, `SidebarSeparator()`, `useSidebar()`
+- **Thin community `Community 19`** (13 nodes): `ClientsStore`, `.deleteAllClients()`, `.deleteClient()`, `.getActiveClientCount()`, `.getAllClients()`, `.getClient()`, `.getClientByEmail()`, `.getClientCount()`, `.getClientsByStatus()`, `.permanentlyDeleteClient()`, `.searchClients()`, `.storeClient()`, `.updateClientStatus()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 24`** (10 nodes): `sidebar.tsx`, `cn()`, `handleKeyDown()`, `SidebarFooter()`, `SidebarHeader()`, `SidebarMenu()`, `SidebarMenuButton()`, `SidebarMenuItem()`, `SidebarSeparator()`, `useSidebar()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 26`** (9 nodes): `filterEmails()`, `formatDate()`, `handleArchive()`, `handleDelete()`, `handleEmailClick()`, `handleMarkAsRead()`, `handleMarkAsUnread()`, `loadEmails()`, `MailInboxTab.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
@@ -248,33 +245,31 @@ Nodes (2): createTasksForClient(), ensureClientTasks()
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 31`** (8 nodes): `chargerMontages()`, `chargerParametresDefaut()`, `comparerScenarios()`, `formatCurrency()`, `formatPercent()`, `handleMontageChange()`, `lancerSimulation()`, `SimulateurPatrimonial.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 34`** (7 nodes): `applyTaskUpdate()`, `areAllTasksCompleted()`, `countTasksByState()`, `isTaskCompleted()`, `isValidTaskState()`, `validateTaskUpdate()`, `task_states.tsx`
+- **Thin community `Community 52`** (5 nodes): `getLocationIcon()`, `getMeetingTypeColor()`, `loadMeetings()`, `toggleMeetingCompleted()`, `ClientMeetings.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 53`** (5 nodes): `getLocationIcon()`, `getMeetingTypeColor()`, `loadMeetings()`, `toggleMeetingCompleted()`, `ClientMeetings.tsx`
+- **Thin community `Community 56`** (5 nodes): `carousel.tsx`, `Carousel()`, `CarouselNext()`, `cn()`, `useCarousel()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 57`** (5 nodes): `carousel.tsx`, `Carousel()`, `CarouselNext()`, `cn()`, `useCarousel()`
+- **Thin community `Community 64`** (4 nodes): `checkFile()`, `getAllFiles()`, `getDomain()`, `check-domains.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 65`** (4 nodes): `checkFile()`, `getAllFiles()`, `getDomain()`, `check-domains.js`
+- **Thin community `Community 68`** (4 nodes): `getSession()`, `handleReportGenerated()`, `loadClientData()`, `GelAvoirsTask.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 69`** (4 nodes): `getSession()`, `handleReportGenerated()`, `loadClientData()`, `GelAvoirsTask.tsx`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 85`** (4 nodes): `ensureClientTasks.ts`, `createTasksForClient()`, `ensureClientTasks()`, `reloadClientTasks()`
+- **Thin community `Community 84`** (4 nodes): `ensureClientTasks.ts`, `createTasksForClient()`, `ensureClientTasks()`, `reloadClientTasks()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `getSession()` connect `Community 2` to `Community 1`, `Community 10`, `Community 9`, `Community 25`?**
-  _High betweenness centrality (0.046) - this node is a cross-community bridge._
-- **Why does `verifyAuthFromCookie()` connect `Community 1` to `Community 2`?**
+- **Why does `getSession()` connect `Community 2` to `Community 11`, `Community 12`, `Community 14`?**
   _High betweenness centrality (0.040) - this node is a cross-community bridge._
-- **Why does `getByPrefix()` connect `Community 0` to `Community 17`, `Community 3`, `Community 5`, `Community 15`?**
-  _High betweenness centrality (0.007) - this node is a cross-community bridge._
-- **Are the 27 inferred relationships involving `getByPrefix()` (e.g. with `collecterDonneesClient()` and `getAuditsClient()`) actually correct?**
-  _`getByPrefix()` has 27 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `verifyAuthFromCookie()` connect `Community 12` to `Community 2`?**
+  _High betweenness centrality (0.038) - this node is a cross-community bridge._
+- **Why does `getByPrefix()` connect `Community 0` to `Community 1`, `Community 3`, `Community 6`, `Community 8`, `Community 10`, `Community 19`?**
+  _High betweenness centrality (0.012) - this node is a cross-community bridge._
+- **Are the 43 inferred relationships involving `getByPrefix()` (e.g. with `getAuditsClient()` and `.getAllClients()`) actually correct?**
+  _`getByPrefix()` has 43 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 17 inferred relationships involving `del()` (e.g. with `.permanentlyDeleteClient()` and `.deleteChunk()`) actually correct?**
+  _`del()` has 17 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 16 inferred relationships involving `getSession()` (e.g. with `verifyAuthFromCookie()` and `loadData()`) actually correct?**
   _`getSession()` has 16 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 3 inferred relationships involving `analyserProfilClient()` (e.g. with `rechercherPourAssistant()` and `searchMontages()`) actually correct?**
-  _`analyserProfilClient()` has 3 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 2 inferred relationships involving `genererAuditComplet()` (e.g. with `genererRapportStructure()` and `.set()`) actually correct?**
-  _`genererAuditComplet()` has 2 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 14 inferred relationships involving `delByPrefix()` (e.g. with `.deleteAllClients()` and `.deleteAllChunks()`) actually correct?**
+  _`delByPrefix()` has 14 INFERRED edges - model-reasoned connections that need verification._

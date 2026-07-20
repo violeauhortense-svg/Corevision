@@ -1,5 +1,6 @@
 import * as cheerio from 'npm:cheerio@1.0.0';
-import * as kv from './kv_store.tsx';
+import { documentsStore } from './documents_store.tsx';
+import { rulesStore } from './rules_store.tsx';
 import * as parserJuridique from './parser_juridique.tsx';
 import * as extracteurRegles from './extracteur_regles.tsx';
 import * as indexIA from './index_ia.tsx';
@@ -268,9 +269,8 @@ export async function runCollecte(): Promise<{
     const allDocs = [...bofipDocs, ...legifranceDocs];
 
     for (const doc of allDocs) {
-      const key = `juridique:${doc.source.toLowerCase()}:${doc.id}`;
       try {
-        await kv.set(key, doc);
+        await documentsStore.storeCollectedDocument(doc.id, doc);
       } catch (error) {
         const errorMsg = `Erreur stockage ${doc.id}: ${error instanceof Error ? error.message : 'Unknown error'}`;
         console.error(errorMsg);
@@ -305,14 +305,9 @@ export async function runCollecte(): Promise<{
         if (regles && regles.length > 0) {
           reglesExtraites.push(...regles);
           
-          // Sauvegarder chaque règle dans le KV store avec un préfixe spécial
+          // Sauvegarder chaque règle via le facade rulesStore
           for (const regle of regles) {
-            const regleKey = `regle_collectee:${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            await kv.set(regleKey, {
-              ...regle,
-              source_document: doc.id,
-              date_extraction: new Date().toISOString()
-            });
+            await rulesStore.storeCollectedRule(regle, { source_document: doc.id });
             reglesAjoutees++;
           }
         }
@@ -366,7 +361,7 @@ export async function runCollecte(): Promise<{
       errors
     };
 
-    await kv.set('juridique:last_collecte', collecteInfo);
+    await documentsStore.updateLastCollectionTimestamp(new Date().toISOString());
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1) + 's';
 
@@ -404,33 +399,9 @@ export async function runCollecte(): Promise<{
 export async function searchDocuments(query?: string, source?: string): Promise<DocumentJuridique[]> {
 
   try {
-    // Récupérer tous les documents juridiques
-    const prefix = source ? `juridique:${source.toLowerCase()}:` : 'juridique:';
-    const keys = await kv.getByPrefix(prefix);
-
-    let documents: DocumentJuridique[] = keys
-      .filter(item => item.key !== 'juridique:last_collecte')
-      .map(item => item.value as DocumentJuridique);
-
-    // Filtrer par query si fournie
-    if (query && query.trim()) {
-      const queryLower = query.toLowerCase();
-      documents = documents.filter(doc => 
-        doc.titre.toLowerCase().includes(queryLower) ||
-        doc.texte.toLowerCase().includes(queryLower) ||
-        doc.section.toLowerCase().includes(queryLower) ||
-        doc.metadata.mots_cles.some(kw => kw.includes(queryLower))
-      );
-    }
-
-    // Trier par date de publication (plus récent d'abord)
-    documents.sort((a, b) => {
-      const dateA = new Date(a.date_publication).getTime();
-      const dateB = new Date(b.date_publication).getTime();
-      return dateB - dateA;
-    });
-
-    return documents;
+    // Use documentsStore facade which handles filtering and sorting
+    const documents = await documentsStore.searchCollectedDocuments(query, source);
+    return documents as any;
 
   } catch (error) {
     console.error('❌ Erreur lors de la recherche:', error);
@@ -443,9 +414,9 @@ export async function searchDocuments(query?: string, source?: string): Promise<
  */
 export async function getCollecteStats() {
   try {
-    const lastCollecte = await kv.get('juridique:last_collecte');
+    const lastCollecte = await documentsStore.getLastCollectionTimestamp();
     const allDocs = await searchDocuments();
-    const reglesCollectees = await kv.getByPrefix('regle_collectee:');
+    const reglesCollectees = await rulesStore.getCollectedRules();
 
     return {
       last_collecte: lastCollecte || null,
@@ -472,12 +443,14 @@ export async function getCollecteStats() {
  */
 export async function getReglesCollectees(): Promise<any[]> {
   try {
-    const regles = await kv.getByPrefix('regle_collectee:');
-    return regles.map(item => item.value).sort((a: any, b: any) => {
-      const dateA = new Date(a.date_extraction || 0).getTime();
-      const dateB = new Date(b.date_extraction || 0).getTime();
-      return dateB - dateA; // Plus récent d'abord
-    });
+    const regles = await rulesStore.getCollectedRules();
+    return regles
+      .map((item: any) => item.value || item)
+      .sort((a: any, b: any) => {
+        const dateA = new Date(a.date_extraction || 0).getTime();
+        const dateB = new Date(b.date_extraction || 0).getTime();
+        return dateB - dateA; // Plus récent d'abord
+      });
   } catch (error) {
     console.error('❌ Erreur récupération règles collectées:', error);
     return [];
