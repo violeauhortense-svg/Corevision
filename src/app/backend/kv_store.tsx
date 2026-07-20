@@ -29,8 +29,7 @@ async function initializeDb(): Promise<void> {
             value JSONB NOT NULL,
             created_at TIMESTAMP DEFAULT NOW(),
             updated_at TIMESTAMP DEFAULT NOW()
-          );
-          CREATE INDEX IF NOT EXISTS idx_key_prefix ON kv_store (key);
+          )
         `;
       } catch (err) {
         console.error("Could not create table:", (err as Error).message);
@@ -98,11 +97,12 @@ export const mset = async (keys: string[], values: any[]): Promise<void> => {
 
 export const mget = async (keys: string[]): Promise<any[]> => {
   const sql = await getSql();
-  const result = await sql`SELECT value FROM kv_store WHERE key = ANY(${keys})`;
-  return result.map(row => {
-    const value = row.value;
-    return typeof value === 'string' ? JSON.parse(value) : value;
-  });
+  const result = await sql`SELECT key, value FROM kv_store WHERE key = ANY(${keys})`;
+  const map = new Map(result.map(row => {
+    const value = typeof row.value === 'string' ? JSON.parse(row.value) : row.value;
+    return [row.key, value];
+  }));
+  return keys.map(k => map.get(k) ?? null);
 };
 
 export const mdel = async (keys: string[]): Promise<void> => {
@@ -112,7 +112,9 @@ export const mdel = async (keys: string[]): Promise<void> => {
 
 export const getByPrefix = async (prefix: string): Promise<any[]> => {
   const sql = await getSql();
-  const result = await sql`SELECT value FROM kv_store WHERE key LIKE ${prefix + '%'}`;
+  // Escape LIKE wildcards in the prefix so literal % and _ in keys don't act as patterns
+  const escaped = prefix.replace(/[%_\\]/g, '\\$&');
+  const result = await sql`SELECT value FROM kv_store WHERE key LIKE ${escaped + '%'} ESCAPE '\\'`;
   return result.map(row => {
     const value = row.value;
     return typeof value === 'string' ? JSON.parse(value) : value;
@@ -128,8 +130,8 @@ export const delByPrefix = async (prefix: string): Promise<number> => {
 // Graceful shutdown
 if (typeof Deno !== "undefined" && "unload" in Deno) {
   (Deno as any).unload = async () => {
-    if (_pool) {
-      await _pool.end();
+    if (_sql) {
+      await _sql.end();
     }
   };
 }
