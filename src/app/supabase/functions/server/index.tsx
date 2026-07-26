@@ -607,15 +607,17 @@ print("✅ Bridge démarré!")
 print("🌐 Accédez à: http://127.0.0.1:5001/health")
 """, encoding='utf-8')
 
-    # Exécuter le script
-    subprocess.Popen([sys.executable, str(start_script)])
-
+    # Lancer directement app.py pour voir les logs
     print("✅ Bridge en cours de démarrage...")
     print()
     print("=" * 50)
-    print("Vous pouvez fermer cette fenêtre.")
-    print("Le Bridge continue de tourner en arrière-plan!")
+    print("⚠️  GARDEZ CETTE FENÊTRE OUVERTE!")
+    print("Logs de Flask:")
     print("=" * 50)
+    print()
+
+    os.chdir(bridge_dir)
+    subprocess.run([sys.executable, 'app.py'])
 
 def main():
     print_header()
