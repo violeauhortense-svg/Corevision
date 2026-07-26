@@ -94,14 +94,23 @@ export function BridgeManager() {
   };
 
   const downloadInstaller = () => {
-    // Créer un lien de téléchargement du fichier install_service.bat
     const link = document.createElement('a');
     link.href = '/bridge/install_service.bat';
-    link.download = 'install_bridge.bat';
+    link.download = 'install_bridge_service.bat';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success('Téléchargement en cours...');
+    toast.success('Téléchargement: install_bridge_service.bat');
+  };
+
+  const downloadLauncher = () => {
+    const link = document.createElement('a');
+    link.href = '/bridge/launcher.bat';
+    link.download = 'bridge_launcher.bat';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Téléchargement: bridge_launcher.bat');
   };
 
   return (
@@ -184,46 +193,51 @@ export function BridgeManager() {
 
         {/* Setup Instructions */}
         {!bridgeStatus?.bridge_running && (
-          <Card className="p-6 mb-8 bg-yellow-50 border border-yellow-200">
-            <h3 className="font-bold text-yellow-900 mb-4 flex items-center gap-2">
-              <AlertCircle className="w-5 h-5" />
-              Installation en 2 étapes
-            </h3>
-            <div className="space-y-4 text-sm text-yellow-800">
-              <div>
-                <p className="font-bold mb-2">1️⃣ Télécharge et exécute l'installateur</p>
-                <p>
-                  • Clique sur <strong>"Installer le Bridge"</strong>
-                </p>
-                <p>
-                  • Double-clique sur le fichier téléchargé
-                </p>
-                <p>
-                  • <strong>Clique droit → Exécuter en tant qu'administrateur</strong>
-                </p>
+          <div className="space-y-4 mb-8">
+            {/* Option 1: Service Windows */}
+            <Card className="p-6 bg-blue-50 border border-blue-200">
+              <h3 className="font-bold text-blue-900 mb-4 flex items-center gap-2">
+                ⚙️ Option 1: Service Windows (Recommandé avec droits admin)
+              </h3>
+              <div className="space-y-3 text-sm text-blue-800">
+                <p>Démarrage automatique au boot, tourne 24/7 en arrière-plan</p>
+                <div className="bg-white p-3 rounded space-y-2">
+                  <p><strong>Étape 1:</strong> Clique sur le bouton ci-dessus</p>
+                  <p><strong>Étape 2:</strong> Clique droit sur le fichier → "Exécuter en tant qu'administrateur"</p>
+                  <p><strong>Étape 3:</strong> Attends 2-3 min (l'installateur configure tout)</p>
+                  <p><strong>Étape 4:</strong> Reviens ici et clique "Synchroniser Maintenant"</p>
+                </div>
               </div>
-              <div>
-                <p className="font-bold mb-2">2️⃣ Attends la confirmation</p>
-                <p>L'installateur configure tout automatiquement (2-3 min)</p>
-              </div>
-              <div>
-                <p className="font-bold mb-2">3️⃣ C'est fini!</p>
-                <p>Reviens ici et clique sur <strong>"Synchroniser Maintenant"</strong></p>
-              </div>
-            </div>
+              <button
+                onClick={downloadInstaller}
+                className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold"
+              >
+                ⬇️ Télécharger installateur service
+              </button>
+            </Card>
 
-            <div className="mt-4 bg-white p-3 rounded text-yellow-900 text-xs">
-              <p className="font-mono">
-                📋 Ce que l'installateur fait:
-              </p>
-              <ul className="ml-4 mt-2 space-y-1">
-                <li>✅ Installe les dépendances Python</li>
-                <li>✅ Configure le service Windows</li>
-                <li>✅ Démarre le Bridge automatiquement</li>
-                <li>✅ Configure le démarrage au boot</li>
-              </ul>
-            </div>
-          </Card>
+            {/* Option 2: Launcher GUI */}
+            <Card className="p-6 bg-green-50 border border-green-200">
+              <h3 className="font-bold text-green-900 mb-4 flex items-center gap-2">
+                ✨ Option 2: Launcher GUI (Sans droits admin)
+              </h3>
+              <div className="space-y-3 text-sm text-green-800">
+                <p>Interface graphique, pas besoin de droits admin, démarrage manuel</p>
+                <div className="bg-white p-3 rounded space-y-2">
+                  <p><strong>Étape 1:</strong> Clique sur le bouton ci-dessous</p>
+                  <p><strong>Étape 2:</strong> Double-clique sur le fichier téléchargé</p>
+                  <p><strong>Étape 3:</strong> Clique "Démarrer Bridge" dans la fenêtre</p>
+                  <p><strong>Étape 4:</strong> Reviens ici et clique "Synchroniser Maintenant"</p>
+                </div>
+              </div>
+              <button
+                onClick={downloadLauncher}
+                className="mt-4 w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold"
+              >
+                ⬇️ Télécharger launcher (sans admin)
+              </button>
+            </Card>
+          </div>
         )}
 
         {/* Configuration */}
