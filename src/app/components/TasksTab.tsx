@@ -88,6 +88,9 @@ export function TasksTab({ clientId }: TasksTabProps) {
         if (result.statusProgressed) {
           toast.success(`🎉 Passage au statut suivant !`);
         }
+
+        // ✨ CLOSE MODAL
+        setActiveModal(null);
       } else {
         toast.error('Erreur validation tâche');
       }
@@ -120,6 +123,9 @@ export function TasksTab({ clientId }: TasksTabProps) {
         if (result.statusProgressed) {
           toast.success(`🎉 Passage au statut suivant !`);
         }
+
+        // ✨ CLOSE MODAL
+        setActiveModal(null);
       } else {
         toast.error('Erreur marquage N.A.');
       }
