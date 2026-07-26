@@ -137,7 +137,7 @@ export function setupTaskRoutes(app: Hono) {
   });
 
   // PATCH: Validate/NA a task in the 8-status pipeline
-  app.patch("/make-server-cac859af/clients/:clientId/tache/:taskIdx", async (c) => {
+  app.patch("/make-server-cac859af/clients/:clientId/tache/:taskId", async (c) => {
     const { user, error } = await verifyAuth(c.req.header('Authorization'));
 
     if (error || !user) {
@@ -147,14 +147,14 @@ export function setupTaskRoutes(app: Hono) {
 
     try {
       const clientId = c.req.param('clientId');
-      const taskIdx = parseInt(c.req.param('taskIdx'), 10);
+      const taskId = c.req.param('taskId');
       const body = await c.req.json();
       const { completed, status } = body;
 
       console.log(`🔄 Task validation request:`);
       console.log(`   userId: ${user.id}`);
       console.log(`   clientId: ${clientId}`);
-      console.log(`   taskIdx: ${taskIdx}, completed: ${completed}, status: ${status}`);
+      console.log(`   taskId: ${taskId}, completed: ${completed}, status: ${status}`);
 
       // Fetch the client
       const kvKey = `client:${user.id}:${clientId}`;
@@ -177,8 +177,11 @@ export function setupTaskRoutes(app: Hono) {
       const currentStatus = client.statusOuvert || 'Prospect';
       const tasks = client.taches?.[currentStatus] || [];
 
-      if (taskIdx < 0 || taskIdx >= tasks.length) {
-        return c.json({ error: `Invalid task index ${taskIdx} for status "${currentStatus}"` }, 400);
+      // Find task by ID instead of index
+      let taskIdx = tasks.findIndex((t: any) => t.id === taskId);
+
+      if (taskIdx < 0) {
+        return c.json({ error: 'Tâche introuvable' }, 404);
       }
 
       console.log(`   Task before: id=${tasks[taskIdx]?.id}, completed=${tasks[taskIdx]?.completed}, status=${tasks[taskIdx]?.status}`);
