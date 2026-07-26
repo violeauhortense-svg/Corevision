@@ -188,8 +188,11 @@ export function setupTaskRoutes(app: Hono) {
       // 2️⃣ SAVE CLIENT
       client.taches[currentStatus] = tasks;
       client.updated_at = new Date().toISOString();
-      await kv.set(`client:${user.id}:${clientId}`, client);
-      console.log(`✅ [PATCH Task] Client saved to KV`);
+      const saveKey = `client:${user.id}:${clientId}`;
+      await kv.set(saveKey, client);
+      console.log(`✅ [PATCH Task] Client saved to KV at ${saveKey}`);
+      console.log(`   Tasks in "${currentStatus}": ${tasks.length}, all completed: ${tasks.every((t: any) => t.completed || t.status === 'na')}`);
+
 
       // 3️⃣ CHECK IF ALL TASKS COMPLETED/NA
       const allCompleted = areAllTasksCompleted(tasks);
@@ -236,7 +239,12 @@ export function setupTaskRoutes(app: Hono) {
       // 5️⃣ RELOAD AND RETURN
       console.log(`🔄 [PATCH Task] Reloading client from KV...`);
       const reloadedClient = await kv.get(`client:${user.id}:${clientId}`);
-      console.log(`✅ [PATCH Task] Client reloaded`);
+
+      if (!reloadedClient) {
+        console.error(`❌ [PATCH Task] Reloaded client is NULL!`);
+      } else {
+        console.log(`✅ [PATCH Task] Client reloaded: ${reloadedClient.nom}, status: ${reloadedClient.statusOuvert}`);
+      }
 
       const responseData = {
         success: true,
@@ -247,7 +255,7 @@ export function setupTaskRoutes(app: Hono) {
         client: reloadedClient
       };
 
-      console.log(`✅ [PATCH Task] Sending response...`);
+      console.log(`✅ [PATCH Task] Sending response with client:`, reloadedClient ? 'YES' : 'NO');
       return c.json(responseData);
 
     } catch (err) {

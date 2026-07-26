@@ -83,9 +83,17 @@ export function TasksTab({ clientId }: TasksTabProps) {
 
       if (response.ok) {
         const result = await response.json();
+        console.log('✅ [handleTaskUpdate] Response:', result);
+        console.log('   client:', result.client ? 'present' : 'MISSING');
+        console.log('   statusProgressed:', result.statusProgressed);
 
         // ✨ USE SERVER DATA DIRECTLY
-        setClient(result.client);
+        if (result.client) {
+          console.log('✅ [handleTaskUpdate] Updating client state');
+          setClient(result.client);
+        } else {
+          console.error('❌ [handleTaskUpdate] No client in response!');
+        }
 
         toast.success(completed ? '✅ Tâche validée' : '↩️ Validation annulée');
 
@@ -95,8 +103,11 @@ export function TasksTab({ clientId }: TasksTabProps) {
         }
 
         // ✨ CLOSE MODAL
+        console.log('🔄 [handleTaskUpdate] Closing modal');
         setActiveModal(null);
       } else {
+        const errorText = await response.text();
+        console.error('❌ [handleTaskUpdate] Response not OK:', response.status, errorText);
         toast.error('Erreur validation tâche');
       }
     } catch (err) {
