@@ -176,7 +176,10 @@ export function AgendaView({ session }: AgendaViewProps) {
   // Filtrer les RDV par date
   const getMeetingsForDate = (date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
-    return meetings.filter(meeting => meeting.date.startsWith(dateStr));
+    return meetings.filter(meeting => {
+      const meetingDate = meeting.startDate || meeting.date || '';
+      return meetingDate.startsWith(dateStr);
+    });
   };
 
   const getTodayItems = () => {
@@ -267,7 +270,10 @@ export function AgendaView({ session }: AgendaViewProps) {
   const hasItemsOnDate = (date: Date | null) => {
     if (!date) return false;
     const dateStr = date.toISOString().split('T')[0];
-    return tasks.some(task => task.deadline === dateStr) || meetings.some(meeting => meeting.date.startsWith(dateStr));
+    return tasks.some(task => task.deadline === dateStr) || meetings.some(meeting => {
+      const meetingDate = meeting.startDate || meeting.date || '';
+      return meetingDate.startsWith(dateStr);
+    });
   };
 
   const getLocationIcon = (type: string) => {
