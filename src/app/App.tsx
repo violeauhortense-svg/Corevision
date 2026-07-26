@@ -12,6 +12,7 @@ import { CoreVisionAdminView } from "./components/CoreVisionAdminView";
 import { AdminKnowledgeBase } from "./components/AdminKnowledgeBase";
 import { BaremesFiscauxView } from "./components/BaremesFiscauxView";
 import { CommunicationsHub } from "./components/CommunicationsHub";
+import { BridgeManager } from "./components/BridgeManager";
 import { BaremeUpdateNotification } from "./components/BaremeUpdateNotification";
 import { cleanupObsoleteTasks } from './utils/cleanupObsoleteTasks';
 import { clearAllTestData } from './utils/dataCleanup';
@@ -27,7 +28,8 @@ export type ViewType =
   | "profile"
   | "corevision"
   | "knowledge-base"
-  | "baremes-fiscaux";
+  | "baremes-fiscaux"
+  | "bridge";
 
 export default function App() {
   const [session, setSession] = useState<any>(null);
@@ -155,6 +157,8 @@ export default function App() {
         return <AdminKnowledgeBase session={session} />;
       case "baremes-fiscaux":
         return <BaremesFiscauxView />;
+      case "bridge":
+        return <BridgeManager />;
       default:
         return <DashboardView session={session} />;
     }

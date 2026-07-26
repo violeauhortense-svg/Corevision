@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, FileText, Calendar, CheckSquare, UserCircle, LogOut, Settings, Package, Lightbulb, Calculator, Mail } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Calendar, CheckSquare, UserCircle, LogOut, Settings, Package, Lightbulb, Calculator, Mail, Terminal } from 'lucide-react';
 import type { ViewType } from '../App';
 
 interface SidebarProps {
@@ -131,7 +131,31 @@ export function Sidebar({ currentView, onViewChange, onLogout, session }: Sideba
             </div>
           </button>
         )}
-        
+
+        {/* Bouton Bridge Outlook */}
+        <button
+          onClick={() => onViewChange('bridge')}
+          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+            currentView === 'bridge'
+              ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg'
+              : 'bg-gradient-to-r from-orange-50 to-red-50 text-orange-700 hover:from-orange-100 hover:to-red-100 border border-orange-200'
+          }`}
+        >
+          <Terminal className="w-5 h-5" />
+          <div className="text-left flex-1">
+            <p className={`text-sm font-semibold ${
+              currentView === 'bridge' ? 'text-white' : 'text-orange-900'
+            }`}>
+              Bridge Outlook
+            </p>
+            <p className={`text-xs ${
+              currentView === 'bridge' ? 'text-orange-100' : 'text-orange-600'
+            }`}>
+              Synchronisation
+            </p>
+          </div>
+        </button>
+
         <button
           onClick={() => onViewChange('profile')}
           className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
