@@ -7,7 +7,7 @@ import { Calendar, MapPin, Mail, Send, AlertCircle, Loader2, X, ChevronDown, Che
 import { toast } from 'sonner';
 import { clientAPI, rdvAPI, taskAPI } from '../services/api';
 import { generateEmailContent, recordEmailHistory } from '../utils/meetingHelpers';
-import { agendaAPI } from '../services/agendaAPI';
+import { agendaAPI } from '../services/newAgendaAPI';
 import type { Task, ClientData, FamilyInfo } from './client-detail/types';
 
 // Types

@@ -1,5 +1,5 @@
 import { taskAPI } from './api';
-import { agendaAPI } from './agendaAPI';
+import { agendaAPI } from './newAgendaAPI';
 import type { AgendaEvent } from '../types/agenda';
 import type { Task } from '../types/client';
 

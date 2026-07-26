@@ -4,7 +4,7 @@ import { taskSyncService } from '../services/taskSyncService';
 import { taskAPI } from '../services/api';
 import type { Task } from '../types/client';
 import type { AgendaEvent, MeetingType } from '../types/agenda';
-import { agendaAPI } from '../services/agendaAPI';
+import { agendaAPI } from '../services/newAgendaAPI';
 import { clientAPI } from '../services/api';
 import { toast } from 'sonner';
 
@@ -74,9 +74,10 @@ export function AgendaView({ session }: AgendaViewProps) {
 
       setTasks(tasksWithDeadline);
 
-      // Charger tous les RDV
-      const allMeetings = await agendaAPI.getAll();
-      setMeetings(allMeetings);
+      // Charger les RDVs du mois courant
+      const now = new Date();
+      const monthData = await agendaAPI.getMonthEvents(now.getFullYear(), now.getMonth() + 1);
+      setMeetings(monthData.month.events);
     } catch (error) {
       console.error('❌ Erreur chargement agenda:', error);
       toast.error('Erreur lors du chargement de l\'agenda');
@@ -106,17 +107,8 @@ export function AgendaView({ session }: AgendaViewProps) {
   };
 
   const toggleMeeting = async (meetingId: string) => {
-    try {
-      const meeting = meetings.find(m => m.id === meetingId);
-      if (!meeting) return;
-
-      await agendaAPI.update(meetingId, { completed: !meeting.completed });
-      toast.success(meeting.completed ? 'RDV réactivé' : 'RDV complété');
-      await loadAgendaData();
-    } catch (error) {
-      console.error('Erreur mise à jour RDV:', error);
-      toast.error('Erreur lors de la mise à jour');
-    }
+    // TODO: Implement meeting status toggle in new agenda API
+    toast.info('Fonctionnalité en développement');
   };
 
   const handleCreateMeeting = async () => {
@@ -131,18 +123,15 @@ export function AgendaView({ session }: AgendaViewProps) {
 
       const meetingDateTime = `${meetingDate}T${meetingTime}:00`;
 
-      await agendaAPI.create({
-        clientId: client.id,
-        clientName: client.name,
-        clientEmail: client.email,
+      // Interaction 3: Create RDV with clientId → updates client.dateNextRdv
+      await agendaAPI.createClientMeeting(client.id, client.name, {
         title: `RDV ${meetingType} - ${client.name}`,
-        date: meetingDateTime,
-        time: meetingTime,
+        description: meetingDescription || `Rendez-vous ${meetingType} avec ${client.name}`,
+        startDate: meetingDateTime,
         location: meetingLocation,
         locationType: locationType,
         meetingType: meetingType,
-        description: meetingDescription || `Rendez-vous ${meetingType} avec ${client.name}`,
-        completed: false,
+        source: 'manual'
       });
 
       toast.success('📅 Rendez-vous créé avec succès');

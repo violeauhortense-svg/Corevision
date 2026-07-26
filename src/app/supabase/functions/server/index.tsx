@@ -9,19 +9,16 @@ import { setupBilanRoutes } from "./bilan_routes.tsx";
 import { setupClientRoutes } from "./client_routes.tsx";
 import { setupTaskRoutes } from "./task_routes.tsx";
 import { setupDERRoutes } from "./der_routes.tsx";
-import { setupEmailRoutes } from "./email_routes.tsx";
 import { setupCoreVisionRoutes } from "./corevision_routes.tsx";
 import { setupSignatureRoutes } from "./signature_routes.tsx";
 import { setupSanctionsRoutes } from "./sanctions_routes.tsx";
 import { setupEmailWebhookRoutes } from "./email_webhook.tsx";
-import { setupRDVRoutes } from "./rdv_routes.tsx";
 import knowledgeBaseRoutes from "./knowledge_base_routes.tsx";
 import { setupCalculRoutes } from "./calcul_routes.tsx";
 import { setupIncoherencesRoutes } from "./incoherences_routes.tsx";
 import { setupRecommandationsRoutes } from "./recommandations_routes.tsx";
 import { setupBaremesRoutes } from "./baremes_routes.tsx";
 import { setupSectionRapportRoutes } from "./section_rapport_routes.tsx";
-import { mailRoutes } from "./mail_routes.tsx";
 // Knowledge ingestion routes
 import { setupCollecteurJuridiqueRoutes } from "./collecteur_juridique_routes.tsx";
 import { setupParserJuridiqueRoutes } from "./parser_juridique_routes.tsx";
@@ -370,7 +367,6 @@ console.log('? DER routes loaded');
 setupEmailRoutes(app, verifyAuth);
 console.log('? Email routes loaded');
 setupCoreVisionRoutes(app, supabaseAdminCompat, kv);
-console.log('? CoreVision routes loaded');
 setupSignatureRoutes(app, supabaseAdminCompat, kv);
 console.log('? Signature routes loaded');
 setupSanctionsRoutes(app, supabaseAdminCompat, kv);
@@ -380,7 +376,6 @@ console.log('? Email webhook routes loaded');
 setupRDVRoutes(app);
 console.log('? RDV routes loaded');
 
-// Knowledge Base routes
 app.route('/make-server-cac859af/knowledge-base', knowledgeBaseRoutes);
 console.log('? Knowledge base routes loaded');
 
@@ -408,7 +403,6 @@ console.log('? Bar�mes fiscaux routes loaded');
 app.route('/make-server-cac859af', mailRoutes);
 console.log('? Mail routes loaded');
 
-// ============================================
 // KNOWLEDGE INGESTION + PATRIMOINE ROUTES
 // ============================================
 

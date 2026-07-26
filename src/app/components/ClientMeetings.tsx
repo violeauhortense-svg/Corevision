@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Calendar, Clock, MapPin, Building2, Home, Video, CheckCircle, XCircle } from 'lucide-react';
-import { agendaAPI } from '../services/agendaAPI';
+import { agendaAPI } from '../services/newAgendaAPI';
 import type { AgendaEvent } from '../types/agenda';
 
 interface ClientMeetingsProps {

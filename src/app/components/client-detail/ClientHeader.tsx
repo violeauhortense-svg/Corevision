@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, User, Phone, Mail, MapPin, Calendar, Edit, X, Save, Building2 } from 'lucide-react';
-import { agendaAPI } from '../../services/agendaAPI';
+import { agendaAPI } from '../../services/newAgendaAPI';
 import type { ClientData } from './types';
 
 interface ClientHeaderProps {
