@@ -258,9 +258,16 @@ export function setupTaskRoutes(app: Hono) {
         }, 400);
       }
 
+      // Initialize tasks object if not exists
+      if (!client.taches) {
+        client.taches = {};
+      }
+
       // Initialize tasks for next status if not exists
-      if (!client.taches[toStatus]) {
+      if (!client.taches[toStatus] || client.taches[toStatus].length === 0) {
         const nextTaskDefs = getTasksWithIdsForStatus(toStatus);
+        console.log(`📝 Creating ${nextTaskDefs.length} tasks for "${toStatus}":`, nextTaskDefs.map((t: any) => t.id));
+
         client.taches[toStatus] = nextTaskDefs.map((def: any) => ({
           id: def.id,
           title: def.title,
@@ -270,6 +277,8 @@ export function setupTaskRoutes(app: Hono) {
           clientId: clientId,
           statusPipeline: toStatus,
         }));
+
+        console.log(`✅ Created tasks for "${toStatus}":`, client.taches[toStatus].map((t: any) => ({ id: t.id, title: t.title })));
       }
 
       // Update client status
@@ -277,7 +286,7 @@ export function setupTaskRoutes(app: Hono) {
       client.updated_at = new Date().toISOString();
       await kv.set(`client:${user.id}:${clientId}`, client);
 
-      console.log(`✅ Client progressed to "${toStatus}"`);
+      console.log(`✅ Client progressed to "${toStatus}" with ${client.taches[toStatus]?.length || 0} tasks`);
 
       return c.json({
         success: true,
