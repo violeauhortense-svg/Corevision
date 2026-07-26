@@ -913,6 +913,17 @@ const setupBridgeRoutes = (app: any) => {
 setupBridgeRoutes(app);
 console.log('🌉 Bridge routes loaded');
 
+// Helper: Generate hash for deduplication
+function generateHash(text: string): string {
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    const char = text.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString(36);
+}
+
 // Endpoint to receive mails and calendar events from Bridge
 app.post("/make-server-cac859af/bridge/sync-data", async (c) => {
   try {
@@ -920,12 +931,41 @@ app.post("/make-server-cac859af/bridge/sync-data", async (c) => {
     const { device_id, mails, events } = body;
 
     let mailsCreated = 0;
+    let mailsSkipped = 0;
     let eventsCreated = 0;
+    let eventsSkipped = 0;
 
-    // Process mails - create communications
+    // Get all existing communications to check for duplicates
+    const existingComms = await kv.getByPrefix('communication:');
+    const commHashes = new Set();
+    for (const comm of existingComms) {
+      if (comm.tags && comm.tags.includes('bridge')) {
+        const hash = generateHash(`${comm.subject}|${comm.from}|${comm.receivedAt}`);
+        commHashes.add(hash);
+      }
+    }
+
+    // Get all existing agenda events to check for duplicates
+    const existingEvents = await kv.getByPrefix('agenda_event:');
+    const eventHashes = new Set();
+    for (const evt of existingEvents) {
+      if (evt.source === 'outlook') {
+        const hash = generateHash(`${evt.title}|${evt.startDate}|${evt.endDate}`);
+        eventHashes.add(hash);
+      }
+    }
+
+    // Process mails - create communications with deduplication
     if (mails && Array.isArray(mails)) {
       for (const mail of mails) {
         try {
+          const mailHash = generateHash(`${mail.subject}|${mail.from}|${mail.date}`);
+
+          if (commHashes.has(mailHash)) {
+            mailsSkipped++;
+            continue;
+          }
+
           const commId = crypto.randomUUID();
           const communication = {
             id: commId,
@@ -944,16 +984,24 @@ app.post("/make-server-cac859af/bridge/sync-data", async (c) => {
           const key = `communication:${commId}`;
           await kv.set(key, communication);
           mailsCreated++;
+          commHashes.add(mailHash);
         } catch (mailErr) {
           console.error('❌ [BRIDGE] Error processing mail:', mailErr);
         }
       }
     }
 
-    // Process calendar events - create agenda events
+    // Process calendar events - create agenda events with deduplication
     if (events && Array.isArray(events)) {
       for (const event of events) {
         try {
+          const eventHash = generateHash(`${event.subject}|${event.start}|${event.end}`);
+
+          if (eventHashes.has(eventHash)) {
+            eventsSkipped++;
+            continue;
+          }
+
           const eventId = crypto.randomUUID();
           const agendaEvent = {
             id: eventId,
@@ -977,18 +1025,21 @@ app.post("/make-server-cac859af/bridge/sync-data", async (c) => {
           const key = `agenda_event:bridge:${eventId}`;
           await kv.set(key, agendaEvent);
           eventsCreated++;
+          eventHashes.add(eventHash);
         } catch (eventErr) {
           console.error('❌ [BRIDGE] Error processing event:', eventErr);
         }
       }
     }
 
-    console.log(`✅ [BRIDGE] Sync completed: ${mailsCreated} mails, ${eventsCreated} events from ${device_id}`);
+    console.log(`✅ [BRIDGE] Sync completed from ${device_id}: ${mailsCreated} mails (+${mailsSkipped} duplicates), ${eventsCreated} events (+${eventsSkipped} duplicates)`);
     return c.json({
       status: 'success',
       device_id,
       mails_created: mailsCreated,
-      events_created: eventsCreated
+      mails_skipped: mailsSkipped,
+      events_created: eventsCreated,
+      events_skipped: eventsSkipped
     }, 200);
   } catch (err) {
     console.error('❌ [BRIDGE] Sync error:', err);
