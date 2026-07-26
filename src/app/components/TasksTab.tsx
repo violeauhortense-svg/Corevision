@@ -83,7 +83,7 @@ export function TasksTab({ clientId }: TasksTabProps) {
 
       if (response.ok) {
         const result = await response.json();
-        console.log('✅ [handleTaskUpdate] Response:', result);
+        console.log('✅ [handleTaskUpdate] Full response:', JSON.stringify(result, null, 2));
         console.log('   client:', result.client ? 'present' : 'MISSING');
         console.log('   statusProgressed:', result.statusProgressed);
 
