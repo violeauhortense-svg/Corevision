@@ -156,15 +156,27 @@ def internal_error(e):
 # ============================================
 
 if __name__ == '__main__':
+    import os
+
     logger.info("🌉 Starting Outlook Bridge Flask API...")
 
     # Démarrer le bridge
     bridge.start()
 
+    # Récupérer le host depuis l'environnement (par défaut: 0.0.0.0 pour écouter sur tous les ordinateurs)
+    # Mettre à 127.0.0.1 si tu veux restreindre au localhost uniquement
+    host = os.getenv('BRIDGE_HOST', '0.0.0.0')
+    port = int(os.getenv('BRIDGE_PORT', 5001))
+
+    logger.info(f"🌐 Listening on {host}:{port}")
+    if host == '0.0.0.0':
+        logger.info("   ✅ Accessible from any computer on this network")
+        logger.info("   🔐 Make sure your firewall allows port 5001")
+
     # Démarrer le serveur Flask
     app.run(
-        host='127.0.0.1',
-        port=5001,
+        host=host,
+        port=port,
         debug=False,
         use_reloader=False  # Désactiver le reloader pour ne pas dupliquer le bridge
     )

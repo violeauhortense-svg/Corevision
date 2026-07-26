@@ -197,6 +197,31 @@ Vérifier que le backend CRM est running sur l'URL définie dans `.env`
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
+## Multi-Device Support
+
+Le Bridge peut tourner sur **plusieurs ordinateurs simultanément** sans créer de doublons!
+
+### Configuration multi-device:
+
+1. **Copie le dossier `bridge/`** sur chaque ordinateur
+2. **Édite `.env`** sur chaque ordinateur avec un Device ID unique:
+   ```
+   DEVICE_ID=mon-ordinateur-001    # Sur l'ordinateur 1
+   DEVICE_ID=mon-ordinateur-002    # Sur l'ordinateur 2
+   DEVICE_ID=mon-ordinateur-003    # Sur l'ordinateur 3
+   ```
+3. **Lance le Bridge** sur chaque ordinateur: `python app.py`
+4. **Zéro doublon!** Les mails sont automatiquement dédupliqués par device_id
+
+### Configuration réseau:
+
+Par défaut, le Bridge écoute sur `0.0.0.0:5001` (accessible depuis n'importe quel ordinateur).
+
+Pour restreindre au localhost uniquement:
+```bash
+BRIDGE_HOST=127.0.0.1 python app.py
+```
+
 ## Production
 
 ### Lancer en arrière-plan sur Windows
