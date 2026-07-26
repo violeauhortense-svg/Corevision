@@ -213,7 +213,15 @@ app.post("/make-server-cac859af/auth/signin", async (c) => {
     const { email, password } = body;
 
     const data = await signInUser(email, password);
-    return c.json({ session: data.session, user: data.user });
+
+    // ✨ Set JWT as HTTP-only cookie (not in localStorage)
+    c.header('Set-Cookie', `sessionId=${data.access_token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=604800`);
+
+    // Return user info (but NOT the token in JSON)
+    return c.json({
+      user: data.user,
+      message: "Logged in successfully - token set in secure cookie"
+    });
   } catch (error) {
     console.error('Sign in error:', error);
     return c.json({ error: (error as Error).message }, 401);
