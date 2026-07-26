@@ -214,8 +214,8 @@ app.post("/make-server-cac859af/auth/signin", async (c) => {
 
     const data = await signInUser(email, password);
 
-    // ✨ Set JWT as HTTP-only cookie
-    c.header('Set-Cookie', `sessionId=${data.access_token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=604800`);
+    // ✨ Set JWT as HTTP-only cookie (no Secure flag for dev/test)
+    c.header('Set-Cookie', `sessionId=${data.access_token}; HttpOnly; SameSite=Lax; Path=/`);
 
     // Also return token in response so frontend can confirm
     return c.json({ session: data.session, user: data.user });
