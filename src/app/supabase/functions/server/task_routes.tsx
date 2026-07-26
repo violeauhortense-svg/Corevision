@@ -203,8 +203,9 @@ export function setupTaskRoutes(app: Hono) {
       const stats = countTasksByState(tasks);
       const allCompleted = areAllTasksCompleted(tasks);
       console.log(`📊 Stats: completed=${stats.completed}, pending=${stats.pending}, na=${stats.na}, allCompleted=${allCompleted}`);
+      console.log(`📤 Returning task validation response with stats:`, { allCompleted, stats });
 
-      return c.json({
+      const response = {
         success: true,
         message: `Task ${status === 'na' ? 'marked N.A.' : (completed ? 'validated' : 'unvalidated')}`,
         task: tasks[taskIdx],
@@ -213,7 +214,10 @@ export function setupTaskRoutes(app: Hono) {
           counts: stats,
         },
         client
-      });
+      };
+
+      console.log(`📤 Response stats:`, response.stats);
+      return c.json(response);
     } catch (err) {
       console.error('❌ Error validating task:', err);
       return c.json({ error: 'Failed to validate task: ' + (err as Error).message }, 500);
