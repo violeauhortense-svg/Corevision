@@ -58,29 +58,41 @@ export async function verifyAuth(authHeaderOrRequest?: string | { header: (key: 
   // Extract headers whether we got a string or a request object
   if (typeof authHeaderOrRequest === "string") {
     authHeader = authHeaderOrRequest;
+    console.log('📋 [verifyAuth] Received string authHeader');
   } else if (authHeaderOrRequest && typeof authHeaderOrRequest === "object" && 'header' in authHeaderOrRequest) {
     authHeader = authHeaderOrRequest.header('Authorization');
     cookieHeader = authHeaderOrRequest.header('Cookie');
+    console.log('📋 [verifyAuth] Received request object');
+    console.log('   Authorization header:', authHeader ? '✅ present' : '❌ missing');
+    console.log('   Cookie header:', cookieHeader ? `✅ present (${cookieHeader.length} chars)` : '❌ missing');
+  } else {
+    console.log('❌ [verifyAuth] Invalid input:', typeof authHeaderOrRequest);
   }
 
   // Try Authorization header first (Bearer token)
   if (authHeader?.startsWith("Bearer ")) {
     token = authHeader.slice(7);
+    console.log('✅ [verifyAuth] Token found in Authorization header (Bearer)');
   } else if (authHeader) {
     // Try as-is if no Bearer prefix
     token = authHeader;
+    console.log('✅ [verifyAuth] Token found in Authorization header (raw)');
   }
 
   // Fallback: try to extract token from cookies
   if (!token && cookieHeader) {
+    console.log('🍪 [verifyAuth] Searching for sessionId in cookies...');
     // Parse cookies looking for sessionId or token
     const cookies = cookieHeader.split(';').map(c => c.trim());
+    console.log(`   Found ${cookies.length} cookies: ${cookies.map(c => c.split('=')[0]).join(', ')}`);
     for (const cookie of cookies) {
       if (cookie.startsWith('sessionId=')) {
         token = cookie.slice(10); // Extract value after "sessionId="
+        console.log('✅ [verifyAuth] Token found in sessionId cookie');
         break;
       } else if (cookie.startsWith('token=')) {
         token = cookie.slice(6); // Extract value after "token="
+        console.log('✅ [verifyAuth] Token found in token cookie');
         break;
       }
     }
@@ -88,6 +100,8 @@ export async function verifyAuth(authHeaderOrRequest?: string | { header: (key: 
 
   if (!token) {
     console.log('🔴 [verifyAuth] No token found in headers or cookies');
+    console.log('   authHeader:', authHeader ? 'present' : 'missing');
+    console.log('   cookieHeader:', cookieHeader ? 'present' : 'missing');
     return { user: null, error: "No token provided" };
   }
 
