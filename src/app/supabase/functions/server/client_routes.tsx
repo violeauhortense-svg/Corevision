@@ -56,12 +56,12 @@ export function setupClientRoutes(app: Hono) {
         const currentStatus = client.statusOuvert || 'Prospect';
         const taskTemplates = getTasksWithIdsForStatus(currentStatus);
 
-        tasksByStatus[currentStatus] = taskTemplates.map((def: any, idx: number) => ({
+        tasksByStatus[currentStatus] = taskTemplates.map((def: any) => ({
           id: def.id,
           title: def.title,
           description: def.description,
-          completed: idx === 0, // First task auto-completed
-          status: idx === 0 ? 'pending' : 'pending',
+          completed: false,
+          status: 'pending',
           createdAt: new Date().toISOString(),
           clientId: clientId,
           statusPipeline: currentStatus,
