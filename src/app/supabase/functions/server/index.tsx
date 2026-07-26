@@ -995,9 +995,20 @@ app.post("/make-server-cac859af/bridge/sync-data", async (c) => {
     if (events && Array.isArray(events)) {
       for (const event of events) {
         try {
-          // Ensure dates are valid
-          const startDate = event.start ? new Date(event.start).toISOString() : new Date().toISOString();
-          const endDate = event.end ? new Date(event.end).toISOString() : new Date(new Date().getTime() + 3600000).toISOString();
+          // Ensure dates are valid and add GMT+2 timezone if missing
+          let startDate = event.start;
+          let endDate = event.end;
+
+          // Add timezone offset if missing (dates from Bridge are in GMT+2)
+          if (startDate && !startDate.includes('+') && !startDate.includes('Z')) {
+            startDate = startDate + '+02:00';
+          }
+          if (endDate && !endDate.includes('+') && !endDate.includes('Z')) {
+            endDate = endDate + '+02:00';
+          }
+
+          startDate = startDate ? new Date(startDate).toISOString() : new Date().toISOString();
+          endDate = endDate ? new Date(endDate).toISOString() : new Date(new Date().getTime() + 3600000).toISOString();
 
           const eventHash = generateHash(`${event.subject}|${startDate}|${endDate}`);
 
