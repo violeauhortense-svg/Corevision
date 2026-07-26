@@ -471,6 +471,7 @@ pause`;
 app.get("/make-server-cac859af/download/bridge-launcher-py", async (c) => {
   try {
     const content = `#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Outlook Bridge Launcher - Ultra Simple
 Démarre le Bridge sans droits admin
@@ -480,6 +481,11 @@ import subprocess
 import sys
 import os
 from pathlib import Path
+
+# Fix Windows encoding issue
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 def print_header():
     print()
