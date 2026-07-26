@@ -36,6 +36,9 @@ import { setupSimulateurPatrimonialRoutes } from "./simulateur_patrimonial_route
 import { setupReglesFiscalesRoutes } from "./regles_fiscales_routes.tsx";
 import { setupAuditPatrimonialRoutes } from "./audit_patrimonial_routes.tsx";
 import { setupDashboardRoutes } from "./dashboard_routes.tsx";
+// HUB Communication & Agenda (refactored)
+import { setupCommunicationsRoutes } from "./communications_routes.tsx";
+import { setupAgendaRoutes } from "./agenda_routes.tsx";
 
 // ============================================
 // VERSION: 2026-02-27-DER-FIX-V6
@@ -352,6 +355,10 @@ app.get("/make-server-cac859af/files/*", async (c) => {
 
 setupDashboardRoutes(app);
 console.log('? Dashboard routes loaded');
+setupCommunicationsRoutes(app);
+console.log('📧 Communications (Hub) routes loaded');
+setupAgendaRoutes(app);
+console.log('📅 Agenda routes loaded');
 setupClientRoutes(app);
 console.log('? Client routes loaded');
 setupTaskRoutes(app);
