@@ -522,7 +522,7 @@ SYNC_INTERVAL=30
 BRIDGE_HOST=0.0.0.0
 BRIDGE_PORT=5001
 """
-        env_file.write_text(env_content)
+        env_file.write_text(env_content, encoding='utf-8')
         print(f"✅ .env créé: {env_file}")
 
     return bridge_dir
@@ -596,7 +596,7 @@ def force_sync():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001, debug=False, use_reloader=False)
-''')
+''', encoding='utf-8')
 
 # Lancer le Bridge
 subprocess.Popen([sys.executable, 'app.py'],
@@ -604,7 +604,7 @@ subprocess.Popen([sys.executable, 'app.py'],
                   stderr=subprocess.DEVNULL)
 print("✅ Bridge démarré!")
 print("🌐 Accédez à: http://127.0.0.1:5001/health")
-""")
+""", encoding='utf-8')
 
     # Exécuter le script
     subprocess.Popen([sys.executable, str(start_script)])
