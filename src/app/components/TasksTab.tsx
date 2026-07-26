@@ -100,49 +100,32 @@ export function TasksTab({ clientId }: TasksTabProps) {
 
         toast.success(completed ? '✅ Tâche validée' : '↩️ Validation annulée');
 
-        // UPDATE STATE IMMEDIATELY
-        setClient(prev => {
-          if (!prev) return prev;
+        // ✨ UPDATE STATE with server data (ensure persistence)
+        if (result.client) {
+          setClient(result.client);
+        }
 
+        // ✨ AUTO-PROGRESSION: Check if all tasks completed for current status
+        const currentStatus = client?.statusOuvert || client?.status || 'Prospect';
+        console.log('   result.stats?.allCompleted:', result.stats?.allCompleted);
+        console.log('   status === currentStatus:', status === currentStatus);
 
-          const updatedClient = {
-            ...prev,
-            taches: {
-              ...prev.taches,
-              [status]: (prev.taches?.[status] || []).map(t => {
-                if (t.id === taskId || t.title === taskId) {
-                  return result.task;
-                }
-                return t;
-              })
-            }
-          };
+        if (result.stats?.allCompleted && status === currentStatus) {
+          const STATUSES = ['Prospect', 'Découverte', 'Simulation', 'Lettre Mission', 'Rapport/Audit', 'Suivi MEP', 'Suivi CSP', 'Arbitrage'];
+          const currentIdx = STATUSES.indexOf(status);
+          const nextStatus = currentIdx < STATUSES.length - 1 ? STATUSES[currentIdx + 1] : null;
 
+          console.log('   nextStatus:', nextStatus);
 
-          // ✨ AUTO-PROGRESSION: Check if all tasks completed for current status
-          const currentStatus = prev.statusOuvert || prev.status || 'Prospect';
-          console.log('   result.stats?.allCompleted:', result.stats?.allCompleted);
-          console.log('   status === currentStatus:', status === currentStatus);
-
-          if (result.stats?.allCompleted && status === currentStatus) {
-            const STATUSES = ['Prospect', 'Découverte', 'Simulation', 'Lettre Mission', 'Rapport/Audit', 'Suivi MEP', 'Suivi CSP', 'Arbitrage'];
-            const currentIdx = STATUSES.indexOf(status);
-            const nextStatus = currentIdx < STATUSES.length - 1 ? STATUSES[currentIdx + 1] : null;
-
-            console.log('   nextStatus:', nextStatus);
-
-            if (nextStatus) {
-              console.log(`   Scheduling progression from "${status}" to "${nextStatus}"`);
-              setTimeout(() => {
-                handleProgressToNextStatus(status, nextStatus);
-              }, 800);
-            }
-          } else {
-            console.log('   No auto-progression: allCompleted=' + result.stats?.allCompleted + ', isCurrentStatus=' + (status === currentStatus));
+          if (nextStatus) {
+            console.log(`   Scheduling progression from "${status}" to "${nextStatus}"`);
+            setTimeout(() => {
+              handleProgressToNextStatus(status, nextStatus);
+            }, 800);
           }
-
-          return updatedClient;
-        });
+        } else {
+          console.log('   No auto-progression: allCompleted=' + result.stats?.allCompleted + ', isCurrentStatus=' + (status === currentStatus));
+        }
       } else {
         const errorText = await response.text();
         console.error('❌ [handleTaskUpdate] Error response:');
