@@ -50,29 +50,38 @@ async function verifyJWT(token: string): Promise<Record<string, unknown> | null>
   }
 }
 
-export async function verifyAuth(authHeaderOrRequest: string | undefined | { header?: (key: string) => string | undefined }) {
-  // Support both: string (Authorization header) and Hono request object
+export async function verifyAuth(authHeader?: string, cookieHeader?: string) {
   let token: string | undefined;
 
-  if (typeof authHeaderOrRequest === "string") {
-    // Direct Authorization header
-    if (authHeaderOrRequest?.startsWith("Bearer ")) {
-      token = authHeaderOrRequest.slice(7);
-    }
-  } else if (authHeaderOrRequest && typeof authHeaderOrRequest === "object") {
-    // Hono request object - try to get token from header first
-    const authHeader = authHeaderOrRequest.header?.('Authorization');
-    if (authHeader?.startsWith("Bearer ")) {
-      token = authHeader.slice(7);
-    } else {
-      // Fallback: try to get from Authorization header without Bearer prefix
-      token = authHeader;
+  // Try Authorization header first (Bearer token)
+  if (authHeader?.startsWith("Bearer ")) {
+    token = authHeader.slice(7);
+  } else if (authHeader) {
+    // Try as-is if no Bearer prefix
+    token = authHeader;
+  }
+
+  // Fallback: try to extract token from cookies
+  if (!token && cookieHeader) {
+    // Parse cookies looking for sessionId or token
+    const cookies = cookieHeader.split(';').map(c => c.trim());
+    for (const cookie of cookies) {
+      if (cookie.startsWith('sessionId=')) {
+        token = cookie.slice(10); // Extract value after "sessionId="
+        break;
+      } else if (cookie.startsWith('token=')) {
+        token = cookie.slice(6); // Extract value after "token="
+        break;
+      }
     }
   }
 
   if (!token) {
+    console.log('🔴 [verifyAuth] No token found in headers or cookies');
     return { user: null, error: "No token provided" };
   }
+
+  console.log('✅ [verifyAuth] Token found, verifying...');
 
   try {
     const parts = token.split(".");

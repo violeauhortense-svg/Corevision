@@ -139,7 +139,12 @@ export function setupTaskRoutes(app: Hono) {
   // PATCH: Validate/NA a task + AUTO-PROGRESSION (8-status pipeline)
   app.patch("/make-server-cac859af/clients/:clientId/tache/:taskId", async (c) => {
     console.log('🔄 [PATCH Task] Request received');
-    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+    // Try to get auth from Authorization header OR from cookies
+    const authHeader = c.req.header('Authorization');
+    const cookieHeader = c.req.header('Cookie');
+    console.log('🔄 [PATCH Task] Auth check - header:', !!authHeader, 'cookies:', !!cookieHeader);
+
+    const { user, error } = await verifyAuth(authHeader, cookieHeader);
 
     if (error || !user) {
       console.error('❌ [PATCH Task] Auth failed:', error);
