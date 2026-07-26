@@ -202,7 +202,8 @@ export function AgendaView({ session }: AgendaViewProps) {
     });
 
     const upcomingMeetings = meetings.filter(meeting => {
-      const meetingDate = new Date(meeting.date);
+      const dateStr = meeting.startDate || meeting.date || '';
+      const meetingDate = new Date(dateStr);
       meetingDate.setHours(0, 0, 0, 0);
       return meetingDate > today;
     });
@@ -222,7 +223,8 @@ export function AgendaView({ session }: AgendaViewProps) {
     });
 
     const overdueMeetings = meetings.filter(meeting => {
-      const meetingDate = new Date(meeting.date);
+      const dateStr = meeting.startDate || meeting.date || '';
+      const meetingDate = new Date(dateStr);
       meetingDate.setHours(0, 0, 0, 0);
       return meetingDate < today && !meeting.completed;
     });
