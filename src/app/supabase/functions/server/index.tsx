@@ -499,7 +499,7 @@ def check_python():
 
 def install_deps():
     print("📦 Installation des dépendances...")
-    subprocess.run([sys.executable, '-m', 'pip', 'install', '-q', 'flask', 'flask-cors', 'requests', 'python-dotenv', 'pywin32'],
+    subprocess.run([sys.executable, '-m', 'pip', 'install', '-q', 'flask', 'requests', 'python-dotenv'],
                    capture_output=True)
     print("✅ Dépendances OK")
 
@@ -547,44 +547,30 @@ os.chdir(bridge_dir)
 # Créer app.py minimaliste
 app_py = bridge_dir / "app.py"
 if not app_py.exists():
-    app_py.write_text('''
-from flask import Flask, jsonify, request
-from flask_cors import CORS
+    app_py.write_text('''# -*- coding: utf-8 -*-
+from flask import Flask, jsonify, request, make_response
 import os
-import threading
-import time
 
 app = Flask(__name__)
 
-# Enable CORS for all routes
-CORS(app, resources={r"/*": {
-    "origins": [
-        "https://corevision-main.vercel.app",
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://127.0.0.1:*"
-    ],
-    "methods": ["GET", "POST", "OPTIONS"],
-    "allow_headers": ["Content-Type"]
-}})
+@app.after_request
+def add_cors_headers(response):
+    """Add CORS headers to every response"""
+    origin = request.headers.get('Origin')
+    allowed_origins = [
+        'https://corevision-main.vercel.app',
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:3001'
+    ]
 
-class MinimalBridge:
-    def __init__(self):
-        self.running = True
+    if origin in allowed_origins or origin and origin.startswith('http://127.0.0.1'):
+        response.headers['Access-Control-Allow-Origin'] = origin
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
 
-    def sync_mails(self):
-        return 0, 0
-
-    def sync_calendar(self):
-        return 0
-
-    def send_pending_emails(self):
-        return 0
-
-    def respond_to_meetings(self):
-        return 0
-
-bridge = MinimalBridge()
+    return response
 
 @app.route('/health', methods=['GET', 'OPTIONS'])
 def health():
@@ -608,9 +594,9 @@ def force_sync():
     }), 200
 
 if __name__ == '__main__':
-    print("🌐 Serveur Flask démarré sur http://0.0.0.0:5001")
-    print("✅ CORS activé pour https://corevision-main.vercel.app")
-    app.run(host='0.0.0.0', port=5001, debug=False, use_reloader=False)
+    print("🌐 Serveur Bridge démarré sur http://0.0.0.0:5001")
+    print("✅ CORS activé")
+    app.run(host='0.0.0.0', port=5001, debug=False, use_reloader=False, threaded=True)
 ''', encoding='utf-8')
 
 # Lancer le Bridge
