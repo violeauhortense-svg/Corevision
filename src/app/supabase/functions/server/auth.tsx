@@ -50,8 +50,18 @@ async function verifyJWT(token: string): Promise<Record<string, unknown> | null>
   }
 }
 
-export async function verifyAuth(authHeader?: string, cookieHeader?: string) {
+export async function verifyAuth(authHeaderOrRequest?: string | { header: (key: string) => string | undefined }) {
   let token: string | undefined;
+  let authHeader: string | undefined;
+  let cookieHeader: string | undefined;
+
+  // Extract headers whether we got a string or a request object
+  if (typeof authHeaderOrRequest === "string") {
+    authHeader = authHeaderOrRequest;
+  } else if (authHeaderOrRequest && typeof authHeaderOrRequest === "object" && 'header' in authHeaderOrRequest) {
+    authHeader = authHeaderOrRequest.header('Authorization');
+    cookieHeader = authHeaderOrRequest.header('Cookie');
+  }
 
   // Try Authorization header first (Bearer token)
   if (authHeader?.startsWith("Bearer ")) {
