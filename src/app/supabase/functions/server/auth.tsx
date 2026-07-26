@@ -99,8 +99,7 @@ export async function verifyAuth(authHeaderOrRequest: string | undefined | { hea
       };
     }
   } catch (err) {
-      console.error("❌ Erreur décodage token:", err);
-    }
+    console.error("❌ Erreur décodage token:", err);
   }
 
   // Fallback dev
