@@ -236,16 +236,19 @@ export function setupTaskRoutes(app: Hono) {
       // 5️⃣ RELOAD AND RETURN
       console.log(`🔄 [PATCH Task] Reloading client from KV...`);
       const reloadedClient = await kv.get(`client:${user.id}:${clientId}`);
-      console.log(`✅ [PATCH Task] Client reloaded, returning response...`);
+      console.log(`✅ [PATCH Task] Client reloaded`);
 
-      return c.json({
+      const responseData = {
         success: true,
         taskId,
         completed,
         status: tasks[taskIdx].status,
         statusProgressed: allCompleted ? true : false,
         client: reloadedClient
-      });
+      };
+
+      console.log(`✅ [PATCH Task] Sending response...`);
+      return c.json(responseData);
 
     } catch (err) {
       console.error('❌ [PATCH Task] Exception:', err);
