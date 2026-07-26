@@ -190,6 +190,14 @@ export function AgendaView({ session }: AgendaViewProps) {
     };
   };
 
+  const getSelectedDateItems = () => {
+    if (!selectedDate) return { tasks: [], meetings: [] };
+    return {
+      tasks: getTasksForDate(selectedDate),
+      meetings: getMeetingsForDate(selectedDate),
+    };
+  };
+
   const getUpcomingItems = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -662,6 +670,100 @@ export function AgendaView({ session }: AgendaViewProps) {
               )}
             </div>
           </div>
+
+          {/* Jour sélectionné */}
+          {selectedDate && (
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                {selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+              </h3>
+              <div className="space-y-3">
+                {getSelectedDateItems().tasks.length === 0 && getSelectedDateItems().meetings.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-600">Rien de prévu ce jour</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Tâches du jour sélectionné */}
+                    {getSelectedDateItems().tasks.map((task) => (
+                      <div key={task.id} className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                          <button
+                            onClick={() => toggleTask(task.id)}
+                            className={`mt-1 transition-colors ${
+                              task.completed ? 'text-green-600' : 'text-blue-600 hover:text-blue-800'
+                            }`}
+                          >
+                            {task.completed ? <CheckCircle className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
+                          </button>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <ListTodo className="w-4 h-4 text-blue-600" />
+                              <span className="text-xs font-semibold text-blue-700 uppercase">Tâche</span>
+                            </div>
+                            <h4 className={`font-semibold ${task.completed ? 'line-through text-gray-600' : 'text-gray-900'}`}>
+                              {task.title}
+                            </h4>
+                            {task.clientName && (
+                              <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
+                                <User className="w-4 h-4" />
+                                <span>{task.clientName}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* RDV du jour sélectionné */}
+                    {getSelectedDateItems().meetings.map((meeting) => (
+                      <div key={meeting.id} className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                          <button
+                            onClick={() => toggleMeeting(meeting.id)}
+                            className={`mt-1 transition-colors ${
+                              meeting.completed ? 'text-green-600' : 'text-indigo-600 hover:text-indigo-800'
+                            }`}
+                          >
+                            {meeting.completed ? <CheckCircle className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
+                          </button>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Calendar className="w-4 h-4 text-indigo-600" />
+                              <span className="text-xs font-semibold text-indigo-700 uppercase">RDV</span>
+                              <span className={`px-2 py-0.5 rounded text-xs font-bold ${getMeetingTypeColor(meeting.meetingType)}`}>
+                                {meeting.meetingType}
+                              </span>
+                            </div>
+                            <h4 className={`font-semibold ${meeting.completed ? 'line-through text-gray-600' : 'text-gray-900'}`}>
+                              {meeting.title}
+                            </h4>
+                            {meeting.clientName && (
+                              <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
+                                <User className="w-4 h-4" />
+                                <span>{meeting.clientName}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-1 text-sm text-gray-700 mt-1">
+                              <Clock className="w-4 h-4" />
+                              <span>{meeting.time || 'Heure non spécifiée'}</span>
+                            </div>
+                            {meeting.location && (
+                              <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
+                                {getLocationIcon(meeting.locationType)}
+                                <span>{meeting.location}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
