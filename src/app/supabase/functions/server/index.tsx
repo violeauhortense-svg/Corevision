@@ -716,34 +716,82 @@ pause`;
 });
 
 // ============================================
-// BRIDGE PROXY ENDPOINTS (forwarding to localhost:5001)
+// BRIDGE HEARTBEAT (Reverse polling - Bridge registers itself)
 // ============================================
-app.get("/make-server-cac859af/bridge-proxy/health", async (c) => {
+interface BridgeHeartbeat {
+  device_id: string;
+  timestamp: number;
+  status: 'online' | 'offline';
+  sync_interval: number;
+}
+
+// Store bridge heartbeats in memory (expires after 60 seconds)
+const bridgeHeartbeats = new Map<string, BridgeHeartbeat>();
+
+app.post("/make-server-cac859af/bridge/register", async (c) => {
   try {
-    const response = await fetch("http://127.0.0.1:5001/health");
-    const data = await response.json();
-    return c.json(data, response.status);
+    const body = await c.req.json();
+    const { device_id, sync_interval } = body;
+
+    // Store/update heartbeat
+    bridgeHeartbeats.set(device_id, {
+      device_id,
+      timestamp: Date.now(),
+      status: 'online',
+      sync_interval: sync_interval || 30
+    });
+
+    console.log(`✅ Bridge registered: ${device_id}`);
+    return c.json({
+      status: 'registered',
+      message: `Bridge ${device_id} registered successfully`
+    }, 200);
   } catch (error) {
-    console.error("❌ Bridge proxy /health error:", error);
-    return c.json({ error: "Bridge unreachable", status: "error" }, 503);
+    console.error("❌ Bridge register error:", error);
+    return c.json({ error: "Registration failed" }, 400);
   }
 });
 
-app.post("/make-server-cac859af/bridge-proxy/sync", async (c) => {
+app.get("/make-server-cac859af/bridge/status/:deviceId", async (c) => {
   try {
-    const body = await c.req.json();
-    const response = await fetch("http://127.0.0.1:5001/sync", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const data = await response.json();
-    return c.json(data, response.status);
+    const deviceId = c.req.param('deviceId');
+    const heartbeat = bridgeHeartbeats.get(deviceId);
+
+    if (!heartbeat) {
+      return c.json({
+        status: 'offline',
+        bridge_running: false,
+        device_id: deviceId,
+        message: 'No heartbeat received'
+      }, 200);
+    }
+
+    // Check if heartbeat is stale (older than 60 seconds)
+    const isStale = Date.now() - heartbeat.timestamp > 60000;
+
+    return c.json({
+      status: isStale ? 'offline' : 'online',
+      bridge_running: !isStale,
+      device_id: deviceId,
+      last_heartbeat: new Date(heartbeat.timestamp).toISOString(),
+      sync_interval: heartbeat.sync_interval
+    }, 200);
   } catch (error) {
-    console.error("❌ Bridge proxy /sync error:", error);
-    return c.json({ error: "Bridge unreachable" }, 503);
+    console.error("❌ Bridge status error:", error);
+    return c.json({ error: "Status check failed" }, 500);
   }
 });
+
+// Cleanup stale heartbeats every minute
+setInterval(() => {
+  const now = Date.now();
+  for (const [deviceId, heartbeat] of bridgeHeartbeats.entries()) {
+    if (now - heartbeat.timestamp > 120000) { // 2 minutes
+      bridgeHeartbeats.delete(deviceId);
+      console.log(`🗑️ Removed stale heartbeat: ${deviceId}`);
+    }
+  }
+}, 60000);
 
 setupDashboardRoutes(app);
 console.log('? Dashboard routes loaded');

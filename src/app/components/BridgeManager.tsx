@@ -12,7 +12,7 @@ interface BridgeStatus {
   last_sync?: string;
 }
 
-const BRIDGE_PROXY_URL = "https://corevision-api.onrender.com/make-server-cac859af/bridge-proxy";
+const BACKEND_URL = "https://corevision-api.onrender.com/make-server-cac859af";
 
 export function BridgeManager() {
   const [bridgeStatus, setBridgeStatus] = useState<BridgeStatus | null>(null);
@@ -23,20 +23,21 @@ export function BridgeManager() {
 
   useEffect(() => {
     checkBridgeStatus();
-    const interval = setInterval(checkBridgeStatus, 5000);
+    const interval = setInterval(checkBridgeStatus, 3000);
     return () => clearInterval(interval);
-  }, []);
+  }, [deviceId]);
 
   const checkBridgeStatus = async () => {
     try {
-      const response = await fetch(`${BRIDGE_PROXY_URL}/health`);
+      const response = await fetch(`${BACKEND_URL}/bridge/status/${deviceId}`);
       if (response.ok) {
         const data = await response.json();
         setBridgeStatus(data);
-        addLog(`✅ Bridge en ligne`);
-      } else {
-        setBridgeStatus(null);
-        addLog(`❌ Bridge hors ligne`);
+        if (data.bridge_running) {
+          addLog(`✅ Bridge en ligne`);
+        } else {
+          addLog(`❌ Bridge hors ligne`);
+        }
       }
     } catch (error) {
       setBridgeStatus(null);
@@ -59,7 +60,7 @@ export function BridgeManager() {
       setSyncing(true);
       addLog('🔄 Synchronisation en cours...');
 
-      const response = await fetch(`${BRIDGE_PROXY_URL}/sync`, {
+      const response = await fetch(`http://127.0.0.1:5001/sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cycles: ['mails', 'calendar', 'send', 'respond'] })
