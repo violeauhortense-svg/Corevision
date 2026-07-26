@@ -5,20 +5,11 @@ const BASE_URL = apiBaseUrl;
 
 
 // ─── Session ───────────────────────────────────────────────────────────────
-
-async function getSession() {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session) {
-    return { access_token: session.access_token, user: session.user, isValid: true };
-  }
-  // Non connecté — pas de fallback localStorage pour les données sensibles
-  return { access_token: publicAnonKey, user: { id: 'anonymous' }, isValid: false };
-}
+// ✨ Authentication is now handled via HTTP-only cookies (sessionId)
+// No Authorization header needed — the browser sends the cookie automatically
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
-  const session = await getSession();
   return {
-    'Authorization': `Bearer ${session.access_token}`,
     'Content-Type': 'application/json',
   };
 }
@@ -86,7 +77,7 @@ function clientToServer(clientData: any): any {
 export const clientAPI = {
   async getById(clientId: string) {
     const headers = await getAuthHeaders();
-    const response = await fetch(`${BASE_URL}/clients/${clientId}`, { headers });
+    const response = await fetch(`${BASE_URL}/clients/${clientId}`, { headers, credentials: 'include' });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
       throw new Error(err.error || `Erreur serveur ${response.status}`);
@@ -98,7 +89,7 @@ export const clientAPI = {
 
   async getAll() {
     const headers = await getAuthHeaders();
-    const response = await fetch(`${BASE_URL}/clients`, { headers });
+    const response = await fetch(`${BASE_URL}/clients`, { headers, credentials: 'include' });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
       throw new Error(err.error || `Erreur serveur ${response.status}`);
@@ -114,6 +105,7 @@ export const clientAPI = {
       method: 'POST',
       headers: await getAuthHeaders(),
       body: JSON.stringify(payload),
+      credentials: 'include',
     });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
@@ -130,6 +122,7 @@ export const clientAPI = {
       method: 'PUT',
       headers: await getAuthHeaders(),
       body: JSON.stringify(payload),
+      credentials: 'include',
     });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
@@ -144,6 +137,7 @@ export const clientAPI = {
     const response = await fetch(`${BASE_URL}/clients/${clientId}`, {
       method: 'DELETE',
       headers: await getAuthHeaders(),
+      credentials: 'include',
     });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
