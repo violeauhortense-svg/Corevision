@@ -12,7 +12,6 @@ import { setupDERRoutes } from "./der_routes.tsx";
 import { setupCoreVisionRoutes } from "./corevision_routes.tsx";
 import { setupSignatureRoutes } from "./signature_routes.tsx";
 import { setupSanctionsRoutes } from "./sanctions_routes.tsx";
-import { setupEmailWebhookRoutes } from "./email_webhook.tsx";
 import knowledgeBaseRoutes from "./knowledge_base_routes.tsx";
 import { setupCalculRoutes } from "./calcul_routes.tsx";
 import { setupIncoherencesRoutes } from "./incoherences_routes.tsx";
@@ -364,17 +363,13 @@ setupBilanRoutes(app, verifyAuth);
 console.log('? Bilan routes loaded');
 setupDERRoutes(app, verifyAuth);
 console.log('? DER routes loaded');
-setupEmailRoutes(app, verifyAuth);
-console.log('? Email routes loaded');
+// OLD: Email routes removed (replaced by communications_routes)
 setupCoreVisionRoutes(app, supabaseAdminCompat, kv);
 setupSignatureRoutes(app, supabaseAdminCompat, kv);
 console.log('? Signature routes loaded');
 setupSanctionsRoutes(app, supabaseAdminCompat, kv);
 console.log('? Sanctions routes loaded');
-setupEmailWebhookRoutes(app);
-console.log('? Email webhook routes loaded');
-setupRDVRoutes(app);
-console.log('? RDV routes loaded');
+// OLD: Email webhook and RDV routes removed (replaced by communications_routes and agenda_routes)
 
 app.route('/make-server-cac859af/knowledge-base', knowledgeBaseRoutes);
 console.log('? Knowledge base routes loaded');
