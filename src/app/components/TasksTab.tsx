@@ -26,6 +26,7 @@ export function TasksTab({ clientId }: TasksTabProps) {
   const [arbitrageClosureDate, setArbitrageClosureDate] = useState('');
   const [arbitrageTreasuryN1, setArbitrageTreasuryN1] = useState('');
   const [loading, setLoading] = useState(true);
+  const [validating, setValidating] = useState(false);
 
   useEffect(() => {
     loadClient();
@@ -67,6 +68,7 @@ export function TasksTab({ clientId }: TasksTabProps) {
 
   const handleTaskUpdate = async (status: string, taskId: string, completed: boolean) => {
     if (!client) return;
+    setValidating(true);
 
     try {
       const token = localStorage.getItem('auth_token');
@@ -100,11 +102,14 @@ export function TasksTab({ clientId }: TasksTabProps) {
     } catch (err) {
       console.error('Error:', err);
       toast.error('Erreur réseau');
+    } finally {
+      setValidating(false);
     }
   };
 
   const handleTaskNA = async (status: string, taskId: string) => {
     if (!client) return;
+    setValidating(true);
 
     try {
       const token = localStorage.getItem('auth_token');
@@ -138,6 +143,8 @@ export function TasksTab({ clientId }: TasksTabProps) {
     } catch (err) {
       console.error('Error:', err);
       toast.error('Erreur réseau');
+    } finally {
+      setValidating(false);
     }
   };
 
