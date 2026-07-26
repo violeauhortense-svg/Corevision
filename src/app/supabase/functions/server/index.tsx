@@ -468,6 +468,175 @@ pause`;
   }
 });
 
+app.get("/make-server-cac859af/download/bridge-launcher-py", async (c) => {
+  try {
+    const content = `"""
+Outlook Bridge Launcher - GUI Interface
+Démarre le Bridge sans droits admin
+Double-clique ce fichier pour exécuter
+"""
+
+import tkinter as tk
+from tkinter import messagebox
+import subprocess
+import sys
+import os
+import threading
+import time
+from pathlib import Path
+import json
+
+class BridgeLauncher:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("🌉 Outlook Bridge - Launcher")
+        self.root.geometry("500x350")
+        self.root.resizable(False, False)
+
+        self.bridge_process = None
+        self.is_running = False
+        self.config_file = Path.home() / ".bridge_launcher.json"
+        self.load_config()
+
+        self.setup_ui()
+        self.check_bridge_status()
+
+    def load_config(self):
+        if self.config_file.exists():
+            with open(self.config_file) as f:
+                self.config = json.load(f)
+        else:
+            self.config = {
+                'backend_url': 'https://corevision-api.onrender.com/make-server-cac859af',
+                'device_id': 'device-001'
+            }
+            self.save_config()
+
+    def save_config(self):
+        with open(self.config_file, 'w') as f:
+            json.dump(self.config, f)
+
+    def setup_ui(self):
+        main_frame = tk.Frame(self.root, bg='#f0f0f0')
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+
+        tk.Label(main_frame, text="🌉 Outlook Bridge", font=("Arial", 18, "bold"), bg='#f0f0f0').pack(pady=10)
+
+        self.status_label = tk.Label(main_frame, text="🔴 Hors ligne", font=("Arial", 14, "bold"), fg='red', bg='#f0f0f0')
+        self.status_label.pack(pady=10)
+
+        self.info_label = tk.Label(main_frame, text="En attente...", font=("Arial", 10), bg='#f0f0f0', fg='#666')
+        self.info_label.pack(pady=5)
+
+        button_frame = tk.Frame(main_frame, bg='#f0f0f0')
+        button_frame.pack(pady=20)
+
+        self.start_btn = tk.Button(button_frame, text="▶️  Démarrer Bridge", command=self.start_bridge, font=("Arial", 11, "bold"), bg='#4CAF50', fg='white', width=20, height=2)
+        self.start_btn.pack(pady=5)
+
+        self.stop_btn = tk.Button(button_frame, text="⏹️  Arrêter Bridge", command=self.stop_bridge, font=("Arial", 11, "bold"), bg='#f44336', fg='white', width=20, height=2, state=tk.DISABLED)
+        self.stop_btn.pack(pady=5)
+
+        config_frame = tk.Frame(main_frame, bg='#f0f0f0')
+        config_frame.pack(pady=10, fill=tk.X)
+
+        tk.Label(config_frame, text="Device ID:", font=("Arial", 9), bg='#f0f0f0').pack(side=tk.LEFT)
+
+        self.device_id_entry = tk.Entry(config_frame, font=("Arial", 9), width=20)
+        self.device_id_entry.pack(side=tk.LEFT, padx=5)
+        self.device_id_entry.insert(0, self.config['device_id'])
+
+        tk.Button(config_frame, text="💾 Sauvegarder", command=self.save_device_id, font=("Arial", 8), bg='#2196F3', fg='white').pack(side=tk.LEFT)
+
+    def start_bridge(self):
+        try:
+            # Créer un script Python qui démarre le Bridge
+            bridge_script = """
+import subprocess
+import sys
+import os
+from dotenv import load_dotenv
+
+env_file = os.path.expanduser('~/.bridge_launcher.json')
+os.chdir('.')
+subprocess.Popen([sys.executable, 'app.py'],
+                  stdout=subprocess.DEVNULL,
+                  stderr=subprocess.DEVNULL)
+"""
+            self.config['device_id'] = self.device_id_entry.get()
+            self.save_config()
+
+            # Démarrer le Bridge en arrière-plan
+            self.bridge_process = subprocess.Popen(
+                [sys.executable, '-m', 'pip', 'install', '-q', 'flask', 'requests', 'python-dotenv'],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+
+            self.is_running = True
+            self.start_btn.config(state=tk.DISABLED)
+            self.stop_btn.config(state=tk.NORMAL)
+            self.status_label.config(text="🟡 Démarrage...", fg='orange')
+            self.info_label.config(text="Installation des dépendances...")
+
+            self.verify_bridge()
+
+        except Exception as e:
+            messagebox.showerror("Erreur", f"Impossible de démarrer: {e}")
+
+    def stop_bridge(self):
+        if self.bridge_process:
+            try:
+                self.bridge_process.terminate()
+                self.is_running = False
+                self.start_btn.config(state=tk.NORMAL)
+                self.stop_btn.config(state=tk.DISABLED)
+                self.status_label.config(text="🔴 Hors ligne", fg='red')
+            except:
+                pass
+
+    def check_bridge_status(self):
+        try:
+            import urllib.request
+            urllib.request.urlopen('http://127.0.0.1:5001/health', timeout=2)
+            return True
+        except:
+            return False
+
+    def verify_bridge(self):
+        def check():
+            time.sleep(2)
+            for i in range(10):
+                if self.check_bridge_status():
+                    self.status_label.config(text="🟢 En ligne!", fg='green')
+                    self.info_label.config(text="Synchronisation active")
+                    return
+                time.sleep(1)
+            self.info_label.config(text="⚠️  Vérifiez que Outlook est installé")
+
+        threading.Thread(target=check, daemon=True).start()
+
+    def save_device_id(self):
+        self.config['device_id'] = self.device_id_entry.get()
+        self.save_config()
+        messagebox.showinfo("✅", "Device ID sauvegardé!")
+
+if __name__ == '__main__':
+    root = tk.Tk()
+    app = BridgeLauncher(root)
+    root.mainloop()
+`;
+
+    return c.text(content, 200, {
+      'Content-Type': 'application/octet-stream',
+      'Content-Disposition': 'attachment; filename="bridge_launcher.py"'
+    });
+  } catch (err) {
+    console.error('❌ Erreur download launcher py:', err);
+    return c.json({ error: 'Téléchargement échoué' }, 500);
+  }
+});
+
 app.get("/make-server-cac859af/download/bridge-launcher", async (c) => {
   try {
     const content = `@echo off
@@ -476,7 +645,7 @@ REM Outlook Bridge Launcher (Sans droits admin)
 REM ============================================
 
 echo.
-echo 🌉 Outlook Bridge - Launcher
+echo 🌉 Outlook Bridge - Launcher Installer
 echo ============================================
 echo.
 
@@ -494,77 +663,19 @@ if %errorLevel% neq 0 (
 
 echo ✅ Python trouvé
 
-REM Installer les dépendances si nécessaire
 echo.
-echo 📦 Vérification des dépendances...
-pip show flask >nul 2>&1
-if %errorLevel% neq 0 (
-    echo 📥 Installation des dépendances...
-    pip install Flask requests python-dotenv --quiet
-)
+echo 📦 Installation des dépendances...
+python -m pip install flask requests python-dotenv --quiet
 
 echo.
-echo 🚀 Démarrage du launcher...
+echo 🚀 Téléchargement du launcher...
+
+REM Télécharger le launcher.py
+python -c "import urllib.request; urllib.request.urlretrieve('https://corevision-api.onrender.com/make-server-cac859af/download/bridge-launcher-py', 'bridge_launcher.py')"
+
 echo.
-echo Note: Laisse cette fenêtre ouverte pendant la durée de fonctionnement du Bridge
-echo.
-
-REM Créer un script Python temporaire pour le launcher
-python -c "
-import tkinter as tk
-from tkinter import messagebox
-import subprocess
-import sys
-import os
-import threading
-import time
-
-class BridgeLauncher:
-    def __init__(self, root):
-        self.root = root
-        self.root.title('🌉 Outlook Bridge - Launcher')
-        self.root.geometry('400x250')
-        self.bridge_process = None
-        self.is_running = False
-
-        main_frame = tk.Frame(self.root)
-        main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
-
-        tk.Label(main_frame, text='🌉 Outlook Bridge', font=('Arial', 16, 'bold')).pack(pady=10)
-
-        self.status_label = tk.Label(main_frame, text='🔴 Hors ligne', font=('Arial', 14, 'bold'), fg='red')
-        self.status_label.pack(pady=10)
-
-        self.start_btn = tk.Button(main_frame, text='▶️  Démarrer Bridge', command=self.start_bridge, bg='#4CAF50', fg='white', font=('Arial', 11, 'bold'), height=2)
-        self.start_btn.pack(fill=tk.X, pady=5)
-
-        self.stop_btn = tk.Button(main_frame, text='⏹️  Arrêter Bridge', command=self.stop_bridge, bg='#f44336', fg='white', font=('Arial', 11, 'bold'), height=2, state=tk.DISABLED)
-        self.stop_btn.pack(fill=tk.X, pady=5)
-
-    def start_bridge(self):
-        try:
-            self.bridge_process = subprocess.Popen([sys.executable, '-m', 'pip', 'install', '-q', 'Flask', 'requests', 'python-dotenv'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            time.sleep(2)
-            self.is_running = True
-            self.start_btn.config(state=tk.DISABLED)
-            self.stop_btn.config(state=tk.NORMAL)
-            self.status_label.config(text='🟡 Démarrage...', fg='orange')
-            messagebox.showinfo('✅', 'Bridge en cours de démarrage...')
-        except Exception as e:
-            messagebox.showerror('Erreur', f'Impossible de démarrer: {e}')
-
-    def stop_bridge(self):
-        if self.bridge_process:
-            self.bridge_process.terminate()
-            self.is_running = False
-            self.start_btn.config(state=tk.NORMAL)
-            self.stop_btn.config(state=tk.DISABLED)
-            self.status_label.config(text='🔴 Hors ligne', fg='red')
-
-root = tk.Tk()
-app = BridgeLauncher(root)
-root.mainloop()
-"
+echo ✅ Démarrage du launcher...
+python bridge_launcher.py
 
 pause`;
 
