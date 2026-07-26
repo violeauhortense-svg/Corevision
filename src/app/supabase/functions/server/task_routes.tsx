@@ -138,9 +138,11 @@ export function setupTaskRoutes(app: Hono) {
 
   // PATCH: Validate/NA a task + AUTO-PROGRESSION (8-status pipeline)
   app.patch("/make-server-cac859af/clients/:clientId/tache/:taskId", async (c) => {
+    console.log('🔄 [PATCH Task] Request received');
     const { user, error } = await verifyAuth(c.req.header('Authorization'));
 
     if (error || !user) {
+      console.error('❌ [PATCH Task] Auth failed:', error);
       return c.json({ error: error || 'Unauthorized' }, 401);
     }
 
@@ -150,46 +152,64 @@ export function setupTaskRoutes(app: Hono) {
       const body = await c.req.json();
       const { completed, status } = body;
 
+      console.log(`🔄 [PATCH Task] Validating: clientId=${clientId}, taskId=${taskId}, completed=${completed}`);
+
       // Fetch the client
       const kvKey = `client:${user.id}:${clientId}`;
+      console.log(`🔄 [PATCH Task] Fetching client: ${kvKey}`);
       const client = await kv.get(kvKey);
 
       if (!client) {
+        console.error('❌ [PATCH Task] Client not found');
         return c.json({ error: 'Client not found' }, 404);
       }
 
+      console.log(`✅ [PATCH Task] Client found: ${client.nom}`);
+
       const currentStatus = client.statusOuvert || 'Prospect';
       const tasks = client.taches?.[currentStatus] || [];
+      console.log(`🔄 [PATCH Task] Current status: ${currentStatus}, tasks count: ${tasks.length}`);
 
       // Find task by ID
       let taskIdx = tasks.findIndex((t: any) => t.id === taskId);
       if (taskIdx < 0) {
+        console.error(`❌ [PATCH Task] Task not found: ${taskId}`);
         return c.json({ error: 'Tâche introuvable' }, 404);
       }
+
+      console.log(`✅ [PATCH Task] Task found at index ${taskIdx}`);
 
       // 1️⃣ UPDATE TASK
       tasks[taskIdx].completed = completed;
       tasks[taskIdx].status = status || (completed ? 'validated' : 'pending');
       tasks[taskIdx].updated_at = new Date().toISOString();
+      console.log(`✅ [PATCH Task] Task updated: ${taskId}, status=${tasks[taskIdx].status}`);
 
       // 2️⃣ SAVE CLIENT
       client.taches[currentStatus] = tasks;
       client.updated_at = new Date().toISOString();
       await kv.set(`client:${user.id}:${clientId}`, client);
+      console.log(`✅ [PATCH Task] Client saved to KV`);
 
       // 3️⃣ CHECK IF ALL TASKS COMPLETED/NA
       const allCompleted = areAllTasksCompleted(tasks);
+      console.log(`📊 [PATCH Task] All completed? ${allCompleted}`);
 
       if (allCompleted) {
+        console.log(`🎯 [PATCH Task] All tasks completed, checking progression...`);
         // 4️⃣ AUTO-PROGRESSION: Move to next status
         const STATUSES = ['Prospect', 'Découverte', 'Simulation', 'Lettre Mission', 'Rapport/Audit', 'Suivi MEP', 'Suivi CSP', 'Arbitrage'];
         const currentIdx = STATUSES.indexOf(currentStatus);
+        console.log(`🎯 [PATCH Task] Current index: ${currentIdx}, total: ${STATUSES.length}`);
 
         if (currentIdx < STATUSES.length - 1) {
           const nextStatus = STATUSES[currentIdx + 1];
+          console.log(`🎯 [PATCH Task] Creating tasks for next status: ${nextStatus}`);
 
           // Create tasks for next status
           const nextTaskDefs = getTasksWithIdsForStatus(nextStatus);
+          console.log(`🎯 [PATCH Task] Task defs fetched: ${nextTaskDefs.length} tasks`);
+
           if (!client.taches) client.taches = {};
 
           client.taches[nextStatus] = nextTaskDefs.map((def: any) => ({
@@ -202,17 +222,21 @@ export function setupTaskRoutes(app: Hono) {
             statusPipeline: nextStatus,
           }));
 
+          console.log(`🎯 [PATCH Task] Tasks created for ${nextStatus}: ${client.taches[nextStatus].length}`);
+
           // Update status and save
           client.statusOuvert = nextStatus;
           client.updated_at = new Date().toISOString();
           await kv.set(`client:${user.id}:${clientId}`, client);
 
-          console.log(`✅ AUTO-PROGRESSION: ${currentStatus} → ${nextStatus} with ${client.taches[nextStatus].length} tasks created`);
+          console.log(`✅ [PATCH Task] AUTO-PROGRESSION: ${currentStatus} → ${nextStatus}`);
         }
       }
 
       // 5️⃣ RELOAD AND RETURN
+      console.log(`🔄 [PATCH Task] Reloading client from KV...`);
       const reloadedClient = await kv.get(`client:${user.id}:${clientId}`);
+      console.log(`✅ [PATCH Task] Client reloaded, returning response...`);
 
       return c.json({
         success: true,
@@ -224,7 +248,7 @@ export function setupTaskRoutes(app: Hono) {
       });
 
     } catch (err) {
-      console.error('❌ Error:', err);
+      console.error('❌ [PATCH Task] Exception:', err);
       return c.json({ error: 'Failed: ' + (err as Error).message }, 500);
     }
   });
