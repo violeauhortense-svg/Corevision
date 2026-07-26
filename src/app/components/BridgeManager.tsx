@@ -12,7 +12,7 @@ interface BridgeStatus {
   last_sync?: string;
 }
 
-const BRIDGE_URL = "http://127.0.0.1:5001";
+const BRIDGE_PROXY_URL = "https://corevision-api.onrender.com/make-server-cac859af/bridge-proxy";
 
 export function BridgeManager() {
   const [bridgeStatus, setBridgeStatus] = useState<BridgeStatus | null>(null);
@@ -29,7 +29,7 @@ export function BridgeManager() {
 
   const checkBridgeStatus = async () => {
     try {
-      const response = await fetch(`${BRIDGE_URL}/health`);
+      const response = await fetch(`${BRIDGE_PROXY_URL}/health`);
       if (response.ok) {
         const data = await response.json();
         setBridgeStatus(data);
@@ -59,7 +59,7 @@ export function BridgeManager() {
       setSyncing(true);
       addLog('🔄 Synchronisation en cours...');
 
-      const response = await fetch(`${BRIDGE_URL}/sync`, {
+      const response = await fetch(`${BRIDGE_PROXY_URL}/sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cycles: ['mails', 'calendar', 'send', 'respond'] })

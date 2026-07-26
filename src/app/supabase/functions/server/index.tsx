@@ -715,6 +715,36 @@ pause`;
   }
 });
 
+// ============================================
+// BRIDGE PROXY ENDPOINTS (forwarding to localhost:5001)
+// ============================================
+app.get("/make-server-cac859af/bridge-proxy/health", async (c) => {
+  try {
+    const response = await fetch("http://127.0.0.1:5001/health");
+    const data = await response.json();
+    return c.json(data, response.status);
+  } catch (error) {
+    console.error("❌ Bridge proxy /health error:", error);
+    return c.json({ error: "Bridge unreachable", status: "error" }, 503);
+  }
+});
+
+app.post("/make-server-cac859af/bridge-proxy/sync", async (c) => {
+  try {
+    const body = await c.req.json();
+    const response = await fetch("http://127.0.0.1:5001/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await response.json();
+    return c.json(data, response.status);
+  } catch (error) {
+    console.error("❌ Bridge proxy /sync error:", error);
+    return c.json({ error: "Bridge unreachable" }, 503);
+  }
+});
+
 setupDashboardRoutes(app);
 console.log('? Dashboard routes loaded');
 setupCommunicationsRoutes(app);

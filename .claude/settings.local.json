@@ -18,7 +18,9 @@
       "PowerShell(cd \"C:\\\\Users\\\\conta\\\\OneDrive\\\\Documents\\\\Claude\\\\Projects\\\\Corevision-main\" ; vercel --prod 2>&1 | Where-Object { $_ -match \"ready|Production:|READY|Error\" })",
       "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
       "Bash(npx tsc *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(Remove-Item \"C:\\\\Users\\\\conta\\\\.bridge_corevision\\\\app.py\" -Force -ErrorAction SilentlyContinue)",
+      "Bash(Write-Host \"✅ Ancien app.py supprimé\")"
     ]
   }
 }
