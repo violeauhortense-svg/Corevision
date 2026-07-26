@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ArrowLeft, User, Phone, Mail, MapPin, Calendar, Edit, X, Save, Building2 } from 'lucide-react';
-import { agendaAPI } from '../../services/newAgendaAPI';
 import type { ClientData } from './types';
 
 interface ClientHeaderProps {
@@ -17,48 +16,6 @@ export function ClientHeader({
   const [isEditingClient, setIsEditingClient] = useState(false);
   const [tempClientData, setTempClientData] = useState(clientData);
 
-  // Charger automatiquement les dates RDV depuis l'agenda
-  useEffect(() => {
-    const loadMeetingDates = async () => {
-      try {
-        const agendaEvents = await agendaAPI.getAll();
-        const clientEvents = agendaEvents.filter((event: any) => event.clientId === clientData.id);
-
-        if (clientEvents.length === 0) return;
-
-        const now = new Date();
-        const pastEvents = clientEvents.filter((event: any) => new Date(`${event.date}T${event.time}`) < now);
-        const futureEvents = clientEvents.filter((event: any) => new Date(`${event.date}T${event.time}`) >= now);
-
-        // Trouver le RDV passé le plus récent
-        const lastMeeting = pastEvents.length > 0
-          ? pastEvents.sort((a: any, b: any) => new Date(`${b.date}T${b.time}`).getTime() - new Date(`${a.date}T${a.time}`).getTime())[0]
-          : null;
-
-        // Trouver le RDV futur le plus proche
-        const nextMeeting = futureEvents.length > 0
-          ? futureEvents.sort((a: any, b: any) => new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime())[0]
-          : null;
-
-        // Mettre à jour automatiquement si les dates ont changé
-        const updates: Partial<ClientData> = {};
-        if (lastMeeting && clientData.lastMeetingDate !== lastMeeting.date) {
-          updates.lastMeetingDate = lastMeeting.date;
-        }
-        if (nextMeeting && clientData.nextMeetingDate !== nextMeeting.date) {
-          updates.nextMeetingDate = nextMeeting.date;
-        }
-
-        if (Object.keys(updates).length > 0) {
-          onUpdate(updates);
-        }
-      } catch (error) {
-        console.warn('⚠️ Erreur lors du chargement des dates RDV:', error);
-      }
-    };
-
-    loadMeetingDates();
-  }, [clientData.id, onUpdate]);
 
   const startEditClient = () => {
     setTempClientData(clientData);
