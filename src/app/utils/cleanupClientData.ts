@@ -3,7 +3,6 @@
  */
 
 import { clientAPI, taskAPI } from '../services/api';
-import { agendaAPI } from '../services/agendaAPI';
 import { toast } from 'sonner';
 
 /**
@@ -12,7 +11,6 @@ import { toast } from 'sonner';
  */
 export async function cleanupClientData(clientId: string): Promise<{ success: boolean; summary: any }> {
   const summary = {
-    rdvRemoved: 0,
     tasksRemoved: 0,
     documentsRemoved: 0,
     errors: [] as string[],
@@ -20,23 +18,7 @@ export async function cleanupClientData(clientId: string): Promise<{ success: bo
 
   try {
 
-    // 1️⃣ Supprimer tous les RDV du client
-    try {
-      const agendaEvents = await agendaAPI.getAll();
-      const clientEvents = agendaEvents.filter((event: any) => event.clientId === clientId);
-
-      clientEvents.forEach((event: any) => {
-        agendaAPI.delete(event.id);
-        summary.rdvRemoved++;
-      });
-
-    } catch (error) {
-      const msg = `Erreur suppression RDV: ${error}`;
-      summary.errors.push(msg);
-      console.error(msg);
-    }
-
-    // 2️⃣ Supprimer toutes les tâches du client
+    // 1️⃣ Supprimer toutes les tâches du client
     try {
       const allTasks = await taskAPI.getAll();
       const clientTasks = allTasks.filter((t: any) => t.clientId === clientId);
@@ -89,7 +71,6 @@ export async function cleanupClientData(clientId: string): Promise<{ success: bo
 export async function auditAndCleanupOrphanedData(): Promise<{ success: boolean; summary: any }> {
   const summary = {
     totalClientsChecked: 0,
-    orphanedRdvRemoved: 0,
     orphanedTasksRemoved: 0,
     orphanedDocumentsRemoved: 0,
     orphanedEntriesRemovedFromStorage: 0,
@@ -111,29 +92,7 @@ export async function auditAndCleanupOrphanedData(): Promise<{ success: boolean;
 
     const validClientIds = allClients.map((c) => c.id);
 
-    // 1️⃣ Auditer les RDV
-    try {
-      const agendaEvents = await agendaAPI.getAll();
-      const orphanedEvents = agendaEvents.filter((event: any) => !validClientIds.includes(event.clientId));
-
-      for (const event of orphanedEvents) {
-        try {
-          agendaAPI.delete(event.id);
-          summary.orphanedRdvRemoved++;
-        } catch (e) {
-          console.warn(`⚠️ Erreur suppression RDV orphelin ${event.id}:`, e);
-        }
-      }
-
-      if (summary.orphanedRdvRemoved > 0) {
-      }
-    } catch (error) {
-      const msg = `Erreur audit RDV: ${error}`;
-      summary.errors.push(msg);
-      console.error(msg);
-    }
-
-    // 2️⃣ Auditer les tâches
+    // 1️⃣ Auditer les tâches
     try {
       const allTasks = await taskAPI.getAll();
       const orphanedTasks = allTasks.filter((t: any) => !validClientIds.includes(t.clientId));
@@ -203,7 +162,7 @@ export async function auditAndCleanupOrphanedData(): Promise<{ success: boolean;
 export function displayAuditReport(summary: any): void {
   console.group('📊 Rapport d\'audit');
   console.log('Clients vérifiés:', summary.totalClientsChecked);
-  console.log('RDV orphelins supprimés:', summary.orphanedRdvRemoved);
+  console.log('Tâches orphelines supprimées:', summary.orphanedTasksRemoved);
   console.log('Documents orphelins supprimés:', summary.orphanedDocumentsRemoved);
   console.log('Entrées localStorage orphelines supprimées:', summary.orphanedEntriesRemovedFromStorage);
   if (summary.errors.length > 0) {
