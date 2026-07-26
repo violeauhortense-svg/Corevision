@@ -528,34 +528,29 @@ BRIDGE_PORT=5001
     return bridge_dir
 
 def start_bridge(bridge_dir):
-    """Démarrer le Bridge en arrière-plan"""
+    """Démarrer le Bridge en avant-plan avec CORS automatique"""
     print()
-    print("🚀 Démarrage du Bridge...")
+    print("🚀 Préparation du Bridge...")
     print()
 
-    # Créer un script de démarrage
-    start_script = bridge_dir / "start_bridge.py"
-    start_script.write_text("""
-import subprocess
-import sys
-import os
-from pathlib import Path
-
-bridge_dir = Path.home() / ".bridge_corevision"
-os.chdir(bridge_dir)
-
-# Créer app.py minimaliste
-app_py = bridge_dir / "app.py"
-if not app_py.exists():
+    # Créer app.py DIRECTEMENT (ne pas le cacher dans un autre script)
+    app_py = bridge_dir / "app.py"
     app_py.write_text('''# -*- coding: utf-8 -*-
-from flask import Flask, jsonify, request, make_response
+from flask import Flask, jsonify, request
 import os
+import sys
+import io
+
+# Fix UTF-8 encoding sur Windows
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
 app = Flask(__name__)
 
 @app.after_request
 def add_cors_headers(response):
-    """Add CORS headers to every response"""
+    """Ajouter les headers CORS à chaque réponse"""
     origin = request.headers.get('Origin')
     allowed_origins = [
         'https://corevision-main.vercel.app',
@@ -565,10 +560,11 @@ def add_cors_headers(response):
         'http://127.0.0.1:3001'
     ]
 
-    if origin in allowed_origins or origin and origin.startswith('http://127.0.0.1'):
+    if origin in allowed_origins:
         response.headers['Access-Control-Allow-Origin'] = origin
-        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, PATCH, DELETE, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+        response.headers['Access-Control-Allow-Credentials'] = 'true'
 
     return response
 
@@ -594,26 +590,17 @@ def force_sync():
     }), 200
 
 if __name__ == '__main__':
-    print("🌐 Serveur Bridge démarré sur http://0.0.0.0:5001")
+    print("🌐 Bridge Flask démarré sur http://0.0.0.0:5001")
     print("✅ CORS activé")
+    print("📍 Domaines autorisés: https://corevision-main.vercel.app, http://localhost:*")
     app.run(host='0.0.0.0', port=5001, debug=False, use_reloader=False, threaded=True)
 ''', encoding='utf-8')
 
-# Lancer le Bridge
-subprocess.Popen([sys.executable, 'app.py'],
-                  stdout=subprocess.DEVNULL,
-                  stderr=subprocess.DEVNULL)
-print("✅ Bridge démarré!")
-print("🌐 Accédez à: http://127.0.0.1:5001/health")
-""", encoding='utf-8')
-
-    # Lancer directement app.py pour voir les logs
-    print("✅ Bridge en cours de démarrage...")
+    print("✅ app.py créé")
     print()
-    print("=" * 50)
-    print("⚠️  GARDEZ CETTE FENÊTRE OUVERTE!")
-    print("Logs de Flask:")
-    print("=" * 50)
+    print("=" * 60)
+    print("🚀 DÉMARRAGE DE FLASK - GARDEZ CETTE FENÊTRE OUVERTE!")
+    print("=" * 60)
     print()
 
     os.chdir(bridge_dir)
