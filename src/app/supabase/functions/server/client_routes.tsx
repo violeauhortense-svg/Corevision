@@ -78,6 +78,12 @@ export function setupClientRoutes(app: Hono) {
       // Pour l'instant, retourner le client avec les tâches qu'on a déjà stockées
       if (client.taches && Object.keys(client.taches).length > 0) {
         // Les tâches sont déjà groupées dans le client
+        console.log(`📤 Returning client with existing taches:`);
+        console.log(`   statusOuvert: ${client.statusOuvert}`);
+        console.log(`   taches statuses: ${Object.keys(client.taches).join(', ')}`);
+        Object.entries(client.taches).forEach(([status, tasks]: [string, any]) => {
+          console.log(`   ${status}: ${tasks?.length || 0} tasks`);
+        });
         return c.json({ client });
       }
 
