@@ -7,6 +7,19 @@ import * as kv from "./kv_store.tsx";
 import { verifyAuth } from "./auth.tsx";
 import { getTasksWithIdsForStatus } from "./helpers.tsx";
 
+// ✨ Utility functions for task completion tracking
+function areAllTasksCompleted(tasks: any[]): boolean {
+  return tasks.every((t: any) => t.completed || t.status === 'na');
+}
+
+function countTasksByState(tasks: any[]): Record<string, number> {
+  return {
+    completed: tasks.filter((t: any) => t.completed).length,
+    pending: tasks.filter((t: any) => !t.completed && t.status === 'pending').length,
+    na: tasks.filter((t: any) => t.status === 'na').length,
+  };
+}
+
 export function setupTaskRoutes(app: Hono) {
   // Get tasks for a client
   app.get("/make-server-cac859af/clients/:clientId/tasks", async (c) => {
@@ -183,9 +196,19 @@ export function setupTaskRoutes(app: Hono) {
       console.log(`   Task after: completed=${tasks[taskIdx].completed}, status=${tasks[taskIdx].status}`);
       console.log(`✅ Task validation successful`);
 
+      // ✨ Calculate completion stats for auto-progression
+      const stats = countTasksByState(tasks);
+      const allCompleted = areAllTasksCompleted(tasks);
+      console.log(`📊 Stats: completed=${stats.completed}, pending=${stats.pending}, na=${stats.na}, allCompleted=${allCompleted}`);
+
       return c.json({
         success: true,
         message: `Task ${status === 'na' ? 'marked N.A.' : (completed ? 'validated' : 'unvalidated')}`,
+        task: tasks[taskIdx],
+        stats: {
+          allCompleted,
+          counts: stats,
+        },
         client
       });
     } catch (err) {
