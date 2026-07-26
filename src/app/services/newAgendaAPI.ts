@@ -1,6 +1,6 @@
 import { apiBaseUrl } from '../utils/api/info';
 
-const API_URL = `${apiBaseUrl}/make-server-cac859af`;
+const API_URL = apiBaseUrl;
 
 export const agendaAPI = {
   // ============= ÉVÉNEMENTS =============
