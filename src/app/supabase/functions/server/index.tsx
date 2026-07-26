@@ -995,7 +995,11 @@ app.post("/make-server-cac859af/bridge/sync-data", async (c) => {
     if (events && Array.isArray(events)) {
       for (const event of events) {
         try {
-          const eventHash = generateHash(`${event.subject}|${event.start}|${event.end}`);
+          // Ensure dates are valid
+          const startDate = event.start ? new Date(event.start).toISOString() : new Date().toISOString();
+          const endDate = event.end ? new Date(event.end).toISOString() : new Date(new Date().getTime() + 3600000).toISOString();
+
+          const eventHash = generateHash(`${event.subject}|${startDate}|${endDate}`);
 
           if (eventHashes.has(eventHash)) {
             eventsSkipped++;
@@ -1009,16 +1013,16 @@ app.post("/make-server-cac859af/bridge/sync-data", async (c) => {
             clientId: null,
             clientName: null,
             taskId: null,
-            title: event.subject || '(No title)',
-            description: event.description || '',
-            startDate: event.start || new Date().toISOString(),
-            endDate: event.end || new Date().toISOString(),
-            location: event.location || '',
+            title: String(event.subject || '(No title)'),
+            description: String(event.description || ''),
+            startDate: startDate,
+            endDate: endDate,
+            location: String(event.location || ''),
             locationType: 'online' as const,
             meetingType: 'other' as const,
             status: 'scheduled' as const,
             notes: '',
-            attendees: event.attendees || [],
+            attendees: Array.isArray(event.attendees) ? event.attendees : [],
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
           };
