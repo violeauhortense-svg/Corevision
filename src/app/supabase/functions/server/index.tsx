@@ -232,8 +232,13 @@ app.post("/make-server-cac859af/auth/signin", async (c) => {
 
     const data = await signInUser(email, password);
 
-    // ✨ Set JWT as HTTP-only cookie (no Secure flag for dev/test)
-    const cookieValue = `sessionId=${data.access_token}; HttpOnly; SameSite=Lax; Path=/`;
+    // ✨ Set JWT as HTTP-only cookie
+    // For cross-domain (Vercel frontend → Render backend): use SameSite=None; Secure
+    // For localhost dev: use SameSite=Lax
+    const isProduction = Deno.env.get("NODE_ENV") === "production";
+    const sameSite = isProduction ? "None; Secure" : "Lax";
+    const cookieValue = `sessionId=${data.access_token}; HttpOnly; SameSite=${sameSite}; Path=/`;
+
     c.header('Set-Cookie', cookieValue);
     console.log('🍪 [SIGNIN] Set-Cookie header:', cookieValue.substring(0, 80) + '...');
     console.log('✅ [SIGNIN] User logged in:', email);
