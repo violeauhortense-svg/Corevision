@@ -548,12 +548,25 @@ os.chdir(bridge_dir)
 app_py = bridge_dir / "app.py"
 if not app_py.exists():
     app_py.write_text('''
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
+from flask_cors import CORS
 import os
 import threading
 import time
 
 app = Flask(__name__)
+
+# Enable CORS for all routes
+CORS(app, resources={r"/*": {
+    "origins": [
+        "https://corevision-main.vercel.app",
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:*"
+    ],
+    "methods": ["GET", "POST", "OPTIONS"],
+    "allow_headers": ["Content-Type"]
+}})
 
 class MinimalBridge:
     def __init__(self):
@@ -573,7 +586,7 @@ class MinimalBridge:
 
 bridge = MinimalBridge()
 
-@app.route('/health', methods=['GET'])
+@app.route('/health', methods=['GET', 'OPTIONS'])
 def health():
     return jsonify({
         'status': 'ok',
@@ -582,7 +595,7 @@ def health():
         'sync_interval': int(os.getenv('SYNC_INTERVAL', 30))
     }), 200
 
-@app.route('/sync', methods=['POST'])
+@app.route('/sync', methods=['POST', 'OPTIONS'])
 def force_sync():
     return jsonify({
         'status': 'success',
@@ -595,6 +608,8 @@ def force_sync():
     }), 200
 
 if __name__ == '__main__':
+    print("🌐 Serveur Flask démarré sur http://0.0.0.0:5001")
+    print("✅ CORS activé pour https://corevision-main.vercel.app")
     app.run(host='0.0.0.0', port=5001, debug=False, use_reloader=False)
 ''', encoding='utf-8')
 
