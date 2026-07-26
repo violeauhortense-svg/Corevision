@@ -101,11 +101,29 @@ app.use("/*", async (c, next) => {
 app.get("/make-server-cac859af/health", (c) => {
   console.log('? Health check called - NO AUTH REQUIRED');
   console.log('?? Headers:', c.req.header('Authorization') ? 'Auth present' : 'NO AUTH');
-  return c.json({ 
-    status: "ok", 
+  return c.json({
+    status: "ok",
     version: SERVER_VERSION,
     timestamp: new Date().toISOString(),
     message: "Server is running - Modular architecture"
+  });
+});
+
+app.get("/make-server-cac859af/auth/debug", async (c) => {
+  console.log('🔍 [DEBUG AUTH]');
+  const authHeader = c.req.header('Authorization');
+  const cookieHeader = c.req.header('Cookie');
+  console.log('   Authorization header:', authHeader ? '✅ present' : '❌ missing');
+  console.log('   Cookie header:', cookieHeader ? `✅ present (${cookieHeader})` : '❌ missing');
+
+  const { user, error } = await verifyAuth(c.req);
+  console.log('   verifyAuth result:', user ? `✅ user ${user.id}` : `❌ ${error}`);
+
+  return c.json({
+    authHeaderPresent: !!authHeader,
+    cookieHeaderPresent: !!cookieHeader,
+    cookieValue: cookieHeader || 'none',
+    verifyAuthResult: user ? { id: user.id, email: user.email } : { error }
   });
 });
 
