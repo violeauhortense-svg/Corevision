@@ -69,10 +69,19 @@ export function TasksTab({ clientId }: TasksTabProps) {
     if (!client) return;
 
     try {
+      // Get JWT from localStorage for Authorization header
+      const token = localStorage.getItem('auth_token');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${apiBaseUrl}/clients/${clientId}/tache/${taskId}`, {
         method: 'PATCH',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ completed, status: completed ? 'validated' : 'pending' }),
       });
 
@@ -104,10 +113,19 @@ export function TasksTab({ clientId }: TasksTabProps) {
     if (!client) return;
 
     try {
+      // Get JWT from localStorage for Authorization header
+      const token = localStorage.getItem('auth_token');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${apiBaseUrl}/clients/${clientId}/tache/${taskId}`, {
         method: 'PATCH',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ completed: false, status: 'na' }),
       });
 
