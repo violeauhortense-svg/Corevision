@@ -74,7 +74,9 @@ export function setupAgendaRoutes(app: Hono) {
       const year = parseInt(c.req.param('year'));
       const month = parseInt(c.req.param('month'));
 
-      const allEvents = await kv.getByPrefix(`agenda_event:${user.id}:`);
+      const userEvents = await kv.getByPrefix(`agenda_event:${user.id}:`);
+      const bridgeEvents = await kv.getByPrefix(`agenda_event:bridge:`);
+      const allEvents = [...userEvents, ...bridgeEvents];
 
       // Filtrer les événements du mois
       const monthEvents = allEvents.filter((event: any) => {
