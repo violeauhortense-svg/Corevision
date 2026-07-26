@@ -1,85 +1,40 @@
-# ============================================
-# export_mails.ps1: Exporte les mails Outlook
-# ============================================
+# Export mails from Outlook (including 3-month history on first sync)
 
-param(
-    [int]$DaysBack = 7  # Exporter les mails des 7 derniers jours
-)
+param([string]$InitialSync = "false")
 
 try {
-    # Créer l'objet Outlook
-    $outlook = New-Object -ComObject Outlook.Application
-    $namespace = $outlook.GetNamespace("MAPI")
+    $Outlook = New-Object -ComObject Outlook.Application
+    $Namespace = $Outlook.GetNamespace("MAPI")
+    $MailFolder = $Namespace.GetDefaultFolder(6)  # 6 = Inbox
 
-    # Récupérer les dossiers Inbox et Sent Items
-    $inbox = $namespace.GetDefaultFolder(6)  # 6 = olFolderInbox
-    $sent = $namespace.GetDefaultFolder(5)   # 5 = olFolderSentMail
+    if ($InitialSync -eq "true") {
+        $StartDate = (Get-Date).AddMonths(-3)
+        Write-Host "📧 Initial sync: 3 months history"
+    } else {
+        $StartDate = (Get-Date).AddHours(-1)
+        Write-Host "📧 Normal sync: last hour"
+    }
 
-    $mails = @()
-    $cutoffDate = (Get-Date).AddDays(-$DaysBack)
-
-    # ============================================
-    # Exporter les mails reçus
-    # ============================================
-
-    foreach ($item in $inbox.Items) {
-        if ($item.ReceivedTime -gt $cutoffDate) {
-            $mail = @{
-                subject = $item.Subject
-                from_address = $item.SenderEmailAddress
-                to = $item.To
-                received_date = $item.ReceivedTime.ToString("o")
-                body = $item.Body
-                html_body = if ($item.HTMLBody) { $item.HTMLBody } else { $null }
-                attachments = @()
+    $Mails = @()
+    foreach ($Item in $MailFolder.Items) {
+        if ($Item.ReceivedTime -ge $StartDate) {
+            $Mail = @{
+                subject = $Item.Subject
+                from = $Item.SenderName
+                to = $Item.To
+                date = $Item.ReceivedTime.ToString("yyyy-MM-dd HH:mm:ss")
             }
-
-            # Récupérer les attachements
-            foreach ($attachment in $item.Attachments) {
-                $mail.attachments += @{
-                    name = $attachment.FileName
-                    size = $attachment.Size
-                    mimeType = "application/octet-stream"
-                }
-            }
-
-            $mails += $mail
+            $Mails += $Mail
         }
     }
 
-    # ============================================
-    # Exporter les mails envoyés
-    # ============================================
+    $Result = @{
+        status = "ok"
+        count = $Mails.Count
+        mails = $Mails
+    } | ConvertTo-Json -Depth 10
 
-    foreach ($item in $sent.Items) {
-        if ($item.SentOn -gt $cutoffDate) {
-            $mail = @{
-                subject = $item.Subject
-                from_address = $namespace.CurrentUser.EmailAddress
-                to = $item.To
-                received_date = $item.SentOn.ToString("o")
-                body = $item.Body
-                html_body = if ($item.HTMLBody) { $item.HTMLBody } else { $null }
-                attachments = @()
-            }
-
-            # Récupérer les attachements
-            foreach ($attachment in $item.Attachments) {
-                $mail.attachments += @{
-                    name = $attachment.FileName
-                    size = $attachment.Size
-                    mimeType = "application/octet-stream"
-                }
-            }
-
-            $mails += $mail
-        }
-    }
-
-    # Retourner le JSON
-    $mails | ConvertTo-Json -Depth 5
-
+    Write-Host $Result
 } catch {
-    Write-Error "Error exporting mails: $_"
-    exit 1
+    Write-Host (ConvertTo-Json @{status = "error"; message = $_.Exception.Message})
 }

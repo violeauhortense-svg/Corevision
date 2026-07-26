@@ -1,59 +1,43 @@
-# ============================================
-# export_calendar.ps1: Exporte les événements Outlook
-# ============================================
+# Export calendar events from Outlook (including 3-month history on first sync)
+
+param([string]$InitialSync = "false")
 
 try {
-    # Créer l'objet Outlook
-    $outlook = New-Object -ComObject Outlook.Application
-    $namespace = $outlook.GetNamespace("MAPI")
+    $Outlook = New-Object -ComObject Outlook.Application
+    $Namespace = $Outlook.GetNamespace("MAPI")
+    $CalendarFolder = $Namespace.GetDefaultFolder(9)  # 9 = Calendar
 
-    # Récupérer le calendrier par défaut
-    $calendar = $namespace.GetDefaultFolder(9)  # 9 = olFolderCalendar
+    if ($InitialSync -eq "true") {
+        $StartDate = (Get-Date).AddMonths(-3)
+        $EndDate = (Get-Date).AddMonths(1)
+        Write-Host "📅 Initial sync: 3 months history + 1 month future"
+    } else {
+        $StartDate = (Get-Date).AddHours(-1)
+        $EndDate = (Get-Date).AddDays(7)
+        Write-Host "📅 Normal sync: last hour + next 7 days"
+    }
 
-    $events = @()
-
-    # Filtre : événements entre -60 et +90 jours
-    $startDate = (Get-Date).AddDays(-60)
-    $endDate = (Get-Date).AddDays(90)
-
-    # Récupérer tous les événements
-    foreach ($item in $calendar.Items) {
-        if ($item.Start -ge $startDate -and $item.Start -le $endDate) {
-            # Mapper le statut de réponse
-            $responseStatus = switch ($item.ResponseStatus) {
-                1 { "not_responded" }    # olResponseNotReceived
-                2 { "accepted" }         # olResponseAccepted
-                3 { "declined" }         # olResponseDeclined
-                4 { "tentative" }        # olResponseTentativelyAccepted
-                default { "not_responded" }
+    $Events = @()
+    foreach ($Item in $CalendarFolder.Items) {
+        if ($Item.Start -ge $StartDate -and $Item.Start -le $EndDate) {
+            $Event = @{
+                subject = $Item.Subject
+                start = $Item.Start.ToString("yyyy-MM-dd HH:mm:ss")
+                end = $Item.End.ToString("yyyy-MM-dd HH:mm:ss")
+                location = $Item.Location
+                attendees = @($Item.Recipients | ForEach-Object { $_.Name })
             }
-
-            # Récupérer les attendees requis
-            $requiredAttendees = @()
-            foreach ($recipient in $item.Recipients) {
-                if ($recipient.Type -eq 1) {  # 1 = olTo (required)
-                    $requiredAttendees += $recipient.Address
-                }
-            }
-
-            $event = @{
-                subject = $item.Subject
-                start = $item.Start.ToString("o")
-                end = $item.End.ToString("o")
-                organizer = $item.Organizer
-                required_attendees = $requiredAttendees
-                outlook_entry_id = $item.EntryID
-                response_status = $responseStatus
-            }
-
-            $events += $event
+            $Events += $Event
         }
     }
 
-    # Retourner le JSON
-    $events | ConvertTo-Json -Depth 5
+    $Result = @{
+        status = "ok"
+        count = $Events.Count
+        events = $Events
+    } | ConvertTo-Json -Depth 10
 
+    Write-Host $Result
 } catch {
-    Write-Error "Error exporting calendar: $_"
-    exit 1
+    Write-Host (ConvertTo-Json @{status = "error"; message = $_.Exception.Message})
 }
