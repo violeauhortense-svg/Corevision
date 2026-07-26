@@ -5,13 +5,17 @@ const BASE_URL = apiBaseUrl;
 
 
 // ─── Session ───────────────────────────────────────────────────────────────
-// ✨ Authentication is now handled via HTTP-only cookies (sessionId)
-// No Authorization header needed — the browser sends the cookie automatically
+// ✨ JWT stored in localStorage, sent via Authorization header
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
-  return {
+  const token = localStorage.getItem('auth_token');
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
 }
 
 // ─── Mapping tâches : serveur (champs FR) ↔ frontend (champs EN) ───────────
@@ -77,7 +81,7 @@ function clientToServer(clientData: any): any {
 export const clientAPI = {
   async getById(clientId: string) {
     const headers = await getAuthHeaders();
-    const response = await fetch(`${BASE_URL}/clients/${clientId}`, { headers, credentials: 'include' });
+    const response = await fetch(`${BASE_URL}/clients/${clientId}`, { headers });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
       throw new Error(err.error || `Erreur serveur ${response.status}`);
@@ -89,7 +93,7 @@ export const clientAPI = {
 
   async getAll() {
     const headers = await getAuthHeaders();
-    const response = await fetch(`${BASE_URL}/clients`, { headers, credentials: 'include' });
+    const response = await fetch(`${BASE_URL}/clients`, { headers });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
       throw new Error(err.error || `Erreur serveur ${response.status}`);

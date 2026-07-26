@@ -246,14 +246,11 @@ app.post("/make-server-cac859af/auth/signin", async (c) => {
     console.log('🍪 [SIGNIN] Headers after setting cookie:', c.res.headers.get('Set-Cookie'));
 
     console.log('✅ [SIGNIN] Returning response to frontend');
-    // Also return token in response so frontend can verify it worked
-    const response = {
+    return c.json({
+      access_token: data.access_token,
       session: data.session,
-      user: data.user,
-      cookieSet: true,
-      tokenLength: data.access_token.length
-    };
-    return c.json(response);
+      user: data.user
+    });
   } catch (error) {
     console.error('❌ [SIGNIN] Error:', error);
     return c.json({ error: (error as Error).message }, 401);
