@@ -229,8 +229,10 @@ app.post("/make-server-cac859af/auth/signin", async (c) => {
   try {
     const body = await c.req.json();
     const { email, password } = body;
+    console.log('🔐 [SIGNIN] Request received for:', email);
 
     const data = await signInUser(email, password);
+    console.log('🔐 [SIGNIN] User authenticated:', email, ', token length:', data.access_token.length);
 
     // ✨ Set JWT as HTTP-only cookie
     // For cross-domain (Vercel frontend → Render backend): use SameSite=None; Secure
@@ -239,14 +241,21 @@ app.post("/make-server-cac859af/auth/signin", async (c) => {
     const sameSite = isProduction ? "None; Secure" : "Lax";
     const cookieValue = `sessionId=${data.access_token}; HttpOnly; SameSite=${sameSite}; Path=/`;
 
+    console.log('🍪 [SIGNIN] Setting cookie:', cookieValue.substring(0, 80) + '...');
     c.header('Set-Cookie', cookieValue);
-    console.log('🍪 [SIGNIN] Set-Cookie header:', cookieValue.substring(0, 80) + '...');
-    console.log('✅ [SIGNIN] User logged in:', email);
+    console.log('🍪 [SIGNIN] Headers after setting cookie:', c.res.headers.get('Set-Cookie'));
 
-    // Also return token in response so frontend can confirm
-    return c.json({ session: data.session, user: data.user });
+    console.log('✅ [SIGNIN] Returning response to frontend');
+    // Also return token in response so frontend can verify it worked
+    const response = {
+      session: data.session,
+      user: data.user,
+      cookieSet: true,
+      tokenLength: data.access_token.length
+    };
+    return c.json(response);
   } catch (error) {
-    console.error('Sign in error:', error);
+    console.error('❌ [SIGNIN] Error:', error);
     return c.json({ error: (error as Error).message }, 401);
   }
 });
