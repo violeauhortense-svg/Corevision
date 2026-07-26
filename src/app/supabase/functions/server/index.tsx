@@ -470,95 +470,77 @@ pause`;
 
 app.get("/make-server-cac859af/download/bridge-launcher-py", async (c) => {
   try {
-    const content = `#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+    const content = `# -*- coding: utf-8 -*-
 """
-Outlook Bridge Launcher - Ultra Simple
-Démarre le Bridge sans droits admin
+Outlook Bridge Launcher GUI
+Démarrage facile du Bridge avec interface graphique
 """
 
+import tkinter as tk
+from tkinter import messagebox
 import subprocess
-import sys
 import os
+import sys
+import threading
+import time
 from pathlib import Path
+import json
+import urllib.request
 
-# Fix Windows encoding issue
-if sys.platform == 'win32':
-    import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+class BridgeLauncher:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("🌉 Outlook Bridge - Launcher")
+        self.root.geometry("500x350")
+        self.root.resizable(False, False)
 
-def print_header():
-    print()
-    print("=" * 50)
-    print("🌉 Outlook Bridge - Launcher")
-    print("=" * 50)
-    print()
+        self.config_file = Path.home() / ".bridge_corevision" / "launcher_config.json"
+        self.bridge_process = None
+        self.is_running = False
 
-def check_python():
-    print("✅ Python trouvé:", sys.version.split()[0])
+        self.load_config()
+        self.setup_ui()
+        self.create_app_py()
+        self.check_bridge_status()
 
-def install_deps():
-    print("📦 Installation des dépendances...")
-    subprocess.run([sys.executable, '-m', 'pip', 'install', '-q', 'flask', 'requests', 'python-dotenv'],
-                   capture_output=True)
-    print("✅ Dépendances OK")
+    def load_config(self):
+        """Charger la configuration"""
+        if self.config_file.exists():
+            with open(self.config_file) as f:
+                self.config = json.load(f)
+        else:
+            self.config = {
+                'backend_url': 'https://corevision-api.onrender.com/make-server-cac859af',
+                'device_id': 'device-001',
+                'sync_interval': 30
+            }
+            self.config_file.parent.mkdir(parents=True, exist_ok=True)
+            self.save_config()
 
-def get_bridge_files():
-    """Récupérer les fichiers du Bridge depuis le backend"""
-    import urllib.request
+    def save_config(self):
+        """Sauvegarder la configuration"""
+        with open(self.config_file, 'w') as f:
+            json.dump(self.config, f, indent=2)
 
-    print()
-    print("📥 Téléchargement du Bridge...")
+    def create_app_py(self):
+        """Créer le fichier app.py avec heartbeat complet"""
+        app_py = self.config_file.parent / "app.py"
+        if app_py.exists():
+            return  # Déjà créé
 
-    bridge_dir = Path.home() / ".bridge_corevision"
-    bridge_dir.mkdir(exist_ok=True)
-
-    # Créer un .env
-    env_file = bridge_dir / ".env"
-    if not env_file.exists():
-        env_content = """BACKEND_URL=https://corevision-api.onrender.com/make-server-cac859af
-DEVICE_ID=device-001
-SYNC_INTERVAL=30
-BRIDGE_HOST=0.0.0.0
-BRIDGE_PORT=5001
-"""
-        env_file.write_text(env_content, encoding='utf-8')
-        print(f"✅ .env créé: {env_file}")
-
-    return bridge_dir
-
-def start_bridge(bridge_dir):
-    """Démarrer le Bridge en avant-plan avec CORS automatique"""
-    print()
-    print("🚀 Préparation du Bridge...")
-    print()
-
-    # Créer app.py DIRECTEMENT (ne pas le cacher dans un autre script)
-    app_py = bridge_dir / "app.py"
-    app_py.write_text('''# -*- coding: utf-8 -*-
+        app_code = '''# -*- coding: utf-8 -*-
 from flask import Flask, jsonify, request
-import os
-import sys
-import io
+import os, sys, io, threading, time, urllib.request, json
 
-# Fix UTF-8 encoding sur Windows
 if sys.platform == 'win32':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
 app = Flask(__name__)
-
-ALLOWED_ORIGINS = [
-    'https://corevision-main.vercel.app',
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:3001'
-]
+ALLOWED_ORIGINS = ['https://corevision-main.vercel.app', 'http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001']
 
 @app.before_request
 def handle_preflight():
-    """Gérer les requêtes OPTIONS (preflight CORS)"""
     if request.method == 'OPTIONS':
         origin = request.headers.get('Origin')
         if origin in ALLOWED_ORIGINS:
@@ -566,76 +548,177 @@ def handle_preflight():
             response.headers['Access-Control-Allow-Origin'] = origin
             response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, PATCH, DELETE, OPTIONS'
             response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
-            response.headers['Access-Control-Allow-Credentials'] = 'true'
             response.status_code = 204
             return response
-        return '', 204
 
 @app.after_request
 def add_cors_headers(response):
-    """Ajouter les headers CORS à chaque réponse"""
     origin = request.headers.get('Origin')
     if origin in ALLOWED_ORIGINS:
         response.headers['Access-Control-Allow-Origin'] = origin
         response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, PATCH, DELETE, OPTIONS'
         response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
-        response.headers['Access-Control-Allow-Credentials'] = 'true'
-
     return response
 
 @app.route('/health', methods=['GET'])
 def health():
-    return jsonify({
-        'status': 'ok',
-        'bridge_running': True,
-        'device_id': os.getenv('DEVICE_ID', 'device-001'),
-        'sync_interval': int(os.getenv('SYNC_INTERVAL', 30))
-    }), 200
+    return jsonify({'status': 'ok', 'bridge_running': True, 'device_id': os.getenv('DEVICE_ID', 'device-001'), 'sync_interval': int(os.getenv('SYNC_INTERVAL', 30))})
 
 @app.route('/sync', methods=['POST'])
 def force_sync():
-    return jsonify({
-        'status': 'success',
-        'results': {
-            'mails': {'sent': 0, 'duplicates': 0},
-            'calendar': {'events_synced': 0},
-            'send': {'emails_sent': 0},
-            'respond': {'meetings_responded': 0}
-        }
-    }), 200
+    return jsonify({'status': 'success', 'results': {'mails': {'sent': 0}, 'calendar': {'events_synced': 0}, 'send': {'emails_sent': 0}, 'respond': {'meetings_responded': 0}}})
+
+BACKEND_URL = "https://corevision-api.onrender.com/make-server-cac859af"
+DEVICE_ID = os.getenv('DEVICE_ID', 'device-001')
+SYNC_INTERVAL = int(os.getenv('SYNC_INTERVAL', 30))
+
+def send_heartbeat():
+    time.sleep(2)
+    while True:
+        try:
+            time.sleep(SYNC_INTERVAL)
+            payload = json.dumps({"device_id": DEVICE_ID, "sync_interval": SYNC_INTERVAL}).encode('utf-8')
+            req = urllib.request.Request(f"{BACKEND_URL}/bridge/register", data=payload, headers={'Content-Type': 'application/json'}, method='POST')
+            with urllib.request.urlopen(req, timeout=5) as response:
+                if response.status == 200:
+                    print(f"💓 Heartbeat registered")
+        except Exception as e:
+            print(f"⚠️  Heartbeat error: {e}")
 
 if __name__ == '__main__':
-    print("🌐 Bridge Flask démarré sur http://0.0.0.0:5001")
-    print("✅ CORS activé")
-    print("📍 Domaines autorisés: https://corevision-main.vercel.app, http://localhost:*")
+    heartbeat_thread = threading.Thread(target=send_heartbeat, daemon=True)
+    heartbeat_thread.start()
+    print("🌐 Bridge démarré sur http://0.0.0.0:5001")
     app.run(host='0.0.0.0', port=5001, debug=False, use_reloader=False, threaded=True)
-''', encoding='utf-8')
+'''
+        app_py.write_text(app_code, encoding='utf-8')
 
-    print("✅ app.py créé ✅ CORS configuré ✅")
-    print()
-    print("=" * 60)
-    print("🚀 DÉMARRAGE DE FLASK - GARDEZ CETTE FENÊTRE OUVERTE!")
-    print("=" * 60)
-    print()
+    def setup_ui(self):
+        """Créer l'interface GUI"""
+        main_frame = tk.Frame(self.root, bg='#f0f0f0')
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
 
-    os.chdir(bridge_dir)
-    subprocess.run([sys.executable, 'app.py'])
+        title = tk.Label(main_frame, text="🌉 Outlook Bridge", font=("Arial", 18, "bold"), bg='#f0f0f0')
+        title.pack(pady=(0, 10))
 
-def main():
-    print_header()
-    check_python()
-    install_deps()
-    bridge_dir = get_bridge_files()
-    start_bridge(bridge_dir)
-    print()
-    input("Appuyez sur Entrée pour terminer...")
+        self.status_label = tk.Label(main_frame, text="🔴 Hors ligne", font=("Arial", 16, "bold"), fg='red', bg='#f0f0f0')
+        self.status_label.pack(pady=10)
+
+        self.info_label = tk.Label(main_frame, text="En attente...", font=("Arial", 10), bg='#f0f0f0', fg='#666')
+        self.info_label.pack(pady=5)
+
+        button_frame = tk.Frame(main_frame, bg='#f0f0f0')
+        button_frame.pack(pady=20)
+
+        self.start_btn = tk.Button(button_frame, text="▶️  Démarrer Bridge", command=self.start_bridge, font=("Arial", 11, "bold"), bg='#4CAF50', fg='white', width=20, height=2)
+        self.start_btn.pack(pady=5)
+
+        self.stop_btn = tk.Button(button_frame, text="⏹️  Arrêter Bridge", command=self.stop_bridge, font=("Arial", 11, "bold"), bg='#f44336', fg='white', width=20, height=2, state=tk.DISABLED)
+        self.stop_btn.pack(pady=5)
+
+        config_frame = tk.Frame(main_frame, bg='#f0f0f0')
+        config_frame.pack(pady=10, fill=tk.X)
+
+        tk.Label(config_frame, text="Device ID:", font=("Arial", 9), bg='#f0f0f0').pack(side=tk.LEFT)
+
+        self.device_id_entry = tk.Entry(config_frame, font=("Arial", 9), width=20)
+        self.device_id_entry.pack(side=tk.LEFT, padx=5)
+        self.device_id_entry.insert(0, self.config['device_id'])
+
+        tk.Button(config_frame, text="💾 Sauvegarder", command=self.save_device_id, font=("Arial", 8), bg='#2196F3', fg='white').pack(side=tk.LEFT, padx=2)
+
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+    def start_bridge(self):
+        """Démarrer le Bridge"""
+        try:
+            self.config['device_id'] = self.device_id_entry.get()
+            self.save_config()
+
+            env = os.environ.copy()
+            env['DEVICE_ID'] = self.config['device_id']
+            env['SYNC_INTERVAL'] = str(self.config['sync_interval'])
+
+            bridge_dir = self.config_file.parent
+            self.bridge_process = subprocess.Popen(
+                [sys.executable, str(bridge_dir / 'app.py')],
+                cwd=str(bridge_dir),
+                env=env,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+            )
+
+            self.is_running = True
+            self.update_ui()
+            self.info_label.config(text=f"✅ Bridge démarré (PID: {self.bridge_process.pid})")
+            self.verify_bridge()
+        except Exception as e:
+            messagebox.showerror("Erreur", f"Impossible de démarrer: {e}")
+
+    def stop_bridge(self):
+        """Arrêter le Bridge"""
+        if self.bridge_process:
+            try:
+                self.bridge_process.terminate()
+                self.bridge_process.wait(timeout=5)
+                self.is_running = False
+                self.bridge_process = None
+                self.update_ui()
+                self.info_label.config(text="Bridge arrêté")
+            except Exception as e:
+                messagebox.showerror("Erreur", f"Impossible d'arrêter: {e}")
+
+    def check_bridge_status(self):
+        """Vérifier l'état du Bridge"""
+        try:
+            response = urllib.request.urlopen('http://127.0.0.1:5001/health', timeout=2)
+            return response.status == 200
+        except:
+            return False
+
+    def verify_bridge(self):
+        """Vérifier que le Bridge répond"""
+        def check():
+            time.sleep(2)
+            for i in range(10):
+                if self.check_bridge_status():
+                    self.status_label.config(text="🟢 En ligne!", fg='green')
+                    self.info_label.config(text="Heartbeat en cours...")
+                    return
+                time.sleep(1)
+            self.info_label.config(text="⚠️  Bridge démarre...")
+
+        threading.Thread(target=check, daemon=True).start()
+
+    def save_device_id(self):
+        """Sauvegarder le Device ID"""
+        self.config['device_id'] = self.device_id_entry.get()
+        self.save_config()
+        messagebox.showinfo("✅", "Device ID sauvegardé!")
+
+    def update_ui(self):
+        """Mettre à jour l'interface"""
+        if self.is_running:
+            self.status_label.config(text="🟡 Démarrage...", fg='orange')
+            self.start_btn.config(state=tk.DISABLED)
+            self.stop_btn.config(state=tk.NORMAL)
+            self.device_id_entry.config(state=tk.DISABLED)
+        else:
+            self.status_label.config(text="🔴 Hors ligne", fg='red')
+            self.start_btn.config(state=tk.NORMAL)
+            self.stop_btn.config(state=tk.DISABLED)
+            self.device_id_entry.config(state=tk.NORMAL)
+
+    def on_closing(self):
+        """Fermer l'application"""
+        if messagebox.askyesno("Quitter", "Voulez-vous fermer le launcher?\\n\\nNote: Le Bridge continuera de tourner"):
+            self.root.destroy()
 
 if __name__ == '__main__':
-    try:
-        main()
-    except Exception as e:
-        print(f"❌ Erreur: {e}")
-        input("Appuyez sur Entrée...")
+    root = tk.Tk()
+    app = BridgeLauncher(root)
+    root.mainloop()
 `;
 
     return c.text(content, 200, {
