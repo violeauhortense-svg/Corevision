@@ -50,34 +50,55 @@ async function verifyJWT(token: string): Promise<Record<string, unknown> | null>
   }
 }
 
-export async function verifyAuth(authHeader: string | undefined) {
-  if (authHeader?.startsWith("Bearer ")) {
-    const token = authHeader.slice(7);
-    try {
-      const parts = token.split(".");
-      if (parts.length === 3) {
-        // En production : vérification HMAC
-        if (!DEV_MODE) {
-          const payload = await verifyJWT(token);
-          if (!payload) {
-            return { user: null, error: "Token invalide ou expiré" };
-          }
-          return {
-            user: { id: payload.sub as string, email: payload.email as string },
-            error: null,
-          };
+export async function verifyAuth(authHeaderOrRequest: string | undefined | { header?: (key: string) => string | undefined }) {
+  // Support both: string (Authorization header) and Hono request object
+  let token: string | undefined;
+
+  if (typeof authHeaderOrRequest === "string") {
+    // Direct Authorization header
+    if (authHeaderOrRequest?.startsWith("Bearer ")) {
+      token = authHeaderOrRequest.slice(7);
+    }
+  } else if (authHeaderOrRequest && typeof authHeaderOrRequest === "object") {
+    // Hono request object - try to get token from header first
+    const authHeader = authHeaderOrRequest.header?.('Authorization');
+    if (authHeader?.startsWith("Bearer ")) {
+      token = authHeader.slice(7);
+    } else {
+      // Fallback: try to get from Authorization header without Bearer prefix
+      token = authHeader;
+    }
+  }
+
+  if (!token) {
+    return { user: null, error: "No token provided" };
+  }
+
+  try {
+    const parts = token.split(".");
+    if (parts.length === 3) {
+      // En production : vérification HMAC
+      if (!DEV_MODE) {
+        const payload = await verifyJWT(token);
+        if (!payload) {
+          return { user: null, error: "Token invalide ou expiré" };
         }
-        // En dev : décodage sans vérification (compatible tokens Supabase existants)
-        const payload = JSON.parse(base64urlDecode(parts[1]));
         return {
-          user: {
-            id: payload.sub || "default-user",
-            email: payload.email || "dev@example.com",
-          },
+          user: { id: payload.sub as string, email: payload.email as string },
           error: null,
         };
       }
-    } catch (err) {
+      // En dev : décodage sans vérification (compatible tokens Supabase existants)
+      const payload = JSON.parse(base64urlDecode(parts[1]));
+      return {
+        user: {
+          id: payload.sub || "default-user",
+          email: payload.email || "dev@example.com",
+        },
+        error: null,
+      };
+    }
+  } catch (err) {
       console.error("❌ Erreur décodage token:", err);
     }
   }
