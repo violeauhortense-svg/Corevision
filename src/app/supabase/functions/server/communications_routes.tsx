@@ -188,4 +188,45 @@ export function setupCommunicationsRoutes(app: Hono) {
     }
   });
 
+  // ============================================
+  // BRIDGE ENDPOINTS
+  // ============================================
+
+  // GET: Récupérer les mails en attente d'envoi (pour Outlook Bridge)
+  app.get("/make-server-cac859af/communications/pending-send", async (c) => {
+    // Note: Bridge n'utilise pas d'auth, trusted local endpoint
+    try {
+      const allComms = await kv.getByPrefix('communication:');
+      const pending = allComms.filter(c => c.status === 'à_traiter' && c.category === 'interne' && c.source === 'manual');
+
+      console.log(`📧 [BRIDGE] ${pending.length} mails en attente d'envoi`);
+      return c.json({ communications: pending });
+    } catch (err) {
+      console.error('❌ [BRIDGE] Erreur pending-send:', err);
+      return c.json({ error: 'Erreur' }, 500);
+    }
+  });
+
+  // PATCH: Marquer un mail comme envoyé (appelé par Outlook Bridge)
+  app.patch("/make-server-cac859af/communications/:commId/sent", async (c) => {
+    try {
+      const commId = c.req.param('commId');
+      const key = `communication:${commId}`;
+      const comm = await kv.get(key);
+
+      if (!comm) return c.json({ error: 'Communication introuvable' }, 404);
+
+      comm.status = 'traité';
+      comm.updatedAt = new Date().toISOString();
+
+      await kv.set(key, comm);
+      console.log(`✅ [BRIDGE] Mail marqué comme envoyé`);
+
+      return c.json({ success: true, communication: comm });
+    } catch (err) {
+      console.error('❌ [BRIDGE] Erreur sent:', err);
+      return c.json({ error: 'Erreur' }, 500);
+    }
+  });
+
 }

@@ -196,4 +196,55 @@ export function setupAgendaRoutes(app: Hono) {
     }
   });
 
+  // ============================================
+  // BRIDGE ENDPOINTS
+  // ============================================
+
+  // GET: Récupérer les réunions en attente de réponse (pour Outlook Bridge)
+  app.get("/make-server-cac859af/agenda-events/pending-response", async (c) => {
+    // Note: Bridge n'utilise pas d'auth, trusted local endpoint
+    try {
+      const allEvents = await kv.getByPrefix('agenda_event:');
+      const pending = allEvents.filter(e => e.pending_response);
+
+      console.log(`📞 [BRIDGE] ${pending.length} réunions en attente de réponse`);
+      return c.json({ events: pending });
+    } catch (err) {
+      console.error('❌ [BRIDGE] Erreur pending-response:', err);
+      return c.json({ error: 'Erreur' }, 500);
+    }
+  });
+
+  // PATCH: Marquer une réunion comme répondue (appelé par Outlook Bridge)
+  app.patch("/make-server-cac859af/agenda-events/:eventId/responded", async (c) => {
+    try {
+      const eventId = c.req.param('eventId');
+      const { response } = await c.req.json();
+
+      const allEvents = await kv.getByPrefix('agenda_event:');
+      const event = allEvents.find(e => e.id === eventId);
+
+      if (!event) return c.json({ error: 'Événement introuvable' }, 404);
+
+      // Mettre à jour le status
+      if (response === 'accept') event.status = 'confirmed';
+      if (response === 'decline') event.status = 'rejected';
+      if (response === 'tentative') event.status = 'scheduled';
+
+      // Retirer le flag pending
+      event.pending_response = null;
+      event.updatedAt = new Date().toISOString();
+
+      // Sauvegarder (trouver la clé)
+      const key = Object.keys(event).find(k => k.includes(eventId)) || `agenda_event:default:${eventId}`;
+      await kv.set(key, event);
+
+      console.log(`✅ [BRIDGE] Réunion marquée comme répondue: ${response}`);
+      return c.json({ success: true, event });
+    } catch (err) {
+      console.error('❌ [BRIDGE] Erreur responded:', err);
+      return c.json({ error: 'Erreur' }, 500);
+    }
+  });
+
 }
