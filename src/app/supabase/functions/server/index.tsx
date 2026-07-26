@@ -548,19 +548,34 @@ if sys.platform == 'win32':
 
 app = Flask(__name__)
 
+ALLOWED_ORIGINS = [
+    'https://corevision-main.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001'
+]
+
+@app.before_request
+def handle_preflight():
+    """Gérer les requêtes OPTIONS (preflight CORS)"""
+    if request.method == 'OPTIONS':
+        origin = request.headers.get('Origin')
+        if origin in ALLOWED_ORIGINS:
+            response = app.make_response('')
+            response.headers['Access-Control-Allow-Origin'] = origin
+            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, PATCH, DELETE, OPTIONS'
+            response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+            response.headers['Access-Control-Allow-Credentials'] = 'true'
+            response.status_code = 204
+            return response
+        return '', 204
+
 @app.after_request
 def add_cors_headers(response):
     """Ajouter les headers CORS à chaque réponse"""
     origin = request.headers.get('Origin')
-    allowed_origins = [
-        'https://corevision-main.vercel.app',
-        'http://localhost:3000',
-        'http://localhost:3001',
-        'http://127.0.0.1:3000',
-        'http://127.0.0.1:3001'
-    ]
-
-    if origin in allowed_origins:
+    if origin in ALLOWED_ORIGINS:
         response.headers['Access-Control-Allow-Origin'] = origin
         response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, PATCH, DELETE, OPTIONS'
         response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
@@ -568,7 +583,7 @@ def add_cors_headers(response):
 
     return response
 
-@app.route('/health', methods=['GET', 'OPTIONS'])
+@app.route('/health', methods=['GET'])
 def health():
     return jsonify({
         'status': 'ok',
@@ -577,7 +592,7 @@ def health():
         'sync_interval': int(os.getenv('SYNC_INTERVAL', 30))
     }), 200
 
-@app.route('/sync', methods=['POST', 'OPTIONS'])
+@app.route('/sync', methods=['POST'])
 def force_sync():
     return jsonify({
         'status': 'success',
@@ -596,7 +611,7 @@ if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001, debug=False, use_reloader=False, threaded=True)
 ''', encoding='utf-8')
 
-    print("✅ app.py créé")
+    print("✅ app.py créé ✅ CORS configuré ✅")
     print()
     print("=" * 60)
     print("🚀 DÉMARRAGE DE FLASK - GARDEZ CETTE FENÊTRE OUVERTE!")
