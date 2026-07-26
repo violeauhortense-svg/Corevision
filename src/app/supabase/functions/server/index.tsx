@@ -501,6 +501,7 @@ class BridgeLauncher:
         self.load_config()
         self.setup_ui()
         self.create_app_py()
+        self.create_powershell_scripts()
         self.check_bridge_status()
 
     def load_config(self):
@@ -592,6 +593,71 @@ if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001, debug=False, use_reloader=False, threaded=True)
 '''
         app_py.write_text(app_code, encoding='utf-8')
+
+    def create_powershell_scripts(self):
+        """Créer les scripts PowerShell pour exporter mails et calendrier"""
+        scripts_dir = self.config_file.parent / "scripts"
+        scripts_dir.mkdir(exist_ok=True)
+
+        # Script export_mails.ps1
+        mails_script = scripts_dir / "export_mails.ps1"
+        if not mails_script.exists():
+            mails_code = """# Export mails from Outlook
+param([string]$InitialSync = "false")
+try {
+    $Outlook = New-Object -ComObject Outlook.Application
+    $Namespace = $Outlook.GetNamespace("MAPI")
+    $MailFolder = $Namespace.GetDefaultFolder(6)
+    if ($InitialSync -eq "true") {
+        $StartDate = (Get-Date).AddMonths(-3)
+    } else {
+        $StartDate = (Get-Date).AddHours(-1)
+    }
+    $Mails = @()
+    foreach ($Item in $MailFolder.Items) {
+        if ($Item.ReceivedTime -ge $StartDate) {
+            $Mail = @{subject=$Item.Subject; from=$Item.SenderName; date=$Item.ReceivedTime.ToString("yyyy-MM-dd HH:mm:ss")}
+            $Mails += $Mail
+        }
+    }
+    $Result = @{status="ok"; count=$Mails.Count; mails=$Mails} | ConvertTo-Json -Depth 10
+    Write-Host $Result
+} catch {
+    Write-Host (ConvertTo-Json @{status="error"; message=$_.Exception.Message})
+}
+"""
+            mails_script.write_text(mails_code, encoding='utf-8')
+
+        # Script export_calendar.ps1
+        calendar_script = scripts_dir / "export_calendar.ps1"
+        if not calendar_script.exists():
+            calendar_code = """# Export calendar from Outlook
+param([string]$InitialSync = "false")
+try {
+    $Outlook = New-Object -ComObject Outlook.Application
+    $Namespace = $Outlook.GetNamespace("MAPI")
+    $CalendarFolder = $Namespace.GetDefaultFolder(9)
+    if ($InitialSync -eq "true") {
+        $StartDate = (Get-Date).AddMonths(-3)
+        $EndDate = (Get-Date).AddMonths(1)
+    } else {
+        $StartDate = (Get-Date).AddHours(-1)
+        $EndDate = (Get-Date).AddDays(7)
+    }
+    $Events = @()
+    foreach ($Item in $CalendarFolder.Items) {
+        if ($Item.Start -ge $StartDate -and $Item.Start -le $EndDate) {
+            $Event = @{subject=$Item.Subject; start=$Item.Start.ToString("yyyy-MM-dd HH:mm:ss"); end=$Item.End.ToString("yyyy-MM-dd HH:mm:ss")}
+            $Events += $Event
+        }
+    }
+    $Result = @{status="ok"; count=$Events.Count; events=$Events} | ConvertTo-Json -Depth 10
+    Write-Host $Result
+} catch {
+    Write-Host (ConvertTo-Json @{status="error"; message=$_.Exception.Message})
+}
+"""
+            calendar_script.write_text(calendar_code, encoding='utf-8')
 
     def setup_ui(self):
         """Créer l'interface GUI"""
