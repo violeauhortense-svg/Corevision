@@ -394,10 +394,6 @@ console.log('? Section rapport progressif routes loaded');
 setupBaremesRoutes(app);
 console.log('? Bar�mes fiscaux routes loaded');
 
-// ?? Mail routes
-app.route('/make-server-cac859af', mailRoutes);
-console.log('? Mail routes loaded');
-
 // KNOWLEDGE INGESTION + PATRIMOINE ROUTES
 // ============================================
 
