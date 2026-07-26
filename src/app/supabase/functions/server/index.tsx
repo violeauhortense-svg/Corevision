@@ -39,7 +39,7 @@ import { setupDashboardRoutes } from "./dashboard_routes.tsx";
 
 // ============================================
 // VERSION: 2026-02-27-DER-FIX-V6
-// Architecture modulaire refactorisée  
+// Architecture modulaire refactorisï¿½e  
 // FIX: Routes DER publiques accessibles
 // ============================================
 const SERVER_VERSION = "2026-02-27-DER-FIX-V6";
@@ -49,25 +49,50 @@ const app = new Hono();
 
 const supabaseAdmin = supabaseAdminCompat;
 
-// Initialiser le dossier de documents au démarrage
+// Initialiser le dossier de documents au dï¿½marrage
 (async () => {
   try {
     await Deno.mkdir(`${UPLOADS_DIR}/make-cac859af-documents`, { recursive: true });
-    console.log('? Dossier uploads initialisé:', UPLOADS_DIR);
+    console.log('? Dossier uploads initialisï¿½:', UPLOADS_DIR);
   } catch {
-    console.log('? Dossier uploads déjà existant');
+    console.log('? Dossier uploads dï¿½jï¿½ existant');
   }
 })();
 
 // Middleware
 app.use('*', logger(console.log));
-app.use("/*", cors({
-  origin: "*",
-  allowHeaders: ["Content-Type", "Authorization"],
-  allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  exposeHeaders: ["Content-Length"],
-  maxAge: 600,
-}));
+
+// âœ¨ Custom CORS middleware for credentials support
+app.use("/*", async (c, next) => {
+  const origin = c.req.header("origin");
+  const allowedOrigins = [
+    "https://corevision-main.vercel.app",
+    "http://localhost:3000",
+    "http://localhost:3001",
+  ];
+
+  // ALWAYS set CORS headers to prevent browser fallback to wildcard
+  const isAllowed = origin && allowedOrigins.includes(origin);
+
+  if (isAllowed) {
+    c.header("Access-Control-Allow-Origin", origin);
+    c.header("Access-Control-Allow-Credentials", "true");
+    c.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+    c.header("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie");
+    c.header("Access-Control-Expose-Headers", "Content-Length, Set-Cookie");
+    c.header("Access-Control-Max-Age", "600");
+  } else {
+    // Still set headers but for non-allowed origins without credentials
+    c.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+    c.header("Access-Control-Allow-Headers", "Content-Type");
+  }
+
+  if (c.req.method === "OPTIONS") {
+    return c.text("OK");
+  }
+
+  await next();
+});
 
 // ============================================
 // BASIC ROUTES
@@ -123,7 +148,7 @@ app.delete("/make-server-cac859af/reset-user-data", async (c) => {
   }
 
   try {
-    console.log('??? RESET: Suppression de toutes les données pour user:', user.id);
+    console.log('??? RESET: Suppression de toutes les donnï¿½es pour user:', user.id);
     
     const clients = await kv.getByPrefix(`client:${user.id}:`);
     for (const client of clients) {
@@ -140,7 +165,7 @@ app.delete("/make-server-cac859af/reset-user-data", async (c) => {
     
     return c.json({ 
       success: true,
-      message: 'Toutes les données ont été supprimées',
+      message: 'Toutes les donnï¿½es ont ï¿½tï¿½ supprimï¿½es',
       deleted: {
         clients: clients.length,
         tasks: taskCount
@@ -251,7 +276,7 @@ app.post("/make-server-cac859af/upload-document", async (c) => {
       .from('make-cac859af-documents')
       .createSignedUrl(filePath, 31536000);
 
-    console.log('? Fichier uploadé:', uploadData.path);
+    console.log('? Fichier uploadï¿½:', uploadData.path);
     return c.json({
       success: true,
       fileUrl: signedUrlData.signedUrl,
@@ -319,9 +344,9 @@ console.log('? Knowledge base routes loaded');
 setupCalculRoutes(app);
 console.log('? Calcul routes loaded');
 
-// ?? Incohérences routes
+// ?? Incohï¿½rences routes
 setupIncoherencesRoutes(app);
-console.log('? Incohérences routes loaded');
+console.log('? Incohï¿½rences routes loaded');
 
 // ?? Recommandations routes
 setupRecommandationsRoutes(app);
@@ -331,9 +356,9 @@ console.log('? Recommandations routes loaded');
 setupSectionRapportRoutes(app);
 console.log('? Section rapport progressif routes loaded');
 
-// ?? Barèmes fiscaux routes
+// ?? Barï¿½mes fiscaux routes
 setupBaremesRoutes(app);
-console.log('? Barèmes fiscaux routes loaded');
+console.log('? Barï¿½mes fiscaux routes loaded');
 
 // ?? Mail routes
 app.route('/make-server-cac859af', mailRoutes);
@@ -348,7 +373,7 @@ console.log('? Collecteur juridique routes loaded');
 setupParserJuridiqueRoutes(app);
 console.log('? Parser juridique routes loaded');
 setupExtracteurReglesRoutes(app);
-console.log('? Extracteur règles routes loaded');
+console.log('? Extracteur rï¿½gles routes loaded');
 setupCollecteurSocialRoutes(app);
 console.log('? Collecteur social + social + retraite routes loaded');
 setupCollecteurRetraiteRoutes(app);
@@ -362,42 +387,42 @@ console.log('? Moteur patrimonial IA routes loaded');
 setupSimulateurPatrimonialRoutes(app);
 console.log('? Simulateur patrimonial routes loaded');
 setupReglesFiscalesRoutes(app);
-console.log('? Règles fiscales routes loaded');
+console.log('? Rï¿½gles fiscales routes loaded');
 setupAuditPatrimonialRoutes(app);
 console.log('? Audit patrimonial routes loaded');
 
 
 
 // ============================================
-// INITIALISATION AUTOMATIQUE AU DÉMARRAGE
+// INITIALISATION AUTOMATIQUE AU Dï¿½MARRAGE
 // ============================================
 
-console.log('?? Initialisation automatique des données au démarrage...');
+console.log('?? Initialisation automatique des donnï¿½es au dï¿½marrage...');
 
-// ?? DÉSACTIVÉ : Les calculs fiscaux sont maintenant faits en frontend via /services/fiscalCalculator.ts
-// Les règles fiscales en base de données ne sont plus nécessaires au démarrage
-// Pour réactiver, décommentez le bloc ci-dessous
+// ?? Dï¿½SACTIVï¿½ : Les calculs fiscaux sont maintenant faits en frontend via /services/fiscalCalculator.ts
+// Les rï¿½gles fiscales en base de donnï¿½es ne sont plus nï¿½cessaires au dï¿½marrage
+// Pour rï¿½activer, dï¿½commentez le bloc ci-dessous
 
 /*
-// Initialiser les règles fiscales si elles n'existent pas
+// Initialiser les rï¿½gles fiscales si elles n'existent pas
 (async () => {
   try {
     const reglesExistantes = await reglesFiscalesDB.getToutesRegles();
     
     if (reglesExistantes.length === 0) {
-      console.log('?? Aucune règle fiscale trouvée. Initialisation en cours...');
+      console.log('?? Aucune rï¿½gle fiscale trouvï¿½e. Initialisation en cours...');
       const result = await reglesFiscalesDB.initialiserReglesFiscales();
-      console.log(`? ${result.count} règles fiscales initialisées avec succès`);
+      console.log(`? ${result.count} rï¿½gles fiscales initialisï¿½es avec succï¿½s`);
     } else {
-      console.log(`? ${reglesExistantes.length} règles fiscales déjà présentes`);
+      console.log(`? ${reglesExistantes.length} rï¿½gles fiscales dï¿½jï¿½ prï¿½sentes`);
     }
   } catch (error) {
-    console.error('? Erreur lors de l\'initialisation des règles fiscales:', error);
+    console.error('? Erreur lors de l\'initialisation des rï¿½gles fiscales:', error);
   }
 })();
 */
 
-console.log('?? Initialisation des règles fiscales désactivée (calculs maintenant en frontend)');
+console.log('?? Initialisation des rï¿½gles fiscales dï¿½sactivï¿½e (calculs maintenant en frontend)');
 
 console.log(`? Server initialized - Version ${SERVER_VERSION} - Modular architecture`);
 
