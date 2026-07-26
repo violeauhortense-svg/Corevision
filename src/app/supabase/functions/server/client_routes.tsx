@@ -10,7 +10,7 @@ import { getTasksForStatus, getTasksWithIdsForStatus } from "./helpers.tsx";
 export function setupClientRoutes(app: Hono) {
   // Get all clients for authenticated user
   app.get("/make-server-cac859af/clients", async (c) => {
-    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error } = await verifyAuth(c.req);
     
     if (error || !user) {
       return c.json({ error: error || 'Unauthorized' }, 401);
@@ -28,7 +28,7 @@ export function setupClientRoutes(app: Hono) {
 
   // Get client by ID
   app.get("/make-server-cac859af/clients/:id", async (c) => {
-    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error } = await verifyAuth(c.req);
 
     if (error || !user) {
       return c.json({ error: error || 'Unauthorized' }, 401);
@@ -98,7 +98,7 @@ export function setupClientRoutes(app: Hono) {
 
   // Create new client
   app.post("/make-server-cac859af/clients", async (c) => {
-    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error } = await verifyAuth(c.req);
     
     if (error || !user) {
       return c.json({ error: error || 'Unauthorized' }, 401);
@@ -177,7 +177,7 @@ export function setupClientRoutes(app: Hono) {
 
   // Update client
   app.put("/make-server-cac859af/clients/:id", async (c) => {
-    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error } = await verifyAuth(c.req);
     
     if (error || !user) {
       return c.json({ error: error || 'Unauthorized' }, 401);
@@ -210,7 +210,7 @@ export function setupClientRoutes(app: Hono) {
 
   // Delete client
   app.delete("/make-server-cac859af/clients/:id", async (c) => {
-    const { user, error } = await verifyAuth(c.req.header('Authorization'));
+    const { user, error } = await verifyAuth(c.req);
 
     if (error || !user) {
       return c.json({ error: error || 'Unauthorized' }, 401);

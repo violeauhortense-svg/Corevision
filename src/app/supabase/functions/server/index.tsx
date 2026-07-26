@@ -141,7 +141,7 @@ app.get("/make-server-cac859af/debug/users", async (c) => {
 
 // Reset endpoint
 app.delete("/make-server-cac859af/reset-user-data", async (c) => {
-  const { user, error } = await verifyAuth(c.req.header('Authorization'));
+  const { user, error } = await verifyAuth(c.req);
   
   if (error || !user) {
     return c.json({ error: error || 'Unauthorized' }, 401);
@@ -226,7 +226,7 @@ app.post("/make-server-cac859af/auth/signin", async (c) => {
 });
 
 app.get("/make-server-cac859af/auth/profile", async (c) => {
-  const { user, error } = await verifyAuth(c.req.header('Authorization'));
+  const { user, error } = await verifyAuth(c.req);
   
   if (error || !user) {
     return c.json({ error: error || 'Unauthorized' }, 401);
@@ -296,7 +296,7 @@ app.post("/make-server-cac859af/upload-document", async (c) => {
 
 // Serve uploaded files (remplace les signed URLs Supabase)
 app.get("/make-server-cac859af/files/*", async (c) => {
-  const { user, error } = await verifyAuth(c.req.header('Authorization'));
+  const { user, error } = await verifyAuth(c.req);
   if (error || !user) return c.json({ error: 'Unauthorized' }, 401);
 
   const filePath = c.req.path.replace('/make-server-cac859af/files/', '');
