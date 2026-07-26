@@ -286,12 +286,17 @@ export function setupTaskRoutes(app: Hono) {
       client.updated_at = new Date().toISOString();
       await kv.set(`client:${user.id}:${clientId}`, client);
 
-      console.log(`✅ Client progressed to "${toStatus}" with ${client.taches[toStatus]?.length || 0} tasks`);
+      // ✨ CRITICAL: Reload client from KV to ensure all data is in sync
+      const reloadedClient = await kv.get(`client:${user.id}:${clientId}`);
+      console.log(`✅ Client progressed to "${toStatus}" with ${reloadedClient.taches[toStatus]?.length || 0} tasks`);
+      console.log(`📊 Client taches structure:`, Object.keys(reloadedClient.taches || {}).map(status =>
+        `${status}: ${reloadedClient.taches[status]?.length || 0} tasks`
+      ));
 
       return c.json({
         success: true,
         message: `Client progressed to "${toStatus}"`,
-        client
+        client: reloadedClient
       });
     } catch (err) {
       console.error('❌ Error progressing status:', err);
