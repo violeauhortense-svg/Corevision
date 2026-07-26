@@ -913,6 +913,89 @@ const setupBridgeRoutes = (app: any) => {
 setupBridgeRoutes(app);
 console.log('🌉 Bridge routes loaded');
 
+// Endpoint to receive mails and calendar events from Bridge
+app.post("/make-server-cac859af/bridge/sync-data", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { device_id, mails, events } = body;
+
+    let mailsCreated = 0;
+    let eventsCreated = 0;
+
+    // Process mails - create communications
+    if (mails && Array.isArray(mails)) {
+      for (const mail of mails) {
+        try {
+          const commId = crypto.randomUUID();
+          const communication = {
+            id: commId,
+            source: 'outlook' as const,
+            category: 'en_attente' as const,
+            status: 'à_traiter' as const,
+            from: mail.from || 'Unknown',
+            to: mail.to || '',
+            subject: mail.subject || '(No subject)',
+            body: mail.body || '',
+            receivedAt: mail.date || new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            attachments: mail.attachments || [],
+            tags: ['bridge']
+          };
+          const key = `communication:${commId}`;
+          await kv.set(key, communication);
+          mailsCreated++;
+        } catch (mailErr) {
+          console.error('❌ [BRIDGE] Error processing mail:', mailErr);
+        }
+      }
+    }
+
+    // Process calendar events - create agenda events
+    if (events && Array.isArray(events)) {
+      for (const event of events) {
+        try {
+          const eventId = crypto.randomUUID();
+          const agendaEvent = {
+            id: eventId,
+            source: 'outlook' as const,
+            clientId: null,
+            clientName: null,
+            taskId: null,
+            title: event.subject || '(No title)',
+            description: event.description || '',
+            startDate: event.start || new Date().toISOString(),
+            endDate: event.end || new Date().toISOString(),
+            location: event.location || '',
+            locationType: 'online' as const,
+            meetingType: 'other' as const,
+            status: 'scheduled' as const,
+            notes: '',
+            attendees: event.attendees || [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+          const key = `agenda_event:bridge:${eventId}`;
+          await kv.set(key, agendaEvent);
+          eventsCreated++;
+        } catch (eventErr) {
+          console.error('❌ [BRIDGE] Error processing event:', eventErr);
+        }
+      }
+    }
+
+    console.log(`✅ [BRIDGE] Sync completed: ${mailsCreated} mails, ${eventsCreated} events from ${device_id}`);
+    return c.json({
+      status: 'success',
+      device_id,
+      mails_created: mailsCreated,
+      events_created: eventsCreated
+    }, 200);
+  } catch (err) {
+    console.error('❌ [BRIDGE] Sync error:', err);
+    return c.json({ error: 'Sync error' }, 500);
+  }
+});
+
 // Cleanup stale heartbeats every minute
 setInterval(() => {
   const now = Date.now();
