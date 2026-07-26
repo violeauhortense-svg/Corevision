@@ -499,7 +499,7 @@ def check_python():
 
 def install_deps():
     print("📦 Installation des dépendances...")
-    subprocess.run([sys.executable, '-m', 'pip', 'install', '-q', 'flask', 'requests', 'python-dotenv', 'pywin32'],
+    subprocess.run([sys.executable, '-m', 'pip', 'install', '-q', 'flask', 'flask-cors', 'requests', 'python-dotenv', 'pywin32'],
                    capture_output=True)
     print("✅ Dépendances OK")
 
