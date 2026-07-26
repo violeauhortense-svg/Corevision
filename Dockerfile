@@ -9,7 +9,7 @@ COPY src/app/supabase/functions/server /app/server
 WORKDIR /app/server
 
 # Pré-télécharger les dépendances Deno (cache)
-RUN deno cache --import-map=import_map.json index.tsx || deno cache index.tsx || true
+RUN deno cache index.tsx || true
 
 # Production stage
 FROM denoland/deno:latest
