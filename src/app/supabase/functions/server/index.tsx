@@ -349,6 +349,235 @@ app.get("/make-server-cac859af/files/*", async (c) => {
   }
 });
 
+// ============================================
+// BRIDGE DOWNLOADS
+// ============================================
+
+app.get("/make-server-cac859af/download/install-bridge-service", async (c) => {
+  try {
+    const content = `@echo off
+REM ============================================
+REM Outlook Bridge V3 - Windows Service Installer
+REM ============================================
+
+echo.
+echo 🌉 Outlook Bridge V3 - Installation Service Windows
+echo ============================================
+echo.
+
+REM Vérifier si l'utilisateur est admin
+net session >nul 2>&1
+if %errorLevel% == 0 (
+    echo ✅ Droits administrateur détectés
+) else (
+    echo ❌ ERREUR: Droits administrateur requis!
+    echo.
+    echo 💡 Solution:
+    echo    1. Clique droit sur ce fichier (.bat)
+    echo    2. Sélectionne "Exécuter en tant qu'administrateur"
+    echo.
+    pause
+    exit /b 1
+)
+
+echo.
+echo 📦 Vérification des dépendances Python...
+
+python --version >nul 2>&1
+if %errorLevel% neq 0 (
+    echo ❌ ERREUR: Python n'est pas installé ou non accessible!
+    echo.
+    echo 💡 Installation:
+    echo    1. Télécharge Python 3.8+ depuis python.org
+    echo    2. Installe avec "Add Python to PATH" coché
+    echo    3. Relance ce script
+    echo.
+    pause
+    exit /b 1
+)
+
+echo ✅ Python trouvé
+python --version
+
+echo.
+echo 📥 Installation des dépendances Python...
+pip install pywin32 --quiet
+if %errorLevel% neq 0 (
+    echo ❌ ERREUR lors de l'installation de pywin32
+    pause
+    exit /b 1
+)
+
+echo ✅ Dépendances installées
+
+echo.
+echo 🔧 Post-installation pywin32...
+python -m Scripts.pywin32_postinstall -install >nul 2>&1
+if %errorLevel% neq 0 (
+    echo ⚠️  Attention lors de la post-installation (non-critique)
+)
+
+echo.
+echo 🚀 Installation du service Windows...
+python bridge_service.py install
+if %errorLevel% neq 0 (
+    echo ❌ ERREUR: Installation du service échouée
+    pause
+    exit /b 1
+)
+
+echo ✅ Service installé avec succès!
+
+echo.
+echo ⏱️  Démarrage du service...
+python bridge_service.py start
+if %errorLevel% neq 0 (
+    echo ⚠️  Le service a été installé mais n'a pas pu démarrer
+    echo   Vérifiez que Outlook est installé et configuré
+    pause
+    exit /b 1
+)
+
+echo.
+echo ✅ Service démarré avec succès!
+echo.
+echo ============================================
+echo 🎉 Installation terminée!
+echo ============================================
+echo.
+echo 📋 Prochaines étapes:
+echo    1. Vérifie que le Bridge est online dans l'app
+echo    2. Clique sur "Sync Now" pour tester
+echo    3. Les mails arrivent automatiquement toutes les 30s
+echo.
+echo 🔧 Commandes de gestion:
+echo    - Démarrer:     python bridge_service.py start
+echo    - Arrêter:      python bridge_service.py stop
+echo    - Redémarrer:   python bridge_service.py restart
+echo    - Désinstaller: python bridge_service.py remove
+echo.
+pause`;
+
+    return c.text(content, 200, {
+      'Content-Type': 'application/octet-stream',
+      'Content-Disposition': 'attachment; filename="install_bridge_service.bat"'
+    });
+  } catch (err) {
+    console.error('❌ Erreur download service:', err);
+    return c.json({ error: 'Téléchargement échoué' }, 500);
+  }
+});
+
+app.get("/make-server-cac859af/download/bridge-launcher", async (c) => {
+  try {
+    const content = `@echo off
+REM ============================================
+REM Outlook Bridge Launcher (Sans droits admin)
+REM ============================================
+
+echo.
+echo 🌉 Outlook Bridge - Launcher
+echo ============================================
+echo.
+
+REM Vérifier Python
+python --version >nul 2>&1
+if %errorLevel% neq 0 (
+    echo ❌ ERREUR: Python n'est pas installé!
+    echo.
+    echo Télécharge Python depuis python.org
+    echo et installe avec "Add Python to PATH" coché
+    echo.
+    pause
+    exit /b 1
+)
+
+echo ✅ Python trouvé
+
+REM Installer les dépendances si nécessaire
+echo.
+echo 📦 Vérification des dépendances...
+pip show flask >nul 2>&1
+if %errorLevel% neq 0 (
+    echo 📥 Installation des dépendances...
+    pip install Flask requests python-dotenv --quiet
+)
+
+echo.
+echo 🚀 Démarrage du launcher...
+echo.
+echo Note: Laisse cette fenêtre ouverte pendant la durée de fonctionnement du Bridge
+echo.
+
+REM Créer un script Python temporaire pour le launcher
+python -c "
+import tkinter as tk
+from tkinter import messagebox
+import subprocess
+import sys
+import os
+import threading
+import time
+
+class BridgeLauncher:
+    def __init__(self, root):
+        self.root = root
+        self.root.title('🌉 Outlook Bridge - Launcher')
+        self.root.geometry('400x250')
+        self.bridge_process = None
+        self.is_running = False
+
+        main_frame = tk.Frame(self.root)
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+
+        tk.Label(main_frame, text='🌉 Outlook Bridge', font=('Arial', 16, 'bold')).pack(pady=10)
+
+        self.status_label = tk.Label(main_frame, text='🔴 Hors ligne', font=('Arial', 14, 'bold'), fg='red')
+        self.status_label.pack(pady=10)
+
+        self.start_btn = tk.Button(main_frame, text='▶️  Démarrer Bridge', command=self.start_bridge, bg='#4CAF50', fg='white', font=('Arial', 11, 'bold'), height=2)
+        self.start_btn.pack(fill=tk.X, pady=5)
+
+        self.stop_btn = tk.Button(main_frame, text='⏹️  Arrêter Bridge', command=self.stop_bridge, bg='#f44336', fg='white', font=('Arial', 11, 'bold'), height=2, state=tk.DISABLED)
+        self.stop_btn.pack(fill=tk.X, pady=5)
+
+    def start_bridge(self):
+        try:
+            self.bridge_process = subprocess.Popen([sys.executable, '-m', 'pip', 'install', '-q', 'Flask', 'requests', 'python-dotenv'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            time.sleep(2)
+            self.is_running = True
+            self.start_btn.config(state=tk.DISABLED)
+            self.stop_btn.config(state=tk.NORMAL)
+            self.status_label.config(text='🟡 Démarrage...', fg='orange')
+            messagebox.showinfo('✅', 'Bridge en cours de démarrage...')
+        except Exception as e:
+            messagebox.showerror('Erreur', f'Impossible de démarrer: {e}')
+
+    def stop_bridge(self):
+        if self.bridge_process:
+            self.bridge_process.terminate()
+            self.is_running = False
+            self.start_btn.config(state=tk.NORMAL)
+            self.stop_btn.config(state=tk.DISABLED)
+            self.status_label.config(text='🔴 Hors ligne', fg='red')
+
+root = tk.Tk()
+app = BridgeLauncher(root)
+root.mainloop()
+"
+
+pause`;
+
+    return c.text(content, 200, {
+      'Content-Type': 'application/octet-stream',
+      'Content-Disposition': 'attachment; filename="bridge_launcher.bat"'
+    });
+  } catch (err) {
+    console.error('❌ Erreur download launcher:', err);
+    return c.json({ error: 'Téléchargement échoué' }, 500);
+  }
+});
+
 setupDashboardRoutes(app);
 console.log('? Dashboard routes loaded');
 setupCommunicationsRoutes(app);

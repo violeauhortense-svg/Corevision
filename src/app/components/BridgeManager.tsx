@@ -93,24 +93,44 @@ export function BridgeManager() {
     toast.success(`Device ID: ${deviceId}`);
   };
 
-  const downloadInstaller = () => {
-    const link = document.createElement('a');
-    link.href = '/bridge/install_service.bat';
-    link.download = 'install_bridge_service.bat';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success('Téléchargement: install_bridge_service.bat');
+  const downloadInstaller = async () => {
+    try {
+      const response = await fetch('https://corevision-api.onrender.com/make-server-cac859af/download/install-bridge-service');
+      if (!response.ok) throw new Error('Téléchargement échoué');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'install_bridge_service.bat';
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+      toast.success('✅ install_bridge_service.bat téléchargé!');
+    } catch (error) {
+      toast.error('Erreur téléchargement');
+    }
   };
 
-  const downloadLauncher = () => {
-    const link = document.createElement('a');
-    link.href = '/bridge/launcher.bat';
-    link.download = 'bridge_launcher.bat';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success('Téléchargement: bridge_launcher.bat');
+  const downloadLauncher = async () => {
+    try {
+      const response = await fetch('https://corevision-api.onrender.com/make-server-cac859af/download/bridge-launcher');
+      if (!response.ok) throw new Error('Téléchargement échoué');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'bridge_launcher.bat';
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+      toast.success('✅ bridge_launcher.bat téléchargé!');
+    } catch (error) {
+      toast.error('Erreur téléchargement');
+    }
   };
 
   return (
