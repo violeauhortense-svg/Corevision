@@ -69,78 +69,30 @@ export function TasksTab({ clientId }: TasksTabProps) {
     if (!client) return;
 
     try {
-      const url = `${apiBaseUrl}/clients/${clientId}/tache/${taskId}`;
-
-      console.log('   status:', status);
-      console.log('   taskId:', taskId);
-      console.log('   completed:', completed);
-      console.log('   url:', url);
-      console.log('   auth method: HTTP-only cookie (auto-sent by browser)');
-
-      const payload = { completed, status: completed ? 'validated' : 'pending' };
-      console.log('   payload:', JSON.stringify(payload));
-
-      const response = await fetch(url, {
+      const response = await fetch(`${apiBaseUrl}/clients/${clientId}/tache/${taskId}`, {
         method: 'PATCH',
-        credentials: 'include',  // ✨ Send cookies automatically (sessionId)
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ completed, status: completed ? 'validated' : 'pending' }),
       });
-
-      console.log('   status code:', response.status);
-      console.log('   ok:', response.ok);
 
       if (response.ok) {
         const result = await response.json();
-        console.log('   task.status:', result.task?.status);
-        console.log('   task.completed:', result.task?.completed);
-        console.log('   stats.allCompleted:', result.stats?.allCompleted);
+
+        // ✨ USE SERVER DATA DIRECTLY
+        setClient(result.client);
 
         toast.success(completed ? '✅ Tâche validée' : '↩️ Validation annulée');
 
-        // ✨ UPDATE STATE with server data (ensure persistence)
-        if (result.client) {
-          setClient(result.client);
-        }
-
-        // ✨ AUTO-PROGRESSION: Check if all tasks completed for current status
-        const currentStatus = client?.statusOuvert || client?.status || 'Prospect';
-        console.log('   result.stats?.allCompleted:', result.stats?.allCompleted);
-        console.log('   status === currentStatus:', status === currentStatus);
-
-        if (result.stats?.allCompleted && status === currentStatus) {
-          const STATUSES = ['Prospect', 'Découverte', 'Simulation', 'Lettre Mission', 'Rapport/Audit', 'Suivi MEP', 'Suivi CSP', 'Arbitrage'];
-          const currentIdx = STATUSES.indexOf(status);
-          const nextStatus = currentIdx < STATUSES.length - 1 ? STATUSES[currentIdx + 1] : null;
-
-          console.log('   nextStatus:', nextStatus);
-
-          if (nextStatus) {
-            console.log(`   Scheduling progression from "${status}" to "${nextStatus}"`);
-            setTimeout(() => {
-              handleProgressToNextStatus(status, nextStatus);
-            }, 800);
-          }
-        } else {
-          console.log('   No auto-progression: allCompleted=' + result.stats?.allCompleted + ', isCurrentStatus=' + (status === currentStatus));
+        // ✨ IF AUTO-PROGRESSION HAPPENED
+        if (result.statusProgressed) {
+          toast.success(`🎉 Passage au statut suivant !`);
         }
       } else {
-        const errorText = await response.text();
-        console.error('❌ [handleTaskUpdate] Error response:');
-        console.error('   status code:', response.status);
-        console.error('   error text:', errorText);
-        try {
-          const errorJson = JSON.parse(errorText);
-          console.error('   error json:', errorJson);
-        } catch (e) {
-          console.error('   (not JSON)');
-        }
         toast.error('Erreur validation tâche');
       }
     } catch (err) {
-      console.error('❌ [handleTaskUpdate] Exception:', err);
+      console.error('Error:', err);
       toast.error('Erreur réseau');
     }
   };
@@ -149,56 +101,30 @@ export function TasksTab({ clientId }: TasksTabProps) {
     if (!client) return;
 
     try {
-      const url = `${apiBaseUrl}/clients/${clientId}/tache/${taskId}`;
-
-      const response = await fetch(url, {
+      const response = await fetch(`${apiBaseUrl}/clients/${clientId}/tache/${taskId}`, {
         method: 'PATCH',
-        credentials: 'include',  // ✨ Send cookies automatically (sessionId)
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ completed: false, status: 'na' }),
       });
 
       if (response.ok) {
         const result = await response.json();
+
+        // ✨ USE SERVER DATA DIRECTLY
+        setClient(result.client);
+
         toast.success('⊘ Tâche marquée N.A.');
 
-        // UPDATE STATE IMMEDIATELY
-        setClient(prev => {
-          if (!prev) return prev;
-          const updatedClient = {
-            ...prev,
-            taches: {
-              ...prev.taches,
-              [status]: (prev.taches?.[status] || []).map(t =>
-                (t.id === taskId || t.title === taskId) ? result.task : t
-              )
-            }
-          };
-
-          // ✨ AUTO-PROGRESSION: Check if all tasks completed for current status
-          if (result.stats?.allCompleted && status === (prev.statusOuvert || prev.status || 'Prospect')) {
-            const STATUSES = ['Prospect', 'Découverte', 'Simulation', 'Lettre Mission', 'Rapport/Audit', 'Suivi MEP', 'Suivi CSP', 'Arbitrage'];
-            const currentIdx = STATUSES.indexOf(status);
-            const nextStatus = currentIdx < STATUSES.length - 1 ? STATUSES[currentIdx + 1] : null;
-
-            if (nextStatus) {
-              setTimeout(() => {
-                handleProgressToNextStatus(status, nextStatus);
-              }, 800);  // Small delay for UX
-            }
-          }
-
-          return updatedClient;
-        });
+        // ✨ IF AUTO-PROGRESSION HAPPENED
+        if (result.statusProgressed) {
+          toast.success(`🎉 Passage au statut suivant !`);
+        }
       } else {
-        const error = await response.text();
-        console.error('❌ Erreur:', error);
         toast.error('Erreur marquage N.A.');
       }
     } catch (err) {
-      console.error('❌ Erreur N.A.:', err);
+      console.error('Error:', err);
       toast.error('Erreur réseau');
     }
   };

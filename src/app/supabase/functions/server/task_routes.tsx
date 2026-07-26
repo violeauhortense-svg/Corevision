@@ -136,12 +136,11 @@ export function setupTaskRoutes(app: Hono) {
     }
   });
 
-  // PATCH: Validate/NA a task in the 8-status pipeline
+  // PATCH: Validate/NA a task + AUTO-PROGRESSION (8-status pipeline)
   app.patch("/make-server-cac859af/clients/:clientId/tache/:taskId", async (c) => {
     const { user, error } = await verifyAuth(c.req.header('Authorization'));
 
     if (error || !user) {
-      console.error('❌ Auth error:', error);
       return c.json({ error: error || 'Unauthorized' }, 401);
     }
 
@@ -151,76 +150,82 @@ export function setupTaskRoutes(app: Hono) {
       const body = await c.req.json();
       const { completed, status } = body;
 
-      console.log(`🔄 Task validation request:`);
-      console.log(`   userId: ${user.id}`);
-      console.log(`   clientId: ${clientId}`);
-      console.log(`   taskId: ${taskId}, completed: ${completed}, status: ${status}`);
-
       // Fetch the client
       const kvKey = `client:${user.id}:${clientId}`;
-      console.log(`🔍 Searching for client with key: ${kvKey}`);
       const client = await kv.get(kvKey);
 
       if (!client) {
-        console.error(`❌ Client not found with key: ${kvKey}`);
-        // Debug: list all client keys for this user
-        const allClientKeys = await kv.getByPrefix(`client:${user.id}:`);
-        console.log(`📋 All client keys for user ${user.id}: ${allClientKeys.length} found`);
-        allClientKeys.forEach((c: any, i: number) => {
-          console.log(`   [${i}] id=${c.id}, nom=${c.nom}`);
-        });
         return c.json({ error: 'Client not found' }, 404);
       }
-
-      console.log(`✅ Client found: id=${client.id}, nom=${client.nom}`);
 
       const currentStatus = client.statusOuvert || 'Prospect';
       const tasks = client.taches?.[currentStatus] || [];
 
-      // Find task by ID instead of index
+      // Find task by ID
       let taskIdx = tasks.findIndex((t: any) => t.id === taskId);
-
       if (taskIdx < 0) {
         return c.json({ error: 'Tâche introuvable' }, 404);
       }
 
-      console.log(`   Task before: id=${tasks[taskIdx]?.id}, completed=${tasks[taskIdx]?.completed}, status=${tasks[taskIdx]?.status}`);
-
-      // Update the task
+      // 1️⃣ UPDATE TASK
       tasks[taskIdx].completed = completed;
       tasks[taskIdx].status = status || (completed ? 'validated' : 'pending');
       tasks[taskIdx].updated_at = new Date().toISOString();
 
-      // Save client
+      // 2️⃣ SAVE CLIENT
       client.taches[currentStatus] = tasks;
       client.updated_at = new Date().toISOString();
       await kv.set(`client:${user.id}:${clientId}`, client);
 
-      console.log(`   Task after: completed=${tasks[taskIdx].completed}, status=${tasks[taskIdx].status}`);
-      console.log(`✅ Task validation successful`);
-
-      // ✨ Calculate completion stats for auto-progression
-      const stats = countTasksByState(tasks);
+      // 3️⃣ CHECK IF ALL TASKS COMPLETED/NA
       const allCompleted = areAllTasksCompleted(tasks);
-      console.log(`📊 Stats: completed=${stats.completed}, pending=${stats.pending}, na=${stats.na}, allCompleted=${allCompleted}`);
-      console.log(`📤 Returning task validation response with stats:`, { allCompleted, stats });
 
-      const response = {
+      if (allCompleted) {
+        // 4️⃣ AUTO-PROGRESSION: Move to next status
+        const STATUSES = ['Prospect', 'Découverte', 'Simulation', 'Lettre Mission', 'Rapport/Audit', 'Suivi MEP', 'Suivi CSP', 'Arbitrage'];
+        const currentIdx = STATUSES.indexOf(currentStatus);
+
+        if (currentIdx < STATUSES.length - 1) {
+          const nextStatus = STATUSES[currentIdx + 1];
+
+          // Create tasks for next status
+          const nextTaskDefs = getTasksWithIdsForStatus(nextStatus);
+          if (!client.taches) client.taches = {};
+
+          client.taches[nextStatus] = nextTaskDefs.map((def: any) => ({
+            id: def.id,
+            title: def.title,
+            completed: false,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            clientId: clientId,
+            statusPipeline: nextStatus,
+          }));
+
+          // Update status and save
+          client.statusOuvert = nextStatus;
+          client.updated_at = new Date().toISOString();
+          await kv.set(`client:${user.id}:${clientId}`, client);
+
+          console.log(`✅ AUTO-PROGRESSION: ${currentStatus} → ${nextStatus} with ${client.taches[nextStatus].length} tasks created`);
+        }
+      }
+
+      // 5️⃣ RELOAD AND RETURN
+      const reloadedClient = await kv.get(`client:${user.id}:${clientId}`);
+
+      return c.json({
         success: true,
-        message: `Task ${status === 'na' ? 'marked N.A.' : (completed ? 'validated' : 'unvalidated')}`,
-        task: tasks[taskIdx],
-        stats: {
-          allCompleted,
-          counts: stats,
-        },
-        client
-      };
+        taskId,
+        completed,
+        status: tasks[taskIdx].status,
+        statusProgressed: allCompleted ? true : false,
+        client: reloadedClient
+      });
 
-      console.log(`📤 Response stats:`, response.stats);
-      return c.json(response);
     } catch (err) {
-      console.error('❌ Error validating task:', err);
-      return c.json({ error: 'Failed to validate task: ' + (err as Error).message }, 500);
+      console.error('❌ Error:', err);
+      return c.json({ error: 'Failed: ' + (err as Error).message }, 500);
     }
   });
 
