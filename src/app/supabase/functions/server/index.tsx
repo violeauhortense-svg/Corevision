@@ -924,6 +924,24 @@ function generateHash(text: string): string {
   return Math.abs(hash).toString(36);
 }
 
+// Cleanup old bridge events before new sync
+app.post("/make-server-cac859af/bridge/cleanup", async (c) => {
+  try {
+    const allBridgeEvents = await kv.getByPrefix('agenda_event:bridge:');
+    let deleted = 0;
+    for (const event of allBridgeEvents) {
+      const key = `agenda_event:bridge:${event.id}`;
+      await kv.del(key);
+      deleted++;
+    }
+    console.log(`✅ [BRIDGE] Cleanup: deleted ${deleted} old bridge events`);
+    return c.json({ status: 'success', deleted }, 200);
+  } catch (err) {
+    console.error('❌ [BRIDGE] Cleanup error:', err);
+    return c.json({ error: 'Cleanup error' }, 500);
+  }
+});
+
 // Endpoint to receive mails and calendar events from Bridge
 app.post("/make-server-cac859af/bridge/sync-data", async (c) => {
   try {
