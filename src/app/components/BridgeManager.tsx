@@ -182,14 +182,10 @@ export function BridgeManager() {
           <div className="flex gap-3 justify-center">
             {bridgeStatus?.bridge_running ? (
               <>
-                <button
-                  onClick={handleForcedSync}
-                  disabled={syncing}
-                  className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-bold text-lg flex items-center gap-2"
-                >
-                  <Play className="w-5 h-5" />
-                  {syncing ? 'Synchronisation...' : 'Synchroniser Maintenant'}
-                </button>
+                <div className="text-center">
+                  <p className="text-sm text-gray-600 mb-3">La synchronisation est automatique toutes les 15 secondes</p>
+                  <p className="text-xs text-gray-500">Les nouveaux mails et événements apparaissent automatiquement</p>
+                </div>
               </>
             ) : (
               <>
