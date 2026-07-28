@@ -9,6 +9,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { hubCommunicationAPI } from '../../services/hubCommunicationAPI';
 import { ClientAssociation } from './ClientAssociation';
 import { NotesSystem } from './NotesSystem';
 import { AttachmentsDisplay } from './AttachmentsDisplay';
@@ -29,42 +30,35 @@ export function MailDetailPanel({ mail, onClose, onUpdate }: MailDetailPanelProp
 
   const handleStatusChange = async (newStatus: MailTraitementStatus) => {
     setSelectedStatus(newStatus);
-    const updated: HubMail = {
-      ...mail,
-      traitementStatus: newStatus,
-      updatedAt: new Date().toISOString(),
-    };
     setLoading(true);
     try {
+      const updated = await hubCommunicationAPI.updateMailStatus(mail.id, newStatus);
       await onUpdate(updated);
       toast.success(`État changé à "${getStatusLabel(newStatus)}"`);
     } catch (error) {
+      console.error('Erreur changement statut:', error);
       toast.error('Impossible de changer l\'état');
-      setSelectedStatus(mail.traitementStatus); // Revert on error
+      setSelectedStatus(mail.traitementStatus);
     } finally {
       setLoading(false);
     }
   };
 
   const handleAddNote = async (content: string) => {
-    const newNoteObj: MailNote = {
-      id: `note-${Date.now()}`,
-      content,
-      createdBy: 'user@prudentia.fr', // TODO: Get from session
-      createdByName: 'Vous',
-      createdAt: new Date().toISOString(),
-    };
-
-    const updated: HubMail = {
-      ...mail,
-      notes: [...mail.notes, newNoteObj],
-      updatedAt: new Date().toISOString(),
-    };
-
     setLoading(true);
     try {
+      const note = await hubCommunicationAPI.addMailNote(
+        mail.id,
+        content,
+        'user@prudentia.fr',
+        'Vous'
+      );
+      const updated = await hubCommunicationAPI.getMailById(mail.id);
       await onUpdate(updated);
+      toast.success('Note ajoutée');
     } catch (error) {
+      console.error('Erreur ajout note:', error);
+      toast.error('Impossible d\'ajouter la note');
       throw error;
     } finally {
       setLoading(false);
@@ -72,16 +66,15 @@ export function MailDetailPanel({ mail, onClose, onUpdate }: MailDetailPanelProp
   };
 
   const handleDeleteNote = async (noteId: string) => {
-    const updated: HubMail = {
-      ...mail,
-      notes: mail.notes.filter((n) => n.id !== noteId),
-      updatedAt: new Date().toISOString(),
-    };
-
     setLoading(true);
     try {
+      await hubCommunicationAPI.deleteMailNote(mail.id, noteId);
+      const updated = await hubCommunicationAPI.getMailById(mail.id);
       await onUpdate(updated);
+      toast.success('Note supprimée');
     } catch (error) {
+      console.error('Erreur suppression note:', error);
+      toast.error('Impossible de supprimer la note');
       throw error;
     } finally {
       setLoading(false);
@@ -89,19 +82,19 @@ export function MailDetailPanel({ mail, onClose, onUpdate }: MailDetailPanelProp
   };
 
   const handleAssociateClient = async (clientId: string, clientName: string, clientEmail?: string) => {
-    const updated: HubMail = {
-      ...mail,
-      clientId: clientId || undefined,
-      clientName: clientName || undefined,
-      clientEmail: clientEmail || undefined,
-      hubTab: clientId ? 'conversation_client' : 'interne_externe',
-      updatedAt: new Date().toISOString(),
-    };
-
     setLoading(true);
     try {
+      const updated = await hubCommunicationAPI.associateClient(
+        mail.id,
+        clientId,
+        clientName,
+        clientEmail
+      );
       await onUpdate(updated);
+      toast.success('Client associé');
     } catch (error) {
+      console.error('Erreur association client:', error);
+      toast.error('Impossible d\'associer le client');
       throw error;
     } finally {
       setLoading(false);
@@ -109,18 +102,20 @@ export function MailDetailPanel({ mail, onClose, onUpdate }: MailDetailPanelProp
   };
 
   const handleReply = async (reply: { to: string[]; subject: string; body: string; cc?: string[] }) => {
-    // TODO: Implement actual Outlook integration
-    const updated: HubMail = {
-      ...mail,
-      traitementStatus: 'en_cours',
-      updatedAt: new Date().toISOString(),
-    };
-
     setLoading(true);
     try {
+      const updated = await hubCommunicationAPI.sendMailReply(
+        mail.id,
+        reply.to,
+        reply.subject,
+        reply.body,
+        reply.cc
+      );
       await onUpdate(updated);
-      toast.success('Réponse envoyée via Outlook');
+      toast.success('Réponse envoyée');
     } catch (error) {
+      console.error('Erreur envoi réponse:', error);
+      toast.error('Impossible d\'envoyer la réponse');
       throw error;
     } finally {
       setLoading(false);

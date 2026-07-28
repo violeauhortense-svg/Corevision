@@ -5,6 +5,24 @@
 import type { Hono } from "npm:hono";
 import * as kv from "./kv_store.tsx";
 import { verifyAuth } from "./auth.tsx";
+import { Client } from "npm:pg";
+
+// Initialize PostgreSQL client
+const databaseUrl = Deno.env.get('DATABASE_URL');
+const postgres = new Client(databaseUrl || '');
+let dbConnected = false;
+
+async function ensureDbConnected() {
+  if (!dbConnected && databaseUrl) {
+    try {
+      await postgres.connect();
+      dbConnected = true;
+      console.log('✅ PostgreSQL connected for Hub Communication');
+    } catch (err) {
+      console.error('❌ PostgreSQL connection failed:', err);
+    }
+  }
+}
 
 export function setupCommunicationsRoutes(app: Hono) {
 
@@ -226,6 +244,459 @@ export function setupCommunicationsRoutes(app: Hono) {
     } catch (err) {
       console.error('❌ [BRIDGE] Erreur sent:', err);
       return c.json({ error: 'Erreur' }, 500);
+    }
+  });
+
+  // ============================================
+  // HUB MAIL ROUTES (PostgreSQL-based)
+  // ============================================
+
+  // GET /api/hub/mails - Load mails for a tab
+  app.get("/api/hub/mails", async (c) => {
+    await ensureDbConnected();
+    if (!dbConnected) return c.json({ error: 'Database not configured' }, 500);
+
+    try {
+      const tab = c.req.query('tab') || 'conversation_client';
+      const limit = parseInt(c.req.query('limit') || '50', 10);
+      const skip = parseInt(c.req.query('skip') || '0', 10);
+
+      // Get mails for tab
+      const mailsResult = await postgres.queryObject(
+        `SELECT * FROM hub_mails WHERE "hubTab" = $1 ORDER BY "sentAt" DESC LIMIT $2 OFFSET $3`,
+        [tab, limit, skip]
+      );
+
+      // Get total count
+      const countResult = await postgres.queryObject(
+        `SELECT COUNT(*) as count FROM hub_mails WHERE "hubTab" = $1`,
+        [tab]
+      );
+
+      // Get stats
+      const statsResult = await postgres.queryObject(
+        `SELECT "hubTab", "traitementStatus", read FROM hub_mails`
+      );
+
+      const stats = {
+        conversation_client: 0,
+        interne_externe: 0,
+        archive: 0,
+        appels: 0,
+        a_traiter: 0,
+        en_cours: 0,
+        a_valider_gl: 0,
+        valide_gl: 0,
+        unread: 0,
+      };
+
+      if (statsResult.rows) {
+        statsResult.rows.forEach((m: any) => {
+          if (m.hubTab === 'conversation_client') stats.conversation_client++;
+          if (m.hubTab === 'interne_externe') stats.interne_externe++;
+          if (m.hubTab === 'archive') stats.archive++;
+          if (m.traitementStatus === 'a_traiter') stats.a_traiter++;
+          if (m.traitementStatus === 'en_cours') stats.en_cours++;
+          if (m.traitementStatus === 'a_valider_gl') stats.a_valider_gl++;
+          if (m.traitementStatus === 'valide_gl') stats.valide_gl++;
+          if (!m.read) stats.unread++;
+        });
+      }
+
+      const total = (countResult.rows?.[0] as any)?.count || 0;
+
+      return c.json({ mails: mailsResult.rows, total, stats });
+    } catch (err: any) {
+      console.error('❌ GET /api/hub/mails error:', err);
+      return c.json({ error: err.message }, 400);
+    }
+  });
+
+  // GET /api/hub/mails/:id - Get specific mail
+  app.get("/api/hub/mails/:id", async (c) => {
+    await ensureDbConnected();
+    if (!dbConnected) return c.json({ error: 'Database not configured' }, 500);
+
+    try {
+      const mailId = c.req.param('id');
+      const result = await postgres.queryObject(
+        `SELECT * FROM hub_mails WHERE id = $1`,
+        [mailId]
+      );
+
+      const mail = result.rows?.[0];
+      if (!mail) return c.json({ error: 'Mail not found' }, 404);
+
+      return c.json(mail);
+    } catch (err: any) {
+      console.error('❌ GET /api/hub/mails/:id error:', err);
+      return c.json({ error: err.message }, 404);
+    }
+  });
+
+  // PUT /api/hub/mails/:id - Update mail
+  app.put("/api/hub/mails/:id", async (c) => {
+    await ensureDbConnected();
+    if (!dbConnected) return c.json({ error: 'Database not configured' }, 500);
+
+    try {
+      const mailId = c.req.param('id');
+      const body = await c.req.json();
+
+      const setClauses: string[] = ['"updatedAt" = NOW()'];
+      const params: any[] = [];
+      let paramCount = 1;
+
+      if (body.traitementStatus) {
+        setClauses.push(`"traitementStatus" = $${paramCount++}`);
+        params.push(body.traitementStatus);
+      }
+      if (body.processingNotes !== undefined) {
+        setClauses.push(`"processingNotes" = $${paramCount++}`);
+        params.push(body.processingNotes);
+      }
+      if (body.clientId !== undefined) {
+        setClauses.push(`"clientId" = $${paramCount++}`);
+        params.push(body.clientId || null);
+      }
+      if (body.clientName !== undefined) {
+        setClauses.push(`"clientName" = $${paramCount++}`);
+        params.push(body.clientName || null);
+      }
+      if (body.clientEmail !== undefined) {
+        setClauses.push(`"clientEmail" = $${paramCount++}`);
+        params.push(body.clientEmail || null);
+      }
+
+      params.push(mailId);
+
+      const query = `UPDATE hub_mails SET ${setClauses.join(', ')} WHERE id = $${paramCount} RETURNING *`;
+      const result = await postgres.queryObject(query, params);
+      const mail = result.rows?.[0];
+
+      if (!mail) return c.json({ error: 'Mail not found' }, 404);
+      return c.json(mail);
+    } catch (err: any) {
+      console.error('❌ PUT /api/hub/mails/:id error:', err);
+      return c.json({ error: err.message }, 400);
+    }
+  });
+
+  // POST /api/hub/mails/:id/notes - Add note
+  app.post("/api/hub/mails/:id/notes", async (c) => {
+    await ensureDbConnected();
+    if (!dbConnected) return c.json({ error: 'Database not configured' }, 500);
+
+    try {
+      const mailId = c.req.param('id');
+      const { content, createdBy, createdByName } = await c.req.json();
+
+      const newNote = {
+        id: `note-${Date.now()}`,
+        content,
+        createdBy,
+        createdByName,
+        createdAt: new Date().toISOString(),
+      };
+
+      // Get existing notes
+      const getResult = await postgres.queryObject(
+        `SELECT notes FROM hub_mails WHERE id = $1`,
+        [mailId]
+      );
+
+      const existingNotes = getResult.rows?.[0]?.notes || [];
+      const updatedNotes = [...existingNotes, newNote];
+
+      await postgres.queryObject(
+        `UPDATE hub_mails SET notes = $1, "updatedAt" = NOW() WHERE id = $2`,
+        [JSON.stringify(updatedNotes), mailId]
+      );
+
+      return c.json(newNote, 201);
+    } catch (err: any) {
+      console.error('❌ POST /api/hub/mails/:id/notes error:', err);
+      return c.json({ error: err.message }, 400);
+    }
+  });
+
+  // DELETE /api/hub/mails/:id/notes/:noteId - Delete note
+  app.delete("/api/hub/mails/:id/notes/:noteId", async (c) => {
+    await ensureDbConnected();
+    if (!dbConnected) return c.json({ error: 'Database not configured' }, 500);
+
+    try {
+      const mailId = c.req.param('id');
+      const noteId = c.req.param('noteId');
+
+      const getResult = await postgres.queryObject(
+        `SELECT notes FROM hub_mails WHERE id = $1`,
+        [mailId]
+      );
+
+      const notes = getResult.rows?.[0]?.notes || [];
+      const updatedNotes = notes.filter((n: any) => n.id !== noteId);
+
+      await postgres.queryObject(
+        `UPDATE hub_mails SET notes = $1, "updatedAt" = NOW() WHERE id = $2`,
+        [JSON.stringify(updatedNotes), mailId]
+      );
+
+      return c.json({ success: true });
+    } catch (err: any) {
+      console.error('❌ DELETE /api/hub/mails/:id/notes/:noteId error:', err);
+      return c.json({ error: err.message }, 400);
+    }
+  });
+
+  // POST /api/hub/mails/:id/reply - Send reply
+  app.post("/api/hub/mails/:id/reply", async (c) => {
+    await ensureDbConnected();
+    if (!dbConnected) return c.json({ error: 'Database not configured' }, 500);
+
+    try {
+      const mailId = c.req.param('id');
+      const { to, subject, body, cc } = await c.req.json();
+
+      // Update original mail status
+      await postgres.queryObject(
+        `UPDATE hub_mails SET "traitementStatus" = 'en_cours', "updatedAt" = NOW() WHERE id = $1`,
+        [mailId]
+      );
+
+      // Create reply mail
+      const replyId = `mail-${Date.now()}`;
+      const now = new Date().toISOString();
+
+      await postgres.queryObject(
+        `INSERT INTO hub_mails (id, "from", "to", subject, body, "sentAt", direction, read, "hubTab", "traitementStatus", attachments, notes, "createdAt", "updatedAt")
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+        [replyId, 'contact@prudentia.fr', to, subject, body, now, 'sent', true, 'conversation_client', 'termine', '[]', '[]', now, now]
+      );
+
+      // Return updated original mail
+      const result = await postgres.queryObject(
+        `SELECT * FROM hub_mails WHERE id = $1`,
+        [mailId]
+      );
+
+      return c.json(result.rows?.[0], 201);
+    } catch (err: any) {
+      console.error('❌ POST /api/hub/mails/:id/reply error:', err);
+      return c.json({ error: err.message }, 400);
+    }
+  });
+
+  // POST /api/hub/mails/search - Search mails
+  app.post("/api/hub/mails/search", async (c) => {
+    await ensureDbConnected();
+    if (!dbConnected) return c.json({ error: 'Database not configured' }, 500);
+
+    try {
+      const { query, tab, limit } = await c.req.json();
+      const searchLimit = limit || 50;
+      const searchQuery = `%${query}%`;
+
+      let sql = `SELECT * FROM hub_mails WHERE (subject ILIKE $1 OR body ILIKE $2 OR "from" ILIKE $3 OR "clientName" ILIKE $4)`;
+      const params: any[] = [searchQuery, searchQuery, searchQuery, searchQuery];
+
+      if (tab) {
+        sql += ` AND "hubTab" = $5`;
+        params.push(tab);
+      }
+
+      sql += ` LIMIT $${params.length + 1}`;
+      params.push(searchLimit);
+
+      const result = await postgres.queryObject(sql, params);
+      return c.json(result.rows);
+    } catch (err: any) {
+      console.error('❌ POST /api/hub/mails/search error:', err);
+      return c.json({ error: err.message }, 400);
+    }
+  });
+
+  // GET /api/hub/stats - Get statistics
+  app.get("/api/hub/stats", async (c) => {
+    await ensureDbConnected();
+    if (!dbConnected) return c.json({ error: 'Database not configured' }, 500);
+
+    try {
+      const result = await postgres.queryObject(
+        `SELECT "hubTab", "traitementStatus", read FROM hub_mails`
+      );
+
+      const stats = {
+        conversation_client: 0,
+        interne_externe: 0,
+        archive: 0,
+        appels: 0,
+        a_traiter: 0,
+        en_cours: 0,
+        a_valider_gl: 0,
+        valide_gl: 0,
+        unread: 0,
+      };
+
+      result.rows?.forEach((m: any) => {
+        if (m.hubTab === 'conversation_client') stats.conversation_client++;
+        if (m.hubTab === 'interne_externe') stats.interne_externe++;
+        if (m.hubTab === 'archive') stats.archive++;
+        if (m.traitementStatus === 'a_traiter') stats.a_traiter++;
+        if (m.traitementStatus === 'en_cours') stats.en_cours++;
+        if (m.traitementStatus === 'a_valider_gl') stats.a_valider_gl++;
+        if (m.traitementStatus === 'valide_gl') stats.valide_gl++;
+        if (!m.read) stats.unread++;
+      });
+
+      return c.json(stats);
+    } catch (err: any) {
+      console.error('❌ GET /api/hub/stats error:', err);
+      return c.json({ error: err.message }, 400);
+    }
+  });
+
+  // HUB CALLS ROUTES
+  // GET /api/hub/calls - Get calls to handle
+  app.get("/api/hub/calls", async (c) => {
+    await ensureDbConnected();
+    if (!dbConnected) return c.json({ error: 'Database not configured' }, 500);
+
+    try {
+      const status = c.req.query('status');
+      const limit = parseInt(c.req.query('limit') || '50', 10);
+      const skip = parseInt(c.req.query('skip') || '0', 10);
+
+      let sql = `SELECT * FROM hub_calls`;
+      const params: any[] = [];
+
+      if (status) {
+        sql += ` WHERE status = $1`;
+        params.push(status);
+      } else {
+        sql += ` WHERE status IN ('pending', 'in_progress')`;
+      }
+
+      // Get count
+      const countSql = sql.replace('SELECT *', 'SELECT COUNT(*) as count');
+      const countResult = await postgres.queryObject(countSql, params);
+      const total = (countResult.rows?.[0] as any)?.count || 0;
+
+      // Get paginated results
+      sql += ` ORDER BY "dueDate" ASC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+      params.push(limit, skip);
+
+      const result = await postgres.queryObject(sql, params);
+      return c.json({ calls: result.rows, total });
+    } catch (err: any) {
+      console.error('❌ GET /api/hub/calls error:', err);
+      return c.json({ error: err.message }, 400);
+    }
+  });
+
+  // GET /api/hub/calls/:id - Get specific call
+  app.get("/api/hub/calls/:id", async (c) => {
+    await ensureDbConnected();
+    if (!dbConnected) return c.json({ error: 'Database not configured' }, 500);
+
+    try {
+      const callId = c.req.param('id');
+      const result = await postgres.queryObject(
+        `SELECT * FROM hub_calls WHERE id = $1`,
+        [callId]
+      );
+
+      const call = result.rows?.[0];
+      if (!call) return c.json({ error: 'Call not found' }, 404);
+
+      return c.json(call);
+    } catch (err: any) {
+      console.error('❌ GET /api/hub/calls/:id error:', err);
+      return c.json({ error: err.message }, 404);
+    }
+  });
+
+  // POST /api/hub/calls - Create new call
+  app.post("/api/hub/calls", async (c) => {
+    await ensureDbConnected();
+    if (!dbConnected) return c.json({ error: 'Database not configured' }, 500);
+
+    try {
+      const body = await c.req.json();
+      const callId = `call-${Date.now()}`;
+      const now = new Date().toISOString();
+
+      await postgres.queryObject(
+        `INSERT INTO hub_calls (id, "clientId", "clientName", "clientPhone", "clientEmail", subject, reason, "dueDate", priority, status, "linkedMailId", notes, "createdAt")
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+        [callId, body.clientId, body.clientName, body.clientPhone, body.clientEmail, body.subject, body.reason, body.dueDate, body.priority || 'normal', body.status || 'pending', body.linkedMailId, body.notes, now]
+      );
+
+      const result = await postgres.queryObject(
+        `SELECT * FROM hub_calls WHERE id = $1`,
+        [callId]
+      );
+
+      return c.json(result.rows?.[0], 201);
+    } catch (err: any) {
+      console.error('❌ POST /api/hub/calls error:', err);
+      return c.json({ error: err.message }, 400);
+    }
+  });
+
+  // PUT /api/hub/calls/:id - Update call
+  app.put("/api/hub/calls/:id", async (c) => {
+    await ensureDbConnected();
+    if (!dbConnected) return c.json({ error: 'Database not configured' }, 500);
+
+    try {
+      const callId = c.req.param('id');
+      const updates = await c.req.json();
+
+      const setClauses: string[] = [];
+      const params: any[] = [];
+      let paramCount = 1;
+
+      Object.entries(updates).forEach(([key, value]) => {
+        setClauses.push(`"${key}" = $${paramCount++}`);
+        params.push(value);
+      });
+
+      params.push(callId);
+
+      const query = `UPDATE hub_calls SET ${setClauses.join(', ')} WHERE id = $${paramCount} RETURNING *`;
+      const result = await postgres.queryObject(query, params);
+
+      return c.json(result.rows?.[0]);
+    } catch (err: any) {
+      console.error('❌ PUT /api/hub/calls/:id error:', err);
+      return c.json({ error: err.message }, 400);
+    }
+  });
+
+  // POST /api/hub/calls/:id/complete - Mark call as completed
+  app.post("/api/hub/calls/:id/complete", async (c) => {
+    await ensureDbConnected();
+    if (!dbConnected) return c.json({ error: 'Database not configured' }, 500);
+
+    try {
+      const callId = c.req.param('id');
+      const now = new Date().toISOString();
+
+      await postgres.queryObject(
+        `UPDATE hub_calls SET status = 'completed', "completedAt" = $1 WHERE id = $2`,
+        [now, callId]
+      );
+
+      const result = await postgres.queryObject(
+        `SELECT * FROM hub_calls WHERE id = $1`,
+        [callId]
+      );
+
+      return c.json(result.rows?.[0]);
+    } catch (err: any) {
+      console.error('❌ POST /api/hub/calls/:id/complete error:', err);
+      return c.json({ error: err.message }, 400);
     }
   });
 

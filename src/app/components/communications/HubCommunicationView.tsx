@@ -11,8 +11,11 @@ import {
   Search,
   Mail,
   AlertCircle,
+  Loader,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { hubCommunicationAPI } from '../../services/hubCommunicationAPI';
+import { MailDetailPanel } from './MailDetailPanel';
 import type { HubMail, CallToHandle, HubTab, HubStats } from '../../types/mail';
 
 export function HubCommunicationView() {
@@ -33,138 +36,78 @@ export function HubCommunicationView() {
     unread: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     loadData();
   }, []);
 
+  useEffect(() => {
+    if (searchTerm) {
+      searchMails();
+    } else {
+      loadMailsByTab(activeTab);
+    }
+  }, [activeTab, searchTerm]);
+
   const loadData = async () => {
     try {
       setLoading(true);
-      // TODO: Remplacer par des vrais appels API
-      // GET /api/hub/mails
-      // GET /api/hub/calls
-
-      const demoMails: HubMail[] = [
-        {
-          id: 'mail-1',
-          messageId: 'outlook-123',
-          threadId: 'thread-chiffrage',
-          from: 'pierre.dubois@co.fr',
-          fromName: 'Pierre Dubois',
-          to: ['contact@prudentia.fr'],
-          subject: 'Demande de chiffrage initial',
-          body: 'Bonjour,\n\nJe souhaite un chiffrage pour la mise en place des structures de hold. Pouvez-vous me proposer un premier devis?\n\nCordialement,\nPierre Dubois',
-          isHtml: false,
-          bodyPreview: 'Je souhaite un chiffrage pour la mise en place...',
-          sentAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-          direction: 'received',
-          read: false,
-          clientId: 'client-123',
-          clientName: 'Pierre Dubois (SARL Dubois)',
-          clientEmail: 'pierre.dubois@co.fr',
-          hubTab: 'conversation_client',
-          traitementStatus: 'a_traiter',
-          attachments: [
-            {
-              id: 'attach-1',
-              name: 'Situation_actuelle.xlsx',
-              size: 1220000,
-              mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-              url: '/downloads/Situation_actuelle.xlsx',
-            },
-          ],
-          notes: [],
-          createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-          importedFrom: 'outlook',
-        },
-        {
-          id: 'mail-2',
-          messageId: 'outlook-124',
-          threadId: 'thread-chiffrage',
-          from: 'contact@prudentia.fr',
-          to: ['pierre.dubois@co.fr'],
-          subject: 'Re: Demande de chiffrage initial',
-          body: 'Bonjour Pierre,\n\nMerci pour votre demande. Nous vous proposons deux approches...\n\nCordialement,\nL\'équipe',
-          isHtml: false,
-          sentAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          direction: 'sent',
-          read: true,
-          clientId: 'client-123',
-          clientName: 'Pierre Dubois (SARL Dubois)',
-          hubTab: 'conversation_client',
-          traitementStatus: 'en_cours',
-          attachments: [],
-          notes: [
-            {
-              id: 'note-1',
-              content: 'Vérifier les conditions MEP avec le GL',
-              createdBy: 'user@prudentia.fr',
-              createdByName: 'Vous',
-              createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-            },
-          ],
-          createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          importedFrom: 'outlook',
-        },
-      ];
-
-      const demoCalls: CallToHandle[] = [
-        {
-          id: 'call-1',
-          clientName: 'Marie Bernard',
-          clientPhone: '+33 6 12 34 56 78',
-          subject: 'Suivi audit patrimonial',
-          reason: 'Validation des recommandations',
-          dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          priority: 'urgent',
-          status: 'pending',
-          createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-        },
-      ];
-
-      setMails(demoMails);
-      setCalls(demoCalls);
-      updateStats(demoMails, demoCalls);
+      await loadMailsByTab('conversation_client');
+      await loadCalls();
     } catch (error) {
-      console.error('Erreur chargement Hub Communication:', error);
-      toast.error('Impossible de charger les communications');
+      console.error('Erreur chargement données:', error);
+      toast.error('Impossible de charger les données');
     } finally {
       setLoading(false);
     }
   };
 
-  const updateStats = (mailsList: HubMail[], callsList: CallToHandle[]) => {
-    setStats({
-      conversation_client: mailsList.filter((m) => m.hubTab === 'conversation_client').length,
-      interne_externe: mailsList.filter((m) => m.hubTab === 'interne_externe').length,
-      archive: mailsList.filter((m) => m.hubTab === 'archive').length,
-      appels: callsList.length,
-      a_traiter: mailsList.filter((m) => m.traitementStatus === 'a_traiter').length,
-      en_cours: mailsList.filter((m) => m.traitementStatus === 'en_cours').length,
-      a_valider_gl: mailsList.filter((m) => m.traitementStatus === 'a_valider_gl').length,
-      valide_gl: mailsList.filter((m) => m.traitementStatus === 'valide_gl').length,
-      unread: mailsList.filter((m) => !m.read).length,
-    });
+  const loadMailsByTab = async (tab: HubTab) => {
+    try {
+      const result = await hubCommunicationAPI.getMailsByTab(tab, 50, 0);
+      setMails(result.mails);
+      setStats(result.stats);
+    } catch (error) {
+      console.error('Erreur chargement mails:', error);
+      toast.error('Impossible de charger les mails');
+    }
   };
 
-  const getFilteredMails = (): HubMail[] => {
-    let filtered = mails.filter((m) => m.hubTab === activeTab);
+  const loadCalls = async () => {
+    try {
+      const result = await hubCommunicationAPI.getCalls(undefined, 50, 0);
+      setCalls(result.calls);
+    } catch (error) {
+      console.error('Erreur chargement appels:', error);
+      toast.error('Impossible de charger les appels');
+    }
+  };
 
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (m) =>
-          m.subject.toLowerCase().includes(term) ||
-          m.body.toLowerCase().includes(term) ||
-          m.from.toLowerCase().includes(term) ||
-          m.clientName?.toLowerCase().includes(term)
-      );
+  const searchMails = async () => {
+    if (!searchTerm.trim()) {
+      loadMailsByTab(activeTab);
+      return;
     }
 
-    return filtered.sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime());
+    try {
+      const results = await hubCommunicationAPI.searchMails(searchTerm, activeTab, 50);
+      setMails(results);
+    } catch (error) {
+      console.error('Erreur recherche:', error);
+      toast.error('Erreur lors de la recherche');
+    }
+  };
+
+  const handleMailUpdate = async (mail: HubMail) => {
+    try {
+      await loadMailsByTab(activeTab);
+      setSelectedMail(mail);
+      toast.success('Mail mis à jour');
+    } catch (error) {
+      console.error('Erreur update:', error);
+      toast.error('Erreur lors de la mise à jour');
+    }
   };
 
   const formatDate = (dateStr: string) => {
@@ -212,20 +155,19 @@ export function HubCommunicationView() {
 
   if (loading) {
     return (
-      <div className="space-y-4 p-8">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Card key={i} className="p-6 animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
-            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-          </Card>
-        ))}
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <Loader className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Chargement du Hub Communication...</p>
+        </div>
       </div>
     );
   }
 
-  const filteredMails = getFilteredMails();
+  const filteredMails = mails;
 
   return (
+    <>
     <div className="flex-1 p-8 overflow-y-auto bg-gradient-to-br from-gray-50 via-white to-blue-50">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
@@ -328,62 +270,54 @@ export function HubCommunicationView() {
                 </div>
               </div>
 
-              {/* Mail List */}
-              <TabsContent value="conversation_client" className="mt-0">
-                {filteredMails.length === 0 ? (
-                  <Card className="p-12 text-center">
-                    <Mail className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucun mail trouvé</h3>
-                    <p className="text-gray-600">
-                      {searchTerm
-                        ? 'Aucun mail ne correspond à votre recherche'
-                        : 'Vous n\'avez aucun mail de client'}
-                    </p>
-                  </Card>
-                ) : (
-                  <div className="grid gap-3">
-                    {filteredMails.map((mail) => (
-                      <Card
-                        key={mail.id}
-                        className="p-4 cursor-pointer hover:shadow-lg transition-all"
-                        onClick={() => setSelectedMail(mail)}
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <p className={`font-semibold truncate ${!mail.read ? 'text-gray-900' : 'text-gray-700'}`}>
-                                {mail.subject}
-                              </p>
-                              <Badge className={getStatusColor(mail.traitementStatus)}>
-                                {getStatusLabel(mail.traitementStatus)}
-                              </Badge>
+              {/* Mail List - For mail tabs */}
+              {['conversation_client', 'interne_externe', 'archive'].map((tabValue) => (
+                <TabsContent key={tabValue} value={tabValue as HubTab} className="mt-0">
+                  {filteredMails.length === 0 ? (
+                    <Card className="p-12 text-center">
+                      <Mail className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucun mail trouvé</h3>
+                      <p className="text-gray-600">
+                        {searchTerm
+                          ? 'Aucun mail ne correspond à votre recherche'
+                          : 'Vous n\'avez aucun mail dans cette catégorie'}
+                      </p>
+                    </Card>
+                  ) : (
+                    <div className="grid gap-3">
+                      {filteredMails.map((mail) => (
+                        <Card
+                          key={mail.id}
+                          className="p-4 cursor-pointer hover:shadow-lg transition-all"
+                          onClick={() => setSelectedMail(mail)}
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <p className={`font-semibold truncate ${!mail.read ? 'text-gray-900' : 'text-gray-700'}`}>
+                                  {mail.subject}
+                                </p>
+                                <Badge className={getStatusColor(mail.traitementStatus)}>
+                                  {getStatusLabel(mail.traitementStatus)}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-gray-600">{mail.from}</p>
+                              <p className="text-sm text-gray-500 truncate">{mail.body.substring(0, 80)}</p>
                             </div>
-                            <p className="text-sm text-gray-600">{mail.from}</p>
-                            <p className="text-sm text-gray-500 truncate">
-                              {mail.bodyPreview || mail.body.substring(0, 80)}
-                            </p>
+
+                            <div className="text-right flex-shrink-0">
+                              <p className="text-xs text-gray-500 whitespace-nowrap">{formatDate(mail.sentAt)}</p>
+                              {!mail.read && <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>}
+                            </div>
                           </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+              ))}
 
-                          <div className="text-right flex-shrink-0">
-                            <p className="text-xs text-gray-500 whitespace-nowrap">{formatDate(mail.sentAt)}</p>
-                            {!mail.read && <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>}
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-
-              {/* Autres onglets à compléter */}
-              <TabsContent value="interne_externe" className="mt-0">
-                <p className="text-gray-600">Section à compléter</p>
-              </TabsContent>
-
-              <TabsContent value="archive" className="mt-0">
-                <p className="text-gray-600">Section à compléter</p>
-              </TabsContent>
-
+              {/* Calls Tab */}
               <TabsContent value="appels" className="mt-0">
                 {calls.length === 0 ? (
                   <Card className="p-12 text-center">
@@ -423,5 +357,14 @@ export function HubCommunicationView() {
         </Card>
       </div>
     </div>
+
+    {selectedMail && (
+      <MailDetailPanel
+        mail={selectedMail}
+        onClose={() => setSelectedMail(null)}
+        onUpdate={handleMailUpdate}
+      />
+    )}
+    </>
   );
 }

@@ -17,9 +17,14 @@ services:
       - key: JWT_SECRET
         value: "change-me-in-production-min-32-chars!!"
       - key: API_BASE_URL
-        value: "https://corevision-fnid.onrender.com"
+        value: "https://corevision-api.onrender.com"
       - key: NODE_ENV
         value: "production"
+      # Supabase Configuration (REQUIRED for Hub Communication)
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
 
     # Health check
     healthCheckPath: /make-server-cac859af/health

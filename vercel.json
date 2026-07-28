@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/hub/:path*",
+      "destination": "https://corevision-api.onrender.com/api/hub/:path*"
+    },
+    {
       "source": "/api/:path*",
       "destination": "https://corevision-api.onrender.com/make-server-cac859af/:path*"
     }
