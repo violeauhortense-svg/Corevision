@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Card } from '../ui/card';
-import { Mail, Send, Inbox, MessageSquare, FileText } from 'lucide-react';
+import { Mail, Send, Inbox, MessageSquare, FileText, CheckSquare } from 'lucide-react';
 import { MailTemplatesTab } from './MailTemplatesTab';
 import { MailConversationsTab } from './MailConversationsTab';
 import { MailInboxTab } from './MailInboxTab';
 import { MailInternalTab } from './MailInternalTab';
+import { MailManagementTab } from './MailManagementTab';
 import { MailStatsHeader } from './MailStatsHeader';
 import type { MailStats } from '../../types/mail';
 
@@ -70,9 +71,16 @@ export function MailsView() {
 
         {/* Tabs */}
         <Card className="mt-6 shadow-xl border-gray-200">
-          <Tabs defaultValue="conversations" className="w-full">
+          <Tabs defaultValue="management" className="w-full">
             <div className="border-b border-gray-200 bg-gray-50 px-6">
               <TabsList className="bg-transparent border-none gap-2">
+                <TabsTrigger
+                  value="management"
+                  className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
+                >
+                  <CheckSquare className="w-4 h-4 mr-2" />
+                  Gestion des Mails
+                </TabsTrigger>
                 <TabsTrigger
                   value="conversations"
                   className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
@@ -110,6 +118,10 @@ export function MailsView() {
             </div>
 
             <div className="p-6">
+              <TabsContent value="management" className="mt-0">
+                <MailManagementTab onStatsUpdate={loadStats} />
+              </TabsContent>
+
               <TabsContent value="conversations" className="mt-0">
                 <MailConversationsTab onStatsUpdate={loadStats} />
               </TabsContent>

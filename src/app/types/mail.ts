@@ -37,6 +37,8 @@ export interface MailConversation {
 
 export type ConversationStatus = 'ouvert' | 'en_attente' | 'resolu' | 'archive';
 
+export type MailProcessingStatus = 'a_traiter' | 'en_cours' | 'a_valider_gl' | 'valide_gl' | 'termine';
+
 export interface MailMessage {
   id: string;
   conversationId: string;
@@ -53,6 +55,11 @@ export interface MailMessage {
   linkedClientId?: string;
   linkedTaskId?: string;
   linkedTemplateId?: string;
+  processingStatus?: MailProcessingStatus;
+  processingNotes?: string;
+  processingAssignedTo?: string;
+  processedAt?: string;
+  lastModifiedAt?: string;
 }
 
 export interface MailAttachment {
