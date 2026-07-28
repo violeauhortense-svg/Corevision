@@ -9,17 +9,19 @@ import { Client } from "npm:pg";
 
 // Initialize PostgreSQL client
 const databaseUrl = Deno.env.get('DATABASE_URL');
-const postgres = new Client(databaseUrl || '');
+let postgres: Client | null = null;
 let dbConnected = false;
 
 async function ensureDbConnected() {
   if (!dbConnected && databaseUrl) {
     try {
+      postgres = new Client(databaseUrl);
       await postgres.connect();
       dbConnected = true;
       console.log('✅ PostgreSQL connected for Hub Communication');
     } catch (err) {
       console.error('❌ PostgreSQL connection failed:', err);
+      postgres = null;
     }
   }
 }
