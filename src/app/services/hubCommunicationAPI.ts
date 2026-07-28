@@ -1,7 +1,7 @@
-import { apiBaseUrl } from '../utils/api/info';
 import type { HubMail, CallToHandle, HubTab, HubStats, MailTraitementStatus } from '../types/mail';
 
-const API_URL = `${apiBaseUrl}/hub`;
+// Hub Communication uses relative URLs (routed by Vercel to Render)
+const API_URL = '/api/hub';
 
 /**
  * Client API pour le Hub Communication
