@@ -4,6 +4,8 @@ import { logger } from "npm:hono/logger";
 import * as kv from "./kv_store.tsx";
 import { supabaseAdminCompat, UPLOADS_DIR } from "./storage.tsx";
 import { verifyAuth, createUser, signInUser } from "./auth.tsx";
+// Initialize Hub Communication tables
+import "./init_hub_tables.tsx";
 // Feature routes
 import { setupBilanRoutes } from "./bilan_routes.tsx";
 import { setupClientRoutes } from "./client_routes.tsx";
