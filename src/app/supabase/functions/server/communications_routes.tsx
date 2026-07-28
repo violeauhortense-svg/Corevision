@@ -248,6 +248,102 @@ export function setupCommunicationsRoutes(app: Hono) {
   });
 
   // ============================================
+  // MIGRATION ENDPOINT - Import old KV mails to PostgreSQL
+  // ============================================
+
+  app.post("/api/hub/migrate", async (c) => {
+    await ensureDbConnected();
+    if (!dbConnected) return c.json({ error: 'Database not configured' }, 500);
+
+    try {
+      console.log('🔄 Starting migration from KV store to PostgreSQL...');
+
+      // Get all mails from KV store
+      const allComms = await kv.getByPrefix('communication:');
+      console.log(`📧 Found ${allComms.length} mails in KV store`);
+
+      let migratedCount = 0;
+      let errors = 0;
+
+      // Convert and insert each mail
+      for (const comm of allComms) {
+        try {
+          // Convert KV communication to HubMail format
+          const hubMail = {
+            id: comm.id || `mail-${Date.now()}-${Math.random()}`,
+            messageId: comm.id,
+            threadId: null,
+            from: comm.from || 'unknown@unknown.com',
+            fromName: comm.from?.split('@')[0] || 'Unknown',
+            to: Array.isArray(comm.to) ? comm.to : [comm.to || 'unknown@unknown.com'],
+            subject: comm.subject || '(No subject)',
+            body: comm.body || '',
+            isHtml: false,
+            bodyPreview: (comm.body || '').substring(0, 100),
+            sentAt: comm.receivedAt || new Date().toISOString(),
+            direction: 'received' as const,
+            read: comm.status !== 'à_traiter',
+            clientId: comm.clientId || null,
+            clientName: comm.clientName || null,
+            clientEmail: comm.clientEmail || comm.from || null,
+            hubTab: comm.category === 'conversation_client' ? 'conversation_client' :
+                   comm.category === 'archive' ? 'archive' :
+                   'interne_externe',
+            traitementStatus: comm.status === 'à_traiter' ? 'a_traiter' :
+                            comm.status === 'traité' ? 'termine' :
+                            'a_traiter',
+            attachments: comm.attachments || [],
+            notes: comm.notes ?
+              [{ id: `note-${Date.now()}`, content: comm.notes, createdBy: 'system', createdByName: 'System', createdAt: new Date().toISOString() }]
+              : [],
+            createdAt: comm.receivedAt || new Date().toISOString(),
+            updatedAt: comm.updatedAt || new Date().toISOString(),
+            importedFrom: 'outlook'
+          };
+
+          // Check if mail already exists
+          const existing = await postgres.queryObject(
+            `SELECT id FROM hub_mails WHERE id = $1`,
+            [hubMail.id]
+          );
+
+          if (existing.rows?.length === 0) {
+            // Insert mail
+            await postgres.queryObject(
+              `INSERT INTO hub_mails (id, "messageId", "threadId", "from", "fromName", "to", subject, body, "isHtml", "bodyPreview", "sentAt", direction, read, "clientId", "clientName", "clientEmail", "hubTab", "traitementStatus", attachments, notes, "createdAt", "updatedAt", "importedFrom")
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)`,
+              [
+                hubMail.id, hubMail.messageId, hubMail.threadId, hubMail.from, hubMail.fromName,
+                hubMail.to, hubMail.subject, hubMail.body, hubMail.isHtml, hubMail.bodyPreview,
+                hubMail.sentAt, hubMail.direction, hubMail.read, hubMail.clientId, hubMail.clientName,
+                hubMail.clientEmail, hubMail.hubTab, hubMail.traitementStatus,
+                JSON.stringify(hubMail.attachments), JSON.stringify(hubMail.notes),
+                hubMail.createdAt, hubMail.updatedAt, hubMail.importedFrom
+              ]
+            );
+            migratedCount++;
+          }
+        } catch (err) {
+          console.error(`❌ Error migrating mail ${comm.id}:`, err);
+          errors++;
+        }
+      }
+
+      console.log(`✅ Migration complete: ${migratedCount} mails imported, ${errors} errors`);
+
+      return c.json({
+        success: true,
+        migratedCount,
+        errors,
+        message: `Migrated ${migratedCount} mails from KV store to PostgreSQL`
+      });
+    } catch (err: any) {
+      console.error('❌ Migration error:', err);
+      return c.json({ error: err.message }, 500);
+    }
+  });
+
+  // ============================================
   // HUB MAIL ROUTES (PostgreSQL-based)
   // ============================================
 
