@@ -4,7 +4,6 @@
  */
 
 import { apiBaseUrl } from '../utils/api/info';
-import { supabase } from '../utils/api/client';
 
 interface CoreVisionOrder {
   orderId: string;
@@ -20,12 +19,11 @@ interface CoreVisionOrder {
   adminNotes?: string;
 }
 
-async function getAuthToken(): Promise<string> {
-  const { data: { session } } = await supabase.auth.getSession();
-  return session?.access_token ?? '';
+function getAuthToken(): string {
+  return localStorage.getItem('auth_token') ?? '';
 }
 
-const BASE = `${apiBaseUrl}/make-server-cac859af`;
+const BASE = `${apiBaseUrl}/api`;
 
 export const corevisionAPI = {
   /**

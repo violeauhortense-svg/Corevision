@@ -5,10 +5,11 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { pb } from './pocketbase_client.tsx';
+import { initializePocketBase } from './init-pocketbase.tsx';
 
 // Import routes
 import hubMailsRoutes from './hub_mails_routes_pb.tsx';
-import authRoutes from './auth_routes_pb.tsx';
+import authRoutes from './auth_routes_pb_fixed.tsx';
 import clientsRoutes from './clients_routes_pb.tsx';
 import tasksRoutes from './tasks_routes_pb.tsx';
 
@@ -26,6 +27,10 @@ app.use(
     credentials: true,
   })
 );
+
+// ─── Initialize PocketBase ────────────────────────────────────────────
+const pbUrl = Deno.env.get('POCKETBASE_URL') || 'http://localhost:8090';
+await initializePocketBase(pbUrl);
 
 // ─── Health Check ─────────────────────────────────────────────────────
 app.get('/health', (c) => {

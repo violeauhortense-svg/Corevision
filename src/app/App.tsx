@@ -90,7 +90,7 @@ export default function App() {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    const token = getAuthToken();
+    const token = localStorage.getItem('auth_token');
     const userStr = localStorage.getItem('auth_user');
 
     if (token && userStr) {
