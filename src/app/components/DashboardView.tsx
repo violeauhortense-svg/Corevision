@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { MetricsCard } from './MetricsCard';
 import { KanbanBoard } from './KanbanBoard';
 import { apiBaseUrl } from '../utils/api/info';
-import { getAuthToken } from '../utils/supabase/client';
+import { supabase } from '../utils/api/client';
 
 // Force rebuild - Cache bust
 
@@ -25,7 +25,8 @@ export function DashboardView({ session }: DashboardViewProps) {
 
   const loadMetrics = async () => {
     try {
-      const token = session?.access_token || getAuthToken();
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      const token = session?.access_token || currentSession?.access_token || '';
       const response = await fetch(`${apiBaseUrl}/dashboard/metrics`, {
         headers: {
           'Authorization': `Bearer ${token}`

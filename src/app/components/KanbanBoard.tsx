@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { apiBaseUrl } from '../utils/api/info';
-import { getAuthToken } from '../utils/supabase/client';
+import { supabase } from '../utils/api/client';
 
 const STATUSES = [
   'Prospect',
@@ -54,9 +54,11 @@ export const KanbanBoard: React.FC<{ token?: string; onClientClick: (clientId: s
 
   const loadKanban = async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const authToken = token || session?.access_token || '';
       const response = await fetch(`${apiBaseUrl}/dashboard/kanban`, {
         headers: {
-          'Authorization': `Bearer ${token || getAuthToken()}`
+          'Authorization': `Bearer ${authToken}`
         }
       });
 

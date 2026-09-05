@@ -17,7 +17,7 @@ import { BaremeUpdateNotification } from "./components/BaremeUpdateNotification"
 import { cleanupObsoleteTasks } from './utils/cleanupObsoleteTasks';
 import { clearAllTestData } from './utils/dataCleanup';
 import { auditAndCleanupOrphanedData } from './utils/cleanupClientData';
-import { getAuthToken } from './utils/supabase/client';
+import { supabase } from './utils/api/client';
 
 export type ViewType =
   | "dashboard"

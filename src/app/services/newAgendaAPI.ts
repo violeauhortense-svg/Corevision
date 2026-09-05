@@ -1,6 +1,13 @@
 import { apiBaseUrl } from '../utils/api/info';
+import { supabase } from '../utils/api/client';
 
 const API_URL = apiBaseUrl;
+
+// Helper to get auth token from session (not localStorage)
+async function getAuthToken(): Promise<string> {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.access_token || '';
+}
 
 export const agendaAPI = {
   // ============= ÉVÉNEMENTS =============
@@ -21,7 +28,7 @@ export const agendaAPI = {
     meetingType?: string;
     source?: string;
   }) {
-    const token = localStorage.getItem('auth_token');
+    const token = await getAuthToken();
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -50,7 +57,7 @@ export const agendaAPI = {
    * Interaction 4 : Récupérer les événements du mois (RDVs + Tâches + Actions)
    */
   async getMonthEvents(year: number, month: number) {
-    const token = localStorage.getItem('auth_token');
+    const token = await getAuthToken();
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -63,7 +70,7 @@ export const agendaAPI = {
    * Interaction 4 : Synchroniser avec Outlook
    */
   async syncWithOutlook(eventId: string, outlookEventId: string) {
-    const token = localStorage.getItem('auth_token');
+    const token = await getAuthToken();
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -80,7 +87,7 @@ export const agendaAPI = {
    * Interaction 5 : Répondre à une invitation RDV
    */
   async respondToInvitation(eventId: string, response: 'accepted' | 'declined' | 'tentative') {
-    const token = localStorage.getItem('auth_token');
+    const token = await getAuthToken();
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -97,7 +104,7 @@ export const agendaAPI = {
    * Récupérer un événement
    */
   async getEvent(eventId: string) {
-    const token = localStorage.getItem('auth_token');
+    const token = await getAuthToken();
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
