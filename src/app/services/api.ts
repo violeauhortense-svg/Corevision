@@ -1,5 +1,4 @@
 import { apiBaseUrl, publicAnonKey } from '../utils/api/info';
-import { supabase } from '../utils/api/client';
 
 const BASE_URL = apiBaseUrl;
 
