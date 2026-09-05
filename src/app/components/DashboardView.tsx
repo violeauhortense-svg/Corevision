@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { MetricsCard } from './MetricsCard';
 import { KanbanBoard } from './KanbanBoard';
 import { apiBaseUrl } from '../utils/api/info';
-import { supabase } from '../utils/api/client';
 
 // Force rebuild - Cache bust
 
@@ -25,8 +24,7 @@ export function DashboardView({ session }: DashboardViewProps) {
 
   const loadMetrics = async () => {
     try {
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      const token = session?.access_token || currentSession?.access_token || '';
+      const token = localStorage.getItem('auth_token') || '';
       const response = await fetch(`${apiBaseUrl}/dashboard/metrics`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -112,7 +110,7 @@ export function DashboardView({ session }: DashboardViewProps) {
       <div className="mt-8">
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Pipeline par Statut</h2>
         <KanbanBoard
-          token={session?.access_token || getAuthToken()}
+          token={localStorage.getItem('auth_token') || ''}
           onClientClick={(clientId) => console.log('Click client:', clientId)}
         />
       </div>
