@@ -1,120 +1,69 @@
-# 🚀 CoreVision - Quick Start Guide
+# 🚀 QUICK START - CoreVision
 
-## ✨ Qu'est-ce qui a changé?
-
-Votre application utilise réellement:
-- **Frontend:** React 18 sur Vercel
-- **Backend:** Hono/Deno sur Render  
-- **Database:** PostgreSQL sur Render
-
-**Mais le code parlait de Supabase partout.** ❌
-
-Nous venons d'aligner le code avec la réalité. ✅
-
----
-
-## 📁 Nouvelle structure
+## Architecture Finale
 
 ```
-src/app/
-├── backend/           ← Serveur Render (était: supabase/functions/server)
-├── components/        ← Interface React (200+ fichiers)
-├── services/          ← API clients
-├── utils/api/         ← Config API (était: utils/supabase)
-└── ...
+🌐 Vercel Cloud          https://corevision-main.vercel.app
+    ↓
+🔐 Tailscale Tunnel      pc1.tailscale:3000
+    ↓
+💻 PC Local Backend      Deno/Hono (port 3000)
+    ↓
+🗄️  PocketBase DB        localhost:8090
 ```
 
 ---
 
-## 🚀 Démarrage
+## ⚡ Démarrage Rapide
 
-### Frontend
+### 1️⃣  Lancer le Backend (à faire une fois)
 ```bash
-npm install
-npm run dev
-# http://localhost:5173
+cd C:\Users\conta\OneDrive\Documents\Claude\Projects\Corevision-main
+deno run -A src/app/backend/index.ts
 ```
 
-### Push vers production
+### 2️⃣  Ouvrir l'App
+```
+https://corevision-main.vercel.app
+```
+
+### 3️⃣  Se Connecter
+- **Email :** violeau.hortense@gmail.com
+- **Password :** Hvguillote78
+
+---
+
+## 🧪 Tester l'App
+
+### Mode 1 : Test Automatique (RECOMMANDÉ)
 ```bash
-git push main
-# Frontend → auto-deploys to Vercel
-# Backend → auto-deploys to Render
+bash test-app.sh
+```
+
+### Mode 2 : Vérifications Manuels
+```bash
+# Backend health
+curl -s http://localhost:3000/health
+
+# Login test
+curl -X POST http://localhost:3000/api/auth/signin \
+  -H "Content-Type: application/json" \
+  -d '{"email":"violeau.hortense@gmail.com","password":"Hvguillote78"}'
 ```
 
 ---
 
-## 📚 Documentation
+## ✅ Checklist Finale
 
-| Document | Contenu |
-|----------|---------|
-| **ARCHITECTURE.md** | 🏗️ Architecture complète, flux données, déploiement |
-| **README.md** | 📖 Overview projet, technologies, installation |
-| **src/app/backend/README.md** | 🚀 Guide serveur Deno/Hono |
-| **src/app/utils/api/README.md** | 🔗 API client utilities |
-| **REFACTORING_SUMMARY.md** | 📋 Ce qui a changé exactement |
-
----
-
-## 🔐 Authentification
-
-JWT custom stocké dans localStorage:
-```typescript
-import { supabase } from '@/utils/api/client';
-
-const { data, error } = await supabase.auth.signInWithPassword({
-  email: 'user@example.com',
-  password: 'password'
-});
-```
+- [ ] Backend fonctionne
+- [ ] Dashboard charge
+- [ ] 6 cartes visibles (RDV, Tâches, CA, Mails, Dossiers)
+- [ ] Kanban visible avec 8 colonnes
+- [ ] Console sans erreurs (F12)
+- [ ] Logout fonctionne
 
 ---
 
-## 🌐 API calls
+## 🎉 C'EST PRÊT !
 
-Via Vercel rewrite → Render backend:
-```typescript
-import { apiBaseUrl } from '@/utils/api/info';
-
-const res = await fetch(`${apiBaseUrl}/clients/123`);
-```
-
----
-
-## 🗄️ Database
-
-PostgreSQL sur Render:
-```
-Connexion: DATABASE_URL (env var)
-Table: kv_store (key TEXT, value JSONB)
-```
-
----
-
-## ✅ Checklist avant production
-
-- [ ] Lire ARCHITECTURE.md
-- [ ] Tester login
-- [ ] Tester audit complet
-- [ ] Vérifier logs Render
-- [ ] Check Core Web Vitals Vercel
-- [ ] Vérifier env vars Render
-
----
-
-## 🐛 Troubleshooting
-
-### "Cannot connect to API"
-→ Vérifier `src/app/utils/api/info.tsx` - URL correcte?
-
-### "JWT verification failed"
-→ Vérifier JWT_SECRET en Render dashboard
-
-### "Database connection timeout"
-→ Vérifier DATABASE_URL format
-
----
-
-**Besoin d'aide?** Lire ARCHITECTURE.md ou les README.md des dossiers.
-
-Happy coding! 🎉
+Tu peux maintenant utiliser CoreVision !
