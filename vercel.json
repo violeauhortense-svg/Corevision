@@ -1,12 +1,10 @@
 {
-  "rewrites": [
-    {
-      "source": "/api/hub/:path*",
-      "destination": "https://corevision-api.onrender.com/api/hub/:path*"
-    },
-    {
-      "source": "/api/:path*",
-      "destination": "https://corevision-api.onrender.com/make-server-cac859af/:path*"
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "env": {
+    "VITE_API_BASE_URL": {
+      "default": "http://pc1.tailscale:3000"
     }
-  ]
+  }
 }
