@@ -12,6 +12,7 @@ import hubMailsRoutes from './hub_mails_routes_pb.tsx';
 import authRoutes from './auth_routes_pb_fixed.tsx';
 import clientsRoutes from './clients_routes_pb.tsx';
 import tasksRoutes from './tasks_routes_pb.tsx';
+import dashboardRoutes from './dashboard_routes_pb.tsx';
 
 const app = new Hono();
 const PORT = Deno.env.get('PORT') || '3000';
@@ -46,6 +47,7 @@ app.route('/api/auth', authRoutes);
 app.route('/api/hub', hubMailsRoutes);
 app.route('/api/clients', clientsRoutes);
 app.route('/api/tasks', tasksRoutes);
+app.route('/api/dashboard', dashboardRoutes);
 
 // ─── 404 Handler ──────────────────────────────────────────────────────
 app.notFound((c) => {
@@ -74,6 +76,8 @@ console.log(`
 ║  - GET  /api/hub/mails                                     ║
 ║  - POST /api/clients                                       ║
 ║  - GET  /api/tasks                                         ║
+║  - GET  /api/dashboard/metrics                             ║
+║  - GET  /api/dashboard/kanban                              ║
 ╚════════════════════════════════════════════════════════════╝
 `);
 
