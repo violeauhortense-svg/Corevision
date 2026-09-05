@@ -43,7 +43,7 @@ interface CachedData<T> {
 
 const CACHE_VERSION = '1.0.0';
 const CACHE_TTL = 2 * 60 * 1000; // 2 minutes (plus court car données admin)
-const API_BASE_URL = `${apiBaseUrl}/make-server-cac859af`;
+const API_BASE_URL = `${apiBaseUrl}/api`;
 
 // ============================================
 // CACHE MANAGER

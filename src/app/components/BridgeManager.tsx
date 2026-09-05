@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Play, RefreshCw, CheckCircle2, AlertCircle, Terminal, Settings, Download } from 'lucide-react';
 import { Card } from './ui/card';
 import { toast } from 'sonner';
+import { apiBaseUrl } from '../utils/api/info';
 
 interface BridgeStatus {
   status: 'ok' | 'error';
@@ -11,8 +12,6 @@ interface BridgeStatus {
   sync_interval?: number;
   last_sync?: string;
 }
-
-const BACKEND_URL = "https://corevision-api.onrender.com/make-server-cac859af";
 
 export function BridgeManager() {
   const [bridgeStatus, setBridgeStatus] = useState<BridgeStatus | null>(null);
@@ -29,7 +28,7 @@ export function BridgeManager() {
 
   const checkBridgeStatus = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/bridge/status/${deviceId}`);
+      const response = await fetch(`${apiBaseUrl}/bridge/status/${deviceId}`);
       if (response.ok) {
         const data = await response.json();
         setBridgeStatus(data);
@@ -96,7 +95,7 @@ export function BridgeManager() {
 
   const downloadInstaller = async () => {
     try {
-      const response = await fetch('https://corevision-api.onrender.com/make-server-cac859af/download/install-bridge-service');
+      const response = await fetch(`${apiBaseUrl}/download/install-bridge-service`);
       if (!response.ok) throw new Error('Téléchargement échoué');
 
       const blob = await response.blob();
@@ -116,7 +115,7 @@ export function BridgeManager() {
 
   const downloadLauncher = async () => {
     try {
-      const response = await fetch('https://corevision-api.onrender.com/make-server-cac859af/download/bridge-launcher');
+      const response = await fetch(`${apiBaseUrl}/download/bridge-launcher`);
       if (!response.ok) throw new Error('Téléchargement échoué');
 
       const blob = await response.blob();

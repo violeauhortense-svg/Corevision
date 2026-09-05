@@ -87,7 +87,7 @@ export interface RapportIncoherences {
 // CONFIGURATION
 // ============================================
 
-const API_BASE_URL = `${apiBaseUrl}/make-server-cac859af`;
+const API_BASE_URL = `${apiBaseUrl}/api`;
 
 // ============================================
 // SERVICE

@@ -7,7 +7,7 @@
 import { apiBaseUrl, publicAnonKey } from '../utils/api/info';
 import type { Client } from './clientService';
 
-const API_BASE_URL = `${apiBaseUrl}/make-server-cac859af`;
+const API_BASE_URL = `${apiBaseUrl}/api`;
 
 interface MigrationResult {
   success: boolean;

@@ -1,8 +1,10 @@
+import { apiBaseUrl } from './api/info';
+
 // Fonction pour récupérer le statut d'un bilan patrimonial
 export async function getBilanStatus(clientId: string, accessToken: string) {
   try {
     const response = await fetch(
-      `https://gejcydsstilihnefbaqk.supabase.co/functions/v1/make-server-cac859af/bilan-signatures/all`,
+      `${apiBaseUrl}/bilan-signatures/all`,
       {
         headers: {
           'Authorization': `Bearer ${accessToken}`,

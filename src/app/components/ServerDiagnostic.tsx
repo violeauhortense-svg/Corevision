@@ -13,7 +13,7 @@ export function ServerDiagnostic() {
     config?: { success: boolean; error?: string };
   }>({});
 
-  const BASE_URL = `${apiBaseUrl}/make-server-cac859af`;
+  const BASE_URL = `${apiBaseUrl}/api`;
 
   const runDiagnostic = async () => {
     setTesting(true);

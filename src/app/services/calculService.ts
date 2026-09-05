@@ -142,7 +142,7 @@ export interface Probleme {
 // CONFIGURATION
 // ============================================
 
-const API_BASE_URL = `${apiBaseUrl}/make-server-cac859af`;
+const API_BASE_URL = `${apiBaseUrl}/api`;
 const CACHE_TTL = 30 * 1000; // 30 secondes (calculs rapides)
 
 // ============================================
