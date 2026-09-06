@@ -75,7 +75,7 @@ export function TasksTab({ clientId }: TasksTabProps) {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const response = await fetch(`${apiBaseUrl}/clients/${clientId}/tache/${taskId}`, {
+      const response = await fetch(`${apiBaseUrl}/api/clients/${clientId}/tache/${taskId}`, {
         method: 'PATCH',
         headers,
         body: JSON.stringify({ completed, status: completed ? 'validated' : 'pending' }),
@@ -127,7 +127,7 @@ export function TasksTab({ clientId }: TasksTabProps) {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const response = await fetch(`${apiBaseUrl}/clients/${clientId}/tache/${taskId}`, {
+      const response = await fetch(`${apiBaseUrl}/api/clients/${clientId}/tache/${taskId}`, {
         method: 'PATCH',
         headers,
         body: JSON.stringify({ completed: false, status: 'na' }),
@@ -163,7 +163,7 @@ export function TasksTab({ clientId }: TasksTabProps) {
     if (!client) return;
 
     try {
-      const url = `${apiBaseUrl}/clients/${clientId}/progress`;
+      const url = `${apiBaseUrl}/api/clients/${clientId}/progress`;
 
       const response = await fetch(url, {
         method: 'POST',
