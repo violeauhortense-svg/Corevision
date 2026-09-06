@@ -42,6 +42,14 @@ app.get('/health', (c) => {
   });
 });
 
+// ─── Test Endpoint (no PocketBase dependency) ───────────────────────
+app.get('/test', (c) => {
+  return c.json({
+    message: 'Backend is reachable from Vercel',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // ─── Routes ───────────────────────────────────────────────────────────
 app.route('/api/auth', authRoutes);
 app.route('/api/hub', hubMailsRoutes);
