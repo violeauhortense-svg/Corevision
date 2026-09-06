@@ -1,10 +1,5 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "framework": "vite",
-  "env": {
-    "VITE_API_BASE_URL": {
-      "default": "http://pc1.tailscale:3000"
-    }
-  }
+  "framework": "vite"
 }
