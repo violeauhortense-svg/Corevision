@@ -4,7 +4,6 @@ import { LABFTQuestionnaire } from './LABFTQuestionnaire';
 import { clientAPI } from '../services/api';
 import { toast } from 'sonner';
 import type { Task } from '../types/client';
-import { supabase } from '../utils/api/client';
 
 interface LABFTTaskProps {
   task: Task;
@@ -59,7 +58,6 @@ export function LABFTTask({ task, clientId, onToggle, onUpdate }: LABFTTaskProps
 
       // 3. Enregistrer dans les documents réglementaires
       // 🔥 CORRECTION: Utiliser la session Supabase
-      const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id || 'default';
       const clientDetailKey = `client_detail_${userId}_${clientId}`;
       const stored = localStorage.getItem(clientDetailKey);

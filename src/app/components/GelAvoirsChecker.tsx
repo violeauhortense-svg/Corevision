@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Shield, AlertTriangle, CheckCircle2, Loader2, X, FileText, Download, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiBaseUrl, publicAnonKey } from '../utils/api/info';
-import { supabase } from '../utils/api/client';
 
 interface GelAvoirsCheckerProps {
   clientId: string;
@@ -224,7 +223,6 @@ Généré par CRM Patrimoine - ${new Date().toLocaleString('fr-FR')}
     // Sauvegarder dans les documents réglementaires
     try {
       // ?? CORRECTION: Utiliser la session Supabase
-      const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id || 'default';
       const clientDetailKey = `client_detail_${userId}_${clientId}`;
       console.log('?? Clé localStorage utilisée:', clientDetailKey);

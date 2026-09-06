@@ -3,7 +3,6 @@ import { CheckCircle2, FileText, AlertCircle, TrendingUp, ShoppingCart, Package,
 import { CoreVisionWorkflow } from './CoreVisionWorkflow';
 import { toast } from 'sonner';
 import type { Task } from '../types/client';
-import { supabase } from '../utils/api/client';
 
 interface AuditPatrimonialTaskProps {
   task: Task;
@@ -29,7 +28,6 @@ export function AuditPatrimonialTask({ task, clientId, onToggle, onUpdate }: Aud
     const loadData = async () => {
       try {
         // 🔥 CORRECTION: Utiliser la session Supabase
-        const { data: { session } } = await supabase.auth.getSession();
         const userId = session?.user?.id || 'default';
         const clientDetailKey = `client_detail_${userId}_${clientId}`;
         const storedData = localStorage.getItem(clientDetailKey);

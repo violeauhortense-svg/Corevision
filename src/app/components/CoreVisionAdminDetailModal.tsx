@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { X, Eye, Save, Plus, Trash2, Send, CheckCircle2, Euro, User, Users, Baby, Heart, FileText, Sparkles, TrendingUp, AlertTriangle, Target, BarChart3, Loader, Copy, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiBaseUrl, publicAnonKey } from '../utils/api/info';
-import { supabase } from '../utils/api/client';
 import { clientAPI } from '../services/api';
 import { useIncoherences } from '../hooks/useIncoherences';
 import { IncoherencesPanel } from './IncoherencesPanel';
@@ -118,7 +117,6 @@ export function CoreVisionAdminDetailModal({ order, onClose, onUpdate }: CoreVis
       if (success) {
         // ?? 2. NOUVEAU : Sauvegarder aussi dans la fiche client
         try {
-          const { data: { session } } = await supabase.auth.getSession();
           const userId = session?.user?.id || 'default';
           
           const clientDetailKey = `client_detail_${userId}_${order.clientId}`;
@@ -652,7 +650,6 @@ Fiscalité : ${strat.fiscalite}
       console.log('?? Mise à jour du client:', clientId);
       
       // ?? Récupérer le vrai userId depuis la session Supabase
-      const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id || 'default';
       console.log('?? User ID récupéré:', userId);
       

@@ -1,4 +1,3 @@
-import { supabase } from '../backend/supabase';
 import type { CallToHandle } from '../types/mail';
 
 export const hubCallsService = {
@@ -8,7 +7,6 @@ export const hubCallsService = {
    * Charger les appels à traiter
    */
   async getCallsToHandle(status?: 'pending' | 'in_progress' | 'completed', limit = 50, skip = 0) {
-    let query = supabase.from('hub_calls').select('*', { count: 'exact' });
 
     if (status) {
       query = query.eq('status', status);
@@ -52,7 +50,6 @@ export const hubCallsService = {
       createdAt: new Date().toISOString(),
     };
 
-    const { error } = await supabase.from('hub_calls').insert([newCall]);
 
     if (error) throw new Error(`Erreur création appel: ${error.message}`);
 

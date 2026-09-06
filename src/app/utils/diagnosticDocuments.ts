@@ -3,14 +3,12 @@
  * Utilisez ces fonctions dans la console du navigateur pour déboguer
  */
 
-import { supabase } from './api/client';
 
 // 🔍 Afficher tous les documents d'un client
 export async function debugClientDocuments(clientId: string) {
   console.log('Client ID:', clientId);
   
   // 🔥 Essayer de récupérer l'userId depuis la session Supabase
-  const { data: { session } } = await supabase.auth.getSession();
   const userId = session?.user?.id || 'default';
   console.log('User ID:', userId);
   
@@ -97,7 +95,6 @@ export function listClientKeys() {
 
 // 🔧 Obtenir l'userId actuel
 export async function getCurrentUserId() {
-  const { data: { session } } = await supabase.auth.getSession();
   const userId = session?.user?.id || 'default';
   return userId;
 }
@@ -105,7 +102,6 @@ export async function getCurrentUserId() {
 // 🔍 Vérifier la cohérence des données pour un client
 export async function verifyClientDataConsistency(clientId: string) {
   
-  const { data: { session } } = await supabase.auth.getSession();
   const userId = session?.user?.id || 'default';
   
   console.log(`Client ID: ${clientId}`);

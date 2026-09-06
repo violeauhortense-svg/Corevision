@@ -2,7 +2,6 @@
 // HELPERS POUR LA GÉNÉRATION ET GESTION DER
 // ============================================
 
-import { supabase } from './api/client';
 import { clientAPI } from '../services/api';
 import { apiBaseUrl, publicAnonKey } from './api/info';
 
@@ -11,7 +10,6 @@ import { apiBaseUrl, publicAnonKey } from './api/info';
  */
 export async function getUserId(): Promise<string> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
     if (session?.user?.id) {
       return session.user.id;
     }

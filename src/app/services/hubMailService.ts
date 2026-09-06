@@ -1,4 +1,3 @@
-import { supabase } from '../backend/supabase';
 import type { HubMail, MailTraitementStatus, MailNote, HubStats, HubTab } from '../types/mail';
 
 export const hubMailService = {
@@ -181,7 +180,6 @@ export const hubMailService = {
    * Récupérer les statistiques
    */
   async getStats(): Promise<HubStats> {
-    const { data, error } = await supabase.from('hub_mails').select('hubTab, traitementStatus, read', {
       count: 'exact',
     });
 
@@ -254,7 +252,6 @@ export const hubMailService = {
       replies: originalMail.replies,
     };
 
-    const { error } = await supabase.from('hub_mails').insert([newMail]);
 
     if (error) throw new Error(`Erreur envoi réponse: ${error.message}`);
 

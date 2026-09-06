@@ -1,11 +1,9 @@
 import { apiBaseUrl } from '../utils/api/info';
-import { supabase } from '../utils/api/client';
 
 const API_URL = apiBaseUrl;
 
 // Helper to get auth token from session (not localStorage)
 async function getAuthToken(): Promise<string> {
-  const { data: { session } } = await supabase.auth.getSession();
   return session?.access_token || '';
 }
 
