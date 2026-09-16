@@ -31,7 +31,7 @@ export function LoginView({ onLogin }: LoginViewProps) {
     }
 
     try {
-      const response = await fetch(`${apiBaseUrl}/auth/signin`, {
+      const response = await fetch(`${apiBaseUrl}/api/auth/signin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -39,7 +39,7 @@ export function LoginView({ onLogin }: LoginViewProps) {
 
       const result = await response.json();
 
-      if (!response.ok) {
+      if (!response.ok || !result.success) {
         const errorMessage = result.error || 'Erreur de connexion';
         setError(errorMessage);
         toast.error(errorMessage);
@@ -47,7 +47,7 @@ export function LoginView({ onLogin }: LoginViewProps) {
         return;
       }
 
-      const token = result.access_token || result.session?.access_token;
+      const token = result.token;
       const user = result.user;
 
       if (token && user) {
@@ -85,22 +85,19 @@ export function LoginView({ onLogin }: LoginViewProps) {
 
     try {
 
-      const response = await fetch(`${apiBaseUrl}/auth/signup`, {
+      const response = await fetch(`${apiBaseUrl}/api/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email,
           password,
-          nom,
-          prenom,
-          specialite: 'Gestion de patrimoine',
-          certifications: 'CIF, AMF',
+          name: `${prenom} ${nom}`.trim(),
         }),
       });
 
       const result = await response.json();
 
-      if (!response.ok) {
+      if (!response.ok || !result.success) {
         console.error('❌ Erreur signup:', result);
         const errorMessage = result.error || 'Erreur de création de compte';
         setError(errorMessage);
@@ -111,28 +108,8 @@ export function LoginView({ onLogin }: LoginViewProps) {
 
       toast.success('Compte créé avec succès ! Bienvenue !');
 
-      // Se connecter automatiquement
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      const signInResponse = await fetch(`${apiBaseUrl}/auth/signin`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const signInResult = await signInResponse.json();
-
-      if (!signInResponse.ok) {
-        console.error('❌ Erreur signin automatique:', signInResult);
-        setMode('signin');
-        toast.info('Veuillez vous connecter avec vos identifiants');
-        setPassword('');
-        setLoading(false);
-        return;
-      }
-
-      const token = signInResult.access_token || signInResult.session?.access_token;
-      const user = signInResult.user;
+      const token = result.token;
+      const user = result.user;
 
       if (token && user) {
         localStorage.setItem('auth_token', token);

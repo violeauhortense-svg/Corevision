@@ -3,7 +3,7 @@
 
 import { apiBaseUrl } from './info';
 
-const BASE_AUTH = `${apiBaseUrl}/auth`;
+const BASE_AUTH = `${apiBaseUrl}/api/auth`;
 
 export async function signIn(email: string, password: string) {
   const response = await fetch(`${BASE_AUTH}/signin`, {
