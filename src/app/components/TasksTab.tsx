@@ -54,8 +54,13 @@ export function TasksTab({ clientId }: TasksTabProps) {
 
   const getBlockState = (status: string) => {
     const clientStatus = client?.statusOuvert || client?.status || 'Prospect';
-    if (!clientStatus) return 'A_VENIR';
-    const currentIdx = STATUSES.indexOf(clientStatus);
+    // Case-insensitive match: client.status is sometimes stored lowercase
+    // ("prospect") while STATUSES uses the display casing ("Prospect").
+    // STATUSES.indexOf() with a mismatched case used to return -1, which
+    // made every block compare against a nonexistent index and permanently
+    // show "À venir" - nothing was ever active.
+    let currentIdx = STATUSES.findIndex((s) => s.toLowerCase() === clientStatus.toLowerCase());
+    if (currentIdx === -1) currentIdx = 0; // Unrecognized status: default to the first block
     const statusIdx = STATUSES.indexOf(status);
     if (statusIdx < currentIdx) return 'COMPLETE';
     if (statusIdx === currentIdx) return 'EN_COURS';
@@ -66,49 +71,85 @@ export function TasksTab({ clientId }: TasksTabProps) {
     setExpandedBlocks((prev) => ({ ...prev, [status]: !prev[status] }));
   };
 
-  const handleTaskUpdate = async (status: string, taskId: string, completed: boolean) => {
+  // Builds the updated tasks array for a single status block (aligned by
+  // index to TASK_DEFINITIONS, like the render below reads it), applies
+  // the requested change to one task, and persists everything (including
+  // auto-progression to the next status when the block is now complete)
+  // through the generic client PATCH endpoint - the /tache/:taskId and
+  // /progress endpoints this used to call were never implemented on the
+  // backend, so every "Valider"/"N.A." click was silently failing before.
+  const applyTaskChange = async (
+    status: string,
+    taskId: string,
+    changes: { completed: boolean; taskStatus: 'validated' | 'pending' | 'na' }
+  ) => {
     if (!client) return;
     setValidating(true);
 
     try {
+      const taskDefs = getTaskDefs(status);
+      const existingTasks: any[] = client.taches?.[status] || [];
+
+      const updatedTasksForStatus = taskDefs.map((def, idx) => {
+        const existing = existingTasks[idx] || {
+          id: def.id,
+          title: def.title,
+          description: def.description,
+          completed: false,
+          status: 'pending' as const,
+        };
+        if (def.id === taskId) {
+          return { ...existing, id: def.id, title: def.title, description: def.description, completed: changes.completed, status: changes.taskStatus };
+        }
+        return existing;
+      });
+
+      const newTaches = { ...(client.taches || {}), [status]: updatedTasksForStatus };
+
+      const allTasksDone = updatedTasksForStatus.every((t) => t.completed || t.status === 'na');
+      const clientCurrentStatus = client.statusOuvert || client.status || 'Prospect';
+      const currentIdxNormalized = STATUSES.findIndex((s) => s.toLowerCase() === clientCurrentStatus.toLowerCase());
+      const isCurrentBlock = STATUSES.findIndex((s) => s.toLowerCase() === status.toLowerCase()) === currentIdxNormalized;
+      const nextStatus = currentIdxNormalized >= 0 ? STATUSES[currentIdxNormalized + 1] : undefined;
+      const willProgress = isCurrentBlock && allTasksDone && !!nextStatus;
+
+      const payload: Record<string, any> = { taches: newTaches };
+      if (willProgress) {
+        payload.statusOuvert = nextStatus;
+      }
+
       const token = localStorage.getItem('auth_token');
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const response = await fetch(`${apiBaseUrl}/api/clients/${clientId}/tache/${taskId}`, {
+      const response = await fetch(`${apiBaseUrl}/api/clients/${clientId}`, {
         method: 'PATCH',
         headers,
-        body: JSON.stringify({ completed, status: completed ? 'validated' : 'pending' }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
         const result = await response.json();
-        console.log('✅ [handleTaskUpdate] Full response:', JSON.stringify(result, null, 2));
-        console.log('   client:', result.client ? 'present' : 'MISSING');
-        console.log('   statusProgressed:', result.statusProgressed);
+        const updatedClient = result.data ?? result.client ?? result;
+        setClient((prev) => (prev ? { ...prev, ...updatedClient, taches: newTaches, statusOuvert: payload.statusOuvert ?? prev.statusOuvert } : updatedClient));
 
-        // ✨ USE SERVER DATA DIRECTLY
-        if (result.client) {
-          console.log('✅ [handleTaskUpdate] Updating client state');
-          setClient(result.client);
-        } else {
-          console.error('❌ [handleTaskUpdate] No client in response!');
+        toast.success(
+          changes.taskStatus === 'na'
+            ? '⊘ Tâche marquée N.A.'
+            : changes.completed
+              ? '✅ Tâche validée'
+              : '↩️ Validation annulée'
+        );
+
+        if (willProgress) {
+          toast.success(`🎉 Passage au statut suivant : ${nextStatus} !`);
         }
 
-        toast.success(completed ? '✅ Tâche validée' : '↩️ Validation annulée');
-
-        // ✨ IF AUTO-PROGRESSION HAPPENED
-        if (result.statusProgressed) {
-          toast.success(`🎉 Passage au statut suivant !`);
-        }
-
-        // ✨ CLOSE MODAL
-        console.log('🔄 [handleTaskUpdate] Closing modal');
         setActiveModal(null);
       } else {
         const errorText = await response.text();
-        console.error('❌ [handleTaskUpdate] Response not OK:', response.status, errorText);
-        toast.error('Erreur validation tâche');
+        console.error('❌ [applyTaskChange] Response not OK:', response.status, errorText);
+        toast.error('Erreur lors de la mise à jour de la tâche');
       }
     } catch (err) {
       console.error('Error:', err);
@@ -116,74 +157,41 @@ export function TasksTab({ clientId }: TasksTabProps) {
     } finally {
       setValidating(false);
     }
+  };
+
+  const handleTaskUpdate = async (status: string, taskId: string, completed: boolean) => {
+    await applyTaskChange(status, taskId, { completed, taskStatus: completed ? 'validated' : 'pending' });
   };
 
   const handleTaskNA = async (status: string, taskId: string) => {
-    if (!client) return;
-    setValidating(true);
-
-    try {
-      const token = localStorage.getItem('auth_token');
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-
-      const response = await fetch(`${apiBaseUrl}/api/clients/${clientId}/tache/${taskId}`, {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify({ completed: false, status: 'na' }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-
-        // ✨ USE SERVER DATA DIRECTLY
-        setClient(result.client);
-
-        toast.success('⊘ Tâche marquée N.A.');
-
-        // ✨ IF AUTO-PROGRESSION HAPPENED
-        if (result.statusProgressed) {
-          toast.success(`🎉 Passage au statut suivant !`);
-        }
-
-        // ✨ CLOSE MODAL
-        setActiveModal(null);
-      } else {
-        toast.error('Erreur marquage N.A.');
-      }
-    } catch (err) {
-      console.error('Error:', err);
-      toast.error('Erreur réseau');
-    } finally {
-      setValidating(false);
-    }
+    await applyTaskChange(status, taskId, { completed: false, taskStatus: 'na' });
   };
 
+  // Manual progression (used by the "Passer au statut suivant" button, for
+  // when the advisor wants to move on without completing every task). Uses
+  // the same generic client PATCH endpoint as applyTaskChange - the
+  // dedicated /progress route this used to call was never implemented.
   const handleProgressToNextStatus = async (currentStatus: string, nextStatus: string) => {
     if (!client) return;
 
     try {
-      const url = `${apiBaseUrl}/api/clients/${clientId}/progress`;
+      const token = localStorage.getItem('auth_token');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const response = await fetch(url, {
-        method: 'POST',
-        credentials: 'include',  // ✨ Send cookies automatically (sessionId)
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ fromStatus: currentStatus, toStatus: nextStatus }),
+      const response = await fetch(`${apiBaseUrl}/api/clients/${clientId}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ statusOuvert: nextStatus }),
       });
 
       if (response.ok) {
-        const result = await response.json();
         toast.success(`✅ Passage à "${nextStatus}" complété`);
-
-        // UPDATE STATE IMMEDIATELY
-        setClient(result.client);
+        setClient((prev) => (prev ? { ...prev, statusOuvert: nextStatus } : prev));
       } else {
-        const error = await response.json();
+        const error = await response.json().catch(() => ({}));
         console.error('❌ Erreur progression:', error);
-        toast.error(`Erreur: ${error.error}`);
+        toast.error(`Erreur: ${error.error || 'échec de la progression'}`);
       }
     } catch (err) {
       console.error('❌ Erreur progression:', err);
@@ -450,12 +458,21 @@ export function TasksTab({ clientId }: TasksTabProps) {
                     const remainingTasks = tasks.filter((t: any) => !t.completed && t.status !== 'na').length;
 
 
+                    const nextStatusIdx = STATUSES.indexOf(status) + 1;
+                    const nextStatus = nextStatusIdx < STATUSES.length ? STATUSES[nextStatusIdx] : undefined;
+
                     return (
-                      <div className="text-sm">
-                        {allTasksCompleted && (
+                      <div className="text-sm space-y-2">
+                        {allTasksCompleted && nextStatus && (
                           <div className="bg-green-50 border border-green-300 p-3 rounded">
-                            <p className="text-green-700 font-bold">✅ Toutes les tâches sont validées!</p>
-                            <p className="text-green-600 text-xs mt-1">⏳ Passage automatique au statut suivant en cours...</p>
+                            <p className="text-green-700 font-bold">✅ Toutes les tâches sont validées !</p>
+                            <p className="text-green-600 text-xs mt-1">Le statut suivant ("{nextStatus}") a été déverrouillé automatiquement.</p>
+                          </div>
+                        )}
+                        {allTasksCompleted && !nextStatus && (
+                          <div className="bg-green-50 border border-green-300 p-3 rounded">
+                            <p className="text-green-700 font-bold">✅ Toutes les tâches sont validées !</p>
+                            <p className="text-green-600 text-xs mt-1">C'est le dernier statut du pipeline.</p>
                           </div>
                         )}
                         {!allTasksCompleted && (
@@ -463,6 +480,14 @@ export function TasksTab({ clientId }: TasksTabProps) {
                             <p className="text-orange-700 font-bold">⏳ {remainingTasks} tâche(s) en attente</p>
                             <p className="text-orange-600 text-xs mt-1">Validez ou marquez N/A pour continuer</p>
                           </div>
+                        )}
+                        {nextStatus && (
+                          <button
+                            onClick={() => handleProgressToNextStatus(status, nextStatus)}
+                            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+                          >
+                            ➡️ Passer manuellement à "{nextStatus}"
+                          </button>
                         )}
                       </div>
                     );
