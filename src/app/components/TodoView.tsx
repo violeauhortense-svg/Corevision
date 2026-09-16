@@ -3,7 +3,7 @@ import { Calendar, Flag, Check, Circle } from 'lucide-react';
 import { toast } from 'sonner';
 import { ClientTaskItem } from './ClientTaskItem';
 import { ClientService } from '../services/ClientService';
-import { getAllOpenClientTasks, applyClientTaskChange, type OpenClientTask } from '../services/clientTasksService';
+import { getAllOpenClientTasks, applyClientTaskChange, updateClientTaskDeadline, type OpenClientTask } from '../services/clientTasksService';
 
 interface TodoViewProps {
   session: any;
@@ -33,17 +33,28 @@ export function TodoView({ session, onNavigateToClient }: TodoViewProps) {
     }
   };
 
-  const toggleTask = async (taskId: string) => {
-    const task = tasks.find((t) => t.id === taskId);
+  // Task ids (p1, d1, ...) are unique per pipeline definition, not per
+  // client - two clients on the same status share the same ids. The
+  // composite key below (encoded into the id ClientTaskItem passes back)
+  // is what disambiguates which client's task is actually being toggled.
+  const decomposeTaskKey = (compositeId: string): { clientId: string; taskId: string } | null => {
+    const [clientId, taskId] = compositeId.split('::');
+    return clientId && taskId ? { clientId, taskId } : null;
+  };
+
+  const toggleTask = async (compositeId: string) => {
+    const decoded = decomposeTaskKey(compositeId);
+    if (!decoded) return;
+    const task = tasks.find((t) => t.clientId === decoded.clientId && t.id === decoded.taskId);
     if (!task) return;
 
-    const { client } = await ClientService.getClientById(task.clientId, true);
+    const { client } = await ClientService.getClientById(decoded.clientId, true);
     if (!client) {
       toast.error('Client introuvable');
       return;
     }
 
-    const result = await applyClientTaskChange(client, taskId, { completed: true, taskStatus: 'validated' });
+    const result = await applyClientTaskChange(client, decoded.taskId, { completed: true, taskStatus: 'validated' });
     if (result.success) {
       toast.success('✅ Tâche marquée comme complétée');
       if (result.statusProgressed) {
@@ -52,6 +63,28 @@ export function TodoView({ session, onNavigateToClient }: TodoViewProps) {
       await loadTasks();
     } else {
       toast.error('❌ Erreur lors de la completion de la tâche');
+    }
+  };
+
+  const updateDeadline = async (compositeId: string, deadline: string) => {
+    const decoded = decomposeTaskKey(compositeId);
+    if (!decoded) return;
+
+    const { client } = await ClientService.getClientById(decoded.clientId, true);
+    if (!client) {
+      toast.error('Client introuvable');
+      return;
+    }
+
+    const success = await updateClientTaskDeadline(client, decoded.taskId, deadline);
+    if (success) {
+      // Optimistic, in-place update - the task must stay visible here,
+      // it's not completed or N.A. just because it now has a deadline.
+      setTasks((prev) =>
+        prev.map((t) => (t.clientId === decoded.clientId && t.id === decoded.taskId ? { ...t, deadline } : t))
+      );
+    } else {
+      toast.error('❌ Erreur lors de la mise à jour de l\'échéance');
     }
   };
 
@@ -105,9 +138,9 @@ export function TodoView({ session, onNavigateToClient }: TodoViewProps) {
   const renderTask = (task: OpenClientTask) => (
     <ClientTaskItem
       key={`${task.clientId}-${task.id}`}
-      task={task as any}
+      task={{ ...task, id: `${task.clientId}::${task.id}`, createdAt: task.deadline || new Date().toISOString() } as any}
       onToggle={toggleTask}
-      onUpdateDeadline={() => {}}
+      onUpdateDeadline={updateDeadline}
       showClientName={true}
       onNavigateToClient={onNavigateToClient}
     />

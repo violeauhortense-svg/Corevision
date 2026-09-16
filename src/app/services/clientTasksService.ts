@@ -152,3 +152,47 @@ export async function applyClientTaskChange(
   ClientService.clearCache();
   return { success: true, statusProgressed: willProgress ? nextStatus : undefined };
 }
+
+/**
+ * Sets (or clears) a task's deadline without touching its completed/N.A.
+ * state - used by the deadline date picker in TodoView/TasksTab. The task
+ * stays visible in the "all" list regardless of its deadline; only
+ * completing or N.A.-ing it removes it from the open-tasks view.
+ */
+export async function updateClientTaskDeadline(client: Client, taskId: string, deadline: string): Promise<boolean> {
+  const status = findStatusForTaskId(taskId);
+  if (!status) return false;
+
+  const taskDefs = getTaskDefs(status);
+  const existingTasks: any[] = client.taches?.[status] || [];
+
+  const updatedTasksForStatus = taskDefs.map((def) => {
+    const existing = existingTasks.find((t) => t.id === def.id) || existingTasks[taskDefs.indexOf(def)] || {
+      id: def.id,
+      title: def.title,
+      description: def.description,
+      completed: false,
+      status: 'pending' as const,
+    };
+    if (def.id === taskId) {
+      return { ...existing, id: def.id, title: def.title, description: def.description, deadline };
+    }
+    return existing;
+  });
+
+  const newTaches = { ...(client.taches || {}), [status]: updatedTasksForStatus };
+
+  const token = localStorage.getItem('auth_token');
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const response = await fetch(`${apiBaseUrl}/api/clients/${client.id}`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify({ taches: newTaches }),
+  });
+
+  if (!response.ok) return false;
+  ClientService.clearCache();
+  return true;
+}
