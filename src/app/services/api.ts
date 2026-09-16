@@ -1,6 +1,6 @@
 import { apiBaseUrl, publicAnonKey } from '../utils/api/info';
 
-const BASE_URL = apiBaseUrl;
+const BASE_URL = `${apiBaseUrl}/api`;
 
 
 // ─── Session ───────────────────────────────────────────────────────────────
@@ -86,7 +86,7 @@ export const clientAPI = {
       throw new Error(err.error || `Erreur serveur ${response.status}`);
     }
     const data = await response.json();
-    const client = data.client ?? data;
+    const client = data.data ?? data.client ?? data;
     return clientToFrontend(client);
   },
 
@@ -98,7 +98,7 @@ export const clientAPI = {
       throw new Error(err.error || `Erreur serveur ${response.status}`);
     }
     const data = await response.json();
-    const clients = data.clients ?? data ?? [];
+    const clients = data.data ?? data.clients ?? data ?? [];
     return Array.isArray(clients) ? clients.map(clientToFrontend) : [];
   },
 
@@ -115,14 +115,14 @@ export const clientAPI = {
       throw new Error(err.error || 'Échec de la création du client');
     }
     const data = await response.json();
-    const client = data.client ?? data;
+    const client = data.data ?? data.client ?? data;
     return clientToFrontend(client);
   },
 
   async update(clientId: string, clientData: any) {
     const payload = clientToServer(clientData);
     const response = await fetch(`${BASE_URL}/clients/${clientId}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: await getAuthHeaders(),
       body: JSON.stringify(payload),
       credentials: 'include',
@@ -132,7 +132,7 @@ export const clientAPI = {
       throw new Error(err.error || 'Échec de la mise à jour du client');
     }
     const data = await response.json();
-    const client = data.client ?? data;
+    const client = data.data ?? data.client ?? data;
     return clientToFrontend(client);
   },
 
