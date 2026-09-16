@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { clientAPI } from '../../services/api';
 import { toast } from 'sonner';
 import { BarChart3, X, Check, AlertCircle } from 'lucide-react';
-import { useAutoSave } from '../../hooks/useAutoSave';
 import { useClientData, initializeRequiredDocuments } from '../../hooks/useClientData';
 
 // Import des composants modulaires
@@ -30,9 +29,12 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
   const [session, setSession] = useState<any>(null);
   const [showPreAnalyseModal, setShowPreAnalyseModal] = useState(false);
 
-  // Client data management hook - consolidates 17 useState + 13 handlers
+  // Client data management hook - consolidates 17 useState + 13 handlers.
+  // Every handleUpdateXxx call persists immediately to the server (no
+  // debounce), so saveStatus reflects a real, in-flight or completed save.
   const {
     state,
+    saveStatus,
     handleUpdateClient,
     handleUpdateFamily,
     handleUpdateRevenus,
@@ -49,20 +51,6 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
     loadFromAPI,
     saveToAPI,
   } = useClientData(clientId);
-
-  // Auto-save hook
-  const { saveStatus, hasUnsavedChanges, triggerAutoSave } = useAutoSave({
-    delay: 3000,
-    onSave: saveToAPI,
-    onError: (error) => {
-      console.error('❌ Erreur auto-sauvegarde:', error);
-    },
-  });
-
-  // Trigger auto-save after each state change (debounced by useAutoSave)
-  useEffect(() => {
-    triggerAutoSave();
-  }, [state, triggerAutoSave]);
 
   // Memoized calculations for patrimoine to avoid recalculation on every render
   const patrimoineImmobilierNet = useMemo(() => {
@@ -223,12 +211,6 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
             <>
               <AlertCircle className="w-4 h-4 text-red-600" />
               <span className="text-sm text-red-600 font-medium">❌ Erreur sauvegarde</span>
-            </>
-          )}
-          {saveStatus === 'idle' && hasUnsavedChanges && (
-            <>
-              <div className="w-2 h-2 bg-orange-500 rounded-full" />
-              <span className="text-sm text-orange-600 font-medium">⏳ Modifications</span>
             </>
           )}
         </div>

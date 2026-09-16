@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { clientAPI, taskAPI } from '../services/api';
 import { addTimestamps, markNewItems } from '../utils/traceability';
@@ -99,9 +99,45 @@ export function initializeRequiredDocuments(
   return result;
 }
 
+// Build the full API payload from a ClientDataState snapshot
+function buildFullData(clientId: string, state: ClientDataState) {
+  return {
+    id: clientId,
+    name: state.clientData.name,
+    firstName: state.clientData.firstName,
+    lastName: state.clientData.lastName,
+    email: state.clientData.email,
+    phone: state.clientData.phone,
+    address: state.clientData.address,
+    birthDate: state.clientData.birthDate,
+    status: state.clientData.status,
+    patrimoine: state.clientData.patrimoine,
+    majorationPartFiscale: state.clientData.majorationPartFiscale,
+    auditCoreVision: state.clientData.auditCoreVision,
+    presentationCoreVision: state.clientData.presentationCoreVision,
+    preconisationsCoreVision: state.clientData.preconisationsCoreVision,
+    maritalStatus: state.familyInfo.maritalStatus,
+    regimeMatrimonial: state.familyInfo.regimeMatrimonial,
+    spouse: state.familyInfo.spouse,
+    children: state.familyInfo.children,
+    revenus: state.revenus,
+    imposition: state.imposition,
+    patrimoineData: {
+      actifsFinanciers: state.actifsFinanciers,
+      immobilier: state.immobilier,
+      passifs: state.passifs,
+      entreprises: state.entreprises,
+    },
+    objectifs: state.objectifs,
+    auditRecommendations: state.auditRecommendations,
+    documents: state.documents,
+    regulatoryDocs: state.regulatoryDocs,
+    contactsProfessionnels: state.contactsProfessionnels,
+  };
+}
+
 export function useClientData(clientId: string, onSave?: (data: ClientDataState) => Promise<void>) {
-  // Consolidated state object to avoid stale closure issues
-  const [state, setState] = useState<ClientDataState>({
+  const initialState: ClientDataState = {
     clientData: {
       id: clientId,
       name: '',
@@ -155,11 +191,20 @@ export function useClientData(clientId: string, onSave?: (data: ClientDataState)
     regulatoryDocs: [],
     contactsProfessionnels: [],
     tasks: [],
-  });
+  };
+
+  const [state, setState] = useState<ClientDataState>(initialState);
+
+  // Always-current snapshot of state, so each handler can build the full
+  // save payload synchronously without waiting for a React re-render
+  // (which is what made the previous debounced-effect approach lose data
+  // when the user navigated away right after saving).
+  const stateRef = useRef<ClientDataState>(initialState);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
   // Helper: Calculate total patrimoine
-  const calcPatrimoine = useCallback((state: ClientDataState) => {
-    const { actifsFinanciers, immobilier, passifs, entreprises } = state;
+  const calcPatrimoine = useCallback((s: ClientDataState) => {
+    const { actifsFinanciers, immobilier, passifs, entreprises } = s;
     const totalEntreprises = entreprises.reduce((sum, e) => {
       const a = (e.actifs?.immobilisationsCorporelles || 0)
               + (e.actifs?.immobilisationsIncorporelles || 0)
@@ -178,215 +223,177 @@ export function useClientData(clientId: string, onSave?: (data: ClientDataState)
          + totalEntreprises;
   }, []);
 
-  // Consolidated update handler using setState callback to avoid stale closure
   const updateState = useCallback((updates: Partial<ClientDataState>) => {
-    setState(prev => ({ ...prev, ...updates }));
+    setState(prev => {
+      const next = { ...prev, ...updates };
+      stateRef.current = next;
+      return next;
+    });
   }, []);
 
-  // Client handlers
-  const handleUpdateClient = useCallback(async (updates: Partial<ClientData>) => {
+  // Immediately persists a full state snapshot to the server. Called by
+  // every handler right after computing the new state, so a save is never
+  // deferred behind a timer the user could navigate past.
+  const persistState = useCallback(async (newState: ClientDataState): Promise<boolean> => {
+    setSaveStatus('saving');
     try {
-      setState(prev => {
-        const updatedData = { ...prev.clientData, ...updates };
-        const errors = validateClientData(updatedData);
-        if (errors.length > 0) {
-          const errorMessages = errors.map(e => e.message).join(', ');
-          toast.error(`Validation: ${errorMessages}`);
-          return prev;
-        }
-        if (updates.status && updates.status !== prev.clientData.status) {
-          Events.clientStatusChanged(clientId, prev.clientData.status, updates.status);
-        }
-        return { ...prev, clientData: updatedData };
-      });
+      const fullData = buildFullData(clientId, newState);
+      await clientAPI.update(clientId, fullData);
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+      if (onSave) {
+        await onSave(newState);
+      }
+      return true;
     } catch (error) {
-      console.error('Erreur lors de la mise à jour:', error);
-      toast.error('Erreur lors de la mise à jour');
+      console.error('❌ Erreur sauvegarde:', error);
+      setSaveStatus('error');
+      toast.error('Erreur lors de la sauvegarde - vos modifications n\'ont pas été enregistrées');
+      return false;
     }
-  }, [clientId]);
+  }, [clientId, onSave]);
+
+  // Client handlers — each one updates local state for immediate UI
+  // feedback AND persists the full record right away.
+  const handleUpdateClient = useCallback(async (updates: Partial<ClientData>) => {
+    const updatedData = { ...stateRef.current.clientData, ...updates };
+    const errors = validateClientData(updatedData);
+    if (errors.length > 0) {
+      const errorMessages = errors.map(e => e.message).join(', ');
+      toast.error(`Validation: ${errorMessages}`);
+      return false;
+    }
+    if (updates.status && updates.status !== stateRef.current.clientData.status) {
+      Events.clientStatusChanged(clientId, stateRef.current.clientData.status, updates.status);
+    }
+    const newState = { ...stateRef.current, clientData: updatedData };
+    setState(newState);
+    stateRef.current = newState;
+    return persistState(newState);
+  }, [clientId, persistState]);
 
   const handleUpdateFamily = useCallback(async (family: FamilyInfo) => {
-    try {
-      setState(prev => {
-        const familyWithTimestamp = addTimestamps(family, !prev.familyInfo.maritalStatus);
-        Events.clientUpdated(clientId, prev.clientData.name, 'Composition du foyer');
-        return { ...prev, familyInfo: familyWithTimestamp };
-      });
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour du foyer:', error);
-      toast.error('Erreur lors de la mise à jour du foyer');
-    }
-  }, [clientId]);
+    const familyWithTimestamp = addTimestamps(family, !stateRef.current.familyInfo.maritalStatus);
+    const newState = { ...stateRef.current, familyInfo: familyWithTimestamp };
+    setState(newState);
+    stateRef.current = newState;
+    Events.clientUpdated(clientId, newState.clientData.name, 'Composition du foyer');
+    return persistState(newState);
+  }, [clientId, persistState]);
 
   const handleUpdateRevenus = useCallback(async (newRevenus: RevenuItem[]) => {
-    try {
-      setState(prev => {
-        const revenusWithTimestamps = markNewItems(newRevenus, prev.revenus);
-        Events.revenusUpdated(clientId);
-        return { ...prev, revenus: revenusWithTimestamps };
-      });
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour des revenus:', error);
-      toast.error('Erreur lors de la mise à jour des revenus');
-    }
-  }, [clientId]);
+    const revenusWithTimestamps = markNewItems(newRevenus, stateRef.current.revenus);
+    const newState = { ...stateRef.current, revenus: revenusWithTimestamps };
+    setState(newState);
+    stateRef.current = newState;
+    Events.revenusUpdated(clientId);
+    return persistState(newState);
+  }, [clientId, persistState]);
 
   const handleUpdateImposition = useCallback(async (newImposition: ImpositionData, revenusToSave?: RevenuItem[]) => {
-    try {
-      setState(prev => {
-        const errors = validateFinancialData(newImposition);
-        if (errors.length > 0) {
-          const errorMessages = errors.map(e => e.message).join(', ');
-          toast.error(`Validation: ${errorMessages}`);
-          return prev;
-        }
-        const revenusASauvegarder = revenusToSave || prev.revenus;
-        Events.impositionUpdated(clientId);
-        return { ...prev, imposition: newImposition, revenus: revenusASauvegarder };
-      });
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour des données d'imposition:", error);
-      toast.error("Erreur lors de la mise à jour des données d'imposition");
+    const errors = validateFinancialData(newImposition);
+    if (errors.length > 0) {
+      const errorMessages = errors.map(e => e.message).join(', ');
+      toast.error(`Validation: ${errorMessages}`);
+      return false;
     }
-  }, [clientId]);
+    const revenusASauvegarder = revenusToSave || stateRef.current.revenus;
+    const newState = { ...stateRef.current, imposition: newImposition, revenus: revenusASauvegarder };
+    setState(newState);
+    stateRef.current = newState;
+    Events.impositionUpdated(clientId);
+    return persistState(newState);
+  }, [clientId, persistState]);
 
   const handleUpdateActifs = useCallback(async (newActifs: PatrimoineItem[]) => {
-    try {
-      setState(prev => {
-        const actifsWithTimestamps = markNewItems(newActifs, prev.actifsFinanciers);
-        const newState = { ...prev, actifsFinanciers: actifsWithTimestamps };
-        const patrimoineTotal = calcPatrimoine(newState);
-        Events.patrimoineUpdated(clientId, 'actifs_financiers');
-        return {
-          ...newState,
-          clientData: { ...newState.clientData, patrimoine: patrimoineTotal }
-        };
-      });
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour des actifs:', error);
-      toast.error('Erreur lors de la mise à jour des actifs');
-    }
-  }, [clientId, calcPatrimoine]);
+    const actifsWithTimestamps = markNewItems(newActifs, stateRef.current.actifsFinanciers);
+    const intermediate = { ...stateRef.current, actifsFinanciers: actifsWithTimestamps };
+    const patrimoineTotal = calcPatrimoine(intermediate);
+    const newState = { ...intermediate, clientData: { ...intermediate.clientData, patrimoine: patrimoineTotal } };
+    setState(newState);
+    stateRef.current = newState;
+    Events.patrimoineUpdated(clientId, 'actifs_financiers');
+    return persistState(newState);
+  }, [clientId, calcPatrimoine, persistState]);
 
   const handleUpdateImmobilier = useCallback(async (newImmobilier: PatrimoineItem[]) => {
-    try {
-      setState(prev => {
-        const immobilierWithTimestamps = markNewItems(newImmobilier, prev.immobilier);
-        const newState = { ...prev, immobilier: immobilierWithTimestamps };
-        const patrimoineTotal = calcPatrimoine(newState);
-        Events.patrimoineUpdated(clientId, 'immobilier');
-        return {
-          ...newState,
-          clientData: { ...newState.clientData, patrimoine: patrimoineTotal }
-        };
-      });
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour de l\'immobilier:', error);
-      toast.error('Erreur lors de la mise à jour de l\'immobilier');
-    }
-  }, [clientId, calcPatrimoine]);
+    const immobilierWithTimestamps = markNewItems(newImmobilier, stateRef.current.immobilier);
+    const intermediate = { ...stateRef.current, immobilier: immobilierWithTimestamps };
+    const patrimoineTotal = calcPatrimoine(intermediate);
+    const newState = { ...intermediate, clientData: { ...intermediate.clientData, patrimoine: patrimoineTotal } };
+    setState(newState);
+    stateRef.current = newState;
+    Events.patrimoineUpdated(clientId, 'immobilier');
+    return persistState(newState);
+  }, [clientId, calcPatrimoine, persistState]);
 
   const handleUpdatePassifs = useCallback(async (newPassifs: PatrimoineItem[]) => {
-    try {
-      setState(prev => {
-        const passifsWithTimestamps = markNewItems(newPassifs, prev.passifs);
-        const newState = { ...prev, passifs: passifsWithTimestamps };
-        const patrimoineTotal = calcPatrimoine(newState);
-        Events.patrimoineUpdated(clientId, 'passifs');
-        return {
-          ...newState,
-          clientData: { ...newState.clientData, patrimoine: patrimoineTotal }
-        };
-      });
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour des passifs:', error);
-      toast.error('Erreur lors de la mise à jour des passifs');
-    }
-  }, [clientId, calcPatrimoine]);
+    const passifsWithTimestamps = markNewItems(newPassifs, stateRef.current.passifs);
+    const intermediate = { ...stateRef.current, passifs: passifsWithTimestamps };
+    const patrimoineTotal = calcPatrimoine(intermediate);
+    const newState = { ...intermediate, clientData: { ...intermediate.clientData, patrimoine: patrimoineTotal } };
+    setState(newState);
+    stateRef.current = newState;
+    Events.patrimoineUpdated(clientId, 'passifs');
+    return persistState(newState);
+  }, [clientId, calcPatrimoine, persistState]);
 
   const handleUpdateEntreprises = useCallback(async (newEntreprises: any[]) => {
-    try {
-      setState(prev => {
-        const newState = { ...prev, entreprises: newEntreprises };
-        const patrimoineTotal = calcPatrimoine(newState);
-        return {
-          ...newState,
-          clientData: { ...newState.clientData, patrimoine: patrimoineTotal }
-        };
-      });
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour des entreprises:', error);
-      toast.error('Erreur lors de la mise à jour des entreprises');
-    }
-  }, [calcPatrimoine]);
+    const intermediate = { ...stateRef.current, entreprises: newEntreprises };
+    const patrimoineTotal = calcPatrimoine(intermediate);
+    const newState = { ...intermediate, clientData: { ...intermediate.clientData, patrimoine: patrimoineTotal } };
+    setState(newState);
+    stateRef.current = newState;
+    return persistState(newState);
+  }, [calcPatrimoine, persistState]);
 
   const handleUpdateObjectifs = useCallback(async (newObjectifs: Objectif[]) => {
-    try {
-      setState(prev => {
-        return { ...prev, objectifs: newObjectifs };
-      });
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour des objectifs:', error);
-      toast.error('Erreur lors de la mise à jour des objectifs');
-    }
-  }, []);
+    const newState = { ...stateRef.current, objectifs: newObjectifs };
+    setState(newState);
+    stateRef.current = newState;
+    return persistState(newState);
+  }, [persistState]);
 
   const handleUpdateAuditRecommendations = useCallback(async (newRecommendations: AuditRecommendation[]) => {
-    try {
-      setState(prev => {
-        return { ...prev, auditRecommendations: newRecommendations };
-      });
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour des recommandations:', error);
-      toast.error('Erreur lors de la mise à jour des recommandations');
-    }
-  }, []);
+    const newState = { ...stateRef.current, auditRecommendations: newRecommendations };
+    setState(newState);
+    stateRef.current = newState;
+    return persistState(newState);
+  }, [persistState]);
 
   const handleUpdateDocuments = useCallback(async (newDocuments: Document[]) => {
-    try {
-      setState(prev => {
-        return { ...prev, documents: newDocuments };
-      });
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour des documents:', error);
-      toast.error('Erreur lors de la mise à jour des documents');
-    }
-  }, []);
+    const newState = { ...stateRef.current, documents: newDocuments };
+    setState(newState);
+    stateRef.current = newState;
+    return persistState(newState);
+  }, [persistState]);
 
   const handleUpdateRegulatoryDocs = useCallback(async (newDocs: RegulatoryDocument[]) => {
-    try {
-      setState(prev => {
-        return { ...prev, regulatoryDocs: newDocs };
-      });
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour des documents réglementaires:', error);
-      toast.error('Erreur lors de la mise à jour des documents réglementaires');
-    }
-  }, []);
+    const newState = { ...stateRef.current, regulatoryDocs: newDocs };
+    setState(newState);
+    stateRef.current = newState;
+    return persistState(newState);
+  }, [persistState]);
 
   const handleUpdateContactsProfessionnels = useCallback(async (newContacts: ContactProfessionnel[]) => {
-    try {
-      setState(prev => {
-        return { ...prev, contactsProfessionnels: newContacts };
-      });
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour des contacts professionnels:', error);
-      toast.error('Erreur lors de la mise à jour des contacts professionnels');
-    }
-  }, []);
+    const newState = { ...stateRef.current, contactsProfessionnels: newContacts };
+    setState(newState);
+    stateRef.current = newState;
+    return persistState(newState);
+  }, [persistState]);
 
   const handleUpdateTasks = useCallback(async (newTasks: Task[]) => {
-    try {
-      setState(prev => {
-        return { ...prev, tasks: newTasks };
-      });
-      // Sync tasks to TodoView, Agenda, and History
-      if (clientId) {
+    const newState = { ...stateRef.current, tasks: newTasks };
+    setState(newState);
+    stateRef.current = newState;
+    // Tasks are stored server-side via taskAPI directly (not part of the
+    // client record), so no persistState() call here.
+    if (clientId) {
+      try {
         await taskSyncService.syncClientTasks({ clientId, userId: 'default' });
+      } catch (error) {
+        console.error('Erreur lors de la synchronisation des tâches:', error);
       }
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour des tâches:', error);
-      toast.error('Erreur lors de la mise à jour des tâches');
     }
   }, [clientId]);
 
@@ -400,7 +407,7 @@ export function useClientData(clientId: string, onSave?: (data: ClientDataState)
       const patrimoineData = client.patrimoineData || {};
       const initializedRegulatoryDocs = client.regulatoryDocs || [];
 
-      setState({
+      const loadedState: ClientDataState = {
         clientData: {
           id: client.id,
           name: client.name,
@@ -454,12 +461,17 @@ export function useClientData(clientId: string, onSave?: (data: ClientDataState)
         regulatoryDocs: initializedRegulatoryDocs,
         contactsProfessionnels: client.contactsProfessionnels || [],
         tasks: [], // Will be loaded separately via loadTasks
-      });
+      };
+
+      setState(loadedState);
+      stateRef.current = loadedState;
 
       // Load tasks from API
       try {
         const clientTasks = await taskAPI.getByClientId(client.id);
-        setState(prev => ({ ...prev, tasks: clientTasks }));
+        const withTasks = { ...stateRef.current, tasks: clientTasks };
+        setState(withTasks);
+        stateRef.current = withTasks;
         // Sync tasks immediately after loading
         await taskSyncService.syncClientTasks({ clientId: client.id, userId: 'default' });
       } catch (error) {
@@ -471,72 +483,17 @@ export function useClientData(clientId: string, onSave?: (data: ClientDataState)
     }
   }, []);
 
-  // Save to API - uses current state to avoid stale closure
+  // Kept for backward compatibility with callers expecting an explicit
+  // "save everything now" function (e.g. a manual "Save" button).
   const saveToAPI = useCallback(async () => {
-    try {
-      const fullData = {
-        // Basic data
-        id: state.clientData.id,
-        name: state.clientData.name,
-        firstName: state.clientData.firstName,
-        lastName: state.clientData.lastName,
-        email: state.clientData.email,
-        phone: state.clientData.phone,
-        address: state.clientData.address,
-        birthDate: state.clientData.birthDate,
-        status: state.clientData.status,
-        patrimoine: state.clientData.patrimoine,
-        majorationPartFiscale: state.clientData.majorationPartFiscale,
-        auditCoreVision: state.clientData.auditCoreVision,
-        presentationCoreVision: state.clientData.presentationCoreVision,
-        preconisationsCoreVision: state.clientData.preconisationsCoreVision,
-        // Family
-        maritalStatus: state.familyInfo.maritalStatus,
-        regimeMatrimonial: state.familyInfo.regimeMatrimonial,
-        spouse: state.familyInfo.spouse,
-        children: state.familyInfo.children,
-        // Revenue & tax
-        revenus: state.revenus,
-        imposition: state.imposition,
-        // Assets
-        patrimoineData: {
-          actifsFinanciers: state.actifsFinanciers,
-          immobilier: state.immobilier,
-          passifs: state.passifs,
-          entreprises: state.entreprises,
-        },
-        // Goals & audit
-        objectifs: state.objectifs,
-        auditRecommendations: state.auditRecommendations,
-        // Documents
-        documents: state.documents,
-        regulatoryDocs: state.regulatoryDocs,
-        // Contacts
-        contactsProfessionnels: state.contactsProfessionnels,
-      };
-
-      await clientAPI.update(clientId, fullData);
-
-      // Sync tasks after saving client data
-      if (state.tasks.length > 0) {
-        await taskSyncService.syncClientTasks({ clientId, userId: 'default' });
-      }
-
-      if (onSave) {
-        await onSave(state);
-      }
-
-      return true;
-    } catch (error) {
-      console.error('❌ Erreur sauvegarde:', error);
-      return false;
-    }
-  }, [state, clientId, onSave]);
+    return persistState(stateRef.current);
+  }, [persistState]);
 
   return {
     state,
     setState,
     updateState,
+    saveStatus,
     calcPatrimoine: () => calcPatrimoine(state),
     // Handlers
     handleUpdateClient,
