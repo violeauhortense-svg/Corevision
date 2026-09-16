@@ -129,6 +129,29 @@ export async function initializePocketBase(pbUrl: string) {
       { name: 'categoriesDossier', type: 'json' },
       { name: 'arbitrageClosureDate', type: 'text' },
       { name: 'arbitrageTreasuryN1', type: 'number' },
+      // Fields used by the detailed client edit view (useClientData.ts /
+      // saveToAPI), which uses a different field naming scheme than
+      // ClientService.ts's Client type above.
+      { name: 'name', type: 'text' },
+      { name: 'firstName', type: 'text' },
+      { name: 'lastName', type: 'text' },
+      { name: 'phone', type: 'text' },
+      { name: 'address', type: 'text' },
+      { name: 'birthDate', type: 'text' },
+      { name: 'majorationPartFiscale', type: 'bool' },
+      { name: 'auditCoreVision', type: 'json' },
+      { name: 'presentationCoreVision', type: 'json' },
+      { name: 'preconisationsCoreVision', type: 'json' },
+      { name: 'maritalStatus', type: 'text' },
+      { name: 'regimeMatrimonial', type: 'text' },
+      { name: 'spouse', type: 'json' },
+      { name: 'children', type: 'json' },
+      { name: 'imposition', type: 'json' },
+      { name: 'patrimoineData', type: 'json' },
+      { name: 'auditRecommendations', type: 'json' },
+      { name: 'documents', type: 'json' },
+      { name: 'regulatoryDocs', type: 'json' },
+      { name: 'contactsProfessionnels', type: 'json' },
     ]);
 
     await ensureCollection(pbUrl, 'hub_mails', [
