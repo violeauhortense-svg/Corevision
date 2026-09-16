@@ -1,12 +1,11 @@
-// Authentication Routes - PocketBase (Fixed)
-// Uses a simpler auth system that doesn't rely on PocketBase auth
+// Authentication Routes - PocketBase native auth
+// Uses PocketBase's built-in "users" auth collection (bcrypt-hashed passwords, real JWTs)
 
 import { Hono } from 'hono';
 
 const app = new Hono();
 
-// Simple in-memory user store (for now)
-const users = new Map<string, any>();
+const PB_URL = Deno.env.get('POCKETBASE_URL') || 'http://localhost:8090';
 
 // ─── POST /signin ────────────────────────────────────────────────────
 app.post('/signin', async (c) => {
@@ -17,23 +16,25 @@ app.post('/signin', async (c) => {
       return c.json({ error: 'Email and password required' }, 400);
     }
 
-    // Check if user exists (in memory for now)
-    const user = users.get(email);
+    const res = await fetch(`${PB_URL}/api/collections/users/auth-with-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identity: email, password }),
+    });
 
-    if (!user || user.password !== password) {
-      return c.json({ error: 'Invalid credentials' }, 401);
+    const data = await res.json();
+
+    if (!res.ok) {
+      return c.json({ success: false, error: 'Invalid credentials' }, 401);
     }
-
-    // Generate a simple token (in production, use JWT)
-    const token = btoa(`${email}:${Date.now()}`);
 
     return c.json({
       success: true,
-      token,
+      token: data.token,
       user: {
-        email: user.email,
-        name: user.name,
-        role: user.role,
+        email: data.record.email,
+        name: data.record.name,
+        role: data.record.role || 'consultant',
       },
       error: null,
     }, 200);
@@ -52,31 +53,40 @@ app.post('/signup', async (c) => {
       return c.json({ error: 'Email and password required' }, 400);
     }
 
-    // Check if user already exists
-    if (users.has(email)) {
-      return c.json({ error: 'User already exists' }, 400);
+    const res = await fetch(`${PB_URL}/api/collections/users/records`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        password,
+        passwordConfirm: password,
+        name: name || email.split('@')[0],
+        role: 'consultant',
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      const message = data.data?.email?.message || data.message || 'User already exists';
+      return c.json({ success: false, error: message }, 400);
     }
 
-    // Create user
-    const user = {
-      email,
-      password, // In production, hash this!
-      name: name || email.split('@')[0],
-      role: 'consultant',
-    };
-
-    users.set(email, user);
-
-    // Generate token
-    const token = btoa(`${email}:${Date.now()}`);
+    // Sign in immediately after creating the account to return a usable token
+    const authRes = await fetch(`${PB_URL}/api/collections/users/auth-with-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identity: email, password }),
+    });
+    const authData = await authRes.json();
 
     return c.json({
       success: true,
-      token,
+      token: authData.token,
       user: {
-        email: user.email,
-        name: user.name,
-        role: user.role,
+        email: data.email,
+        name: data.name,
+        role: data.role || 'consultant',
       },
       error: null,
     }, 201);
@@ -99,12 +109,30 @@ app.get('/me', async (c) => {
       return c.json({ error: 'Unauthorized' }, 401);
     }
 
-    // For now, just verify token exists
     const token = authHeader.replace('Bearer ', '');
+
+    const res = await fetch(`${PB_URL}/api/collections/users/auth-refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: token,
+      },
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      return c.json({ success: false, error: 'Invalid or expired token' }, 401);
+    }
 
     return c.json({
       success: true,
-      token,
+      token: data.token,
+      user: {
+        email: data.record.email,
+        name: data.record.name,
+        role: data.record.role || 'consultant',
+      },
       error: null,
     });
   } catch (err: any) {
@@ -112,16 +140,5 @@ app.get('/me', async (c) => {
     return c.json({ success: false, error: err.message }, 401);
   }
 });
-
-// ─── Initialize with test user ──────────────────────────────────────
-// Add the test user on startup
-users.set('violeau.hortense@gmail.com', {
-  email: 'violeau.hortense@gmail.com',
-  password: 'Hvguillote78',
-  name: 'Hortense Violeau',
-  role: 'consultant',
-});
-
-console.log('✅ Test user pre-loaded: violeau.hortense@gmail.com');
 
 export default app;

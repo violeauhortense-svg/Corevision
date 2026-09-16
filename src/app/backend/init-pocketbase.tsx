@@ -1,12 +1,38 @@
 // Auto-initialize PocketBase collections
 // Run this on backend startup to ensure all collections exist
+//
+// Note: the "users" auth collection is created automatically by PocketBase
+// itself (it's a built-in system collection) and is NOT managed here.
+
+let adminToken: string | null = null;
+
+async function getAdminToken(pbUrl: string): Promise<string | null> {
+  const email = Deno.env.get('PB_ADMIN_EMAIL') || 'admin@corevision.local';
+  const password = Deno.env.get('PB_ADMIN_PASSWORD') || 'AdminCoreVision2026!';
+
+  try {
+    const res = await fetch(`${pbUrl}/api/collections/_superusers/auth-with-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identity: email, password }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.token;
+  } catch {
+    return null;
+  }
+}
 
 export async function initializePocketBase(pbUrl: string) {
   console.log('Initializing PocketBase collections...');
 
   try {
-    // Create users collection if it doesn't exist
-    await createUsersCollection(pbUrl);
+    adminToken = await getAdminToken(pbUrl);
+    if (!adminToken) {
+      console.warn('⚠️ Could not authenticate as PocketBase admin, skipping collection setup');
+      return false;
+    }
 
     // Create other collections
     await createClientsCollection(pbUrl);
@@ -22,62 +48,12 @@ export async function initializePocketBase(pbUrl: string) {
   }
 }
 
-// Users collection
-async function createUsersCollection(pbUrl: string) {
-  try {
-    const res = await fetch(`${pbUrl}/api/collections`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-    const collections = await res.json();
-    const exists = collections.items?.some((c: any) => c.name === 'users');
-
-    if (!exists) {
-      console.log('Creating users collection...');
-      await fetch(`${pbUrl}/api/collections`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: 'users',
-          type: 'base',
-          schema: [
-            { id: 'email', name: 'email', type: 'text', required: true, unique: true },
-            { id: 'password', name: 'password', type: 'text', required: true },
-            { id: 'name', name: 'name', type: 'text' },
-            { id: 'role', name: 'role', type: 'text' },
-          ],
-        }),
-      });
-
-      // Create test user
-      console.log('Creating test user...');
-      await fetch(`${pbUrl}/api/collections/users/records`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: 'violeau.hortense@gmail.com',
-          password: 'Hvguillote78',
-          name: 'Hortense Violeau',
-          role: 'consultant',
-        }),
-      });
-
-      console.log('✅ users collection created with test user');
-    } else {
-      console.log('✅ users collection already exists');
-    }
-  } catch (err: any) {
-    console.error('Error with users collection:', err.message);
-  }
-}
-
 // Clients collection
 async function createClientsCollection(pbUrl: string) {
   try {
     const res = await fetch(`${pbUrl}/api/collections`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
     });
 
     const collections = await res.json();
@@ -87,7 +63,7 @@ async function createClientsCollection(pbUrl: string) {
       console.log('Creating clients collection...');
       await fetch(`${pbUrl}/api/collections`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
         body: JSON.stringify({
           name: 'clients',
           type: 'base',
@@ -113,7 +89,7 @@ async function createMailsCollection(pbUrl: string) {
   try {
     const res = await fetch(`${pbUrl}/api/collections`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
     });
 
     const collections = await res.json();
@@ -123,7 +99,7 @@ async function createMailsCollection(pbUrl: string) {
       console.log('Creating hub_mails collection...');
       await fetch(`${pbUrl}/api/collections`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
         body: JSON.stringify({
           name: 'hub_mails',
           type: 'base',
@@ -153,7 +129,7 @@ async function createTasksCollection(pbUrl: string) {
   try {
     const res = await fetch(`${pbUrl}/api/collections`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
     });
 
     const collections = await res.json();
@@ -163,7 +139,7 @@ async function createTasksCollection(pbUrl: string) {
       console.log('Creating tasks collection...');
       await fetch(`${pbUrl}/api/collections`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
         body: JSON.stringify({
           name: 'tasks',
           type: 'base',
@@ -190,7 +166,7 @@ async function createCallsCollection(pbUrl: string) {
   try {
     const res = await fetch(`${pbUrl}/api/collections`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
     });
 
     const collections = await res.json();
@@ -200,7 +176,7 @@ async function createCallsCollection(pbUrl: string) {
       console.log('Creating hub_calls collection...');
       await fetch(`${pbUrl}/api/collections`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
         body: JSON.stringify({
           name: 'hub_calls',
           type: 'base',
