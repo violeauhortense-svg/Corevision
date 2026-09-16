@@ -12,6 +12,27 @@ interface AgendaViewProps {
 type LocationType = 'cabinet' | 'client' | 'visio';
 type MeetingType = 'R1' | 'R2' | 'suivi' | 'autre';
 
+// date.toISOString() converts to UTC, which shifts the calendar day
+// backward for any timezone ahead of UTC (e.g. midnight local time in
+// France, UTC+2 in September, is still 22:00 the previous day in UTC).
+// That made a task due "17/09" render under the 18th's calendar cell.
+// This formats the date using its *local* fields instead, matching how
+// deadlines are stored (plain "YYYY-MM-DD", no timezone).
+function toLocalDateString(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+// The inverse of toLocalDateString: parses a plain "YYYY-MM-DD" (or
+// "YYYY-MM-DDTHH:mm") deadline/appointment string as a local calendar
+// date instead of new Date(string)'s UTC-midnight interpretation.
+function parseLocalDate(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('T')[0].split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 export function AgendaView({ session }: AgendaViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [tasks, setTasks] = useState<OpenClientTask[]>([]);
@@ -166,13 +187,13 @@ export function AgendaView({ session }: AgendaViewProps) {
 
   // Filtrer les tâches par date
   const getTasksForDate = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = toLocalDateString(date);
     return tasks.filter(task => task.deadline === dateStr);
   };
 
   // Filtrer les RDV par date
   const getMeetingsForDate = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = toLocalDateString(date);
     return meetings.filter(meeting => {
       const meetingDate = meeting.date || '';
       return meetingDate.startsWith(dateStr);
@@ -198,19 +219,15 @@ export function AgendaView({ session }: AgendaViewProps) {
   const getUpcomingItems = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const upcomingTasks = tasks.filter(task => {
       if (!task.deadline) return false;
-      const taskDate = new Date(task.deadline);
-      taskDate.setHours(0, 0, 0, 0);
-      return taskDate > today;
+      return parseLocalDate(task.deadline) > today;
     });
 
     const upcomingMeetings = meetings.filter(meeting => {
-      const dateStr = meeting.date || '';
-      const meetingDate = new Date(dateStr);
-      meetingDate.setHours(0, 0, 0, 0);
-      return meetingDate > today;
+      if (!meeting.date) return false;
+      return parseLocalDate(meeting.date) > today;
     });
 
     return { tasks: upcomingTasks, meetings: upcomingMeetings };
@@ -219,19 +236,15 @@ export function AgendaView({ session }: AgendaViewProps) {
   const getOverdueItems = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const overdueTasks = tasks.filter(task => {
       if (!task.deadline) return false;
-      const taskDate = new Date(task.deadline);
-      taskDate.setHours(0, 0, 0, 0);
-      return taskDate < today && !task.completed;
+      return parseLocalDate(task.deadline) < today && !task.completed;
     });
 
     const overdueMeetings = meetings.filter(meeting => {
-      const dateStr = meeting.date || '';
-      const meetingDate = new Date(dateStr);
-      meetingDate.setHours(0, 0, 0, 0);
-      return meetingDate < today && !meeting.completed;
+      if (!meeting.date) return false;
+      return parseLocalDate(meeting.date) < today && !meeting.completed;
     });
 
     return { tasks: overdueTasks, meetings: overdueMeetings };
@@ -276,7 +289,7 @@ export function AgendaView({ session }: AgendaViewProps) {
 
   const hasItemsOnDate = (date: Date | null) => {
     if (!date) return false;
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = toLocalDateString(date);
     return tasks.some(task => task.deadline === dateStr) || meetings.some(meeting => {
       const meetingDate = meeting.date || '';
       return meetingDate.startsWith(dateStr);
@@ -448,7 +461,7 @@ export function AgendaView({ session }: AgendaViewProps) {
                         )}
                         <div className="flex items-center gap-1 text-sm text-red-600 mt-1">
                           <Clock className="w-4 h-4" />
-                          <span>Échéance: {new Date(task.deadline!).toLocaleDateString('fr-FR')}</span>
+                          <span>Échéance: {parseLocalDate(task.deadline!).toLocaleDateString('fr-FR')}</span>
                         </div>
                       </div>
                     </div>
@@ -476,7 +489,7 @@ export function AgendaView({ session }: AgendaViewProps) {
                         <h4 className="font-semibold text-gray-900">{meeting.title}</h4>
                         <div className="flex items-center gap-1 text-sm text-red-600 mt-1">
                           <Clock className="w-4 h-4" />
-                          <span>{new Date(meeting.date).toLocaleDateString('fr-FR')} à {meeting.time}</span>
+                          <span>{parseLocalDate(meeting.date).toLocaleDateString('fr-FR')} à {meeting.time}</span>
                         </div>
                         <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
                           {getLocationIcon(meeting.locationType)}
@@ -614,7 +627,7 @@ export function AgendaView({ session }: AgendaViewProps) {
                             )}
                             <div className="flex items-center gap-1">
                               <Calendar className="w-4 h-4" />
-                              <span>{new Date(task.deadline!).toLocaleDateString('fr-FR')}</span>
+                              <span>{parseLocalDate(task.deadline!).toLocaleDateString('fr-FR')}</span>
                             </div>
                           </div>
                         </div>
@@ -652,7 +665,7 @@ export function AgendaView({ session }: AgendaViewProps) {
                             </div>
                             <div className="flex items-center gap-1">
                               <Calendar className="w-4 h-4" />
-                              <span>{new Date(meeting.date).toLocaleDateString('fr-FR')} à {meeting.time}</span>
+                              <span>{parseLocalDate(meeting.date).toLocaleDateString('fr-FR')} à {meeting.time}</span>
                             </div>
                           </div>
                           <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">

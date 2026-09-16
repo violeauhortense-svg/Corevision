@@ -12,6 +12,16 @@ interface TodoViewProps {
 
 type FilterType = 'all' | 'today' | 'completed';
 
+// new Date("YYYY-MM-DD") parses as UTC midnight, not local midnight - in
+// a timezone behind UTC that reads back as the previous day. Deadlines
+// are stored as plain "YYYY-MM-DD" with no timezone, so parse them as
+// local calendar dates explicitly instead of relying on the ambiguous
+// Date(string) constructor.
+function parseLocalDate(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('T')[0].split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 export function TodoView({ session, onNavigateToClient }: TodoViewProps) {
   const [tasks, setTasks] = useState<OpenClientTask[]>([]);
   const [loading, setLoading] = useState(true);
@@ -106,26 +116,16 @@ export function TodoView({ session, onNavigateToClient }: TodoViewProps) {
   const tasksWithoutDeadline = tasks.filter((t) => !t.deadline);
 
   const sortedTasksWithDeadline = [...tasksWithDeadline].sort(
-    (a, b) => new Date(a.deadline!).getTime() - new Date(b.deadline!).getTime()
+    (a, b) => parseLocalDate(a.deadline!).getTime() - parseLocalDate(b.deadline!).getTime()
   );
 
-  const overdueTasks = sortedTasksWithDeadline.filter((t) => {
-    const d = new Date(t.deadline!);
-    d.setHours(0, 0, 0, 0);
-    return d < today;
-  });
+  const overdueTasks = sortedTasksWithDeadline.filter((t) => parseLocalDate(t.deadline!) < today);
 
-  const todayTasks = sortedTasksWithDeadline.filter((t) => {
-    const d = new Date(t.deadline!);
-    d.setHours(0, 0, 0, 0);
-    return d.getTime() === today.getTime();
-  });
+  const todayTasks = sortedTasksWithDeadline.filter(
+    (t) => parseLocalDate(t.deadline!).getTime() === today.getTime()
+  );
 
-  const upcomingTasks = sortedTasksWithDeadline.filter((t) => {
-    const d = new Date(t.deadline!);
-    d.setHours(0, 0, 0, 0);
-    return d > today;
-  });
+  const upcomingTasks = sortedTasksWithDeadline.filter((t) => parseLocalDate(t.deadline!) > today);
 
   const getFilteredTasks = () => {
     if (activeFilter === 'today') return todayTasks;
