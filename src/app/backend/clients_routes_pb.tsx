@@ -51,7 +51,6 @@ app.post('/', async (c) => {
     }
 
     const client = await pb.createRecord('clients', {
-      id: `client_${Date.now()}`,
       nom: body.nom,
       prenom: body.prenom || '',
       email: body.email || '',

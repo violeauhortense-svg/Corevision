@@ -3,6 +3,12 @@
 //
 // Note: the "users" auth collection is created automatically by PocketBase
 // itself (it's a built-in system collection) and is NOT managed here.
+//
+// Uses PocketBase's current "fields" schema format (PocketBase 0.23+).
+// The older "schema" array format silently produces collections with no
+// custom fields at all on this version, which is why this file rewrites
+// missing fields onto existing collections rather than only creating new
+// ones the first time.
 
 let adminToken: string | null = null;
 
@@ -24,6 +30,63 @@ async function getAdminToken(pbUrl: string): Promise<string | null> {
   }
 }
 
+interface FieldDef {
+  name: string;
+  type: 'text' | 'bool' | 'date' | 'json' | 'number';
+  required?: boolean;
+}
+
+async function ensureCollection(pbUrl: string, name: string, fields: FieldDef[]) {
+  try {
+    const listRes = await fetch(`${pbUrl}/api/collections`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+    });
+    const collections = await listRes.json();
+    const existing = collections.items?.find((c: any) => c.name === name);
+
+    const fieldDefs = fields.map((f) => ({ name: f.name, type: f.type, required: !!f.required }));
+
+    if (!existing) {
+      console.log(`Creating ${name} collection...`);
+      const res = await fetch(`${pbUrl}/api/collections`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+        body: JSON.stringify({ name, type: 'base', fields: fieldDefs }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || `Failed to create ${name}`);
+      }
+      console.log(`✅ ${name} collection created`);
+      return;
+    }
+
+    // Collection exists — make sure every expected field is present
+    // (handles collections previously created with no custom fields).
+    const existingNames = new Set((existing.fields || []).map((f: any) => f.name));
+    const missing = fieldDefs.filter((f) => !existingNames.has(f.name));
+
+    if (missing.length > 0) {
+      console.log(`Adding missing fields to ${name}: ${missing.map((f) => f.name).join(', ')}`);
+      const res = await fetch(`${pbUrl}/api/collections/${existing.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+        body: JSON.stringify({ fields: [...existing.fields, ...missing] }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || `Failed to update ${name}`);
+      }
+      console.log(`✅ ${name} collection updated with missing fields`);
+    } else {
+      console.log(`✅ ${name} collection already up to date`);
+    }
+  } catch (err: any) {
+    console.error(`Error with ${name} collection:`, err.message);
+  }
+}
+
 export async function initializePocketBase(pbUrl: string) {
   console.log('Initializing PocketBase collections...');
 
@@ -34,165 +97,48 @@ export async function initializePocketBase(pbUrl: string) {
       return false;
     }
 
-    // Create other collections
-    await createClientsCollection(pbUrl);
-    await createMailsCollection(pbUrl);
-    await createTasksCollection(pbUrl);
-    await createCallsCollection(pbUrl);
+    await ensureCollection(pbUrl, 'clients', [
+      { name: 'nom', type: 'text', required: true },
+      { name: 'prenom', type: 'text' },
+      { name: 'email', type: 'text' },
+      { name: 'telephone', type: 'text' },
+      { name: 'status', type: 'text' },
+      { name: 'patrimoine', type: 'json' },
+    ]);
+
+    await ensureCollection(pbUrl, 'hub_mails', [
+      { name: 'from', type: 'text', required: true },
+      { name: 'to', type: 'text' },
+      { name: 'subject', type: 'text', required: true },
+      { name: 'body', type: 'text' },
+      { name: 'sentAt', type: 'date' },
+      { name: 'clientId', type: 'text' },
+      { name: 'hubTab', type: 'text' },
+      { name: 'traitementStatus', type: 'text' },
+      { name: 'read', type: 'bool' },
+    ]);
+
+    await ensureCollection(pbUrl, 'tasks', [
+      { name: 'title', type: 'text', required: true },
+      { name: 'description', type: 'text' },
+      { name: 'status', type: 'text' },
+      { name: 'priority', type: 'text' },
+      { name: 'dueDate', type: 'date' },
+      { name: 'clientId', type: 'text' },
+    ]);
+
+    await ensureCollection(pbUrl, 'hub_calls', [
+      { name: 'clientId', type: 'text' },
+      { name: 'subject', type: 'text', required: true },
+      { name: 'dueDate', type: 'date' },
+      { name: 'priority', type: 'text' },
+      { name: 'status', type: 'text' },
+    ]);
 
     console.log('✅ Collections initialized');
     return true;
   } catch (err: any) {
     console.error('Error initializing collections:', err.message);
     return false;
-  }
-}
-
-// Clients collection
-async function createClientsCollection(pbUrl: string) {
-  try {
-    const res = await fetch(`${pbUrl}/api/collections`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
-    });
-
-    const collections = await res.json();
-    const exists = collections.items?.some((c: any) => c.name === 'clients');
-
-    if (!exists) {
-      console.log('Creating clients collection...');
-      await fetch(`${pbUrl}/api/collections`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
-        body: JSON.stringify({
-          name: 'clients',
-          type: 'base',
-          schema: [
-            { id: 'nom', name: 'nom', type: 'text', required: true },
-            { id: 'prenom', name: 'prenom', type: 'text' },
-            { id: 'email', name: 'email', type: 'text', unique: true },
-            { id: 'telephone', name: 'telephone', type: 'text' },
-            { id: 'status', name: 'status', type: 'text' },
-          ],
-        }),
-      });
-
-      console.log('✅ clients collection created');
-    }
-  } catch (err: any) {
-    console.error('Error with clients collection:', err.message);
-  }
-}
-
-// Hub Mails collection
-async function createMailsCollection(pbUrl: string) {
-  try {
-    const res = await fetch(`${pbUrl}/api/collections`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
-    });
-
-    const collections = await res.json();
-    const exists = collections.items?.some((c: any) => c.name === 'hub_mails');
-
-    if (!exists) {
-      console.log('Creating hub_mails collection...');
-      await fetch(`${pbUrl}/api/collections`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
-        body: JSON.stringify({
-          name: 'hub_mails',
-          type: 'base',
-          schema: [
-            { id: 'from', name: 'from', type: 'text', required: true },
-            { id: 'to', name: 'to', type: 'text' },
-            { id: 'subject', name: 'subject', type: 'text', required: true },
-            { id: 'body', name: 'body', type: 'text' },
-            { id: 'sentAt', name: 'sentAt', type: 'date' },
-            { id: 'clientId', name: 'clientId', type: 'text' },
-            { id: 'hubTab', name: 'hubTab', type: 'text' },
-            { id: 'traitementStatus', name: 'traitementStatus', type: 'text' },
-            { id: 'read', name: 'read', type: 'bool' },
-          ],
-        }),
-      });
-
-      console.log('✅ hub_mails collection created');
-    }
-  } catch (err: any) {
-    console.error('Error with hub_mails collection:', err.message);
-  }
-}
-
-// Tasks collection
-async function createTasksCollection(pbUrl: string) {
-  try {
-    const res = await fetch(`${pbUrl}/api/collections`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
-    });
-
-    const collections = await res.json();
-    const exists = collections.items?.some((c: any) => c.name === 'tasks');
-
-    if (!exists) {
-      console.log('Creating tasks collection...');
-      await fetch(`${pbUrl}/api/collections`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
-        body: JSON.stringify({
-          name: 'tasks',
-          type: 'base',
-          schema: [
-            { id: 'title', name: 'title', type: 'text', required: true },
-            { id: 'description', name: 'description', type: 'text' },
-            { id: 'status', name: 'status', type: 'text' },
-            { id: 'priority', name: 'priority', type: 'text' },
-            { id: 'dueDate', name: 'dueDate', type: 'date' },
-            { id: 'clientId', name: 'clientId', type: 'text' },
-          ],
-        }),
-      });
-
-      console.log('✅ tasks collection created');
-    }
-  } catch (err: any) {
-    console.error('Error with tasks collection:', err.message);
-  }
-}
-
-// Calls collection
-async function createCallsCollection(pbUrl: string) {
-  try {
-    const res = await fetch(`${pbUrl}/api/collections`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
-    });
-
-    const collections = await res.json();
-    const exists = collections.items?.some((c: any) => c.name === 'hub_calls');
-
-    if (!exists) {
-      console.log('Creating hub_calls collection...');
-      await fetch(`${pbUrl}/api/collections`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
-        body: JSON.stringify({
-          name: 'hub_calls',
-          type: 'base',
-          schema: [
-            { id: 'clientId', name: 'clientId', type: 'text' },
-            { id: 'subject', name: 'subject', type: 'text', required: true },
-            { id: 'dueDate', name: 'dueDate', type: 'date' },
-            { id: 'priority', name: 'priority', type: 'text' },
-            { id: 'status', name: 'status', type: 'text' },
-          ],
-        }),
-      });
-
-      console.log('✅ hub_calls collection created');
-    }
-  } catch (err: any) {
-    console.error('Error with hub_calls collection:', err.message);
   }
 }

@@ -35,6 +35,28 @@ export class PocketBaseClient {
     }
   }
 
+  // Server-side CRUD operations run as a superuser so they bypass the
+  // per-collection API rules meant for end-user auth (which the backend
+  // enforces itself via its own JWT, not PocketBase's).
+  async authenticateAsAdmin(): Promise<void> {
+    const email = Deno.env.get('PB_ADMIN_EMAIL') || 'admin@corevision.local';
+    const password = Deno.env.get('PB_ADMIN_PASSWORD') || 'AdminCoreVision2026!';
+
+    const res = await fetch(`${this.baseUrl}/api/collections/_superusers/auth-with-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identity: email, password }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(`PocketBase admin auth failed: ${data.message || res.statusText}`);
+    }
+
+    const data = await res.json();
+    this.authToken = data.token;
+  }
+
   setAuthToken(token: string) {
     this.authToken = token;
   }

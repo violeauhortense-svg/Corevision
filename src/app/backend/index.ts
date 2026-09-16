@@ -38,6 +38,13 @@ app.use(
 const pbUrl = Deno.env.get('POCKETBASE_URL') || 'http://localhost:8090';
 await initializePocketBase(pbUrl);
 
+try {
+  await pb.authenticateAsAdmin();
+  console.log('✅ Backend authenticated with PocketBase as superuser');
+} catch (err: any) {
+  console.error('⚠️ Failed to authenticate backend with PocketBase:', err.message);
+}
+
 // ─── Health Check ─────────────────────────────────────────────────────
 app.get('/health', (c) => {
   return c.json({
