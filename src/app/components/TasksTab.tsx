@@ -34,7 +34,11 @@ export function TasksTab({ clientId }: TasksTabProps) {
 
   const loadClient = async () => {
     try {
-      const { client: data, error } = await ClientService.getClientById(clientId);
+      // Always bypass ClientService's 5-minute cache here: this tab writes
+      // directly to the API (not through ClientService.updateClient, which
+      // clears the cache itself), so a stale cached record would silently
+      // undo every task validation and status progression on next load.
+      const { client: data, error } = await ClientService.getClientById(clientId, true);
       if (error || !data) {
         toast.error(error || 'Client introuvable');
         setLoading(false);
@@ -132,6 +136,7 @@ export function TasksTab({ clientId }: TasksTabProps) {
         const result = await response.json();
         const updatedClient = result.data ?? result.client ?? result;
         setClient((prev) => (prev ? { ...prev, ...updatedClient, taches: newTaches, statusOuvert: payload.statusOuvert ?? prev.statusOuvert } : updatedClient));
+        ClientService.clearCache();
 
         toast.success(
           changes.taskStatus === 'na'
@@ -188,6 +193,7 @@ export function TasksTab({ clientId }: TasksTabProps) {
       if (response.ok) {
         toast.success(`✅ Passage à "${nextStatus}" complété`);
         setClient((prev) => (prev ? { ...prev, statusOuvert: nextStatus } : prev));
+        ClientService.clearCache();
       } else {
         const error = await response.json().catch(() => ({}));
         console.error('❌ Erreur progression:', error);
