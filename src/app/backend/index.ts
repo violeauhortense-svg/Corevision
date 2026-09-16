@@ -29,7 +29,7 @@ app.use(
       'http://100.75.233.10:3000',  // Tailscale IP (cvh-patrimoine)
     ],
     allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowHeaders: ['Content-Type', 'Authorization'],
+    allowHeaders: ['Content-Type', 'Authorization', 'ngrok-skip-browser-warning'],
     credentials: true,
   })
 );
