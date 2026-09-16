@@ -122,6 +122,7 @@ export async function initializePocketBase(pbUrl: string) {
       { name: 'date_creation', type: 'text' },
       { name: 'statusOuvert', type: 'text' },
       { name: 'dateNextRdv', type: 'text' },
+      { name: 'nextRdvDetails', type: 'json' },
       { name: 'tauxCA', type: 'number' },
       { name: 'cspSigne', type: 'bool' },
       { name: 'taches', type: 'json' },

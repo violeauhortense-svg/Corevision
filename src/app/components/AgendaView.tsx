@@ -1,11 +1,8 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Calendar, Clock, User, CheckCircle, Circle, ListTodo, AlertCircle, Plus, MapPin, Building2, Home, Video, X, XCircle } from 'lucide-react';
-import { taskSyncService } from '../services/taskSyncService';
-import { taskAPI } from '../services/api';
-import type { Task } from '../types/client';
-import type { AgendaEvent, MeetingType } from '../types/agenda';
-import { agendaAPI } from '../services/newAgendaAPI';
-import { clientAPI } from '../services/api';
+import { getAllOpenClientTasks, applyClientTaskChange, type OpenClientTask } from '../services/clientTasksService';
+import { getAllUpcomingMeetings, setClientMeeting, clearClientMeeting, type ClientMeeting } from '../services/clientMeetingsService';
+import { ClientService } from '../services/ClientService';
 import { toast } from 'sonner';
 
 interface AgendaViewProps {
@@ -13,15 +10,16 @@ interface AgendaViewProps {
 }
 
 type LocationType = 'cabinet' | 'client' | 'visio';
+type MeetingType = 'R1' | 'R2' | 'suivi' | 'autre';
 
 export function AgendaView({ session }: AgendaViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [meetings, setMeetings] = useState<AgendaEvent[]>([]);
+  const [tasks, setTasks] = useState<OpenClientTask[]>([]);
+  const [meetings, setMeetings] = useState<ClientMeeting[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCreateMeeting, setShowCreateMeeting] = useState(false);
-  
+
   // États du formulaire de RDV
   const [selectedClient, setSelectedClient] = useState<string>('');
   const [clients, setClients] = useState<any[]>([]);
@@ -55,29 +53,16 @@ export function AgendaView({ session }: AgendaViewProps) {
 
   const loadAgendaData = async () => {
     try {
-      // Charger les tâches avec deadline depuis tous les clients
-      const allClients = await clientAPI.getAll();
+      const { clients: allClients } = await ClientService.getAllClients(true);
       setClients(allClients);
 
-      const tasksWithDeadline: Task[] = [];
-      for (const client of allClients) {
-        try {
-          const clientTasks = await taskAPI.getByClientId(client.id);
-          const filtered = clientTasks.filter(task =>
-            task.deadline && task.deadline.trim() !== '' && !task.completed
-          );
-          tasksWithDeadline.push(...filtered);
-        } catch (error) {
-          console.warn(`⚠️ Erreur chargement tâches client ${client.id}:`, error);
-        }
-      }
+      const [openTasks, upcomingMeetings] = await Promise.all([
+        getAllOpenClientTasks(),
+        getAllUpcomingMeetings(),
+      ]);
 
-      setTasks(tasksWithDeadline);
-
-      // Charger les RDVs du mois courant
-      const now = new Date();
-      const monthData = await agendaAPI.getMonthEvents(now.getFullYear(), now.getMonth() + 1);
-      setMeetings(monthData.month.events);
+      setTasks(openTasks.filter((t) => t.deadline && t.deadline.trim() !== ''));
+      setMeetings(upcomingMeetings);
     } catch (error) {
       console.error('❌ Erreur chargement agenda:', error);
       toast.error('Erreur lors du chargement de l\'agenda');
@@ -87,28 +72,37 @@ export function AgendaView({ session }: AgendaViewProps) {
   };
 
   const toggleTask = async (taskId: string) => {
-    const task = tasks.find(t => t.id === taskId);
-    if (task && task.clientId) {
-      try {
-        const success = await taskSyncService.completeTask(
-          task.clientId,
-          taskId,
-          localStorage.getItem('user_id') || 'default'
-        );
-        if (success) {
-          await loadAgendaData();
-          toast.success('✅ Tâche marquée comme complétée');
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return;
+
+    try {
+      const { client } = await ClientService.getClientById(task.clientId, true);
+      if (!client) return;
+
+      const result = await applyClientTaskChange(client, taskId, { completed: true, taskStatus: 'validated' });
+      if (result.success) {
+        await loadAgendaData();
+        toast.success('✅ Tâche marquée comme complétée');
+        if (result.statusProgressed) {
+          toast.success(`🎉 ${task.clientName} passe au statut suivant : ${result.statusProgressed} !`);
         }
-      } catch (error) {
-        console.error('Erreur completion tâche:', error);
+      } else {
         toast.error('❌ Erreur lors de la completion de la tâche');
       }
+    } catch (error) {
+      console.error('Erreur completion tâche:', error);
+      toast.error('❌ Erreur lors de la completion de la tâche');
     }
   };
 
   const toggleMeeting = async (meetingId: string) => {
-    // TODO: Implement meeting status toggle in new agenda API
-    toast.info('Fonctionnalité en développement');
+    const success = await clearClientMeeting(meetingId);
+    if (success) {
+      await loadAgendaData();
+      toast.success('✅ Rendez-vous marqué comme terminé');
+    } else {
+      toast.error('❌ Erreur lors de la mise à jour du RDV');
+    }
   };
 
   const handleCreateMeeting = async () => {
@@ -118,32 +112,35 @@ export function AgendaView({ session }: AgendaViewProps) {
     }
 
     try {
-      const client = clients.find(c => c.id === selectedClient);
+      const client = clients.find((c) => c.id === selectedClient);
       if (!client) return;
 
-      const meetingDateTime = `${meetingDate}T${meetingTime}:00`;
+      const clientName = `${client.prenom || ''} ${client.nom || ''}`.trim() || 'Client';
+      const meetingDateTime = `${meetingDate}T${meetingTime}`;
 
-      // Interaction 3: Create RDV with clientId → updates client.dateNextRdv
-      await agendaAPI.createClientMeeting(client.id, client.name, {
-        title: `RDV ${meetingType} - ${client.name}`,
-        description: meetingDescription || `Rendez-vous ${meetingType} avec ${client.name}`,
+      const success = await setClientMeeting(client.id, {
         startDate: meetingDateTime,
+        title: `RDV ${meetingType} - ${clientName}`,
+        description: meetingDescription || `Rendez-vous ${meetingType} avec ${clientName}`,
         location: meetingLocation,
-        locationType: locationType,
-        meetingType: meetingType,
-        source: 'manual'
+        locationType,
+        meetingType,
       });
+
+      if (!success) {
+        toast.error('Erreur lors de la création du RDV');
+        return;
+      }
 
       toast.success('📅 Rendez-vous créé avec succès');
       setShowCreateMeeting(false);
-      
-      // Réinitialiser le formulaire
+
       setSelectedClient('');
       setMeetingDate('');
       setMeetingTime('14:00');
       setMeetingDescription('');
       setMeetingType('R1');
-      
+
       await loadAgendaData();
     } catch (error) {
       console.error('Erreur création RDV:', error);
@@ -157,8 +154,8 @@ export function AgendaView({ session }: AgendaViewProps) {
       setMeetingLocation(`${cabinetInfo.companyAddress}, ${cabinetInfo.companyPostalCode} ${cabinetInfo.companyCity}`);
     } else if (locationType === 'client') {
       const client = clients.find(c => c.id === selectedClient);
-      if (client?.address) {
-        setMeetingLocation(`${client.address}${client.postalCode || client.city ? ', ' + (client.postalCode || '') + ' ' + (client.city || '') : ''}`);
+      if (client?.adresse) {
+        setMeetingLocation(`${client.adresse}${client.codePostal || client.ville ? ', ' + (client.codePostal || '') + ' ' + (client.ville || '') : ''}`);
       } else {
         setMeetingLocation('Chez le client (adresse à compléter)');
       }
@@ -177,7 +174,7 @@ export function AgendaView({ session }: AgendaViewProps) {
   const getMeetingsForDate = (date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
     return meetings.filter(meeting => {
-      const meetingDate = meeting.startDate || meeting.date || '';
+      const meetingDate = meeting.date || '';
       return meetingDate.startsWith(dateStr);
     });
   };
@@ -210,7 +207,7 @@ export function AgendaView({ session }: AgendaViewProps) {
     });
 
     const upcomingMeetings = meetings.filter(meeting => {
-      const dateStr = meeting.startDate || meeting.date || '';
+      const dateStr = meeting.date || '';
       const meetingDate = new Date(dateStr);
       meetingDate.setHours(0, 0, 0, 0);
       return meetingDate > today;
@@ -231,7 +228,7 @@ export function AgendaView({ session }: AgendaViewProps) {
     });
 
     const overdueMeetings = meetings.filter(meeting => {
-      const dateStr = meeting.startDate || meeting.date || '';
+      const dateStr = meeting.date || '';
       const meetingDate = new Date(dateStr);
       meetingDate.setHours(0, 0, 0, 0);
       return meetingDate < today && !meeting.completed;
@@ -281,7 +278,7 @@ export function AgendaView({ session }: AgendaViewProps) {
     if (!date) return false;
     const dateStr = date.toISOString().split('T')[0];
     return tasks.some(task => task.deadline === dateStr) || meetings.some(meeting => {
-      const meetingDate = meeting.startDate || meeting.date || '';
+      const meetingDate = meeting.date || '';
       return meetingDate.startsWith(dateStr);
     });
   };
@@ -795,7 +792,7 @@ export function AgendaView({ session }: AgendaViewProps) {
                   <option value="">Sélectionner un client</option>
                   {clients.map((client) => (
                     <option key={client.id} value={client.id}>
-                      {client.name}
+                      {`${client.prenom || ''} ${client.nom || ''}`.trim() || 'Client sans nom'}
                     </option>
                   ))}
                 </select>

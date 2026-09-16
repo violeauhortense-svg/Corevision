@@ -75,6 +75,32 @@ export function TasksTab({ clientId }: TasksTabProps) {
     setExpandedBlocks((prev) => ({ ...prev, [status]: !prev[status] }));
   };
 
+  // Persists a single field on the client record (e.g. dateNextRdv from
+  // the RDV modal) through the generic client PATCH endpoint.
+  const updateClientField = async (field: string, value: any) => {
+    if (!client) return;
+    try {
+      const token = localStorage.getItem('auth_token');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const response = await fetch(`${apiBaseUrl}/api/clients/${clientId}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ [field]: value }),
+      });
+
+      if (response.ok) {
+        setClient((prev) => (prev ? { ...prev, [field]: value } : prev));
+        ClientService.clearCache();
+      } else {
+        console.error(`❌ [updateClientField] Failed to update ${field}`);
+      }
+    } catch (err) {
+      console.error(`❌ [updateClientField] Error updating ${field}:`, err);
+    }
+  };
+
   // Builds the updated tasks array for a single status block (aligned by
   // index to TASK_DEFINITIONS, like the render below reads it), applies
   // the requested change to one task, and persists everything (including
@@ -523,10 +549,21 @@ export function TasksTab({ clientId }: TasksTabProps) {
         }
         clientId={clientId}
         onClose={() => setActiveModal(null)}
-        onSave={async () => {
-          if (activeModal) {
-            await handleTaskUpdate(activeModal.status, activeModal.taskId, true);
+        onSave={async (taskData) => {
+          if (!activeModal) return;
+
+          // The RDV modal collects a date/time but this used to be
+          // discarded entirely - dateNextRdv (which the Dashboard and
+          // Agenda both read) was never updated, so a scheduled meeting
+          // never showed up anywhere outside this one modal.
+          if (activeModal.type === 'rdv' && taskData?.modalData?.rdvDate) {
+            const dateNextRdv = taskData.modalData.rdvTime
+              ? `${taskData.modalData.rdvDate}T${taskData.modalData.rdvTime}`
+              : taskData.modalData.rdvDate;
+            await updateClientField('dateNextRdv', dateNextRdv);
           }
+
+          await handleTaskUpdate(activeModal.status, activeModal.taskId, true);
         }}
       />
     </div>
