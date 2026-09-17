@@ -154,38 +154,69 @@ export function MailDetailPanel({ mail, onClose, onUpdate }: MailDetailPanelProp
         </div>
 
         <div className="p-6 space-y-6">
-          {/* Affichage du mail */}
-          <Card className="p-6 bg-gray-50">
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-600 mb-1">Sujet</h3>
-                <p className="text-lg font-bold text-gray-900">{mail.subject}</p>
+          {/* Affichage du mail - mise en page façon client mail : sujet en
+              titre, puis expéditeur/destinataires en lignes étiquetées
+              plutôt qu'en colonnes serrées, pour rester lisible même avec
+              plusieurs destinataires. */}
+          <Card className="p-5 bg-white border border-gray-200">
+            <div className="pb-3 mb-3 border-b border-gray-100 flex items-start justify-between gap-3">
+              <h3 className="text-lg font-bold text-gray-900 leading-snug">{mail.subject || '(Sans sujet)'}</h3>
+              <Badge
+                className={`shrink-0 ${
+                  mail.direction === 'received'
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-blue-100 text-blue-800'
+                }`}
+              >
+                {mail.direction === 'received' ? '📥 Reçu' : '📤 Envoyé'}
+              </Badge>
+            </div>
+
+            <div className="space-y-2.5">
+              <div className="flex items-baseline gap-3">
+                <span className="w-14 shrink-0 text-xs font-semibold text-gray-500">De</span>
+                <div className="min-w-0">
+                  <span className="font-medium text-gray-900 text-sm">{mail.fromName || mail.from}</span>
+                  {mail.fromName && mail.from && (
+                    <span className="text-xs text-gray-500 ml-2">{mail.from}</span>
+                  )}
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-gray-600">De</p>
-                  <p className="font-medium text-gray-900">{mail.fromName || mail.from}</p>
-                  <p className="text-xs text-gray-500">{mail.from}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600">Vers</p>
-                  <p className="font-medium text-gray-900">{mail.to.join(', ')}</p>
+              <div className="flex items-baseline gap-3">
+                <span className="w-14 shrink-0 text-xs font-semibold text-gray-500">À</span>
+                <div className="min-w-0 flex flex-wrap gap-1.5">
+                  {mail.to.length > 0 ? (
+                    mail.to.map((recipient, i) => (
+                      <span key={i} className="text-sm text-gray-800 bg-gray-100 rounded px-2 py-0.5">
+                        {recipient}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-sm text-gray-400 italic">Destinataire non renseigné</span>
+                  )}
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 pt-2 border-t">
-                <Calendar className="w-4 h-4 text-gray-400" />
-                <span className="text-sm text-gray-600">{formatDate(mail.sentAt)}</span>
-                <Badge
-                  className={
-                    mail.direction === 'received'
-                      ? 'bg-green-100 text-green-800 ml-auto'
-                      : 'bg-blue-100 text-blue-800 ml-auto'
-                  }
-                >
-                  {mail.direction === 'received' ? '📥 Reçu' : '📤 Envoyé'}
-                </Badge>
+              {mail.cc && mail.cc.length > 0 && (
+                <div className="flex items-baseline gap-3">
+                  <span className="w-14 shrink-0 text-xs font-semibold text-gray-500">Cc</span>
+                  <div className="min-w-0 flex flex-wrap gap-1.5">
+                    {mail.cc.map((recipient, i) => (
+                      <span key={i} className="text-sm text-gray-800 bg-gray-100 rounded px-2 py-0.5">
+                        {recipient}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-baseline gap-3 pt-1">
+                <span className="w-14 shrink-0 text-xs font-semibold text-gray-500">Date</span>
+                <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                  <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                  {formatDate(mail.sentAt)}
+                </div>
               </div>
             </div>
           </Card>
@@ -193,11 +224,13 @@ export function MailDetailPanel({ mail, onClose, onUpdate }: MailDetailPanelProp
           {/* Pièces jointes */}
           <AttachmentsDisplay attachments={mail.attachments} loading={loading} />
 
-          {/* Contenu du mail */}
+          {/* Contenu du mail - pas de scroll interne : le panel entier
+              défile déjà, une boîte à hauteur fixe en plus n'ajoutait
+              qu'un cadre exigu pour rien. */}
           <div className="space-y-3">
             <h3 className="font-semibold text-gray-900 text-sm">Message</h3>
-            <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-900 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
-              {mail.body}
+            <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-900 whitespace-pre-wrap leading-relaxed">
+              {mail.body?.trim() ? mail.body : <span className="text-gray-400 italic">Aucun contenu</span>}
             </div>
           </div>
 
