@@ -34,6 +34,7 @@ interface FieldDef {
   name: string;
   type: 'text' | 'bool' | 'date' | 'json' | 'number';
   required?: boolean;
+  max?: number; // text fields only; 0 (the PocketBase default) means unlimited
 }
 
 async function ensureCollection(pbUrl: string, name: string, fields: FieldDef[]) {
@@ -45,7 +46,7 @@ async function ensureCollection(pbUrl: string, name: string, fields: FieldDef[])
     const collections = await listRes.json();
     const existing = collections.items?.find((c: any) => c.name === name);
 
-    const fieldDefs = fields.map((f) => ({ name: f.name, type: f.type, required: !!f.required }));
+    const fieldDefs = fields.map((f) => ({ name: f.name, type: f.type, required: !!f.required, max: f.max }));
 
     if (!existing) {
       console.log(`Creating ${name} collection...`);
@@ -62,24 +63,59 @@ async function ensureCollection(pbUrl: string, name: string, fields: FieldDef[])
       return;
     }
 
-    // Collection exists — make sure every expected field is present
-    // (handles collections previously created with no custom fields).
-    const existingNames = new Set((existing.fields || []).map((f: any) => f.name));
-    const missing = fieldDefs.filter((f) => !existingNames.has(f.name));
+    // Collection exists — make sure every expected field is present.
+    // Note: PocketBase 0.40.2 flatly rejects changing an existing
+    // field's type ("Field type cannot be changed"), so a field defined
+    // here with a different type than what's already in PocketBase can
+    // only be flagged, not auto-fixed - pick a new field name instead if
+    // that ever comes up again.
+    const existingByName = new Map((existing.fields || []).map((f: any) => [f.name, f]));
+    const missing = fieldDefs.filter((f) => !existingByName.has(f.name));
+    const mismatched = fieldDefs.filter((f) => {
+      const current = existingByName.get(f.name);
+      return current && !current.system && current.type !== f.type;
+    });
+    // A text field's max length (e.g. an old default/explicit 5000-char
+    // cap on "body") silently rejects anything longer with a generic
+    // "Failed to create record." unless raised - same "type can't change
+    // but attributes can" PATCH as below, just for max instead.
+    const needsMaxFix = fieldDefs.filter((f) => {
+      const current = existingByName.get(f.name);
+      return current && current.type === 'text' && f.type === 'text' && f.max !== undefined && current.max !== f.max;
+    });
 
-    if (missing.length > 0) {
-      console.log(`Adding missing fields to ${name}: ${missing.map((f) => f.name).join(', ')}`);
+    if (mismatched.length > 0) {
+      console.warn(`⚠️ ${name}: field type mismatch (cannot be changed in place, needs a new field name): ${mismatched.map((f) => `${f.name} (has ${existingByName.get(f.name)!.type}, wants ${f.type})`).join(', ')}`);
+    }
+
+    if (missing.length > 0 || needsMaxFix.length > 0) {
+      if (missing.length > 0) {
+        console.log(`Adding missing fields to ${name}: ${missing.map((f) => f.name).join(', ')}`);
+      }
+      if (needsMaxFix.length > 0) {
+        console.log(`Raising max length on ${name}: ${needsMaxFix.map((f) => `${f.name} -> ${f.max}`).join(', ')}`);
+      }
+
+      const maxFixNames = new Set(needsMaxFix.map((f) => f.name));
+      const updatedFields = (existing.fields || []).map((f: any) => {
+        if (maxFixNames.has(f.name)) {
+          const def = fieldDefs.find((d) => d.name === f.name)!;
+          return { ...f, max: def.max };
+        }
+        return f;
+      });
+
       const res = await fetch(`${pbUrl}/api/collections/${existing.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
-        body: JSON.stringify({ fields: [...existing.fields, ...missing] }),
+        body: JSON.stringify({ fields: [...updatedFields, ...missing] }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.message || `Failed to update ${name}`);
       }
-      console.log(`✅ ${name} collection updated with missing fields`);
-    } else {
+      console.log(`✅ ${name} collection updated`);
+    } else if (mismatched.length === 0) {
       console.log(`✅ ${name} collection already up to date`);
     }
   } catch (err: any) {
@@ -157,14 +193,44 @@ export async function initializePocketBase(pbUrl: string) {
 
     await ensureCollection(pbUrl, 'hub_mails', [
       { name: 'from', type: 'text', required: true },
+      // "to" was created as text before the bridge existed and
+      // PocketBase refuses to change a field's type after the fact
+      // ("Field type cannot be changed") - stays text; the bridge
+      // route joins the recipient array into a string instead.
       { name: 'to', type: 'text' },
       { name: 'subject', type: 'text', required: true },
-      { name: 'body', type: 'text' },
+      // Outlook HTML bodies routinely run well past a few thousand
+      // characters. max: 0 looks like "unlimited" but PocketBase 0.40.2
+      // actually falls back to its system default (5000) in that case -
+      // an explicit large number is required to really lift the cap.
+      { name: 'body', type: 'text', max: 1000000 },
       { name: 'sentAt', type: 'date' },
       { name: 'clientId', type: 'text' },
       { name: 'hubTab', type: 'text' },
       { name: 'traitementStatus', type: 'text' },
       { name: 'read', type: 'bool' },
+      // Fields used by the Outlook bridge (bridge/outlook_bridge_v3.py)
+      { name: 'bodyHtml', type: 'text', max: 1000000 },
+      { name: 'receivedAt', type: 'text' },
+      { name: 'attachments', type: 'json' },
+      { name: 'duplicateKey', type: 'text' },
+      { name: 'deviceId', type: 'text' },
+      { name: 'direction', type: 'text' }, // 'received' | 'pending_send' | 'sent'
+      { name: 'cc', type: 'json' },
+      { name: 'bcc', type: 'json' },
+    ]);
+
+    await ensureCollection(pbUrl, 'agenda_events', [
+      { name: 'title', type: 'text', required: true },
+      { name: 'startDate', type: 'text', required: true },
+      { name: 'endDate', type: 'text' },
+      { name: 'outlookEventId', type: 'text' },
+      { name: 'status', type: 'text' }, // 'accepted' | 'tentative' | 'declined' | 'not_responded'
+      { name: 'attendees', type: 'json' },
+      { name: 'source', type: 'text' }, // 'outlook' | 'manual'
+      { name: 'deviceId', type: 'text' },
+      { name: 'clientId', type: 'text' },
+      { name: 'pendingResponse', type: 'text' }, // set by the CRM UI, cleared once the bridge responds
     ]);
 
     await ensureCollection(pbUrl, 'tasks', [

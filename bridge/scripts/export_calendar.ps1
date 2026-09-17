@@ -1,52 +1,93 @@
-# Export calendar from Outlook - IMPROVED VERSION
+# Export calendar from Outlook
+# Outputs a plain JSON array (not wrapped), using the exact field names
+# outlook_bridge_v3.py's CalendarEvent dataclass expects: subject, start,
+# end, organizer, required_attendees, outlook_entry_id, response_status.
 param([string]$InitialSync = "false")
+
+# Force UTF-8 on the output stream - without this, Write-Host encodes
+# using the console's codepage (cp1252 on this machine), which mangles
+# every accented character (e/e/e...) into replacement chars before
+# Python even sees the bytes.
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+
+function Get-ResponseStatusString($OlResponseStatus) {
+    # olResponseNone=0, olResponseOrganized=1, olResponseTentative=2,
+    # olResponseAccepted=3, olResponseDeclined=4, olResponseNotResponded=5
+    switch ([int]$OlResponseStatus) {
+        3 { return "accepted" }
+        4 { return "declined" }
+        2 { return "tentative" }
+        default { return "not_responded" }
+    }
+}
 
 try {
     $Outlook = New-Object -ComObject Outlook.Application
     $Namespace = $Outlook.GetNamespace("MAPI")
-    $CalendarFolder = $Namespace.GetDefaultFolder(9)  # 9 = Calendar
-    
+    $CalendarFolder = $Namespace.GetDefaultFolder(9)  # olFolderCalendar
+
+    # -60/+90 days with IncludeRecurrences expands every occurrence of
+    # every recurring meeting across that whole 150-day window on each
+    # 30s poll - that's what was actually timing out (240s), not a
+    # backend/network issue. A recurring sync only needs to look far
+    # enough ahead to catch new/changed appointments since last time.
     if ($InitialSync -eq "true") {
-        $StartDate = (Get-Date).AddMonths(-3)
-        $EndDate = (Get-Date).AddMonths(1)
+        $StartDate = (Get-Date).AddDays(-60)
+        $EndDate = (Get-Date).AddDays(90)
     } else {
-        $StartDate = (Get-Date).AddHours(-1)
-        $EndDate = (Get-Date).AddDays(7)
+        $StartDate = (Get-Date).AddDays(-7)
+        $EndDate = (Get-Date).AddDays(30)
     }
-    
+
+    # IMPORTANT: with IncludeRecurrences=$true, iterating $Items directly
+    # walks every occurrence of every recurring meeting across the item's
+    # ENTIRE series (years), then filters by date afterwards - that's what
+    # was actually timing out, regardless of how narrow $StartDate/$EndDate
+    # were. Items.Restrict() applies the date filter at the folder level
+    # BEFORE recurrence expansion, which is the correct/fast pattern for
+    # Outlook COM.
+    $Items = $CalendarFolder.Items
+    $Items.IncludeRecurrences = $true
+    $Items.Sort("[Start]")
+
+    $FilterStart = $StartDate.ToString("MM/dd/yyyy HH:mm")
+    $FilterEnd = $EndDate.ToString("MM/dd/yyyy HH:mm")
+    $Filter = "[Start] <= '$FilterEnd' AND [End] >= '$FilterStart'"
+    $RestrictedItems = $Items.Restrict($Filter)
+
     $Events = @()
-    $ItemCount = 0
-    
-    foreach ($Item in $CalendarFolder.Items) {
-        $ItemCount++
+
+    foreach ($Item in $RestrictedItems) {
         try {
-            if ($Item.Start -ge $StartDate -and $Item.Start -le $EndDate) {
-                $Event = @{
-                    subject = [string]$Item.Subject
-                    start = $Item.Start.ToString("yyyy-MM-dd HH:mm:ss")
-                    end = $Item.End.ToString("yyyy-MM-dd HH:mm:ss")
-                    location = [string]$Item.Location
-                }
-                $Events += $Event
+            $Attendees = @()
+            if ($Item.RequiredAttendees) {
+                $Attendees = $Item.RequiredAttendees -split ';' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' }
             }
+
+            $Event = @{
+                subject             = [string]$Item.Subject
+                start               = $Item.Start.ToString("yyyy-MM-dd HH:mm:ss")
+                end                 = $Item.End.ToString("yyyy-MM-dd HH:mm:ss")
+                organizer           = [string]$Item.Organizer
+                required_attendees  = @($Attendees)
+                outlook_entry_id    = [string]$Item.EntryID
+                response_status     = Get-ResponseStatusString $Item.ResponseStatus
+            }
+            $Events += $Event
         } catch {
-            # Skip items with errors
+            # Skip items that error out
         }
     }
-    
-    $Result = @{
-        status = "ok"
-        count = $Events.Count
-        total_items = $ItemCount
-        events = $Events
-    } | ConvertTo-Json -Depth 10
-    
-    Write-Host $Result
+
+    if ($Events.Count -eq 0) {
+        Write-Host "[]"
+    } elseif ($Events.Count -eq 1) {
+        Write-Host "[$($Events | ConvertTo-Json -Depth 10)]"
+    } else {
+        Write-Host ($Events | ConvertTo-Json -Depth 10)
+    }
 } catch {
-    $ErrorMsg = @{
-        status = "error"
-        message = $_.Exception.Message
-        line = $_.InvocationInfo.ScriptLineNumber
-    } | ConvertTo-Json -Depth 10
-    Write-Host $ErrorMsg
+    Write-Host "[]"
+    [Console]::Error.WriteLine("export_calendar.ps1 error: $($_.Exception.Message)")
 }

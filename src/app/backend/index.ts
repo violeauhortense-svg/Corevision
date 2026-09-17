@@ -13,6 +13,8 @@ import authRoutes from './auth_routes_pb_fixed.tsx';
 import clientsRoutes from './clients_routes_pb.tsx';
 import tasksRoutes from './tasks_routes_pb.tsx';
 import dashboardRoutes from './dashboard_routes_pb.tsx';
+import communicationsRoutes from './communications_routes_pb.tsx';
+import agendaEventsRoutes from './agenda_events_routes_pb.tsx';
 
 const app = new Hono();
 const PORT = Deno.env.get('PORT') || '3000';
@@ -54,6 +56,12 @@ app.get('/health', (c) => {
   });
 });
 
+// The Outlook bridge (bridge/outlook_bridge_v3.py) is configured with
+// BACKEND_URL=http://localhost:3000/api and hits {BACKEND_URL}/health.
+app.get('/api/health', (c) => {
+  return c.json({ status: 'ok', backend: 'pocketbase', timestamp: new Date().toISOString() });
+});
+
 // ─── Test Endpoint (no PocketBase dependency) ───────────────────────
 app.get('/test', (c) => {
   return c.json({
@@ -68,6 +76,8 @@ app.route('/api/hub', hubMailsRoutes);
 app.route('/api/clients', clientsRoutes);
 app.route('/api/tasks', tasksRoutes);
 app.route('/api/dashboard', dashboardRoutes);
+app.route('/api/communications', communicationsRoutes);
+app.route('/api/agenda-events', agendaEventsRoutes);
 
 // ─── 404 Handler ──────────────────────────────────────────────────────
 app.notFound((c) => {

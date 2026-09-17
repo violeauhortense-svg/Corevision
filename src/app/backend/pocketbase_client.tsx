@@ -11,6 +11,8 @@ interface PBRecord {
 export class PocketBaseClient {
   private baseUrl: string;
   private authToken: string | null = null;
+  private adminEmail: string | null = null;
+  private adminPassword: string | null = null;
 
   constructor(baseUrl: string = POCKETBASE_URL) {
     this.baseUrl = baseUrl;
@@ -39,13 +41,13 @@ export class PocketBaseClient {
   // per-collection API rules meant for end-user auth (which the backend
   // enforces itself via its own JWT, not PocketBase's).
   async authenticateAsAdmin(): Promise<void> {
-    const email = Deno.env.get('PB_ADMIN_EMAIL') || 'admin@corevision.local';
-    const password = Deno.env.get('PB_ADMIN_PASSWORD') || 'AdminCoreVision2026!';
+    this.adminEmail = Deno.env.get('PB_ADMIN_EMAIL') || 'admin@corevision.local';
+    this.adminPassword = Deno.env.get('PB_ADMIN_PASSWORD') || 'AdminCoreVision2026!';
 
     const res = await fetch(`${this.baseUrl}/api/collections/_superusers/auth-with-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ identity: email, password }),
+      body: JSON.stringify({ identity: this.adminEmail, password: this.adminPassword }),
     });
 
     if (!res.ok) {
@@ -61,12 +63,36 @@ export class PocketBaseClient {
     this.authToken = token;
   }
 
+  // The superuser token PocketBase issues has a finite lifetime. This
+  // backend process stays up indefinitely, so without this every CRUD
+  // call would eventually start failing with "Only superusers can
+  // perform this action" until someone noticed and restarted it. Any
+  // request that comes back 401/403 (or with that specific message)
+  // triggers one re-authentication + retry instead of surfacing the
+  // error, as long as we know the admin credentials to re-auth with.
+  private async fetchWithReauth(url: string, init: RequestInit): Promise<Response> {
+    let res = await fetch(url, { ...init, headers: this.getHeaders() });
+
+    if ((res.status === 401 || res.status === 403) && this.adminEmail && this.adminPassword) {
+      const bodyText = await res.clone().text().catch(() => '');
+      if (res.status === 401 || bodyText.includes('superuser')) {
+        try {
+          await this.authenticateAsAdmin();
+          res = await fetch(url, { ...init, headers: this.getHeaders() });
+        } catch {
+          // If re-auth itself fails, fall through and return the
+          // original (still-failing) response below.
+        }
+      }
+    }
+
+    return res;
+  }
+
   // ─── Generic CRUD ───────────────────────────────────────────────────
   async getRecord(collection: string, id: string): Promise<PBRecord> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/collections/${collection}/records/${id}`, {
-        headers: this.getHeaders(),
-      });
+      const res = await this.fetchWithReauth(`${this.baseUrl}/api/collections/${collection}/records/${id}`, {});
 
       if (!res.ok) throw new Error(`Record not found: ${id}`);
       return await res.json();
@@ -87,9 +113,7 @@ export class PocketBaseClient {
       if (query?.perPage) params.append('perPage', query.perPage.toString());
       if (query?.page) params.append('page', query.page.toString());
 
-      const res = await fetch(`${this.baseUrl}/api/collections/${collection}/records?${params}`, {
-        headers: this.getHeaders(),
-      });
+      const res = await this.fetchWithReauth(`${this.baseUrl}/api/collections/${collection}/records?${params}`, {});
 
       if (!res.ok) throw new Error(`Failed to list ${collection}`);
       const data = await res.json();
@@ -102,15 +126,17 @@ export class PocketBaseClient {
 
   async createRecord(collection: string, data: any): Promise<PBRecord> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/collections/${collection}/records`, {
+      const res = await this.fetchWithReauth(`${this.baseUrl}/api/collections/${collection}/records`, {
         method: 'POST',
-        headers: this.getHeaders(),
         body: JSON.stringify(data),
       });
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || 'Create failed');
+        // err.message alone (e.g. "Failed to create record.") hides the
+        // actual per-field validation reason in err.data - log it too or
+        // every validation failure looks identical and undiagnosable.
+        throw new Error(`${err.message || 'Create failed'} ${JSON.stringify(err.data || {})}`);
       }
       return await res.json();
     } catch (err: any) {
@@ -121,9 +147,8 @@ export class PocketBaseClient {
 
   async updateRecord(collection: string, id: string, data: any): Promise<PBRecord> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/collections/${collection}/records/${id}`, {
+      const res = await this.fetchWithReauth(`${this.baseUrl}/api/collections/${collection}/records/${id}`, {
         method: 'PATCH',
-        headers: this.getHeaders(),
         body: JSON.stringify(data),
       });
 
@@ -137,9 +162,8 @@ export class PocketBaseClient {
 
   async deleteRecord(collection: string, id: string): Promise<void> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/collections/${collection}/records/${id}`, {
+      const res = await this.fetchWithReauth(`${this.baseUrl}/api/collections/${collection}/records/${id}`, {
         method: 'DELETE',
-        headers: this.getHeaders(),
       });
 
       if (!res.ok) throw new Error(`Delete failed for ${id}`);

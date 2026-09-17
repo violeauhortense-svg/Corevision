@@ -15,6 +15,13 @@ from pathlib import Path
 from typing import Optional, Dict, List, Tuple
 from dataclasses import dataclass
 from hashlib import md5
+from dotenv import load_dotenv
+
+# python-dotenv was listed in requirements.txt but never actually called,
+# so the .env file next to this script was silently ignored and every
+# Config value below always fell back to its hardcoded default
+# (including the old Render backend URL) regardless of what .env said.
+load_dotenv(Path(__file__).parent / '.env')
 
 # ============================================
 # CONFIGURATION
@@ -46,12 +53,20 @@ class Config:
 # LOGGING
 # ============================================
 
+# Windows' console defaults to the cp1252 codepage, which can't encode
+# the emoji used throughout this file's log messages - every log call
+# was raising (and swallowing) a UnicodeEncodeError. Force UTF-8 on both
+# the console stream and the log file.
+import sys
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(Config.LOG_FILE),
-        logging.StreamHandler()
+        logging.FileHandler(Config.LOG_FILE, encoding='utf-8'),
+        logging.StreamHandler(sys.stdout)
     ]
 )
 logger = logging.getLogger(__name__)
@@ -92,6 +107,13 @@ class OutlookBridgeV3:
         self.session = requests.Session()
         self.session.timeout = Config.BACKEND_TIMEOUT
         self.running = False
+        # Outlook's COM API isn't safe for concurrent access from two
+        # PowerShell processes at once - without this, the background
+        # polling thread and a manually-triggered /sync request (or two
+        # overlapping polling cycles) would each spawn their own
+        # export_mails.ps1/export_calendar.ps1, block each other, and
+        # both silently time out reporting "0 mails/events synced".
+        self.sync_lock = threading.Lock()
         self.last_sync = {}
 
         logger.info("🌉 OutlookBridgeV3 initialized")
@@ -204,7 +226,7 @@ class OutlookBridgeV3:
                     }
                 )
 
-                if response.status_code == 200:
+                if response.status_code in (200, 201):
                     sent_count += 1
                     logger.info(f"✅ Événement envoyé : {event.subject}")
                 else:
@@ -337,8 +359,13 @@ class OutlookBridgeV3:
 
     def _run_powershell(self, script_name: str, params: Dict = None) -> Optional[str]:
         """
-        Exécute un script PowerShell et retourne l'output
+        Exécute un script PowerShell et retourne l'output.
+        Serialized via self.sync_lock - see the comment in __init__.
         """
+        with self.sync_lock:
+            return self._run_powershell_locked(script_name, params)
+
+    def _run_powershell_locked(self, script_name: str, params: Dict = None) -> Optional[str]:
         try:
             script_path = Config.SCRIPTS_DIR / script_name
 
@@ -357,14 +384,23 @@ class OutlookBridgeV3:
             # Ajouter les paramètres
             if params:
                 for key, value in params.items():
-                    cmd.extend(['-', key, str(value)])
+                    # Was cmd.extend(['-', key, str(value)]) - that passed
+                    # "-", "key", "value" as three separate argv entries
+                    # instead of the single "-key" flag PowerShell expects,
+                    # so any script taking parameters (send_email.ps1,
+                    # respond_meeting.ps1) never actually received them.
+                    cmd.extend([f'-{key}', str(value)])
 
-            # Exécuter
+            # Exécuter. 120s was too short for export_mails/export_calendar
+            # once there's a real week of mail with full HTML bodies to
+            # walk through via Outlook's COM API - it silently timed out
+            # and every sync cycle reported 0 mails/events with no error.
             result = subprocess.run(
                 cmd,
                 capture_output=True,
-                text=True,
-                timeout=120
+                encoding='utf-8',
+                errors='replace',
+                timeout=240
             )
 
             if result.returncode != 0:
