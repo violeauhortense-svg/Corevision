@@ -11,7 +11,7 @@ import { ProfileView } from "./components/ProfileView";
 import { CoreVisionAdminView } from "./components/CoreVisionAdminView";
 import { AdminKnowledgeBase } from "./components/AdminKnowledgeBase";
 import { BaremesFiscauxView } from "./components/BaremesFiscauxView";
-import { CommunicationsHub } from "./components/CommunicationsHub";
+import { HubCommunicationView } from "./components/communications/HubCommunicationViewUpdated";
 import { BaremeUpdateNotification } from "./components/BaremeUpdateNotification";
 import { cleanupObsoleteTasks } from './utils/cleanupObsoleteTasks';
 import { clearAllTestData } from './utils/dataCleanup';
@@ -137,7 +137,7 @@ export default function App() {
       case "clients":
         return <ClientsView session={session} selectedClientId={selectedClientId} openTasksTab={openTasksTab} />;
       case "mails":
-        return <CommunicationsHub />;
+        return <HubCommunicationView />;
       case "agenda":
         return <AgendaView session={session} />;
       case "todo":

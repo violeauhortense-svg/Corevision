@@ -4,6 +4,7 @@ import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Search, X, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { ClientService } from '../../services/ClientService';
 
 interface ClientOption {
   id: string;
@@ -31,44 +32,24 @@ export function ClientAssociation({
   const [suggestions, setSuggestions] = useState<ClientOption[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isAssociating, setIsAssociating] = useState(false);
+  const [allClients, setAllClients] = useState<ClientOption[]>([]);
 
-  // Mock client list - TODO: Replace with API call
-  const mockClients: ClientOption[] = [
-    {
-      id: 'client-123',
-      name: 'Pierre Dubois (SARL Dubois)',
-      email: 'pierre.dubois@co.fr',
-      type: 'company',
-    },
-    {
-      id: 'client-124',
-      name: 'Marie Bernard (EURL Bernard)',
-      email: 'marie.bernard@co.fr',
-      type: 'company',
-    },
-    {
-      id: 'client-125',
-      name: 'Jean Legrand (Auto-entrepreneur)',
-      email: 'jean.legrand@email.com',
-      type: 'individual',
-    },
-    {
-      id: 'client-126',
-      name: 'Sophie Martin (Holding SCI)',
-      email: 'sophie.martin@email.com',
-      type: 'company',
-    },
-    {
-      id: 'client-127',
-      name: 'Olivier Rousseau (Consultant)',
-      email: 'olivier.rousseau@business.com',
-      type: 'individual',
-    },
-  ];
+  useEffect(() => {
+    ClientService.getAllClients().then(({ clients }) => {
+      setAllClients(
+        clients.map((c: any) => ({
+          id: c.id,
+          name: `${c.prenom || ''} ${c.nom || ''}`.trim() || 'Client sans nom',
+          email: c.email || '',
+          type: 'individual' as const,
+        }))
+      );
+    }).catch(() => setAllClients([]));
+  }, []);
 
   useEffect(() => {
     if (searchTerm.trim()) {
-      const filtered = mockClients.filter(
+      const filtered = allClients.filter(
         (client) =>
           client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           client.email?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -79,7 +60,7 @@ export function ClientAssociation({
       setSuggestions([]);
       setShowSuggestions(false);
     }
-  }, [searchTerm]);
+  }, [searchTerm, allClients]);
 
   const handleSelectClient = async (client: ClientOption) => {
     setIsAssociating(true);

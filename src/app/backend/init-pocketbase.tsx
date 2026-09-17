@@ -206,9 +206,12 @@ export async function initializePocketBase(pbUrl: string) {
       { name: 'body', type: 'text', max: 1000000 },
       { name: 'sentAt', type: 'date' },
       { name: 'clientId', type: 'text' },
+      { name: 'clientName', type: 'text' },
+      { name: 'clientEmail', type: 'text' },
       { name: 'hubTab', type: 'text' },
       { name: 'traitementStatus', type: 'text' },
       { name: 'read', type: 'bool' },
+      { name: 'notes', type: 'json' },
       // Fields used by the Outlook bridge (bridge/outlook_bridge_v3.py)
       { name: 'bodyHtml', type: 'text', max: 1000000 },
       { name: 'receivedAt', type: 'text' },
