@@ -9,12 +9,20 @@ import { pb } from './pocketbase_client.tsx';
 const app = new Hono();
 
 function toHubMail(m: any) {
+  const to = typeof m.to === 'string' ? m.to.split(';').map((s: string) => s.trim()).filter(Boolean) : (m.to || []);
+  // A handful of mails imported before the bridge existed never had
+  // their recipient captured. For a *received* mail that's still a
+  // knowable fact, not a mystery: it's in this mailbox, so she was a
+  // recipient (directly or via a distribution list) - showing that
+  // beats a bare "unknown".
+  if (to.length === 0 && m.direction !== 'sent') to.push('Hortense VIOLEAU');
+
   return {
     id: m.id,
     messageId: m.messageId || '',
     from: m.from || '',
     fromName: m.fromName || '',
-    to: typeof m.to === 'string' ? m.to.split(';').map((s: string) => s.trim()).filter(Boolean) : (m.to || []),
+    to,
     cc: m.cc || [],
     bcc: m.bcc || [],
     subject: m.subject || '',
