@@ -43,13 +43,29 @@ try {
 
         foreach ($Item in $RestrictedItems) {
             try {
+                # Inbox/Sent also hold non-mail items Restrict() doesn't
+                # filter out (meeting responses, read receipts, contact
+                # cards someone dragged in...) - class 43 is the real
+                # MailItem type. Anything else has no real subject/body/
+                # sender and was showing up as blank garbage in the Hub.
+                if ($Item.Class -ne 43) { continue }
+
                 $ReceivedOrSent = if ($Item.PSObject.Properties.Match('ReceivedTime').Count -gt 0 -and $Item.ReceivedTime) { $Item.ReceivedTime } else { $Item.SentOn }
                 $Attachments = @()
                 foreach ($Att in $Item.Attachments) {
                     $Attachments += @{ name = [string]$Att.FileName }
                 }
 
-                $FromAddress = try { [string]$Item.SenderEmailAddress } catch { [string]$Item.SenderName }
+                # For mail routed inside the Exchange org, SenderEmailAddress
+                # returns an internal X.500 DN ("/O=EXCHANGELABS/...")
+                # instead of a real address unless resolved explicitly.
+                $FromAddress = try {
+                    if ($Item.SenderEmailType -eq "EX") {
+                        $Item.Sender.GetExchangeUser().PrimarySmtpAddress
+                    } else {
+                        [string]$Item.SenderEmailAddress
+                    }
+                } catch { [string]$Item.SenderName }
                 $ToAddress = try { [string]$Item.To } catch { "" }
 
                 $Mail = @{
