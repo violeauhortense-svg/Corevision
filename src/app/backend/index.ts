@@ -95,7 +95,7 @@ console.log(`
 ╔════════════════════════════════════════════════════════════╗
 ║           🚀 CoreVision Backend - Development            ║
 ║                                                            ║
-║  ✅ PocketBase:  ${Deno.env.get('POCKETBASE_URL') || 'http://pc1.tailscale:8090'}
+║  ✅ PocketBase:  ${Deno.env.get('POCKETBASE_URL') || 'http://localhost:8090'}
 ║  ✅ Backend:     http://localhost:${PORT}
 ║  ✅ Frontend:    http://localhost:5173                    ║
 ║  ✅ Tailscale:   http://pc1.tailscale:${PORT}

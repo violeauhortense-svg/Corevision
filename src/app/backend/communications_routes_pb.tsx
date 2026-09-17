@@ -8,6 +8,73 @@ import { pb } from './pocketbase_client.tsx';
 
 const app = new Hono();
 
+// ─── GET /hub (frontend: grouped + stats view of hub_mails) ──────────
+// CommunicationsHub.tsx expects { hub: { conversation_client, interne,
+// archive, en_attente, stats } }, grouped by the hub_mails' hubTab field.
+app.get('/hub', async (c) => {
+  try {
+    const result = await pb.listRecords('hub_mails', { perPage: 500, sort: '-receivedAt' });
+
+    const statusMap: Record<string, string> = {
+      a_traiter: 'à_traiter',
+      traite: 'traité',
+      termine: 'terminé',
+    };
+
+    const hub: Record<string, any[]> = {
+      conversation_client: [],
+      interne: [],
+      archive: [],
+      en_attente: [],
+    };
+
+    let unread = 0;
+    let toProcess = 0;
+    let processed = 0;
+    let archived = 0;
+
+    for (const m of result.items as any[]) {
+      const category = hub[m.hubTab] ? m.hubTab : 'en_attente';
+      const status = statusMap[m.traitementStatus] || m.traitementStatus || 'à_traiter';
+
+      hub[category].push({
+        id: m.id,
+        source: m.direction || 'outlook',
+        category,
+        status,
+        from: m.from || '',
+        subject: m.subject || '',
+        body: m.body || '',
+        receivedAt: m.receivedAt || m.created,
+        updatedAt: m.updated,
+        attachments: m.attachments || [],
+        tags: [],
+      });
+
+      if (!m.read) unread++;
+      if (status === 'à_traiter') toProcess++;
+      if (status === 'traité' || status === 'terminé') processed++;
+      if (category === 'archive') archived++;
+    }
+
+    return c.json({
+      hub: {
+        ...hub,
+        stats: {
+          totalReceived: result.total,
+          unread,
+          toProcess,
+          processed,
+          archived,
+        },
+      },
+    }, 200);
+  } catch (err: any) {
+    console.error('Error building hub:', err.message);
+    return c.json({ error: err.message }, 500);
+  }
+});
+
 // ─── POST /receive (bridge -> CRM: a synced Outlook mail) ────────────
 app.post('/receive', async (c) => {
   try {
@@ -47,7 +114,7 @@ app.post('/receive', async (c) => {
       duplicateKey: duplicateKey || '',
       deviceId: body.device_id || body.deviceId || '',
       direction: 'received',
-      hubTab: 'Reçus',
+      hubTab: 'en_attente',
       traitementStatus: 'a_traiter',
       read: false,
     });

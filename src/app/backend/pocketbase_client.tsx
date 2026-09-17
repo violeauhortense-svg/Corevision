@@ -1,7 +1,12 @@
 // PocketBase Client pour Deno/Hono
 // Remplace deno-postgres pour le dev local
 
-const POCKETBASE_URL = Deno.env.get('POCKETBASE_URL') || 'http://pc1.tailscale:8090';
+// The tailscale hostname was the wrong default here: it only resolves
+// when Tailscale is up and running as a service, so a plain restart
+// without POCKETBASE_URL set (e.g. no --env-file flag) made every
+// single PocketBase call silently fail with "fetch failed". localhost
+// is what actually runs on this machine; index.ts uses the same default.
+const POCKETBASE_URL = Deno.env.get('POCKETBASE_URL') || 'http://localhost:8090';
 
 interface PBRecord {
   id: string;

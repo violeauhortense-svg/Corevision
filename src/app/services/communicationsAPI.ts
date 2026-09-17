@@ -1,6 +1,6 @@
 import { apiBaseUrl } from '../utils/api/info';
 
-const API_URL = apiBaseUrl;
+const API_URL = `${apiBaseUrl}/api`;
 
 export const communicationsAPI = {
   // ============= HUB =============

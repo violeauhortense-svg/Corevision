@@ -1,11 +1,12 @@
 /**
  * CLIENT MEETINGS SERVICE
  *
- * The app has no separate "agenda events" collection - each client has a
- * single "next appointment" slot (dateNextRdv + nextRdvDetails). This
- * service reads/writes that slot across all clients so the Agenda,
- * Dashboard, and client detail Tasks tab (RDV modal) all stay in sync
- * through the same data instead of a parallel, disconnected calendar.
+ * Each client has a single "next appointment" slot (dateNextRdv +
+ * nextRdvDetails); this service reads/writes that slot across all
+ * clients so the Agenda, Dashboard, and client detail Tasks tab (RDV
+ * modal) all stay in sync through the same data. getAllUpcomingMeetings
+ * also merges in events synced from Outlook via the bridge (agenda_events
+ * collection), which live outside any client's slot.
  */
 
 import { apiBaseUrl } from '../utils/api/info';
@@ -30,7 +31,48 @@ function splitDateTime(dateNextRdv: string): { date: string; time: string } {
     const [date, timePart] = dateNextRdv.split('T');
     return { date, time: (timePart || '').slice(0, 5) };
   }
+  // Outlook-synced events store "yyyy-MM-dd HH:mm:ss" (space-separated).
+  if (dateNextRdv.includes(' ')) {
+    const [date, timePart] = dateNextRdv.split(' ');
+    return { date, time: (timePart || '').slice(0, 5) };
+  }
   return { date: dateNextRdv, time: '' };
+}
+
+async function getOutlookSyncedMeetings(): Promise<ClientMeeting[]> {
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/agenda-events`);
+    if (!response.ok) return [];
+    const { data } = await response.json();
+    if (!Array.isArray(data)) return [];
+
+    return data
+      .filter((event: any) => event.startDate)
+      .map((event: any) => {
+        const { date, time } = splitDateTime(event.startDate);
+        const attendeeNames = (event.attendees || [])
+          .map((a: any) => a.email || a)
+          .filter(Boolean)
+          .join(', ');
+
+        return {
+          id: `outlook_${event.outlookEventId || event.id}`,
+          clientId: event.clientId || '',
+          clientName: attendeeNames || 'Outlook',
+          title: event.title || 'Événement Outlook',
+          description: '',
+          date,
+          time,
+          location: '',
+          locationType: 'cabinet' as const,
+          meetingType: 'autre',
+          completed: false,
+        };
+      });
+  } catch {
+    // Bridge/backend unreachable - just show client-based meetings.
+    return [];
+  }
 }
 
 export async function getAllUpcomingMeetings(): Promise<ClientMeeting[]> {
@@ -58,7 +100,8 @@ export async function getAllUpcomingMeetings(): Promise<ClientMeeting[]> {
     });
   }
 
-  return meetings;
+  const outlookMeetings = await getOutlookSyncedMeetings();
+  return [...meetings, ...outlookMeetings];
 }
 
 export async function setClientMeeting(
