@@ -280,12 +280,24 @@ export function TasksTab({ clientId }: TasksTabProps) {
 
         console.log(`   ${status}: blockState=${blockState}, tasks=${tasks.length}`);
 
-        // Protection CSP
+        // Protection CSP - il n'existait auparavant aucun moyen dans
+        // l'interface de lever ce verrou une fois le CSP réellement signé,
+        // ce qui bloquait ces deux statuts en permanence pour tous les
+        // clients (cspSigne vaut false par défaut à la création et rien
+        // ne le passait jamais à true).
         if (isProtected && !cspSigne) {
           return (
-            <div key={status} className="border-l-4 border-red-400 bg-red-50 p-4 rounded">
-              <p className="text-sm text-red-700 font-semibold">⚠️ {status} : CSP non signé</p>
-              <p className="text-xs text-red-600">Signez le CSP pour accéder à ce statut</p>
+            <div key={status} className="border-l-4 border-red-400 bg-red-50 p-4 rounded flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm text-red-700 font-semibold">⚠️ {status} : CSP non signé</p>
+                <p className="text-xs text-red-600">Signez le CSP pour accéder à ce statut</p>
+              </div>
+              <button
+                onClick={() => updateClientField('cspSigne', true)}
+                className="shrink-0 px-3 py-1.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
+              >
+                ✅ Marquer le CSP comme signé
+              </button>
             </div>
           );
         }
