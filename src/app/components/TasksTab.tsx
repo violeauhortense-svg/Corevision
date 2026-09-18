@@ -66,6 +66,16 @@ export function TasksTab({ clientId }: TasksTabProps) {
     let currentIdx = STATUSES.findIndex((s) => s.toLowerCase() === clientStatus.toLowerCase());
     if (currentIdx === -1) currentIdx = 0; // Unrecognized status: default to the first block
     const statusIdx = STATUSES.indexOf(status);
+
+    // "Suivi CSP" and "Arbitrage" run in parallel once a client reaches
+    // either one, not sequentially - completing/reaching one shouldn't
+    // collapse or lock the other, so both stay open together for as
+    // long as the client sits anywhere at or past "Suivi CSP".
+    const cspIdx = STATUSES.indexOf('Suivi CSP');
+    if ((status === 'Suivi CSP' || status === 'Arbitrage') && currentIdx >= cspIdx) {
+      return 'EN_COURS';
+    }
+
     if (statusIdx < currentIdx) return 'COMPLETE';
     if (statusIdx === currentIdx) return 'EN_COURS';
     return 'A_VENIR';
