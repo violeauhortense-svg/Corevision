@@ -1,0 +1,7 @@
+# Local-only runtime data and services - Vercel deploys just the static
+# frontend, which talks to the local backend through the ngrok tunnel,
+# never to these files directly. pocketbase/pb_data in particular grows
+# with every mail sync and just blew past Vercel's 100MB upload limit,
+# failing every deploy outright.
+pocketbase/
+bridge/

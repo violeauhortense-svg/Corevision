@@ -92,10 +92,22 @@ app.get('/mails', async (c) => {
       filter = 'hubTab = "interne_externe" && traitementStatus != "termine"';
     }
 
-    const result = await pb.listRecords('hub_mails', { filter, sort: '-sentAt', perPage: limit });
+    // Mail synced by the bridge only ever sets receivedAt, never sentAt
+    // (only queued replies do) - sorting on -sentAt at the DB level left
+    // almost every real mail with nothing to sort by, so the list came
+    // back in near-arbitrary order instead of newest-first. Fetch
+    // unsorted, then sort in memory on the same resolved date toHubMail
+    // already computes (sentAt || receivedAt || created), which every
+    // record has one of.
+    const result = await pb.listRecords('hub_mails', { filter, perPage: 500 });
     const stats = await computeStats();
 
-    return c.json({ mails: result.items.map(toHubMail), total: result.total, stats });
+    const mails = result.items
+      .map(toHubMail)
+      .sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime())
+      .slice(0, limit);
+
+    return c.json({ mails, total: result.total, stats });
   } catch (err: any) {
     console.error('Error fetching mails:', err.message);
     return c.json({ mails: [], total: 0, error: err.message }, 500);
@@ -240,8 +252,12 @@ app.post('/mails/search', async (c) => {
     else if (tab === 'conversation_client') filter += ' && hubTab = "conversation_client"';
     else if (tab === 'interne_externe') filter += ' && hubTab = "interne_externe"';
 
-    const result = await pb.listRecords('hub_mails', { filter, sort: '-sentAt', perPage: limit || 50 });
-    return c.json(result.items.map(toHubMail));
+    const result = await pb.listRecords('hub_mails', { filter, perPage: 500 });
+    const mails = result.items
+      .map(toHubMail)
+      .sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime())
+      .slice(0, limit || 50);
+    return c.json(mails);
   } catch (err: any) {
     console.error('Error searching mails:', err.message);
     return c.json([], 500);

@@ -18,22 +18,28 @@ export function AttachmentsDisplay({
     return null;
   }
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 B';
+  // The bridge only ever captures the attachment's file name (Outlook
+  // COM doesn't hand over size/mimeType without downloading the file),
+  // so both were always undefined here - calling .includes() on an
+  // undefined mimeType threw and crashed the whole modal for any mail
+  // that had an attachment.
+  const formatFileSize = (bytes?: number): string => {
+    if (!bytes) return '';
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
   };
 
-  const getFileIcon = (mimeType: string): string => {
-    if (mimeType.includes('pdf')) return '📄';
-    if (mimeType.includes('word') || mimeType.includes('document')) return '📝';
-    if (mimeType.includes('sheet') || mimeType.includes('excel')) return '📊';
-    if (mimeType.includes('image')) return '🖼️';
-    if (mimeType.includes('video')) return '🎥';
-    if (mimeType.includes('audio')) return '🎵';
-    if (mimeType.includes('zip') || mimeType.includes('archive')) return '🗜️';
+  const getFileIcon = (mimeType?: string, name?: string): string => {
+    const ext = name?.split('.').pop()?.toLowerCase() || '';
+    if (mimeType?.includes('pdf') || ext === 'pdf') return '📄';
+    if (mimeType?.includes('word') || mimeType?.includes('document') || ext === 'doc' || ext === 'docx') return '📝';
+    if (mimeType?.includes('sheet') || mimeType?.includes('excel') || ext === 'xls' || ext === 'xlsx') return '📊';
+    if (mimeType?.includes('image') || ['png', 'jpg', 'jpeg', 'gif'].includes(ext)) return '🖼️';
+    if (mimeType?.includes('video')) return '🎥';
+    if (mimeType?.includes('audio')) return '🎵';
+    if (mimeType?.includes('zip') || mimeType?.includes('archive') || ext === 'zip') return '🗜️';
     return '📎';
   };
 
@@ -63,17 +69,19 @@ export function AttachmentsDisplay({
       <div className="space-y-2">
         {attachments.map((attachment, index) => (
           <div
-            key={attachment.id}
+            key={attachment.id || `${attachment.name}-${index}`}
             className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
           >
             <div className="flex items-center gap-3 min-w-0 flex-1">
-              <span className="text-xl flex-shrink-0">{getFileIcon(attachment.mimeType)}</span>
+              <span className="text-xl flex-shrink-0">{getFileIcon(attachment.mimeType, attachment.name)}</span>
 
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-gray-900 truncate" title={attachment.name}>
                   {attachment.name}
                 </p>
-                <p className="text-xs text-gray-500 mt-0.5">{formatFileSize(attachment.size)}</p>
+                {formatFileSize(attachment.size) && (
+                  <p className="text-xs text-gray-500 mt-0.5">{formatFileSize(attachment.size)}</p>
+                )}
               </div>
             </div>
 
