@@ -12,7 +12,6 @@ import { ProblemesDetectes } from './pre-analyse/ProblemesDetectes';
 // import { SimulationsProjections } from './pre-analyse/SimulationsProjections';
 import { PyramidePatrimonialeNew } from './pre-analyse/PyramidePatrimonialeNew'; // 🆕 Nouvelle pyramide
 import { CapaciteEpargne } from './pre-analyse/CapaciteEpargne';
-import { RecommandationsCategories } from './pre-analyse/RecommandationsCategories'; // 🆕 Recommandations catégorisées
 import { formatEuro } from './pre-analyse/utils';
 import type {
   PreAnalyseTabProps,
@@ -436,17 +435,6 @@ export function PreAnalyseTab({
 
       {/* ── 6. Points de vigilance ──────────────────────────────────── */}
       <ProblemesDetectes problemes={problemes} />
-
-      {/* ── 7. Recommandations ──────────────────────────────────────── */}
-      <RecommandationsCategories
-        problemes={problemes}
-        patrimoineNet={calculs.patrimoineNet}
-        pressionFiscale={calculs.pressionFiscale}
-        tauxEndettement={calculs.tauxEndettement}
-        ratioLiquidite={ratioLiquidite}
-        partImmobilier={calculs.partImmobilier}
-        partFinancier={calculs.partFinancier}
-      />
 
     </div>
   );
