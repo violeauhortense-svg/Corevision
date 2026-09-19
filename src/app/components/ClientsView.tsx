@@ -228,7 +228,12 @@ export function ClientsView({ session, selectedClientId: initialClientId, openTa
                 {filteredClients.map((client) => (
                   <tr key={client.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900">{client.prenom} {client.nom}</div>
+                      <button
+                        onClick={() => setSelectedClientId(client.id)}
+                        className="font-medium text-gray-900 hover:text-blue-600 hover:underline text-left"
+                      >
+                        {client.prenom} {client.nom}
+                      </button>
                     </td>
                     <td className="px-6 py-4">
                       <div className="space-y-1">
