@@ -68,6 +68,17 @@ app.get('/metrics', async (c) => {
 
       // Revenue
       caTotal += Number(client.tauxCA) || 0;
+
+      // Recommandations' CA only counts toward the dashboard total when
+      // attributed to Hortense herself and not refused - CA credited to
+      // M. Lecler or a service is tracked in the module but shouldn't
+      // inflate her own revenue card.
+      const recommendations = Array.isArray(client.auditRecommendations) ? client.auditRecommendations : [];
+      for (const rec of recommendations) {
+        if (rec.venduPar === 'moi' && rec.status !== 'refusee') {
+          caTotal += Number(rec.chiffreAffaires) || 0;
+        }
+      }
     }
 
     let mailsATraiter = 0;
