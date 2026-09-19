@@ -196,7 +196,7 @@ export type AuditRecommendationService = 'juridique' | 'investissement' | 'ingen
 
 // A qui affecter le CA de la vente - distinct du "service" ci-dessus, qui
 // designe le service qui execute la recommandation une fois acceptee.
-export type AuditRecommendationVendeur = 'moi' | 'lecler' | 'service_juridique' | 'service_investissement';
+export type AuditRecommendationVendeur = 'moi' | 'lecler' | 'service_juridique' | 'service_investissement' | 'service_ingenierie_patrimoniale';
 
 export interface AuditRecommendation {
   id: string;

@@ -32,10 +32,11 @@ const SERVICE_LABELS: Record<AuditRecommendationService, string> = {
 };
 
 const VENDEUR_LABELS: Record<AuditRecommendationVendeur, string> = {
-  moi: '👤 Moi',
+  moi: '👤 Hortense Violeau',
   lecler: '👤 M. Lecler',
   service_juridique: '⚖️ Service juridique',
   service_investissement: '📈 Service investissement',
+  service_ingenierie_patrimoniale: '🏛️ Service ingénierie patrimoniale',
 };
 
 function formatEuro(value: number): string {
@@ -217,7 +218,7 @@ export function RecommandationsModule({ recommendations, onUpdate }: Recommandat
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-1.5">Affecté à</label>
+                <label className="block text-sm font-semibold text-gray-900 mb-1.5">Vendu par</label>
                 <select
                   value={form.venduPar}
                   onChange={(e) => setForm({ ...form, venduPar: e.target.value as AuditRecommendationVendeur | '' })}
