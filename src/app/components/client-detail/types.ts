@@ -194,11 +194,16 @@ export type AuditRecommendationStatus =
 
 export type AuditRecommendationService = 'juridique' | 'investissement' | 'ingenierie_patrimoniale';
 
+// A qui affecter le CA de la vente - distinct du "service" ci-dessus, qui
+// designe le service qui execute la recommandation une fois acceptee.
+export type AuditRecommendationVendeur = 'moi' | 'lecler' | 'service_juridique' | 'service_investissement';
+
 export interface AuditRecommendation {
   id: string;
   title: string;
   detail: string;
   chiffreAffaires: number;
+  venduPar?: AuditRecommendationVendeur;
   status: AuditRecommendationStatus;
   service?: AuditRecommendationService; // Choisi une fois la recommandation acceptee
   createdDate: string;

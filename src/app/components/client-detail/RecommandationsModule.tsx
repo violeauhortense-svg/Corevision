@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plus, X, Trash2, Pencil, CheckCircle2, XCircle, ArrowRight, FileCheck, Flag, Lightbulb } from 'lucide-react';
-import type { AuditRecommendation, AuditRecommendationStatus, AuditRecommendationService } from './types';
+import type { AuditRecommendation, AuditRecommendationStatus, AuditRecommendationService, AuditRecommendationVendeur } from './types';
 
 interface RecommandationsModuleProps {
   recommendations: AuditRecommendation[];
@@ -31,12 +31,19 @@ const SERVICE_LABELS: Record<AuditRecommendationService, string> = {
   ingenierie_patrimoniale: '🏛️ Ingénierie patrimoniale',
 };
 
+const VENDEUR_LABELS: Record<AuditRecommendationVendeur, string> = {
+  moi: '👤 Moi',
+  lecler: '👤 M. Lecler',
+  service_juridique: '⚖️ Service juridique',
+  service_investissement: '📈 Service investissement',
+};
+
 function formatEuro(value: number): string {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value || 0);
 }
 
 function emptyForm() {
-  return { title: '', detail: '', chiffreAffaires: '' };
+  return { title: '', detail: '', chiffreAffaires: '', venduPar: '' as AuditRecommendationVendeur | '' };
 }
 
 export function RecommandationsModule({ recommendations, onUpdate }: RecommandationsModuleProps) {
@@ -57,18 +64,19 @@ export function RecommandationsModule({ recommendations, onUpdate }: Recommandat
 
   const openEditForm = (rec: AuditRecommendation) => {
     setEditingId(rec.id);
-    setForm({ title: rec.title, detail: rec.detail, chiffreAffaires: String(rec.chiffreAffaires || '') });
+    setForm({ title: rec.title, detail: rec.detail, chiffreAffaires: String(rec.chiffreAffaires || ''), venduPar: rec.venduPar || '' });
     setShowForm(true);
   };
 
   const handleSaveForm = async () => {
     if (!form.title.trim()) return;
     const now = new Date().toISOString();
+    const venduPar = form.venduPar || undefined;
 
     if (editingId) {
       const next = recommendations.map((r) =>
         r.id === editingId
-          ? { ...r, title: form.title.trim(), detail: form.detail.trim(), chiffreAffaires: Number(form.chiffreAffaires) || 0, updatedDate: now }
+          ? { ...r, title: form.title.trim(), detail: form.detail.trim(), chiffreAffaires: Number(form.chiffreAffaires) || 0, venduPar, updatedDate: now }
           : r
       );
       await persist(next);
@@ -78,6 +86,7 @@ export function RecommandationsModule({ recommendations, onUpdate }: Recommandat
         title: form.title.trim(),
         detail: form.detail.trim(),
         chiffreAffaires: Number(form.chiffreAffaires) || 0,
+        venduPar,
         status: 'proposee',
         createdDate: now,
       };
@@ -117,6 +126,13 @@ export function RecommandationsModule({ recommendations, onUpdate }: Recommandat
     .filter((r) => r.status !== 'refusee')
     .reduce((sum, r) => sum + (r.chiffreAffaires || 0), 0);
 
+  const totalsByVendeur = recommendations
+    .filter((r) => r.status !== 'refusee' && r.venduPar)
+    .reduce<Record<string, number>>((acc, r) => {
+      acc[r.venduPar!] = (acc[r.venduPar!] || 0) + (r.chiffreAffaires || 0);
+      return acc;
+    }, {});
+
   return (
     <div className="space-y-6">
       {/* En-tête + résumé CA */}
@@ -134,6 +150,18 @@ export function RecommandationsModule({ recommendations, onUpdate }: Recommandat
             <p className="text-3xl font-bold">{formatEuro(totalGeneral)}</p>
           </div>
         </div>
+        {Object.keys(totalsByVendeur).length > 0 && (
+          <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t border-white/20">
+            {(Object.keys(VENDEUR_LABELS) as AuditRecommendationVendeur[])
+              .filter((v) => totalsByVendeur[v])
+              .map((v) => (
+                <div key={v} className="text-sm">
+                  <span className="text-emerald-100">{VENDEUR_LABELS[v]} : </span>
+                  <span className="font-bold">{formatEuro(totalsByVendeur[v])}</span>
+                </div>
+              ))}
+          </div>
+        )}
       </div>
 
       {/* Bouton nouvelle recommandation */}
@@ -187,6 +215,19 @@ export function RecommandationsModule({ recommendations, onUpdate }: Recommandat
                   placeholder="0"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-1.5">Affecté à</label>
+                <select
+                  value={form.venduPar}
+                  onChange={(e) => setForm({ ...form, venduPar: e.target.value as AuditRecommendationVendeur | '' })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                >
+                  <option value="">— Non affecté —</option>
+                  {(Object.keys(VENDEUR_LABELS) as AuditRecommendationVendeur[]).map((v) => (
+                    <option key={v} value={v}>{VENDEUR_LABELS[v]}</option>
+                  ))}
+                </select>
               </div>
             </div>
             <div className="p-6 border-t border-gray-200 flex gap-3 justify-end">
@@ -245,6 +286,11 @@ export function RecommandationsModule({ recommendations, onUpdate }: Recommandat
                 )}
                 {rec.chiffreAffaires > 0 && (
                   <span className="text-sm font-semibold text-emerald-700">{formatEuro(rec.chiffreAffaires)}</span>
+                )}
+                {rec.venduPar && (
+                  <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    {VENDEUR_LABELS[rec.venduPar]}
+                  </span>
                 )}
               </div>
 
