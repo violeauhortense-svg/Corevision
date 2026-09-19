@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, X, Trash2, Pencil, CheckCircle2, XCircle, ArrowRight, FileCheck, Flag, Lightbulb } from 'lucide-react';
+import { Plus, X, Trash2, Pencil, CheckCircle2, XCircle, ArrowRight, FileCheck, Flag, Lightbulb, AlertTriangle } from 'lucide-react';
 import type { AuditRecommendation, AuditRecommendationStatus, AuditRecommendationService, AuditRecommendationVendeur } from './types';
 
 interface RecommandationsModuleProps {
@@ -52,6 +52,7 @@ export function RecommandationsModule({ recommendations, onUpdate }: Recommandat
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm());
   const [choosingServiceFor, setChoosingServiceFor] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const persist = async (next: AuditRecommendation[]) => {
     await onUpdate(next);
@@ -101,6 +102,7 @@ export function RecommandationsModule({ recommendations, onUpdate }: Recommandat
 
   const handleDelete = async (id: string) => {
     await persist(recommendations.filter((r) => r.id !== id));
+    setConfirmDeleteId(null);
   };
 
   const updateStatus = async (id: string, status: AuditRecommendationStatus, service?: AuditRecommendationService) => {
@@ -250,6 +252,41 @@ export function RecommandationsModule({ recommendations, onUpdate }: Recommandat
         </div>
       )}
 
+      {/* Confirmation de suppression */}
+      {confirmDeleteId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-md w-full p-6">
+            <div className="flex items-start gap-3">
+              <div className="shrink-0 bg-red-100 p-2 rounded-full">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Supprimer cette recommandation ?</h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  {recommendations.find((r) => r.id === confirmDeleteId)?.title
+                    ? `« ${recommendations.find((r) => r.id === confirmDeleteId)?.title} » sera définitivement supprimée. Cette action est irréversible.`
+                    : 'Cette action est irréversible.'}
+                </p>
+              </div>
+            </div>
+            <div className="mt-6 flex gap-3 justify-end">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => handleDelete(confirmDeleteId)}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium"
+              >
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Liste des recommandations */}
       {recommendations.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
@@ -270,7 +307,7 @@ export function RecommandationsModule({ recommendations, onUpdate }: Recommandat
                   <button onClick={() => openEditForm(rec)} className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500" title="Modifier">
                     <Pencil className="w-4 h-4" />
                   </button>
-                  <button onClick={() => handleDelete(rec.id)} className="p-1.5 hover:bg-red-50 rounded-lg text-red-500" title="Supprimer">
+                  <button onClick={() => setConfirmDeleteId(rec.id)} className="p-1.5 hover:bg-red-50 rounded-lg text-red-500" title="Supprimer">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
