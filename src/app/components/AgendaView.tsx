@@ -681,13 +681,29 @@ export function AgendaView({ session }: AgendaViewProps) {
             </div>
           </div>
 
-          {/* Jour sélectionné */}
+          {/* Jour sélectionné - modal pour un accès rapide au clic sur un jour,
+              plutôt qu'une section à faire défiler en bas de page. */}
           {selectedDate && (
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                {selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-              </h3>
-              <div className="space-y-3">
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+              onClick={() => setSelectedDate(null)}
+            >
+              <div
+                className="bg-white rounded-xl max-w-lg w-full max-h-[85vh] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+              <div className="sticky top-0 bg-white p-6 border-b border-gray-200 flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  {selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                </h3>
+                <button
+                  onClick={() => setSelectedDate(null)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+              <div className="space-y-3 p-6">
                 {getSelectedDateItems().tasks.length === 0 && getSelectedDateItems().meetings.length === 0 ? (
                   <div className="text-center py-8">
                     <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -771,6 +787,7 @@ export function AgendaView({ session }: AgendaViewProps) {
                     ))}
                   </>
                 )}
+              </div>
               </div>
             </div>
           )}
