@@ -1,6 +1,12 @@
 import { useState } from 'react';
-import { ArrowLeft, User, Phone, Mail, MapPin, Calendar, Edit, X, Save, Building2 } from 'lucide-react';
+import { ArrowLeft, User, Phone, Mail, MapPin, Calendar, Edit, X, Save, Building2, Briefcase } from 'lucide-react';
 import type { ClientData } from './types';
+
+const SECTEUR_LABELS: Record<'secteur_1' | 'secteur_2' | 'na', string> = {
+  secteur_1: 'Secteur 1',
+  secteur_2: 'Secteur 2',
+  na: 'N/A',
+};
 
 interface ClientHeaderProps {
   clientData: ClientData;
@@ -78,6 +84,18 @@ export function ClientHeader({
                     <div className="flex items-center gap-2 text-gray-600">
                       <Building2 className="w-4 h-4" />
                       <span>{clientData.mainCompany}</span>
+                    </div>
+                  )}
+                  {clientData.activite && (
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Briefcase className="w-4 h-4" />
+                      <span>{clientData.activite}</span>
+                    </div>
+                  )}
+                  {clientData.secteur && (
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Briefcase className="w-4 h-4" />
+                      <span>{SECTEUR_LABELS[clientData.secteur]}</span>
                     </div>
                   )}
                   {clientData.lastMeetingDate && (
@@ -193,6 +211,29 @@ export function ClientHeader({
                     className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
                     placeholder="Nom de la société"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Activité</label>
+                  <input
+                    type="text"
+                    value={tempClientData.activite || ''}
+                    onChange={(e) => setTempClientData({ ...tempClientData, activite: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+                    placeholder="Ex : Chirurgien-dentiste"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Secteur</label>
+                  <select
+                    value={tempClientData.secteur || ''}
+                    onChange={(e) => setTempClientData({ ...tempClientData, secteur: e.target.value as ClientData['secteur'] })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="">— Non renseigné —</option>
+                    <option value="secteur_1">Secteur 1</option>
+                    <option value="secteur_2">Secteur 2</option>
+                    <option value="na">N/A</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Date du dernier RDV</label>

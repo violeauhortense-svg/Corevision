@@ -320,6 +320,8 @@ export interface ClientData {
   mainCompany?: string; // Société principale
   lastMeetingDate?: string; // Date du dernier rendez-vous
   nextMeetingDate?: string; // Date du prochain rendez-vous
+  activite?: string; // Activité professionnelle du client
+  secteur?: 'secteur_1' | 'secteur_2' | 'na'; // Secteur conventionnel (medecins)
 }
 
 export { type PipelineStage, type Task };

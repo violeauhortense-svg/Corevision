@@ -184,6 +184,8 @@ export async function initializePocketBase(pbUrl: string) {
       { name: 'spouse', type: 'json' },
       { name: 'children', type: 'json' },
       { name: 'imposition', type: 'json' },
+      { name: 'activite', type: 'text' },
+      { name: 'secteur', type: 'text' },
       { name: 'patrimoineData', type: 'json' },
       { name: 'auditRecommendations', type: 'json' },
       { name: 'documents', type: 'json' },
