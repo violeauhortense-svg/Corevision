@@ -29,7 +29,11 @@ try {
     }
 
     $Mails = @()
-    $FilterDate = $StartDate.ToString("MM/dd/yyyy HH:mm")
+    # See export_calendar.ps1 for why this must be culture-aware ("g")
+    # rather than a hardcoded "MM/dd/yyyy" - Outlook's Restrict() parses
+    # date literals using the machine's regional settings (fr-FR here),
+    # so a US-formatted date silently fails to filter correctly.
+    $FilterDate = $StartDate.ToString("g")
 
     # Restrict() filters at the folder level instead of walking every item
     # in the mailbox and checking dates after the fact - same fix as

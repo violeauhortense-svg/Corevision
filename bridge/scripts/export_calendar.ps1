@@ -51,8 +51,15 @@ try {
     $Items.IncludeRecurrences = $true
     $Items.Sort("[Start]")
 
-    $FilterStart = $StartDate.ToString("MM/dd/yyyy HH:mm")
-    $FilterEnd = $EndDate.ToString("MM/dd/yyyy HH:mm")
+    # Outlook's Restrict() parses date literals using the machine's
+    # current regional settings, not a fixed format - this machine is
+    # fr-FR (dd/MM/yyyy). Hardcoding "MM/dd/yyyy" here silently produced
+    # invalid dates for any day-of-month > 12 (e.g. "10/19/2026" parsed
+    # as day 10, month 19 - invalid), which made Restrict() return zero
+    # items every single cycle. "g" auto-formats to the current culture,
+    # so it always matches what Outlook expects on this machine.
+    $FilterStart = $StartDate.ToString("g")
+    $FilterEnd = $EndDate.ToString("g")
     $Filter = "[Start] <= '$FilterEnd' AND [End] >= '$FilterStart'"
     $RestrictedItems = $Items.Restrict($Filter)
 
