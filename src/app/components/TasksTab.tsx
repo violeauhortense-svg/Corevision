@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { TASK_DEFINITIONS, getStatusColor, getTaskDefs, type TaskButtonType } from './tasks/taskDefinitions';
 import { TaskModals } from './tasks/TaskModals';
+import { RecommandationsModule } from './client-detail/RecommandationsModule';
+import type { AuditRecommendation } from './client-detail/types';
 import { ClientService } from '../services/ClientService';
 import type { Client } from '../services/ClientService';
 import type { Task } from '../types/client';
@@ -14,15 +16,17 @@ interface TasksTabProps {
   clientId: string;
   clientStatus?: string;
   objectifs?: any[];
-  recommendations?: any[];
+  auditRecommendations?: AuditRecommendation[];
+  onUpdateAuditRecommendations?: (recommendations: AuditRecommendation[]) => Promise<void> | void;
   entreprises?: any[];
   contacts?: any[];
 }
 
-export function TasksTab({ clientId }: TasksTabProps) {
+export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRecommendations }: TasksTabProps) {
   const [client, setClient] = useState<Client | null>(null);
   const [expandedBlocks, setExpandedBlocks] = useState<Record<string, boolean>>({});
   const [activeModal, setActiveModal] = useState<{ type: TaskButtonType; taskId: string; status: string } | null>(null);
+  const [showRecommandationsModule, setShowRecommandationsModule] = useState(false);
   const [arbitrageClosureDate, setArbitrageClosureDate] = useState('');
   const [arbitrageTreasuryN1, setArbitrageTreasuryN1] = useState('');
   const [loading, setLoading] = useState(true);
@@ -478,7 +482,11 @@ export function TasksTab({ clientId }: TasksTabProps) {
                           )}
                           {taskDef.button && (
                             <button
-                              onClick={() => setActiveModal({ type: taskDef.button!, taskId: task.id, status })}
+                              onClick={() =>
+                                taskDef.button === 'recommandation'
+                                  ? setShowRecommandationsModule(true)
+                                  : setActiveModal({ type: taskDef.button!, taskId: task.id, status })
+                              }
                               className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 font-medium whitespace-nowrap"
                             >
                               {taskDef.button === 'origine' && '📝 Infos'}
@@ -555,6 +563,33 @@ export function TasksTab({ clientId }: TasksTabProps) {
           </div>
         );
       })}
+
+      {/* Module Recommandations, ouvert depuis la tâche "Incorporation des
+          recommandations" - alimente directement la même liste que
+          l'onglet Audit et le bouton dédié sur la fiche client. */}
+      {showRecommandationsModule && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="sticky top-0 bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-6 flex items-center justify-between border-b border-gray-200">
+              <h2 className="text-2xl font-bold">Recommandations</h2>
+              <button
+                onClick={() => setShowRecommandationsModule(false)}
+                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="overflow-y-auto p-6">
+              <RecommandationsModule
+                recommendations={auditRecommendations}
+                onUpdate={async (recs) => {
+                  if (onUpdateAuditRecommendations) await onUpdateAuditRecommendations(recs);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       <TaskModals
         isOpen={!!activeModal}

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { clientAPI } from '../../services/api';
 import { toast } from 'sonner';
-import { BarChart3, X, Check, AlertCircle } from 'lucide-react';
+import { BarChart3, Lightbulb, X, Check, AlertCircle } from 'lucide-react';
 import { useClientData, initializeRequiredDocuments } from '../../hooks/useClientData';
 
 // Import des composants modulaires
@@ -13,6 +13,7 @@ import { PatrimoineTab } from './PatrimoineTab';
 import { ObjectifsTab } from './ObjectifsTab';
 import { PreAnalyseTab } from './PreAnalyseTab';
 import { AuditTab } from './AuditTab';
+import { RecommandationsModule } from './RecommandationsModule';
 import { TasksTab } from '../TasksTab';
 import { DocumentsTab } from './DocumentsTab';
 import { HistoriqueTab } from './HistoriqueTab';
@@ -28,6 +29,7 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
   const [isLoading, setIsLoading] = useState(true);
   const [session, setSession] = useState<any>(null);
   const [showPreAnalyseModal, setShowPreAnalyseModal] = useState(false);
+  const [showRecommandationsModal, setShowRecommandationsModal] = useState(false);
 
   // Client data management hook - consolidates 17 useState + 13 handlers.
   // Every handleUpdateXxx call persists immediately to the server (no
@@ -216,14 +218,21 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
         </div>
       </div>
 
-      {/* Bouton Pré-analyse */}
-      <div className="mb-6">
+      {/* Boutons Pré-analyse / Recommandations */}
+      <div className="mb-6 flex flex-wrap gap-3">
         <button
           onClick={() => setShowPreAnalyseModal(true)}
           className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg"
         >
           <BarChart3 className="w-5 h-5" />
           <span className="font-medium">📊 Voir la Pré-analyse</span>
+        </button>
+        <button
+          onClick={() => setShowRecommandationsModal(true)}
+          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all shadow-md hover:shadow-lg"
+        >
+          <Lightbulb className="w-5 h-5" />
+          <span className="font-medium">💡 Voir les Recommandations</span>
         </button>
       </div>
 
@@ -255,6 +264,32 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
                 passifs={state.passifs}
                 revenus={state.revenus}
                 impositionData={state.imposition}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Recommandations */}
+      {showRecommandationsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="sticky top-0 bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-6 flex items-center justify-between border-b border-gray-200">
+              <h2 className="text-2xl font-bold flex items-center gap-3">
+                <Lightbulb className="w-7 h-7" />
+                Recommandations - {state.clientData.name}
+              </h2>
+              <button
+                onClick={() => setShowRecommandationsModal(false)}
+                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="overflow-y-auto p-6">
+              <RecommandationsModule
+                recommendations={state.auditRecommendations}
+                onUpdate={handleUpdateAuditRecommendations}
               />
             </div>
           </div>
@@ -353,7 +388,8 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
               clientId={clientId}
               clientStatus={state.clientData.status}
               objectifs={state.objectifs}
-              recommendations={state.auditRecommendations}
+              auditRecommendations={state.auditRecommendations}
+              onUpdateAuditRecommendations={handleUpdateAuditRecommendations}
               entreprises={state.entreprises}
               contacts={state.contactsProfessionnels}
             />
@@ -372,6 +408,8 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
             <AuditTab
               clientId={clientId}
               clientName={`${state.clientData.firstName} ${state.clientData.lastName}`}
+              recommendations={state.auditRecommendations}
+              onUpdateRecommendations={handleUpdateAuditRecommendations}
             />
           )}
 

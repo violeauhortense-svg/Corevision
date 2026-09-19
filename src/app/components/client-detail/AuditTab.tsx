@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
 import { FolderOpen, FileText, Clock, CheckCircle, Archive } from 'lucide-react';
+import { RecommandationsModule } from './RecommandationsModule';
+import type { AuditRecommendation } from './types';
 
 interface AuditTabProps {
   clientId: string;
   clientName?: string;
+  recommendations: AuditRecommendation[];
+  onUpdateRecommendations: (recommendations: AuditRecommendation[]) => Promise<void> | void;
 }
 
-export function AuditTab({ clientId, clientName = 'Client' }: AuditTabProps) {
+export function AuditTab({ clientId, clientName = 'Client', recommendations, onUpdateRecommendations }: AuditTabProps) {
   const [dossiersArchives, setDossiersArchives] = useState<any[]>([]);
   
   useEffect(() => {
@@ -40,8 +44,11 @@ export function AuditTab({ clientId, clientName = 'Client' }: AuditTabProps) {
   };
   
   return (
-    <div className="p-6 space-y-6">
-      
+    <div className="p-6 space-y-8">
+
+      {/* Module Recommandations */}
+      <RecommandationsModule recommendations={recommendations} onUpdate={onUpdateRecommendations} />
+
       {/* En-tête */}
       <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg p-6 text-white">
         <div className="flex items-center gap-4">
@@ -56,7 +63,7 @@ export function AuditTab({ clientId, clientName = 'Client' }: AuditTabProps) {
           </div>
         </div>
       </div>
-      
+
       {/* Message informatif */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div className="flex items-start gap-3">

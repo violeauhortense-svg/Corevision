@@ -182,53 +182,27 @@ export interface PatrimoineProfessionnel {
   tresoreriePro: number; // Trésorerie professionnelle
 }
 
+// Workflow: proposee -> (refusee [terminal]) | (acceptee, avec choix du
+// service concerne -> en_cours -> acte_finalise -> termine)
+export type AuditRecommendationStatus =
+  | 'proposee'
+  | 'refusee'
+  | 'acceptee'
+  | 'en_cours'
+  | 'acte_finalise'
+  | 'termine';
+
+export type AuditRecommendationService = 'juridique' | 'investissement' | 'ingenierie_patrimoniale';
+
 export interface AuditRecommendation {
   id: string;
-  category: string;
   title: string;
-  description: string;
-  priority: 'high' | 'medium' | 'low';
-  deadline?: string;
-  completed?: boolean;
-  source?: 'corevision' | 'manual'; // 🔥 Nouveau : Indiquer la source de la recommandation
-  validatedByCGP?: boolean; // 🔥 Nouveau : Pour les recommandations CoreVision
-  // 🆕 Nouveaux champs pour la refonte stratégique
-  status?: 'À analyser' | 'Proposée' | 'Validée' | 'En cours' | 'Mise en place' | 'Abandonnée';
-  responsable?: string; // Responsable de la recommandation
-  createdDate?: string; // Date de création
-  // 🆕 Fiche détaillée
-  contexteClient?: string; // Contexte client
-  problematique?: string; // Problématique identifiée
-  solution?: string; // Solution recommandée
-  avantages?: string; // Avantages
-  risques?: string; // Risques et points de vigilance
-  actions?: string[]; // Actions associées
-  // 🆕 Workflow de mise en place
-  workflowSteps?: Array<{
-    id: string;
-    label: string;
-    completed: boolean;
-    completedDate?: string;
-  }>;
-  // 🆕 Workflow de mise en place détaillé (6 étapes standards)
-  implementationSteps?: {
-    simulation?: 'pending' | 'in-progress' | 'completed' | 'blocked';
-    simulationDate?: string;
-    simulationNotes?: string;
-    dossier?: 'pending' | 'in-progress' | 'completed' | 'blocked';
-    dossierDate?: string;
-    dossierNotes?: string;
-    signature?: 'pending' | 'in-progress' | 'completed' | 'blocked';
-    signatureDate?: string;
-    signatureNotes?: string;
-    transmission?: 'pending' | 'in-progress' | 'completed' | 'blocked';
-    transmissionDate?: string;
-    transmissionNotes?: string;
-    active?: 'pending' | 'in-progress' | 'completed' | 'blocked';
-    activeDate?: string;
-    activeNotes?: string;
-  };
-  validatedDate?: string; // Date de validation de la recommandation
+  detail: string;
+  chiffreAffaires: number;
+  status: AuditRecommendationStatus;
+  service?: AuditRecommendationService; // Choisi une fois la recommandation acceptee
+  createdDate: string;
+  updatedDate?: string;
 }
 
 export interface RevenuItem {
