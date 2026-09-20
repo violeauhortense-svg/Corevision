@@ -85,7 +85,10 @@ app.get('/mails', async (c) => {
 
     let filter: string;
     if (tab === 'archive') {
-      filter = 'traitementStatus = "termine"';
+      // A terminated mail tied to a client files into that client's own
+      // Historique tab instead (see GET /mails/client/:clientId) - this
+      // tab now only holds terminated mail with no client attached.
+      filter = 'traitementStatus = "termine" && hubTab != "conversation_client"';
     } else if (tab === 'conversation_client') {
       filter = 'hubTab = "conversation_client" && traitementStatus != "termine"';
     } else {
@@ -111,6 +114,28 @@ app.get('/mails', async (c) => {
   } catch (err: any) {
     console.error('Error fetching mails:', err.message);
     return c.json({ mails: [], total: 0, error: err.message }, 500);
+  }
+});
+
+// ─── GET /mails/client/:clientId (a client's terminated mail, for the
+// Historique tab - completed client mail lives there, not in the
+// "Interne" tab above) ─────────────────────────────────────────────
+app.get('/mails/client/:clientId', async (c) => {
+  try {
+    const clientId = c.req.param('clientId');
+    const result = await pb.listRecords('hub_mails', {
+      filter: `clientId = "${clientId}" && traitementStatus = "termine"`,
+      perPage: 200,
+    });
+
+    const mails = result.items
+      .map(toHubMail)
+      .sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime());
+
+    return c.json({ mails });
+  } catch (err: any) {
+    console.error('Error fetching client mails:', err.message);
+    return c.json({ mails: [], error: err.message }, 500);
   }
 });
 

@@ -53,6 +53,19 @@ export const hubCommunicationAPI = {
   },
 
   /**
+   * Charger les mails terminés d'un client (pour son onglet Historique)
+   */
+  async getMailsByClient(clientId: string): Promise<HubMail[]> {
+    const response = await fetch(`${API_URL}/mails/client/${clientId}`, {
+      headers: this._getHeaders(),
+    });
+
+    this._handleError(response, 'Erreur chargement mails du client');
+    const data = await response.json();
+    return data.mails || [];
+  },
+
+  /**
    * Mettre à jour un mail
    */
   async updateMail(

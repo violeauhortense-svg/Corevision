@@ -240,7 +240,7 @@ export function HubCommunicationView() {
                     className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
                   >
                     <Archive className="w-4 h-4 mr-2" />
-                    Archive
+                    Interne
                     <span className="ml-2 px-2 py-0.5 text-xs font-bold bg-gray-200 text-gray-700 rounded-full">
                       {stats.archive}
                     </span>
