@@ -52,16 +52,16 @@ export function ClientHeader({
         
         {/* Bandeau principal */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-6">
-              <div className="bg-blue-100 p-4 rounded-full">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="flex items-start gap-6 min-w-0">
+              <div className="bg-blue-100 p-4 rounded-full shrink-0">
                 <User className="w-8 h-8 text-blue-600" />
               </div>
-              
-              <div>
+
+              <div className="min-w-0">
                 <h2 className="text-3xl font-semibold text-gray-900">{clientData.firstName} <span className="text-gray-700">{clientData.lastName}</span></h2>
                 <p className="text-sm text-gray-500 mt-1">{clientData.phone && `📱 ${clientData.phone}`}</p>
-                <div className="grid grid-cols-3 gap-4 mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                   <div className="flex items-center gap-2 text-gray-600">
                     <Mail className="w-4 h-4" />
                     <span>{clientData.email}</span>
@@ -106,7 +106,7 @@ export function ClientHeader({
               </div>
             </div>
             
-            <div className="text-right">
+            <div className="text-left sm:text-right shrink-0">
               <p className="text-sm text-gray-600">Statut</p>
               <span className="inline-flex mt-2 px-4 py-2 rounded-full text-sm font-medium bg-purple-100 text-purple-700">
                 {clientData.status}
