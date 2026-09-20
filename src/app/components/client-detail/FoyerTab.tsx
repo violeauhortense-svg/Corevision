@@ -163,7 +163,7 @@ export function FoyerTab({ clientData, familyInfo, onUpdateFamily }: FoyerTabPro
             {(localFamilyInfo.maritalStatus === 'Marié(e)' || localFamilyInfo.maritalStatus === 'Pacsé(e)') && (
               <>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">R��gime :</span>
+                  <span className="text-sm text-gray-600">Régime :</span>
                   <span className="font-medium text-gray-900">{localFamilyInfo.regimeMatrimonial}</span>
                 </div>
                 {localFamilyInfo.maritalStatus === 'Marié(e)' && localFamilyInfo.dateMarriage && (

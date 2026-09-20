@@ -18,7 +18,7 @@ const regimesFiscauxDisponibles = [
   { value: 'monument_historique', label: 'Monument historique', icon: '🏰', description: 'Déficit sans plafond' },
   { value: 'denormandie', label: 'Denormandie', icon: '🏘️', description: 'Réduction d\'impôt ancien à rénover' },
   { value: 'censi_bouvard', label: 'Censi-Bouvard', icon: '🏥', description: 'Résidences services' },
-  { value: 'girardin', label: 'Girardin', icon: '🏝���', description: 'Investissement Outre-mer' },
+  { value: 'girardin', label: 'Girardin', icon: '🏝️', description: 'Investissement Outre-mer' },
 ];
 
 export function RegimeFiscalField({ value, onChange, actifType }: RegimeFiscalFieldProps) {
