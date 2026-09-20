@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { clientAPI } from '../../services/api';
 import { toast } from 'sonner';
-import { BarChart3, Lightbulb, X, Check, AlertCircle } from 'lucide-react';
+import { BarChart3, Lightbulb, X } from 'lucide-react';
 import { useClientData, initializeRequiredDocuments } from '../../hooks/useClientData';
 
 // Import des composants modulaires
@@ -32,11 +32,10 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
   const [showRecommandationsModal, setShowRecommandationsModal] = useState(false);
 
   // Client data management hook - consolidates 17 useState + 13 handlers.
-  // Every handleUpdateXxx call persists immediately to the server (no
-  // debounce), so saveStatus reflects a real, in-flight or completed save.
+  // Every handleUpdateXxx call persists immediately to the server, with
+  // no debounce.
   const {
     state,
-    saveStatus,
     handleUpdateClient,
     handleUpdateFamily,
     handleUpdateRevenus,
@@ -189,35 +188,12 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
   return (
     <div className="p-8">
       {/* Header avec informations client */}
-      <div className="flex items-start justify-between mb-4 gap-4">
-        <div className="flex-1 min-w-0">
-          <ClientHeader
-            clientData={state.clientData}
-            onBack={onBack}
-            onUpdate={handleUpdateClient}
-          />
-        </div>
-        {/* Indicateur de sauvegarde */}
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 shrink-0">
-          {saveStatus === 'saving' && (
-            <>
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-              <span className="text-sm text-blue-600 font-medium">💾 Sauvegarde...</span>
-            </>
-          )}
-          {saveStatus === 'saved' && (
-            <>
-              <Check className="w-4 h-4 text-green-600" />
-              <span className="text-sm text-green-600 font-medium">✅ Sauvegardé</span>
-            </>
-          )}
-          {saveStatus === 'error' && (
-            <>
-              <AlertCircle className="w-4 h-4 text-red-600" />
-              <span className="text-sm text-red-600 font-medium">❌ Erreur sauvegarde</span>
-            </>
-          )}
-        </div>
+      <div className="mb-4">
+        <ClientHeader
+          clientData={state.clientData}
+          onBack={onBack}
+          onUpdate={handleUpdateClient}
+        />
       </div>
 
       {/* Boutons Pré-analyse / Recommandations */}
