@@ -317,11 +317,18 @@ export interface ClientData {
   presentationCoreVision?: string; // 🔥 Nouveau : Présentation client CoreVision
   preconisationsCoreVision?: any[]; // 🔥 Nouveau : Préconisations brutes CoreVision
   // 🆕 Nouveaux champs pour la refonte stratégique
-  mainCompany?: string; // Société principale
-  lastMeetingDate?: string; // Date du dernier rendez-vous
-  nextMeetingDate?: string; // Date du prochain rendez-vous
   activite?: string; // Activité professionnelle du client
   secteur?: 'secteur_1' | 'secteur_2' | 'na'; // Secteur conventionnel (medecins)
+  // Prochain RDV réel, partagé avec l'Agenda et clientMeetingsService.ts -
+  // pas un champ séparé re-saisi ici, juste affiché en lecture seule.
+  dateNextRdv?: string;
+  nextRdvDetails?: {
+    title?: string;
+    description?: string;
+    location?: string;
+    locationType?: string;
+    meetingType?: string;
+  };
 }
 
 export { type PipelineStage, type Task };

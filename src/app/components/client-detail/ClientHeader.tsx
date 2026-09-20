@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, User, Phone, Mail, MapPin, Calendar, Edit, X, Save, Building2, Briefcase } from 'lucide-react';
+import { ArrowLeft, User, Phone, Mail, MapPin, Calendar, Edit, X, Save, Briefcase } from 'lucide-react';
 import type { ClientData } from './types';
 
 const SECTEUR_LABELS: Record<'secteur_1' | 'secteur_2' | 'na', string> = {
@@ -80,12 +80,6 @@ export function ClientHeader({
                       <span>Né(e) le {new Date(clientData.birthDate).toLocaleDateString('fr-FR')}</span>
                     </div>
                   )}
-                  {clientData.mainCompany && (
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Building2 className="w-4 h-4" />
-                      <span>{clientData.mainCompany}</span>
-                    </div>
-                  )}
                   {clientData.activite && (
                     <div className="flex items-center gap-2 text-gray-600">
                       <Briefcase className="w-4 h-4" />
@@ -98,16 +92,14 @@ export function ClientHeader({
                       <span>{SECTEUR_LABELS[clientData.secteur]}</span>
                     </div>
                   )}
-                  {clientData.lastMeetingDate && (
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Calendar className="w-4 h-4 text-blue-500" />
-                      <span className="text-sm">Dernier RDV: {new Date(clientData.lastMeetingDate).toLocaleDateString('fr-FR')}</span>
-                    </div>
-                  )}
-                  {clientData.nextMeetingDate && (
+                  {clientData.dateNextRdv && (
                     <div className="flex items-center gap-2 text-gray-600">
                       <Calendar className="w-4 h-4 text-green-500" />
-                      <span className="text-sm">Prochain RDV: {new Date(clientData.nextMeetingDate).toLocaleDateString('fr-FR')}</span>
+                      <span className="text-sm">
+                        Prochain RDV : {new Date(clientData.dateNextRdv).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        {clientData.dateNextRdv.includes('T') && ` à ${clientData.dateNextRdv.split('T')[1]?.slice(0, 5)}`}
+                        {clientData.nextRdvDetails?.title && ` — ${clientData.nextRdvDetails.title}`}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -203,16 +195,6 @@ export function ClientHeader({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Société principale</label>
-                  <input
-                    type="text"
-                    value={tempClientData.mainCompany || ''}
-                    onChange={(e) => setTempClientData({ ...tempClientData, mainCompany: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
-                    placeholder="Nom de la société"
-                  />
-                </div>
-                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Activité</label>
                   <input
                     type="text"
@@ -235,25 +217,13 @@ export function ClientHeader({
                     <option value="na">N/A</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date du dernier RDV</label>
-                  <input
-                    type="date"
-                    value={tempClientData.lastMeetingDate || ''}
-                    onChange={(e) => setTempClientData({ ...tempClientData, lastMeetingDate: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date du prochain RDV</label>
-                  <input
-                    type="date"
-                    value={tempClientData.nextMeetingDate || ''}
-                    onChange={(e) => setTempClientData({ ...tempClientData, nextMeetingDate: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
-                  />
-                </div>
               </div>
+
+              {clientData.dateNextRdv && (
+                <p className="text-xs text-gray-500 mt-3">
+                  📅 Le prochain RDV se gère depuis l'Agenda, pas ici.
+                </p>
+              )}
 
               {/* Majoration fiscale */}
               <div className="mt-6 pt-6 border-t border-gray-200">
