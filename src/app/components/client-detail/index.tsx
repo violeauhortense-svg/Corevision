@@ -189,14 +189,16 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
   return (
     <div className="p-8">
       {/* Header avec informations client */}
-      <div className="flex items-center justify-between mb-4">
-        <ClientHeader
-          clientData={state.clientData}
-          onBack={onBack}
-          onUpdate={handleUpdateClient}
-        />
+      <div className="flex items-start justify-between mb-4 gap-4">
+        <div className="flex-1 min-w-0">
+          <ClientHeader
+            clientData={state.clientData}
+            onBack={onBack}
+            onUpdate={handleUpdateClient}
+          />
+        </div>
         {/* Indicateur de sauvegarde */}
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 shrink-0">
           {saveStatus === 'saving' && (
             <>
               <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
