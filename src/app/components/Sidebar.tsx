@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, FileText, Calendar, CheckSquare, UserCircle, LogOut, Settings, Package, Lightbulb, Calculator, Mail, Terminal } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Calendar, CheckSquare, LogOut, Settings, Package, Lightbulb, Calculator, Mail, Terminal } from 'lucide-react';
 import type { ViewType } from '../App';
 
 interface SidebarProps {
@@ -132,29 +132,6 @@ export function Sidebar({ currentView, onViewChange, onLogout, session }: Sideba
           </button>
         )}
 
-        <button
-          onClick={() => onViewChange('profile')}
-          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-            currentView === 'profile'
-              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
-              : 'bg-blue-50 hover:bg-blue-100'
-          }`}
-        >
-          <UserCircle className="w-5 h-5" />
-          <div className="text-left flex-1">
-            <p className={`text-sm font-medium ${
-              currentView === 'profile' ? 'text-white' : 'text-blue-900'
-            }`}>
-              Mon profil
-            </p>
-            <p className={`text-xs ${
-              currentView === 'profile' ? 'text-blue-100' : 'text-blue-700'
-            }`}>
-              {isAdmin ? 'Administrateur' : 'Conseiller CGP'}
-            </p>
-          </div>
-        </button>
-        
         <button
           onClick={onLogout}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-red-600 hover:bg-red-50"
