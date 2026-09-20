@@ -3,6 +3,7 @@ import { Calendar, Mail, Phone, FileText, CheckCircle, Send, Clock, Target, Tren
 import { useClientHistory } from '../../utils/useEventSystem';
 import { taskSyncService } from '../../services/taskSyncService';
 import { hubCommunicationAPI } from '../../services/hubCommunicationAPI';
+import { MailDetailPanel } from '../communications/MailDetailPanel';
 import type { HistoryEvent } from '../../utils/eventEmitter';
 import type { Task } from '../client-detail/types';
 import type { HubMail } from '../../types/mail';
@@ -19,6 +20,16 @@ interface CombinedEvent extends HistoryEvent {
 export function HistoriqueTab({ clientId }: HistoriqueTabProps) {
   const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
   const [completedMails, setCompletedMails] = useState<HubMail[]>([]);
+  const [selectedMail, setSelectedMail] = useState<HubMail | null>(null);
+
+  const loadCompletedMails = async () => {
+    try {
+      const mails = await hubCommunicationAPI.getMailsByClient(clientId);
+      setCompletedMails(mails);
+    } catch (error) {
+      console.error('❌ Erreur chargement mails traités:', error);
+    }
+  };
 
   // 🔥 Utiliser les événements réels du système
   const events = useClientHistory(clientId);
@@ -39,14 +50,6 @@ export function HistoriqueTab({ clientId }: HistoriqueTabProps) {
   // Mails du Hub Communication marqués "Terminée" pour ce client - ils ne
   // s'affichent plus dans l'onglet "Interne" du Hub, mais se rangent ici.
   useEffect(() => {
-    const loadCompletedMails = async () => {
-      try {
-        const mails = await hubCommunicationAPI.getMailsByClient(clientId);
-        setCompletedMails(mails);
-      } catch (error) {
-        console.error('❌ Erreur chargement mails traités:', error);
-      }
-    };
     loadCompletedMails();
   }, [clientId]);
 
@@ -145,7 +148,11 @@ export function HistoriqueTab({ clientId }: HistoriqueTabProps) {
           </h3>
           <div className="space-y-2">
             {completedMails.map((mail) => (
-              <div key={mail.id} className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors">
+              <div
+                key={mail.id}
+                onClick={() => setSelectedMail(mail)}
+                className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors cursor-pointer"
+              >
                 <div className="flex items-start justify-between gap-3">
                   <p className="font-medium text-gray-900 text-sm truncate">{mail.subject || '(Sans sujet)'}</p>
                   <span className="text-xs text-gray-500 shrink-0">
@@ -215,6 +222,17 @@ export function HistoriqueTab({ clientId }: HistoriqueTabProps) {
             </div>
           </div>
         </div>
+      )}
+
+      {selectedMail && (
+        <MailDetailPanel
+          mail={selectedMail}
+          onClose={() => setSelectedMail(null)}
+          onUpdate={async (updated) => {
+            await loadCompletedMails();
+            setSelectedMail(updated);
+          }}
+        />
       )}
     </div>
   );
