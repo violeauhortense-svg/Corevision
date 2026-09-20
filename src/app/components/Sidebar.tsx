@@ -24,8 +24,8 @@ export function Sidebar({ currentView, onViewChange, onLogout, session }: Sideba
   return (
     <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
       <div className="p-6 border-b border-gray-200">
-        <h1 className="text-2xl font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">CoreVision</h1>
-        <p className="text-sm text-gray-500 mt-1">Gestion de Patrimoine</p>
+        <h1 className="text-2xl font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">EFI-Patrimoine</h1>
+        <p className="text-sm text-gray-500 mt-1">CRM - Gestion Client</p>
       </div>
       
       <nav className="flex-1 p-4">
