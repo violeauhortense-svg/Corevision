@@ -29,14 +29,14 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
 
   return (
     <div className="border-b border-gray-200">
-      <div className="flex gap-4 p-2">
+      <div className="flex flex-wrap gap-2 sm:gap-4 p-2">
         {/* Groupe Paramètres Client */}
-        <div className="flex gap-1 px-3 py-1 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+        <div className="flex flex-wrap gap-1 px-3 py-1 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
           {parametresTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              className={`px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg font-medium transition-all whitespace-nowrap ${
                 activeTab === tab.id
                   ? 'bg-blue-600 text-white shadow-md'
                   : 'text-blue-700 hover:bg-blue-100'
@@ -48,12 +48,12 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
         </div>
 
         {/* Groupe Gestion */}
-        <div className="flex gap-1 px-3 py-1 bg-gray-50 rounded-lg border border-gray-200">
+        <div className="flex flex-wrap gap-1 px-3 py-1 bg-gray-50 rounded-lg border border-gray-200">
           {gestionTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              className={`px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg font-medium transition-all whitespace-nowrap ${
                 activeTab === tab.id
                   ? 'bg-gray-700 text-white shadow-md'
                   : 'text-gray-700 hover:bg-gray-100'

@@ -195,7 +195,7 @@ export default function App() {
                   }}
                   onLogout={handleLogout}
                 />
-                <main className="flex-1 overflow-y-auto">
+                <main className="flex-1 overflow-y-auto overflow-x-hidden pt-14 md:pt-0">
                   {renderView()}
                 </main>
               </div>

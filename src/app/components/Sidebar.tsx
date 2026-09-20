@@ -1,4 +1,5 @@
-import { LayoutDashboard, Users, FileText, Calendar, CheckSquare, LogOut, Settings, Package, Lightbulb, Calculator, Mail, Terminal } from 'lucide-react';
+import { useState } from 'react';
+import { LayoutDashboard, Users, FileText, Calendar, CheckSquare, LogOut, Settings, Package, Lightbulb, Calculator, Mail, Terminal, Menu, X } from 'lucide-react';
 import type { ViewType } from '../App';
 
 interface SidebarProps {
@@ -12,7 +13,17 @@ export function Sidebar({ currentView, onViewChange, onLogout, session }: Sideba
   // Vérifier si l'utilisateur est admin
   const ADMIN_EMAIL = 'violeau.hortense@gmail.com';
   const isAdmin = session?.user?.email === ADMIN_EMAIL;
-  
+
+  // En dessous du breakpoint md, la sidebar est un tiroir hors-écran ouvert
+  // via ce hamburger, plutôt qu'une colonne fixe de 256px qui ne laissait
+  // presque plus de place au contenu sur un écran de téléphone.
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const navigate = (view: ViewType) => {
+    onViewChange(view);
+    setMobileOpen(false);
+  };
+
   const menuItems = [
     { id: 'dashboard' as ViewType, label: 'Tableau de bord', icon: LayoutDashboard },
     { id: 'clients' as ViewType, label: 'Clients', icon: Users },
@@ -22,22 +33,53 @@ export function Sidebar({ currentView, onViewChange, onLogout, session }: Sideba
   ];
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
-      <div className="p-6 border-b border-gray-200">
-        <h1 className="text-2xl font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">EFI-Patrimoine</h1>
-        <p className="text-sm text-gray-500 mt-1">CRM - Gestion Client</p>
+    <>
+      {/* Hamburger mobile - masqué sur desktop (md:hidden) */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="md:hidden fixed top-3 left-3 z-30 p-2 bg-white border border-gray-200 rounded-lg shadow-sm"
+        aria-label="Ouvrir le menu"
+      >
+        <Menu className="w-6 h-6 text-gray-700" />
+      </button>
+
+      {/* Fond assombri derrière le tiroir mobile */}
+      {mobileOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/40 z-40"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      <aside
+        className={`w-64 bg-white border-r border-gray-200 flex flex-col fixed md:static inset-y-0 left-0 z-50 transform transition-transform duration-200 md:translate-x-0 ${
+          mobileOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+      <div className="p-6 border-b border-gray-200 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">EFI-Patrimoine</h1>
+          <p className="text-sm text-gray-500 mt-1">CRM - Gestion Client</p>
+        </div>
+        <button
+          onClick={() => setMobileOpen(false)}
+          className="md:hidden p-1 text-gray-500 hover:bg-gray-100 rounded-lg"
+          aria-label="Fermer le menu"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
-      
-      <nav className="flex-1 p-4">
+
+      <nav className="flex-1 p-4 overflow-y-auto">
         <ul className="space-y-2">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentView === item.id;
-            
+
             return (
               <li key={item.id}>
                 <button
-                  onClick={() => onViewChange(item.id)}
+                  onClick={() => navigate(item.id)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                     isActive
                       ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 border border-blue-200'
@@ -57,7 +99,7 @@ export function Sidebar({ currentView, onViewChange, onLogout, session }: Sideba
         {/* Bouton CoreVision - Visible uniquement pour l'admin */}
         {isAdmin && (
           <button
-            onClick={() => onViewChange('corevision')}
+            onClick={() => navigate('corevision')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
               currentView === 'corevision'
                 ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
@@ -83,7 +125,7 @@ export function Sidebar({ currentView, onViewChange, onLogout, session }: Sideba
         {/* Bouton Knowledge Base - Visible uniquement pour l'admin */}
         {isAdmin && (
           <button
-            onClick={() => onViewChange('knowledge-base')}
+            onClick={() => navigate('knowledge-base')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
               currentView === 'knowledge-base'
                 ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
@@ -109,7 +151,7 @@ export function Sidebar({ currentView, onViewChange, onLogout, session }: Sideba
         {/* Bouton Barèmes Fiscaux - Visible uniquement pour l'admin */}
         {isAdmin && (
           <button
-            onClick={() => onViewChange('baremes-fiscaux')}
+            onClick={() => navigate('baremes-fiscaux')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
               currentView === 'baremes-fiscaux'
                 ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg'
@@ -140,6 +182,7 @@ export function Sidebar({ currentView, onViewChange, onLogout, session }: Sideba
           <span className="font-medium">Déconnexion</span>
         </button>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

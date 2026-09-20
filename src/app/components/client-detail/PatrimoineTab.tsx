@@ -361,7 +361,7 @@ export function PatrimoineTab({
 
       {/* Carte synthèse globale */}
       <div className="bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200 rounded-lg p-6">
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <div className="text-center">
             <p className="text-sm text-gray-600 mb-1">Patrimoine personnel net</p>
             <p className="text-3xl font-bold text-blue-600">{formatAmount(patrimoineNetPersonnel)}</p>

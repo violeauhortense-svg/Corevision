@@ -189,7 +189,7 @@ export function HubCommunicationView() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
             <Card className="p-4">
               <p className="text-xs text-gray-600 mb-1">À traiter</p>
               <p className="text-2xl font-bold text-red-600">{stats.a_traiter}</p>
