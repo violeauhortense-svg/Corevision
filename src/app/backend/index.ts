@@ -27,7 +27,7 @@ app.use(
     origin: [
       'http://localhost:5173',
       'http://localhost:3000',
-      'https://corevision-main.vercel.app',
+      'https://mcp-test-efi.vercel.app',
       'http://100.75.233.10:3000',  // Tailscale IP (cvh-patrimoine)
     ],
     allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
