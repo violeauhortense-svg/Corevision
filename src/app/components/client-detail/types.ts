@@ -311,6 +311,10 @@ export interface ClientData {
   address: string;
   birthDate: string;
   status: PipelineStage;
+  // Statut réellement avancé par l'onglet Tâches (pipeline à 8 statuts) -
+  // `status` ci-dessus reste figé à sa valeur de création et se
+  // désynchronise dès que le client progresse dans le pipeline.
+  statusOuvert?: string;
   patrimoine: number; // ✅ Changé de string à number
   majorationPartFiscale: boolean;
   auditCoreVision?: string; // Texte de l'audit CoreVision

@@ -3,6 +3,7 @@ import { Search, Filter, Plus, Mail, Phone, Euro, X, Trash2 } from 'lucide-react
 import { ClientDetailView } from './client-detail';
 import { toast } from 'sonner';
 import { useClients } from '../hooks/useClients';
+import { getStatusColor as getPipelineColor } from './tasks/taskDefinitions';
 
 interface Client {
   id: string;
@@ -12,6 +13,9 @@ interface Client {
   telephone: string;
   patrimoine?: number;
   statut: string;
+  // Le champ réellement avancé par l'onglet Tâches (pipeline à 8 statuts) -
+  // `statut` lui reste figé à sa valeur de création et se désynchronise.
+  statusOuvert?: string;
   date_creation?: string;
   createdAt?: string;
   conseiller_id?: string;
@@ -128,17 +132,9 @@ export function ClientsView({ session, selectedClientId: initialClientId, openTa
     client.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getStatusColor = (statut: string) => {
-    switch (statut) {
-      case 'R0 - Prospect': return 'bg-gray-100 text-gray-700';
-      case 'R0-R1 - Découverte': return 'bg-blue-100 text-blue-700';
-      case 'R1 - Audit patrimonial': return 'bg-indigo-100 text-indigo-700';
-      case 'R1-R2 - Stratégie définie': return 'bg-purple-100 text-purple-700';
-      case 'R2 - Recommandation proposée': return 'bg-green-100 text-green-700';
-      case 'Rsuivi - Suivi patrimonial': return 'bg-emerald-100 text-emerald-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
-  };
+  // Le statut affiché doit être celui réellement avancé par le pipeline
+  // (onglet Tâches de la fiche client), pas la valeur figée à la création.
+  const pipelineStatus = (client: Client) => client.statusOuvert || client.statut || 'Prospect';
 
   if (selectedClientId) {
     return <ClientDetailView clientId={selectedClientId} onBack={() => setSelectedClientId(null)} />; // Fixed: Removed invalid props
@@ -254,8 +250,11 @@ export function ClientsView({ session, selectedClientId: initialClientId, openTa
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(client.statut)}`}>
-                        {client.statut}
+                      <span
+                        className="inline-flex px-3 py-1 rounded-full text-sm font-medium text-white"
+                        style={{ backgroundColor: getPipelineColor(pipelineStatus(client)) }}
+                      >
+                        {pipelineStatus(client)}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">{client.date_creation || client.createdAt}</td>

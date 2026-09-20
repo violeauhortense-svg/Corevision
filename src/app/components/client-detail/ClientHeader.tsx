@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ArrowLeft, User, Phone, Mail, MapPin, Calendar, Edit, X, Save, Briefcase } from 'lucide-react';
 import type { ClientData } from './types';
+import { getStatusColor as getPipelineColor } from '../tasks/taskDefinitions';
 
 const SECTEUR_LABELS: Record<'secteur_1' | 'secteur_2' | 'na', string> = {
   secteur_1: 'Secteur 1',
@@ -108,8 +109,11 @@ export function ClientHeader({
             
             <div className="text-left sm:text-right shrink-0">
               <p className="text-sm text-gray-600">Statut</p>
-              <span className="inline-flex mt-2 px-4 py-2 rounded-full text-sm font-medium bg-purple-100 text-purple-700">
-                {clientData.status}
+              <span
+                className="inline-flex mt-2 px-4 py-2 rounded-full text-sm font-medium text-white"
+                style={{ backgroundColor: getPipelineColor(clientData.statusOuvert || clientData.status) }}
+              >
+                {clientData.statusOuvert || clientData.status}
               </span>
               
               <button

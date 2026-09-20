@@ -420,6 +420,7 @@ export function useClientData(clientId: string, onSave?: (data: ClientDataState)
           address: client.address || '',
           birthDate: client.birthDate || '',
           status: client.status,
+          statusOuvert: client.statusOuvert || '',
           patrimoine: patrimoineNumeric,
           majorationPartFiscale: client.majorationPartFiscale || false,
           auditCoreVision: client.auditCoreVision,
