@@ -20,9 +20,13 @@ interface TasksTabProps {
   onUpdateAuditRecommendations?: (recommendations: AuditRecommendation[]) => Promise<void> | void;
   entreprises?: any[];
   contacts?: any[];
+  // Nom du statut/bloc à déplier automatiquement à l'arrivée sur cet
+  // onglet - utilisé par les liens "Voir la tâche" ailleurs dans la
+  // fiche client (ex: Arbitrage de rémunération depuis le Patrimoine).
+  expandBlock?: string;
 }
 
-export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRecommendations }: TasksTabProps) {
+export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRecommendations, expandBlock }: TasksTabProps) {
   const [client, setClient] = useState<Client | null>(null);
   const [expandedBlocks, setExpandedBlocks] = useState<Record<string, boolean>>({});
   const [activeModal, setActiveModal] = useState<{ type: TaskButtonType; taskId: string; status: string } | null>(null);
@@ -51,7 +55,10 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
       setClient(data);
       setArbitrageClosureDate(data.arbitrageClosureDate || '');
       setArbitrageTreasuryN1(String(data.arbitrageTreasuryN1 || ''));
-      setExpandedBlocks({ [data.statusOuvert || 'Prospect']: true });
+      setExpandedBlocks({
+        [data.statusOuvert || 'Prospect']: true,
+        ...(expandBlock ? { [expandBlock]: true } : {}),
+      });
     } catch (err) {
       console.error('❌ Erreur chargement client:', err);
       toast.error('Erreur chargement du client');

@@ -531,56 +531,6 @@ export function PatrimoineProfessionnel({ onUpdate, clientData, familyInfo, entr
            entreprise.passifs.autresPassifs.reduce((sum, p) => sum + p.valeur, 0);
   };
 
-  // Calculs pour l'analyse du cycle d'exploitation
-  const getBFR = (entreprise: Entreprise) => {
-    // Utiliser le BFR saisi si disponible, sinon calcul automatique
-    return entreprise.bfr ?? (entreprise.actifs.stocks + entreprise.actifs.creancesClients - entreprise.passifs.dettesFournisseurs);
-  };
-
-  const getTresorerie = (entreprise: Entreprise) => {
-    return entreprise.actifs.disponibilites;
-  };
-
-  const getComptesAssocies = (entreprise: Entreprise) => {
-    return entreprise.passifs.comptesAssocies;
-  };
-
-  const getCouvertureBFR = (entreprise: Entreprise) => {
-    const bfr = getBFR(entreprise);
-    if (bfr === 0) return null;
-    return getTresorerie(entreprise) / bfr;
-  };
-
-  const getFinancementParAssocies = (entreprise: Entreprise) => {
-    const bfr = getBFR(entreprise);
-    if (bfr === 0) return null;
-    return getComptesAssocies(entreprise) / bfr;
-  };
-
-  const getTresorerieExcedentaire = (entreprise: Entreprise) => {
-    return getTresorerie(entreprise) - getBFR(entreprise);
-  };
-
-  const getTresorerieSecurite = (chargesMensuelles?: number) => {
-    if (!chargesMensuelles) return 0;
-    return chargesMensuelles * 3;
-  };
-
-  const getTresorerieMobilisable = (entreprise: Entreprise, chargesMensuelles?: number) => {
-    return getTresorerie(entreprise) - getBFR(entreprise) - getTresorerieSecurite(chargesMensuelles);
-  };
-
-  const getAnalyseSituation = (entreprise: Entreprise) => {
-    const couverture = getCouvertureBFR(entreprise);
-    if (couverture === null || couverture < 1) {
-      return { niveau: 'rouge', message: 'Trésorerie majoritairement utilisée pour financer le cycle d\'exploitation' };
-    } else if (couverture >= 1 && couverture <= 1.5) {
-      return { niveau: 'orange', message: 'Situation équilibrée' };
-    } else {
-      return { niveau: 'vert', message: 'Excédent de trésorerie pouvant être étudié pour des placements ou optimisations financières' };
-    }
-  };
-
   // Fonctions de valorisation d'entreprise
   const getValorisationParams = (entrepriseId: string) => {
     return valorisationParams[entrepriseId] || {
@@ -1169,196 +1119,9 @@ export function PatrimoineProfessionnel({ onUpdate, clientData, familyInfo, entr
                     )}
                   </div>
 
-                  {/* 3️⃣ ANALYSE DU CYCLE D'EXPLOITATION ET DE LA TRÉSORERIE */}
-                  <div className="border-2 border-gray-200 rounded-lg">
-                    <button
-                      onClick={() => toggleSection(`${entreprise.id}-analyse-tresorerie`)}
-                      className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <TrendingUp className="w-5 h-5 text-emerald-600" />
-                        <span className="font-semibold text-gray-900">3️⃣ Analyse du cycle d'exploitation et de la trésorerie</span>
-                      </div>
-                      {expandedSections[`${entreprise.id}-analyse-tresorerie`] ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                    </button>
-                    
-                    {expandedSections[`${entreprise.id}-analyse-tresorerie`] && (
-                      <div className="p-6 space-y-6">
-                        {/* Saisie du BFR */}
-                        <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <h4 className="font-semibold text-gray-900">💼 Besoin en Fonds de Roulement (BFR)</h4>
-                            {entreprise.bfr === undefined && (
-                              <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Calcul automatique</span>
-                            )}
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="text-sm font-medium text-gray-700 block mb-1">BFR (€)</label>
-                              <input
-                                type="number"
-                                value={entreprise.bfr ?? ''}
-                                onChange={(e) => {
-                                  const updated = entreprises.map(ent => {
-                                    if (ent.id === entreprise.id) {
-                                      return {
-                                        ...ent,
-                                        bfr: e.target.value ? parseFloat(e.target.value) : undefined
-                                      };
-                                    }
-                                    return ent;
-                                  });
-                                  setEntreprises(updated);
-                                  onUpdate?.(updated);
-                                }}
-                                placeholder={`Auto: ${formatEuro(entreprise.actifs.stocks + entreprise.actifs.creancesClients - entreprise.passifs.dettesFournisseurs)}`}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                              />
-                            </div>
-                            <div className="flex items-end">
-                              <div className="bg-white rounded-lg p-3 border-2 border-emerald-200 w-full">
-                                <p className="text-xs text-gray-600 mb-1">BFR utilisé</p>
-                                <p className="text-xl font-bold text-emerald-900">{formatEuro(getBFR(entreprise))}</p>
-                              </div>
-                            </div>
-                          </div>
-                          <p className="text-xs text-gray-500 mt-2">
-                            💡 Si non renseigné, le BFR est calculé automatiquement : Stocks + Créances clients - Dettes fournisseurs
-                          </p>
-                        </div>
-
-                        {/* 1. Tableau des indicateurs */}
-                        <div className="bg-white border-2 border-emerald-100 rounded-lg p-4">
-                          <h4 className="font-semibold text-gray-900 mb-4">📊 Indicateurs clés</h4>
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                              <thead className="bg-emerald-50">
-                                <tr>
-                                  <th className="text-left p-3 font-semibold text-gray-700">Indicateur</th>
-                                  <th className="text-left p-3 font-semibold text-gray-700">Calcul</th>
-                                  <th className="text-right p-3 font-semibold text-gray-700">Résultat</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-gray-200">
-                                <tr className="hover:bg-gray-50">
-                                  <td className="p-3 font-medium">Couverture BFR</td>
-                                  <td className="p-3 text-gray-600">Trésorerie / BFR</td>
-                                  <td className="p-3 text-right font-semibold">
-                                    {getCouvertureBFR(entreprise) !== null 
-                                      ? getCouvertureBFR(entreprise)!.toFixed(2) 
-                                      : 'N/A'}
-                                  </td>
-                                </tr>
-                                <tr className="hover:bg-gray-50">
-                                  <td className="p-3 font-medium">Financement par associés</td>
-                                  <td className="p-3 text-gray-600">Comptes courants / BFR</td>
-                                  <td className="p-3 text-right font-semibold">
-                                    {getFinancementParAssocies(entreprise) !== null 
-                                      ? getFinancementParAssocies(entreprise)!.toFixed(2) 
-                                      : 'N/A'}
-                                  </td>
-                                </tr>
-                                <tr className="hover:bg-gray-50">
-                                  <td className="p-3 font-medium">Trésorerie excédentaire</td>
-                                  <td className="p-3 text-gray-600">Trésorerie - BFR</td>
-                                  <td className="p-3 text-right font-semibold">
-                                    {formatEuro(getTresorerieExcedentaire(entreprise))}
-                                  </td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-
-                        {/* 2. Analyse visuelle */}
-                        <div className="bg-white border-2 border-emerald-100 rounded-lg p-4">
-                          <h4 className="font-semibold text-gray-900 mb-4">🎯 Situation de trésorerie</h4>
-                          <div className="space-y-3">
-                            <div className="flex items-center gap-3">
-                              <div className="flex-1 bg-gray-200 rounded-full h-6 overflow-hidden">
-                                <div 
-                                  className={`h-6 rounded-full transition-all ${
-                                    getAnalyseSituation(entreprise).niveau === 'vert' ? 'bg-green-500' :
-                                    getAnalyseSituation(entreprise).niveau === 'orange' ? 'bg-orange-500' :
-                                    'bg-red-500'
-                                  }`}
-                                  style={{ 
-                                    width: `${
-                                      getCouvertureBFR(entreprise) !== null && getCouvertureBFR(entreprise)! > 0
-                                        ? Math.min(100, (getCouvertureBFR(entreprise)! / 2) * 100)
-                                        : 0
-                                    }%` 
-                                  }}
-                                ></div>
-                              </div>
-                              <span className="text-sm font-bold min-w-[60px] text-right">
-                                {getCouvertureBFR(entreprise) !== null 
-                                  ? (getCouvertureBFR(entreprise)! * 100).toFixed(0) + '%'
-                                  : 'N/A'}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 text-xs text-gray-600">
-                              <span className="w-3 h-3 bg-red-500 rounded"></span>
-                              <span>Tension (&lt;1)</span>
-                              <span className="w-3 h-3 bg-orange-500 rounded ml-3"></span>
-                              <span>Équilibre (1-1.5)</span>
-                              <span className="w-3 h-3 bg-green-500 rounded ml-3"></span>
-                              <span>Excédent (&gt;1.5)</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* 3. Synthèse */}
-                        <div className={`border-2 rounded-lg p-4 ${
-                          getAnalyseSituation(entreprise).niveau === 'vert' ? 'bg-green-50 border-green-200' :
-                          getAnalyseSituation(entreprise).niveau === 'orange' ? 'bg-orange-50 border-orange-200' :
-                          'bg-red-50 border-red-200'
-                        }`}>
-                          <div className="flex items-start gap-3">
-                            <div className={`text-2xl ${
-                              getAnalyseSituation(entreprise).niveau === 'vert' ? 'text-green-600' :
-                              getAnalyseSituation(entreprise).niveau === 'orange' ? 'text-orange-600' :
-                              'text-red-600'
-                            }`}>
-                              {getAnalyseSituation(entreprise).niveau === 'vert' ? '✅' :
-                               getAnalyseSituation(entreprise).niveau === 'orange' ? '⚠️' : '❌'}
-                            </div>
-                            <div className="flex-1">
-                              <p className="font-bold text-lg mb-2">
-                                Trésorerie potentiellement mobilisable : {formatEuro(getTresorerieMobilisable(entreprise))}
-                              </p>
-                              <p className="text-sm text-gray-700 italic">
-                                {getAnalyseSituation(entreprise).message}
-                              </p>
-                            </div>
-                          </div>
-                          
-                          {/* Détails complémentaires */}
-                          <div className="mt-4 pt-4 border-t border-gray-300 grid grid-cols-3 gap-4 text-sm">
-                            <div>
-                              <p className="text-gray-600">BFR</p>
-                              <p className="font-bold">{formatEuro(getBFR(entreprise))}</p>
-                              <p className="text-xs text-gray-500 mt-1">
-                                {entreprise.bfr !== undefined ? '✏️ Saisi manuellement' : '🔄 Calcul auto'}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-gray-600">Trésorerie (Actif)</p>
-                              <p className="font-bold">{formatEuro(getTresorerie(entreprise))}</p>
-                              <p className="text-xs text-gray-500 mt-1">📊 Depuis Disponibilités</p>
-                            </div>
-                            <div>
-                              <p className="text-gray-600">Comptes courants (Passif)</p>
-                              <p className="font-bold">{formatEuro(getComptesAssocies(entreprise))}</p>
-                              <p className="text-xs text-gray-500 mt-1">📊 Depuis Comptes associés</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* 4️⃣ RÉSULTAT ET DIVIDENDES */}
+                  {/* Arbitrage de rémunération (anciennement "Résultat et Dividendes") -
+                      en lien direct avec la tâche "Arbitrage de rémunération" du pipeline
+                      (onglet Tâches, statut "Arbitrage"). */}
                   <div className="border-2 border-gray-200 rounded-lg">
                     <button
                       onClick={() => toggleSection(`${entreprise.id}-resultat`)}
@@ -1366,11 +1129,22 @@ export function PatrimoineProfessionnel({ onUpdate, clientData, familyInfo, entr
                     >
                       <div className="flex items-center gap-3">
                         <BarChart3 className="w-5 h-5 text-purple-600" />
-                        <span className="font-semibold text-gray-900">4️⃣ Résultat et Dividendes</span>
+                        <span className="font-semibold text-gray-900">Arbitrage de rémunération</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.dispatchEvent(new CustomEvent('switchTab', { detail: { tab: 'taches', expandBlock: 'Arbitrage' } }));
+                          }}
+                          className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800 hover:underline"
+                          title="Voir la tâche « Arbitrage de rémunération » dans l'onglet Tâches"
+                        >
+                          <Link2 className="w-3.5 h-3.5" />
+                          Voir la tâche
+                        </button>
                       </div>
                       {expandedSections[`${entreprise.id}-resultat`] ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                     </button>
-                    
+
                     {expandedSections[`${entreprise.id}-resultat`] && (
                       <div className="p-4 border-t-2 border-gray-200 space-y-4">
                         <div className="flex items-center justify-between">

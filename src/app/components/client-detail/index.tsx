@@ -30,6 +30,7 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
   const [session, setSession] = useState<any>(null);
   const [showBilanPatrimonialModal, setShowBilanPatrimonialModal] = useState(false);
   const [showRecommandationsModal, setShowRecommandationsModal] = useState(false);
+  const [expandTaskBlock, setExpandTaskBlock] = useState<string | undefined>(undefined);
 
   // Client data management hook - consolidates 17 useState + 13 handlers.
   // Every handleUpdateXxx call persists immediately to the server, with
@@ -97,7 +98,8 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
     const handleSwitchTab = (event: CustomEvent) => {
       if (event.detail && event.detail.tab) {
         setActiveTab(event.detail.tab as TabType);
-        
+        setExpandTaskBlock(event.detail.expandBlock);
+
         // Si on passe à l'onglet documents, recharger les données
         if (event.detail.tab === 'documents') {
           reloadDocuments();
@@ -340,6 +342,7 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
               onUpdateAuditRecommendations={handleUpdateAuditRecommendations}
               entreprises={state.entreprises}
               contacts={state.contactsProfessionnels}
+              expandBlock={expandTaskBlock}
             />
           )}
 
