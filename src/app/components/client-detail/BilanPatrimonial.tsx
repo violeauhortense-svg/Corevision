@@ -179,10 +179,13 @@ export function BilanPatrimonial({
           const y2 = bubbleRect.top - containerRect.top;
           // Courbe plutôt que trait droit, pour ne pas passer pile au
           // travers d'une bulle ou d'un autre avatar posé entre les deux -
-          // chaque trait d'une même personne s'écarte un peu plus du
-          // centre pour rester visuellement distinct des autres.
-          const offset = n > 1 ? (i - (n - 1) / 2) * 70 : 0;
-          const cx = (x1 + x2) / 2 + offset;
+          // chaque trait d'une même personne s'écarte du centre pour
+          // rester visuellement distinct des autres, sans jamais dépasser
+          // la largeur du schéma (sinon la courbe sortirait de l'écran
+          // sur mobile).
+          const rawOffset = n > 1 ? (i - (n - 1) / 2) * 200 : 0;
+          const margin = 24;
+          const cx = Math.min(containerRect.width - margin, Math.max(margin, (x1 + x2) / 2 + rawOffset));
           const cy = (y1 + y2) / 2;
           next.push({ key: `${nom}-${h.entreprise}-${i}`, x1, y1, cx, cy, x2, y2, parts: h.parts });
         });
