@@ -188,8 +188,8 @@ export function BilanPatrimonial({
         p.holdings.forEach((h, i) => {
           const bubbleRect = bubbleRects.get(h.entreprise);
           if (!bubbleRect) return;
-          const x2 = bubbleRect.left + bubbleRect.width / 2 - containerRect.left;
-          const y2 = bubbleRect.top - containerRect.top;
+          let x2 = bubbleRect.left + bubbleRect.width / 2 - containerRect.left;
+          let y2 = bubbleRect.top - containerRect.top;
           const yMin = Math.min(y1, y2);
           const yMax = Math.max(y1, y2);
 
@@ -214,12 +214,18 @@ export function BilanPatrimonial({
             const obsLeft = Math.min(...obstacles.map((o) => o.left));
             const obsRight = Math.max(...obstacles.map((o) => o.right));
             const obsTop = Math.min(...obstacles.map((o) => o.top));
-            const obsBottom = Math.max(...obstacles.map((o) => o.bottom));
             const goRight = indexOffset >= 0;
-            const clearanceX = goRight ? obsRight + margin : obsLeft - margin;
+
+            // Entrer par le côté de la bulle cible plutôt que par le haut :
+            // le trait n'a alors plus besoin de retraverser la largeur de
+            // l'obstacle en fin de trajet pour revenir au centre.
+            x2 = goRight ? bubbleRect.right - containerRect.left : bubbleRect.left - containerRect.left;
+            y2 = bubbleRect.top - containerRect.top + bubbleRect.height / 2;
+
+            const clearanceX = goRight ? Math.max(obsRight, x2) + margin : Math.min(obsLeft, x2) - margin;
             c1x = c2x = Math.min(containerRect.width - margin, Math.max(margin, clearanceX));
             c1y = Math.max(yMin, obsTop - 16);
-            c2y = Math.min(yMax, obsBottom + 16);
+            c2y = y2 - 20;
           } else {
             // Pas d'obstacle direct : juste écarter les traits d'une même
             // personne les uns des autres, sans dépasser la largeur du
@@ -579,7 +585,7 @@ export function BilanPatrimonial({
                 {/* Traits reliant chaque personne physique aux entreprises
                     qu'elle détient, tracés par-dessus le contenu à partir
                     des positions réelles mesurées après rendu. */}
-                <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }}>
+                <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 2 }}>
                   {detentionLines.map((l) => {
                     // Point milieu de la courbe (Bézier cubique, t=0.5) pour
                     // poser l'étiquette pile sur le trait.
