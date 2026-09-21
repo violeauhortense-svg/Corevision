@@ -616,7 +616,12 @@ function EntrepriseDetentionNode({
   genreMap: Map<string, 'homme' | 'femme' | undefined>;
 }) {
   const filiales = getFiliales(entreprise.nom);
-  const associes = entreprise.associes || [];
+  // La société mère d'une filiale est déjà montrée par le lien "↳ filiale"
+  // ci-dessus - la lister aussi comme associée juste en dessous ferait
+  // doublon avec la même bulle.
+  const associes = (entreprise.associes || []).filter(
+    (a) => !(entreprise.estFiliale && entreprise.societeMere && a.nom === entreprise.societeMere)
+  );
 
   const personIcon = (a: EntrepriseAssocie) => {
     const genre = genreMap.get(a.nom);
