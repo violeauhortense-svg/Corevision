@@ -119,6 +119,7 @@ function buildFullData(clientId: string, state: ClientDataState) {
     preconisationsCoreVision: state.clientData.preconisationsCoreVision,
     activite: state.clientData.activite,
     secteur: state.clientData.secteur,
+    genre: state.clientData.genre,
     maritalStatus: state.familyInfo.maritalStatus,
     regimeMatrimonial: state.familyInfo.regimeMatrimonial,
     spouse: state.familyInfo.spouse,
@@ -472,6 +473,7 @@ export function useClientData(clientId: string, onSave?: (data: ClientDataState)
           preconisationsCoreVision: client.preconisationsCoreVision,
           activite: client.activite || '',
           secteur: client.secteur || undefined,
+          genre: client.genre || undefined,
           // Prochain RDV réel - la même donnée que l'Agenda/Dashboard,
           // pour laquelle setClientMeeting() (via l'Agenda) reste la
           // seule source d'écriture ; ici on ne fait que l'afficher.
@@ -488,6 +490,7 @@ export function useClientData(clientId: string, onSave?: (data: ClientDataState)
             profession: client.spouse?.profession || '',
             email: client.spouse?.email || '',
             majorationPartFiscale: client.spouse?.majorationPartFiscale || false,
+            genre: client.spouse?.genre || undefined,
           },
           children: client.children || [],
         },

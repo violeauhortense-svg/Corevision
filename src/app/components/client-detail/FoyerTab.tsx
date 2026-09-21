@@ -364,6 +364,26 @@ export function FoyerTab({ clientData, familyInfo, onUpdateFamily }: FoyerTabPro
                   className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Civilité
+                  <span className="text-xs text-gray-500 ml-2">(pour le schéma de détention)</span>
+                </label>
+                <select
+                  value={localFamilyInfo.spouse.genre || ''}
+                  onChange={(e) =>
+                    setLocalFamilyInfo({
+                      ...localFamilyInfo,
+                      spouse: { ...localFamilyInfo.spouse, genre: (e.target.value || undefined) as 'homme' | 'femme' | undefined },
+                    })
+                  }
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+                >
+                  <option value="">— Non renseignée —</option>
+                  <option value="homme">M.</option>
+                  <option value="femme">Mme</option>
+                </select>
+              </div>
               <div className="col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                 <input
@@ -514,7 +534,7 @@ export function FoyerTab({ clientData, familyInfo, onUpdateFamily }: FoyerTabPro
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
                         />
                       </div>
-                      <div className="col-span-2">
+                      <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Date de naissance</label>
                         <input
                           type="date"
@@ -526,6 +546,25 @@ export function FoyerTab({ clientData, familyInfo, onUpdateFamily }: FoyerTabPro
                           }}
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
                         />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Civilité
+                          <span className="text-xs text-gray-500 ml-1">(schéma détention)</span>
+                        </label>
+                        <select
+                          value={child.genre || ''}
+                          onChange={(e) => {
+                            const updatedChildren = [...localFamilyInfo.children];
+                            updatedChildren[index] = { ...child, genre: (e.target.value || undefined) as 'homme' | 'femme' | undefined };
+                            setLocalFamilyInfo({ ...localFamilyInfo, children: updatedChildren });
+                          }}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+                        >
+                          <option value="">— Non renseignée —</option>
+                          <option value="homme">Garçon</option>
+                          <option value="femme">Fille</option>
+                        </select>
                       </div>
                       <div className="col-span-2 space-y-2">
                         <label className="flex items-center gap-2 cursor-pointer">

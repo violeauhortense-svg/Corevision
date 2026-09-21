@@ -1,4 +1,4 @@
-import { X, FileText } from 'lucide-react';
+import { X, FileText, CornerDownRight } from 'lucide-react';
 import type { ClientData, FamilyInfo, PatrimoineItem, RevenuItem, ImpositionData, Objectif } from './types';
 
 // Formes libres ici (pas d'import du type Entreprise, non exporté par
@@ -14,6 +14,7 @@ interface EntrepriseBilan {
   id: string;
   nom: string;
   statutJuridique: string;
+  fiscalite?: string;
   associes?: EntrepriseAssocie[];
   estFiliale?: boolean;
   societeMere?: string;
@@ -113,6 +114,22 @@ export function BilanPatrimonial({
   const entreprisesRacines = entreprisesList.filter(
     (e) => !e.estFiliale || !e.societeMere || !entreprisesList.some((m) => m.nom === e.societeMere)
   );
+
+  // Nom complet -> civilité, pour choisir l'icône 👨/👩 des associés
+  // "membre du foyer" dans le schéma de détention (même construction de nom
+  // que getMembresFoyer() dans PatrimoineProfessionnel.tsx).
+  const genreMap = new Map<string, 'homme' | 'femme' | undefined>();
+  if (clientData?.firstName) {
+    genreMap.set(`${clientData.firstName} ${clientData.lastName}`.trim(), clientData.genre);
+  }
+  if (spouse?.firstName) {
+    genreMap.set(`${spouse.firstName} ${spouse.lastName}`.trim(), spouse.genre);
+  }
+  children.forEach((c) => {
+    if (c.firstName) {
+      genreMap.set(`${c.firstName} ${c.lastName || clientData?.lastName || ''}`.trim(), c.genre);
+    }
+  });
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -447,9 +464,9 @@ export function BilanPatrimonial({
                 Aucune entreprise renseignée pour ce client
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="flex flex-wrap justify-center gap-8">
                 {entreprisesRacines.map((e) => (
-                  <EntrepriseDetentionNode key={e.id} entreprise={e} getFiliales={getFiliales} depth={0} />
+                  <EntrepriseDetentionNode key={e.id} entreprise={e} getFiliales={getFiliales} depth={0} genreMap={genreMap} />
                 ))}
               </div>
             )}
@@ -582,57 +599,87 @@ export function BilanPatrimonial({
   );
 }
 
-// Un nœud de l'arbre de détention : l'entreprise, ses associés (personnes
-// physiques du foyer ou personnes morales), et récursivement ses filiales
-// (rattachées par égalité stricte de nom, même logique que "Filiales de X"
-// dans l'onglet Patrimoine).
+// Un nœud de l'arbre de détention : les associés (personnes physiques du
+// foyer, en petits avatars à l'extérieur, ou personnes morales, en bulle)
+// posés au-dessus de la bulle de l'entreprise, et récursivement ses
+// filiales (rattachées par égalité stricte de nom, même logique que
+// "Filiales de X" dans l'onglet Patrimoine) en dessous.
 function EntrepriseDetentionNode({
   entreprise,
   getFiliales,
   depth,
+  genreMap,
 }: {
   entreprise: EntrepriseBilan;
   getFiliales: (nom: string) => EntrepriseBilan[];
   depth: number;
+  genreMap: Map<string, 'homme' | 'femme' | undefined>;
 }) {
   const filiales = getFiliales(entreprise.nom);
   const associes = entreprise.associes || [];
 
-  return (
-    <div className={depth > 0 ? 'ml-6 pl-4 border-l-2 border-indigo-300' : ''}>
-      <div className="bg-white rounded-lg border-2 border-indigo-200 p-4 shadow-sm">
-        <div className="flex items-center gap-2 mb-3 flex-wrap">
-          {depth > 0 && <span className="text-indigo-400 text-xs font-medium">↳ filiale</span>}
-          <span className="text-lg">🏢</span>
-          <span className="font-bold text-gray-900">{entreprise.nom}</span>
-          <span className="px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded text-xs font-semibold">
-            {entreprise.statutJuridique}
-          </span>
-        </div>
+  const personIcon = (a: EntrepriseAssocie) => {
+    const genre = genreMap.get(a.nom);
+    return genre === 'homme' ? '👨' : genre === 'femme' ? '👩' : '🧑';
+  };
 
-        {associes.length === 0 ? (
-          <p className="text-xs text-gray-500 italic">Aucun associé renseigné</p>
-        ) : (
-          <div className="space-y-1.5">
-            {associes.map((a, i) => (
-              <div key={i} className="flex items-center gap-2 text-sm flex-wrap">
-                <span>{a.membreFoyer ? '👤' : '🏢'}</span>
-                <span className="text-gray-700">{a.nom}</span>
-                <span className="text-indigo-600 font-semibold">{a.parts}%</span>
-                <span className="text-xs text-gray-400">
-                  ({TYPE_DETENTION_LABELS[a.typeDetention] || a.typeDetention})
-                </span>
+  return (
+    <div className="flex flex-col items-center">
+      {depth > 0 && (
+        <div className="flex items-center gap-1 text-indigo-500 text-xs font-semibold mb-2">
+          <CornerDownRight className="w-3.5 h-3.5" /> filiale
+        </div>
+      )}
+
+      {/* Associés : à l'extérieur, au-dessus de la bulle */}
+      {associes.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-4 mb-1">
+          {associes.map((a, i) => (
+            <div key={i} className="flex flex-col items-center w-20">
+              <div
+                className={`w-11 h-11 rounded-full flex items-center justify-center text-xl shadow-md border-2 ${
+                  a.membreFoyer ? 'bg-sky-50 border-sky-300' : 'bg-gray-100 border-gray-300'
+                }`}
+              >
+                {a.membreFoyer ? personIcon(a) : '🏢'}
               </div>
-            ))}
-          </div>
+              <span className="text-[11px] font-medium text-gray-800 mt-1 text-center leading-tight break-words w-full">
+                {a.nom}
+              </span>
+              <span className="text-xs font-bold text-indigo-700">{a.parts}%</span>
+              <span className="text-[9px] text-gray-400 text-center leading-tight">
+                {TYPE_DETENTION_LABELS[a.typeDetention] || a.typeDetention}
+              </span>
+              <div className="w-0.5 h-3 bg-indigo-300 mt-0.5" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Bulle de l'entreprise */}
+      <div className="rounded-[2rem] border-4 border-indigo-300 bg-gradient-to-br from-indigo-100 via-white to-white px-6 py-4 text-center shadow-lg min-w-[160px] max-w-[240px]">
+        <div className="text-2xl">🏢</div>
+        <div className="font-bold text-gray-900 text-sm mt-1 break-words">{entreprise.nom}</div>
+        <div className="inline-block mt-1 px-2 py-0.5 bg-indigo-600 text-white rounded-full text-[10px] font-bold">
+          {entreprise.statutJuridique}
+        </div>
+        {entreprise.fiscalite && (
+          <div className="text-[10px] text-gray-500 mt-1">{entreprise.fiscalite}</div>
         )}
       </div>
 
+      {associes.length === 0 && (
+        <p className="text-xs text-gray-400 italic mt-2">Aucun associé renseigné</p>
+      )}
+
       {filiales.length > 0 && (
-        <div className="mt-3 space-y-3">
-          {filiales.map((f) => (
-            <EntrepriseDetentionNode key={f.id} entreprise={f} getFiliales={getFiliales} depth={depth + 1} />
-          ))}
+        <div className="flex flex-col items-center mt-3">
+          <div className="w-0.5 h-4 bg-indigo-300" />
+          <div className="flex flex-wrap justify-center gap-6">
+            {filiales.map((f) => (
+              <EntrepriseDetentionNode key={f.id} entreprise={f} getFiliales={getFiliales} depth={depth + 1} genreMap={genreMap} />
+            ))}
+          </div>
         </div>
       )}
     </div>

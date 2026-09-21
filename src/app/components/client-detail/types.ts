@@ -259,6 +259,7 @@ export interface FamilyInfo {
     profession: string;
     email: string;
     majorationPartFiscale: boolean;
+    genre?: 'homme' | 'femme'; // Pour l'icône du schéma de détention
   };
   children: Array<{
     id: string;
@@ -270,6 +271,7 @@ export interface FamilyInfo {
     isChildOfClient?: boolean;
     isChildOfSpouse?: boolean;
     majorationPartFiscale?: boolean;
+    genre?: 'homme' | 'femme'; // Pour l'icône du schéma de détention
   }>;
   
   // 📅 TRAÇABILITÉ
@@ -323,6 +325,7 @@ export interface ClientData {
   // 🆕 Nouveaux champs pour la refonte stratégique
   activite?: string; // Activité professionnelle du client
   secteur?: 'secteur_1' | 'secteur_2' | 'na'; // Secteur conventionnel (medecins)
+  genre?: 'homme' | 'femme'; // Pour l'icône du schéma de détention
   // Prochain RDV réel, partagé avec l'Agenda et clientMeetingsService.ts -
   // pas un champ séparé re-saisi ici, juste affiché en lecture seule.
   dateNextRdv?: string;

@@ -221,6 +221,21 @@ export function ClientHeader({
                   />
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Civilité
+                    <span className="text-xs text-gray-500 ml-2">(pour le schéma de détention)</span>
+                  </label>
+                  <select
+                    value={tempClientData.genre || ''}
+                    onChange={(e) => setTempClientData({ ...tempClientData, genre: (e.target.value || undefined) as ClientData['genre'] })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="">— Non renseignée —</option>
+                    <option value="homme">M.</option>
+                    <option value="femme">Mme</option>
+                  </select>
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Activité</label>
                   <input
                     type="text"
