@@ -131,6 +131,21 @@ export function BilanPatrimonial({
     }
   });
 
+  // Une personne physique associée à plusieurs entreprises ne doit
+  // apparaître qu'une seule fois dans le schéma - on regroupe donc ses
+  // détentions (une ligne par entreprise, avec son %) sous un unique
+  // avatar, plutôt que de répéter l'avatar dans chaque bulle.
+  const personnesPhysiques = new Map<string, { genre?: 'homme' | 'femme'; holdings: { entreprise: string; parts: number; typeDetention: string }[] }>();
+  entreprisesList.forEach((e) => {
+    (e.associes || []).forEach((a) => {
+      if (!a.membreFoyer) return;
+      if (!personnesPhysiques.has(a.nom)) {
+        personnesPhysiques.set(a.nom, { genre: genreMap.get(a.nom), holdings: [] });
+      }
+      personnesPhysiques.get(a.nom)!.holdings.push({ entreprise: e.nom, parts: a.parts, typeDetention: a.typeDetention });
+    });
+  });
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
@@ -464,11 +479,37 @@ export function BilanPatrimonial({
                 Aucune entreprise renseignée pour ce client
               </div>
             ) : (
-              <div className="flex flex-wrap justify-center gap-8">
-                {entreprisesRacines.map((e) => (
-                  <EntrepriseDetentionNode key={e.id} entreprise={e} getFiliales={getFiliales} depth={0} genreMap={genreMap} />
-                ))}
-              </div>
+              <>
+                {/* Personnes physiques - une seule fois chacune, même si
+                    associées à plusieurs entreprises, avec le détail de
+                    chaque détention (entreprise + %) en dessous. */}
+                {personnesPhysiques.size > 0 && (
+                  <div className="flex flex-wrap justify-center gap-4 mb-6">
+                    {Array.from(personnesPhysiques.entries()).map(([nom, p]) => (
+                      <div key={nom} className="bg-white rounded-xl border-2 border-sky-300 p-3 shadow-sm w-44 flex flex-col items-center">
+                        <div className="w-11 h-11 rounded-full flex items-center justify-center text-xl shadow-md border-2 bg-sky-50 border-sky-300">
+                          {p.genre === 'homme' ? '👨' : p.genre === 'femme' ? '👩' : '🧑'}
+                        </div>
+                        <span className="text-sm font-semibold text-gray-900 mt-1 text-center">{nom}</span>
+                        <div className="w-full mt-2 space-y-1">
+                          {p.holdings.map((h, i) => (
+                            <div key={i} className="flex items-center justify-between text-xs bg-sky-50 rounded px-2 py-1">
+                              <span className="text-gray-700 truncate">🏢 {h.entreprise}</span>
+                              <span className="font-bold text-indigo-700 shrink-0 ml-1">{h.parts}%</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex flex-wrap justify-center gap-8">
+                  {entreprisesRacines.map((e) => (
+                    <EntrepriseDetentionNode key={e.id} entreprise={e} getFiliales={getFiliales} depth={0} />
+                  ))}
+                </div>
+              </>
             )}
           </div>
 
@@ -599,54 +640,49 @@ export function BilanPatrimonial({
   );
 }
 
-// Un nœud de l'arbre de détention : les associés (personnes physiques du
-// foyer, en petits avatars à l'extérieur, ou personnes morales, en bulle)
-// posés au-dessus de la bulle de l'entreprise, et récursivement ses
-// filiales (rattachées par égalité stricte de nom, même logique que
-// "Filiales de X" dans l'onglet Patrimoine) en dessous.
+// Un nœud de l'arbre de détention : les associés personnes morales (autres
+// entreprises), en bulle au-dessus de la bulle de l'entreprise - les
+// personnes physiques sont affichées une seule fois, globalement, au-dessus
+// de tout l'arbre (voir personnesPhysiques dans BilanPatrimonial) - et
+// récursivement les filiales (rattachées par égalité stricte de nom, même
+// logique que "Filiales de X" dans l'onglet Patrimoine) en dessous, avec le
+// % de détention de la mère indiqué sur le lien.
 function EntrepriseDetentionNode({
   entreprise,
   getFiliales,
   depth,
-  genreMap,
 }: {
   entreprise: EntrepriseBilan;
   getFiliales: (nom: string) => EntrepriseBilan[];
   depth: number;
-  genreMap: Map<string, 'homme' | 'femme' | undefined>;
 }) {
   const filiales = getFiliales(entreprise.nom);
-  // La société mère d'une filiale est déjà montrée par le lien "↳ filiale"
-  // ci-dessus - la lister aussi comme associée juste en dessous ferait
-  // doublon avec la même bulle.
-  const associes = (entreprise.associes || []).filter(
-    (a) => !(entreprise.estFiliale && entreprise.societeMere && a.nom === entreprise.societeMere)
-  );
-
-  const personIcon = (a: EntrepriseAssocie) => {
-    const genre = genreMap.get(a.nom);
-    return genre === 'homme' ? '👨' : genre === 'femme' ? '👩' : '🧑';
-  };
+  const allAssocies = entreprise.associes || [];
+  // Part de la société mère dans cette filiale, pour l'afficher sur le lien
+  // "↳ filiale" plutôt que comme une associée en double de sa propre bulle.
+  const mereAssocie = entreprise.estFiliale && entreprise.societeMere
+    ? allAssocies.find((a) => a.nom === entreprise.societeMere)
+    : undefined;
+  // Associés personnes morales seulement - les personnes physiques sont
+  // regroupées une seule fois au-dessus de tout l'arbre.
+  const associesMoraux = allAssocies.filter((a) => !a.membreFoyer && a !== mereAssocie);
 
   return (
     <div className="flex flex-col items-center">
       {depth > 0 && (
         <div className="flex items-center gap-1 text-indigo-500 text-xs font-semibold mb-2">
-          <CornerDownRight className="w-3.5 h-3.5" /> filiale
+          <CornerDownRight className="w-3.5 h-3.5" />
+          filiale{mereAssocie ? ` (${mereAssocie.parts}%)` : ''}
         </div>
       )}
 
-      {/* Associés : à l'extérieur, au-dessus de la bulle */}
-      {associes.length > 0 && (
+      {/* Associés personnes morales : à l'extérieur, au-dessus de la bulle */}
+      {associesMoraux.length > 0 && (
         <div className="flex flex-wrap justify-center gap-4 mb-1">
-          {associes.map((a, i) => (
+          {associesMoraux.map((a, i) => (
             <div key={i} className="flex flex-col items-center w-20">
-              <div
-                className={`w-11 h-11 rounded-full flex items-center justify-center text-xl shadow-md border-2 ${
-                  a.membreFoyer ? 'bg-sky-50 border-sky-300' : 'bg-gray-100 border-gray-300'
-                }`}
-              >
-                {a.membreFoyer ? personIcon(a) : '🏢'}
+              <div className="w-11 h-11 rounded-full flex items-center justify-center text-xl shadow-md border-2 bg-gray-100 border-gray-300">
+                🏢
               </div>
               <span className="text-[11px] font-medium text-gray-800 mt-1 text-center leading-tight break-words w-full">
                 {a.nom}
@@ -673,7 +709,7 @@ function EntrepriseDetentionNode({
         )}
       </div>
 
-      {associes.length === 0 && (
+      {allAssocies.length === 0 && (
         <p className="text-xs text-gray-400 italic mt-2">Aucun associé renseigné</p>
       )}
 
@@ -682,7 +718,7 @@ function EntrepriseDetentionNode({
           <div className="w-0.5 h-4 bg-indigo-300" />
           <div className="flex flex-wrap justify-center gap-6">
             {filiales.map((f) => (
-              <EntrepriseDetentionNode key={f.id} entreprise={f} getFiliales={getFiliales} depth={depth + 1} genreMap={genreMap} />
+              <EntrepriseDetentionNode key={f.id} entreprise={f} getFiliales={getFiliales} depth={depth + 1} />
             ))}
           </div>
         </div>
