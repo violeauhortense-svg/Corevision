@@ -42,6 +42,13 @@ const TYPE_DETENTION_LABELS: Record<string, string> = {
   'nue-propriete': 'nue-propriété',
 };
 
+// Abrégé pour tenir à côté du % sur un trait du schéma de détention.
+const TYPE_DETENTION_ABBR: Record<string, string> = {
+  'pleine-propriete': 'PP',
+  'usufruit': 'US',
+  'nue-propriete': 'NP',
+};
+
 function getCapitauxPropres(e: EntrepriseBilan): number {
   return (e.passifs?.capitalSocial || 0) + (e.passifs?.reservesLegales || 0) + (e.passifs?.reservesLibres || 0);
 }
@@ -154,14 +161,21 @@ export function BilanPatrimonial({
   const diagramRef = useRef<HTMLDivElement>(null);
   const personRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const bubbleRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const [detentionLines, setDetentionLines] = useState<{ key: string; x1: number; y1: number; cx: number; cy: number; x2: number; y2: number; parts: number }[]>([]);
+  const [detentionLines, setDetentionLines] = useState<{ key: string; x1: number; y1: number; c1x: number; c1y: number; c2x: number; c2y: number; x2: number; y2: number; parts: number; typeDetention: string }[]>([]);
 
   useLayoutEffect(() => {
     const computeLines = () => {
       const container = diagramRef.current;
       if (!container) return;
       const containerRect = container.getBoundingClientRect();
-      const next: { key: string; x1: number; y1: number; cx: number; cy: number; x2: number; y2: number; parts: number }[] = [];
+      const margin = 24;
+      const next: { key: string; x1: number; y1: number; c1x: number; c1y: number; c2x: number; c2y: number; x2: number; y2: number; parts: number; typeDetention: string }[] = [];
+
+      // Rects (relative au conteneur) de chaque bulle d'entreprise, pour
+      // détecter celles posées entre une personne et sa cible et router le
+      // trait à côté plutôt que dessus.
+      const bubbleRects = new Map<string, DOMRect>();
+      bubbleRefs.current.forEach((el, nom) => bubbleRects.set(nom, el.getBoundingClientRect()));
 
       personnesPhysiques.forEach((p, nom) => {
         const personEl = personRefs.current.get(nom);
@@ -172,22 +186,51 @@ export function BilanPatrimonial({
 
         const n = p.holdings.length;
         p.holdings.forEach((h, i) => {
-          const bubbleEl = bubbleRefs.current.get(h.entreprise);
-          if (!bubbleEl) return;
-          const bubbleRect = bubbleEl.getBoundingClientRect();
+          const bubbleRect = bubbleRects.get(h.entreprise);
+          if (!bubbleRect) return;
           const x2 = bubbleRect.left + bubbleRect.width / 2 - containerRect.left;
           const y2 = bubbleRect.top - containerRect.top;
-          // Courbe plutôt que trait droit, pour ne pas passer pile au
-          // travers d'une bulle ou d'un autre avatar posé entre les deux -
-          // chaque trait d'une même personne s'écarte du centre pour
-          // rester visuellement distinct des autres, sans jamais dépasser
-          // la largeur du schéma (sinon la courbe sortirait de l'écran
-          // sur mobile).
-          const rawOffset = n > 1 ? (i - (n - 1) / 2) * 200 : 0;
-          const margin = 24;
-          const cx = Math.min(containerRect.width - margin, Math.max(margin, (x1 + x2) / 2 + rawOffset));
-          const cy = (y1 + y2) / 2;
-          next.push({ key: `${nom}-${h.entreprise}-${i}`, x1, y1, cx, cy, x2, y2, parts: h.parts });
+          const yMin = Math.min(y1, y2);
+          const yMax = Math.max(y1, y2);
+
+          // Bulles d'autres entreprises situées verticalement entre la
+          // personne et sa cible (ex: la société mère d'une filiale) - le
+          // trait doit être tenu à l'écart de leur largeur sur toute leur
+          // hauteur, pas juste "moins au centre" à un instant donné.
+          const obstacles: { left: number; right: number; top: number; bottom: number }[] = [];
+          bubbleRects.forEach((r, obsNom) => {
+            if (obsNom === h.entreprise) return;
+            const top = r.top - containerRect.top;
+            const bottom = r.bottom - containerRect.top;
+            if (bottom > yMin + 4 && top < yMax - 4) {
+              obstacles.push({ left: r.left - containerRect.left, right: r.right - containerRect.left, top, bottom });
+            }
+          });
+
+          const indexOffset = n > 1 ? (i - (n - 1) / 2) * 200 : 0;
+          let c1x: number, c1y: number, c2x: number, c2y: number;
+
+          if (obstacles.length > 0) {
+            const obsLeft = Math.min(...obstacles.map((o) => o.left));
+            const obsRight = Math.max(...obstacles.map((o) => o.right));
+            const obsTop = Math.min(...obstacles.map((o) => o.top));
+            const obsBottom = Math.max(...obstacles.map((o) => o.bottom));
+            const goRight = indexOffset >= 0;
+            const clearanceX = goRight ? obsRight + margin : obsLeft - margin;
+            c1x = c2x = Math.min(containerRect.width - margin, Math.max(margin, clearanceX));
+            c1y = Math.max(yMin, obsTop - 16);
+            c2y = Math.min(yMax, obsBottom + 16);
+          } else {
+            // Pas d'obstacle direct : juste écarter les traits d'une même
+            // personne les uns des autres, sans dépasser la largeur du
+            // schéma sur mobile.
+            const cx = Math.min(containerRect.width - margin, Math.max(margin, (x1 + x2) / 2 + indexOffset));
+            c1x = c2x = cx;
+            c1y = y1 + (y2 - y1) * 0.3;
+            c2y = y1 + (y2 - y1) * 0.7;
+          }
+
+          next.push({ key: `${nom}-${h.entreprise}-${i}`, x1, y1, c1x, c1y, c2x, c2y, x2, y2, parts: h.parts, typeDetention: h.typeDetention });
         });
       });
 
@@ -538,22 +581,24 @@ export function BilanPatrimonial({
                     des positions réelles mesurées après rendu. */}
                 <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }}>
                   {detentionLines.map((l) => {
-                    // Point milieu de la courbe (Bézier quadratique, t=0.5)
-                    // pour poser l'étiquette pile sur le trait, pas au
-                    // milieu géométrique du segment droit.
-                    const midX = 0.25 * l.x1 + 0.5 * l.cx + 0.25 * l.x2;
-                    const midY = 0.25 * l.y1 + 0.5 * l.cy + 0.25 * l.y2;
+                    // Point milieu de la courbe (Bézier cubique, t=0.5) pour
+                    // poser l'étiquette pile sur le trait.
+                    const midX = 0.125 * l.x1 + 0.375 * l.c1x + 0.375 * l.c2x + 0.125 * l.x2;
+                    const midY = 0.125 * l.y1 + 0.375 * l.c1y + 0.375 * l.c2y + 0.125 * l.y2;
+                    const abbr = TYPE_DETENTION_ABBR[l.typeDetention] || '';
+                    const label = abbr ? `${l.parts}% ${abbr}` : `${l.parts}%`;
+                    const pillWidth = 22 + label.length * 6;
                     return (
                       <g key={l.key}>
                         <path
-                          d={`M ${l.x1} ${l.y1} Q ${l.cx} ${l.cy} ${l.x2} ${l.y2}`}
+                          d={`M ${l.x1} ${l.y1} C ${l.c1x} ${l.c1y} ${l.c2x} ${l.c2y} ${l.x2} ${l.y2}`}
                           fill="none"
                           stroke="#818cf8"
                           strokeWidth={2}
                         />
-                        <rect x={midX - 16} y={midY - 9} width={32} height={18} rx={9} fill="white" stroke="#818cf8" />
+                        <rect x={midX - pillWidth / 2} y={midY - 9} width={pillWidth} height={18} rx={9} fill="white" stroke="#818cf8" />
                         <text x={midX} y={midY + 4} textAnchor="middle" fontSize={10} fontWeight="bold" fill="#4338ca">
-                          {l.parts}%
+                          {label}
                         </text>
                       </g>
                     );
@@ -764,7 +809,7 @@ function EntrepriseDetentionNode({
       {depth > 0 && (
         <div className="flex items-center gap-1 text-indigo-500 text-xs font-semibold mb-2">
           <CornerDownRight className="w-3.5 h-3.5" />
-          filiale{mereAssocie ? ` (${mereAssocie.parts}%)` : ''}
+          filiale{mereAssocie ? ` (${mereAssocie.parts}% ${TYPE_DETENTION_ABBR[mereAssocie.typeDetention] || ''})` : ''}
         </div>
       )}
 
