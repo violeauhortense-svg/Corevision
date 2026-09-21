@@ -90,7 +90,7 @@ interface PatrimoineProfessionnelProps {
   entreprises?: Entreprise[];
 }
 
-const STATUTS_JURIDIQUES = ['SARL', 'SAS', 'SASU', 'EURL', 'SA', 'SCI', 'EI', 'EIRL', 'Autre'];
+const STATUTS_JURIDIQUES = ['SARL', 'SAS', 'SASU', 'EURL', 'SA', 'SCI', 'EI', 'EIRL', 'SELARL', 'SELAS', 'SPFPL', 'Autre'];
 const FISCALITES = ['IS (Impôt sur les Sociétés)', 'IR (Impôt sur le Revenu)', 'Micro-entreprise', 'Réel simplifié', 'Réel normal', 'Autre'];
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
@@ -766,7 +766,7 @@ export function PatrimoineProfessionnel({ onUpdate, clientData, familyInfo, entr
                     </div>
                     <div className="bg-white bg-opacity-90 rounded-lg p-3 shadow-sm">
                       <p className="text-xs text-blue-900 font-bold mb-1">
-                        {['SARL', 'EURL', 'SCI'].includes(entreprise.statutJuridique) ? 'Gérant' : 'Président'}
+                        {['SARL', 'EURL', 'SCI', 'SELARL'].includes(entreprise.statutJuridique) ? 'Gérant' : 'Président'}
                       </p>
                       <p className="text-sm font-semibold text-gray-900">{entreprise.nomDirigeant || 'Non renseigné'}</p>
                     </div>
@@ -1653,7 +1653,7 @@ export function PatrimoineProfessionnel({ onUpdate, clientData, familyInfo, entr
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-700 block mb-1">
-                  Nom du {['SARL', 'EURL', 'SCI'].includes(entrepriseForm.statutJuridique) ? 'gérant' : 'président'}
+                  Nom du {['SARL', 'EURL', 'SCI', 'SELARL'].includes(entrepriseForm.statutJuridique) ? 'gérant' : 'président'}
                 </label>
                 <input
                   type="text"
