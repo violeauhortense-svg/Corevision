@@ -306,7 +306,7 @@ export function PatrimoineProfessionnel({ onUpdate, clientData, familyInfo, entr
             nom: associeForm.nom, 
             parts: associeForm.parts,
             typeDetention: associeForm.typeDetention,
-            membreFoyer: associeForm.selection !== 'autre'
+            membreFoyer: associeForm.selection !== 'autre' && !associeForm.selection.startsWith('entreprise:')
           }],
         };
       }
@@ -1529,21 +1529,34 @@ export function PatrimoineProfessionnel({ onUpdate, clientData, familyInfo, entr
                     const value = e.target.value;
                     if (value === 'autre') {
                       setAssocie({...associeForm, selection: value, nom: ''});
+                    } else if (value.startsWith('entreprise:')) {
+                      setAssocie({...associeForm, selection: value, nom: value.slice('entreprise:'.length)});
                     } else {
                       setAssocie({...associeForm, selection: value, nom: value});
                     }
                   }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                 >
-                  {getMembresFoyer().map((membre) => (
-                    <option key={membre.value} value={membre.value}>
-                      {membre.label}
-                    </option>
-                  ))}
+                  <optgroup label="Foyer fiscal">
+                    {getMembresFoyer().map((membre) => (
+                      <option key={membre.value} value={membre.value}>
+                        {membre.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                  {entreprises.filter(e => e.id !== showAddAssocie).length > 0 && (
+                    <optgroup label="Autres entreprises du client">
+                      {entreprises.filter(e => e.id !== showAddAssocie).map((e) => (
+                        <option key={e.id} value={`entreprise:${e.nom}`}>
+                          🏢 {e.nom} ({e.statutJuridique})
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
                   <option value="autre">Autre (hors foyer fiscal)</option>
                 </select>
               </div>
-              
+
               {associeForm.selection === 'autre' && (
                 <div>
                   <label className="text-sm font-medium text-gray-700 block mb-1">Nom de l'associé *</label>
