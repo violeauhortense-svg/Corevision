@@ -1,6 +1,26 @@
 import { X, FileText } from 'lucide-react';
 import type { ClientData, FamilyInfo, PatrimoineItem, RevenuItem, ImpositionData, Objectif } from './types';
 
+// Formes libres ici (pas d'import du type Entreprise, non exporté par
+// PatrimoineProfessionnel.tsx) - seuls les champs effectivement lus sont
+// déclarés, le reste passe par l'index signature.
+interface EntrepriseAssocie {
+  nom: string;
+  parts: number;
+  typeDetention: 'pleine-propriete' | 'usufruit' | 'nue-propriete';
+  membreFoyer?: boolean;
+}
+interface EntrepriseBilan {
+  id: string;
+  nom: string;
+  statutJuridique: string;
+  associes?: EntrepriseAssocie[];
+  estFiliale?: boolean;
+  societeMere?: string;
+  passifs?: { capitalSocial?: number; reservesLegales?: number; reservesLibres?: number };
+  [key: string]: any;
+}
+
 interface BilanPatrimonialProps {
   clientData: ClientData;
   familyInfo: FamilyInfo;
@@ -10,7 +30,18 @@ interface BilanPatrimonialProps {
   revenus: RevenuItem[];
   imposition: ImpositionData;
   objectifs: Objectif[];
+  entreprises: EntrepriseBilan[];
   onClose: () => void;
+}
+
+const TYPE_DETENTION_LABELS: Record<string, string> = {
+  'pleine-propriete': 'pleine propriété',
+  'usufruit': 'usufruit',
+  'nue-propriete': 'nue-propriété',
+};
+
+function getCapitauxPropres(e: EntrepriseBilan): number {
+  return (e.passifs?.capitalSocial || 0) + (e.passifs?.reservesLegales || 0) + (e.passifs?.reservesLibres || 0);
 }
 
 const CATEGORIE_LABELS: Record<string, string> = {
@@ -52,6 +83,7 @@ export function BilanPatrimonial({
   revenus,
   imposition,
   objectifs,
+  entreprises,
   onClose,
 }: BilanPatrimonialProps) {
   const calculateTotal = (items: PatrimoineItem[]) => items.reduce((sum, item) => sum + (item.value || 0), 0);
@@ -59,7 +91,8 @@ export function BilanPatrimonial({
   const totalActifsFinanciers = calculateTotal(actifsFinanciers || []);
   const totalActifsImmobiliers = calculateTotal(immobilier || []);
   const totalPassifs = calculateTotal(passifs || []);
-  const patrimoineNet = totalActifsFinanciers + totalActifsImmobiliers - totalPassifs;
+  const totalPatrimoineProfessionnel = (entreprises || []).reduce((sum, e) => sum + getCapitauxPropres(e), 0);
+  const patrimoineNet = totalActifsFinanciers + totalActifsImmobiliers - totalPassifs + totalPatrimoineProfessionnel;
 
   const totalRevenus = (revenus || []).reduce((sum, r) => sum + (r.montantAnnuel || 0), 0);
 
@@ -70,6 +103,16 @@ export function BilanPatrimonial({
   const spouseAge = calculateAge(spouse?.birthDate);
   const children = familyInfo?.children || [];
   const objectifsInclus = (objectifs || []).filter((o) => o.included);
+
+  // Schéma de détention : les entreprises "racines" (pas filiales, ou dont
+  // la société mère n'est pas elle-même dans la liste) portent l'arbre ;
+  // chaque filiale est rattachée à sa mère par égalité stricte de nom
+  // (même logique que "Filiales de X" dans l'onglet Patrimoine).
+  const entreprisesList = entreprises || [];
+  const getFiliales = (nom: string) => entreprisesList.filter((e) => e.estFiliale && e.societeMere === nom);
+  const entreprisesRacines = entreprisesList.filter(
+    (e) => !e.estFiliale || !e.societeMere || !entreprisesList.some((m) => m.nom === e.societeMere)
+  );
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -307,7 +350,7 @@ export function BilanPatrimonial({
 
             <div className="bg-white p-4 rounded-lg border border-green-300 mb-4">
               <h4 className="font-semibold text-green-800 mb-3">📊 Vue d'ensemble</h4>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div className="text-center p-3 bg-blue-50 rounded border border-blue-200">
                   <p className="text-xs text-blue-600 font-medium mb-1">Actifs financiers</p>
                   <p className="text-lg font-bold text-blue-900">{formatCurrency(totalActifsFinanciers)}</p>
@@ -315,6 +358,10 @@ export function BilanPatrimonial({
                 <div className="text-center p-3 bg-purple-50 rounded border border-purple-200">
                   <p className="text-xs text-purple-600 font-medium mb-1">Actifs immobiliers</p>
                   <p className="text-lg font-bold text-purple-900">{formatCurrency(totalActifsImmobiliers)}</p>
+                </div>
+                <div className="text-center p-3 bg-indigo-50 rounded border border-indigo-200">
+                  <p className="text-xs text-indigo-600 font-medium mb-1">Patrimoine pro.</p>
+                  <p className="text-lg font-bold text-indigo-900">{formatCurrency(totalPatrimoineProfessionnel)}</p>
                 </div>
                 <div className="text-center p-3 bg-red-50 rounded border border-red-200">
                   <p className="text-xs text-red-600 font-medium mb-1">Passifs</p>
@@ -326,6 +373,25 @@ export function BilanPatrimonial({
                 </div>
               </div>
             </div>
+
+            {entreprisesList.length > 0 && (
+              <div className="bg-white p-4 rounded-lg border border-green-200 mb-3">
+                <h4 className="font-semibold text-green-800 mb-3">🏢 Patrimoine professionnel</h4>
+                <div className="space-y-2">
+                  {entreprisesList.map((e) => (
+                    <div key={e.id} className="flex justify-between items-center p-2 bg-green-50 rounded">
+                      <span className="text-sm text-gray-700">
+                        {e.nom} <span className="text-xs text-gray-500">({e.statutJuridique})</span>
+                      </span>
+                      <span className="text-sm font-semibold text-gray-900">{formatCurrency(getCapitauxPropres(e))}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-2 italic">
+                  💡 Valeur = capitaux propres (capital social + réserves) de chaque société
+                </p>
+              </div>
+            )}
 
             {actifsFinanciers && actifsFinanciers.length > 0 && (
               <div className="bg-white p-4 rounded-lg border border-green-200 mb-3">
@@ -370,10 +436,29 @@ export function BilanPatrimonial({
             )}
           </div>
 
-          {/* SECTION 3 : REVENUS ET IMPOSITION */}
+          {/* SECTION 3 : SCHÉMA DE DÉTENTION */}
+          <div className="border-2 border-indigo-200 rounded-lg p-6 bg-indigo-50">
+            <h3 className="text-xl font-bold text-indigo-900 mb-4 flex items-center gap-2">
+              🔗 3. SCHÉMA DE DÉTENTION
+            </h3>
+
+            {entreprisesRacines.length === 0 ? (
+              <div className="bg-white p-4 rounded-lg border border-indigo-200 text-center text-gray-500">
+                Aucune entreprise renseignée pour ce client
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {entreprisesRacines.map((e) => (
+                  <EntrepriseDetentionNode key={e.id} entreprise={e} getFiliales={getFiliales} depth={0} />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* SECTION 4 : REVENUS ET IMPOSITION */}
           <div className="border-2 border-purple-200 rounded-lg p-6 bg-purple-50">
             <h3 className="text-xl font-bold text-purple-900 mb-4 flex items-center gap-2">
-              💼 3. REVENUS ET IMPOSITION
+              💼 4. REVENUS ET IMPOSITION
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -439,10 +524,10 @@ export function BilanPatrimonial({
             </div>
           </div>
 
-          {/* SECTION 4 : OBJECTIFS */}
+          {/* SECTION 5 : OBJECTIFS */}
           <div className="border-2 border-orange-200 rounded-lg p-6 bg-orange-50">
             <h3 className="text-xl font-bold text-orange-900 mb-4 flex items-center gap-2">
-              🎯 4. OBJECTIFS PATRIMONIAUX
+              🎯 5. OBJECTIFS PATRIMONIAUX
             </h3>
 
             {objectifsInclus.length > 0 ? (
@@ -493,6 +578,63 @@ export function BilanPatrimonial({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Un nœud de l'arbre de détention : l'entreprise, ses associés (personnes
+// physiques du foyer ou personnes morales), et récursivement ses filiales
+// (rattachées par égalité stricte de nom, même logique que "Filiales de X"
+// dans l'onglet Patrimoine).
+function EntrepriseDetentionNode({
+  entreprise,
+  getFiliales,
+  depth,
+}: {
+  entreprise: EntrepriseBilan;
+  getFiliales: (nom: string) => EntrepriseBilan[];
+  depth: number;
+}) {
+  const filiales = getFiliales(entreprise.nom);
+  const associes = entreprise.associes || [];
+
+  return (
+    <div className={depth > 0 ? 'ml-6 pl-4 border-l-2 border-indigo-300' : ''}>
+      <div className="bg-white rounded-lg border-2 border-indigo-200 p-4 shadow-sm">
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
+          {depth > 0 && <span className="text-indigo-400 text-xs font-medium">↳ filiale</span>}
+          <span className="text-lg">🏢</span>
+          <span className="font-bold text-gray-900">{entreprise.nom}</span>
+          <span className="px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded text-xs font-semibold">
+            {entreprise.statutJuridique}
+          </span>
+        </div>
+
+        {associes.length === 0 ? (
+          <p className="text-xs text-gray-500 italic">Aucun associé renseigné</p>
+        ) : (
+          <div className="space-y-1.5">
+            {associes.map((a, i) => (
+              <div key={i} className="flex items-center gap-2 text-sm flex-wrap">
+                <span>{a.membreFoyer ? '👤' : '🏢'}</span>
+                <span className="text-gray-700">{a.nom}</span>
+                <span className="text-indigo-600 font-semibold">{a.parts}%</span>
+                <span className="text-xs text-gray-400">
+                  ({TYPE_DETENTION_LABELS[a.typeDetention] || a.typeDetention})
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {filiales.length > 0 && (
+        <div className="mt-3 space-y-3">
+          {filiales.map((f) => (
+            <EntrepriseDetentionNode key={f.id} entreprise={f} getFiliales={getFiliales} depth={depth + 1} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

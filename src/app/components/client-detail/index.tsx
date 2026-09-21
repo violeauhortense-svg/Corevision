@@ -229,6 +229,7 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
           revenus={state.revenus}
           imposition={state.imposition}
           objectifs={state.objectifs}
+          entreprises={state.entreprises}
           onClose={() => setShowBilanPatrimonialModal(false)}
         />
       )}
