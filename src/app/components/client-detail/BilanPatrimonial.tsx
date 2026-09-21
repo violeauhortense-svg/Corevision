@@ -154,14 +154,14 @@ export function BilanPatrimonial({
   const diagramRef = useRef<HTMLDivElement>(null);
   const personRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const bubbleRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const [detentionLines, setDetentionLines] = useState<{ key: string; x1: number; y1: number; x2: number; y2: number; parts: number }[]>([]);
+  const [detentionLines, setDetentionLines] = useState<{ key: string; x1: number; y1: number; cx: number; cy: number; x2: number; y2: number; parts: number }[]>([]);
 
   useLayoutEffect(() => {
     const computeLines = () => {
       const container = diagramRef.current;
       if (!container) return;
       const containerRect = container.getBoundingClientRect();
-      const next: { key: string; x1: number; y1: number; x2: number; y2: number; parts: number }[] = [];
+      const next: { key: string; x1: number; y1: number; cx: number; cy: number; x2: number; y2: number; parts: number }[] = [];
 
       personnesPhysiques.forEach((p, nom) => {
         const personEl = personRefs.current.get(nom);
@@ -170,13 +170,21 @@ export function BilanPatrimonial({
         const x1 = personRect.left + personRect.width / 2 - containerRect.left;
         const y1 = personRect.bottom - containerRect.top;
 
+        const n = p.holdings.length;
         p.holdings.forEach((h, i) => {
           const bubbleEl = bubbleRefs.current.get(h.entreprise);
           if (!bubbleEl) return;
           const bubbleRect = bubbleEl.getBoundingClientRect();
           const x2 = bubbleRect.left + bubbleRect.width / 2 - containerRect.left;
           const y2 = bubbleRect.top - containerRect.top;
-          next.push({ key: `${nom}-${h.entreprise}-${i}`, x1, y1, x2, y2, parts: h.parts });
+          // Courbe plutôt que trait droit, pour ne pas passer pile au
+          // travers d'une bulle ou d'un autre avatar posé entre les deux -
+          // chaque trait d'une même personne s'écarte un peu plus du
+          // centre pour rester visuellement distinct des autres.
+          const offset = n > 1 ? (i - (n - 1) / 2) * 70 : 0;
+          const cx = (x1 + x2) / 2 + offset;
+          const cy = (y1 + y2) / 2;
+          next.push({ key: `${nom}-${h.entreprise}-${i}`, x1, y1, cx, cy, x2, y2, parts: h.parts });
         });
       });
 
@@ -527,11 +535,19 @@ export function BilanPatrimonial({
                     des positions réelles mesurées après rendu. */}
                 <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }}>
                   {detentionLines.map((l) => {
-                    const midX = (l.x1 + l.x2) / 2;
-                    const midY = (l.y1 + l.y2) / 2;
+                    // Point milieu de la courbe (Bézier quadratique, t=0.5)
+                    // pour poser l'étiquette pile sur le trait, pas au
+                    // milieu géométrique du segment droit.
+                    const midX = 0.25 * l.x1 + 0.5 * l.cx + 0.25 * l.x2;
+                    const midY = 0.25 * l.y1 + 0.5 * l.cy + 0.25 * l.y2;
                     return (
                       <g key={l.key}>
-                        <line x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke="#818cf8" strokeWidth={2} />
+                        <path
+                          d={`M ${l.x1} ${l.y1} Q ${l.cx} ${l.cy} ${l.x2} ${l.y2}`}
+                          fill="none"
+                          stroke="#818cf8"
+                          strokeWidth={2}
+                        />
                         <rect x={midX - 16} y={midY - 9} width={32} height={18} rx={9} fill="white" stroke="#818cf8" />
                         <text x={midX} y={midY + 4} textAnchor="middle" fontSize={10} fontWeight="bold" fill="#4338ca">
                           {l.parts}%
@@ -543,13 +559,13 @@ export function BilanPatrimonial({
 
                 <div className="relative" style={{ zIndex: 1 }}>
                   {/* Personnes physiques - une seule fois chacune, même si
-                      associées à plusieurs entreprises, avec le détail de
-                      chaque détention (entreprise + %) en dessous, et un
-                      trait tracé vers chaque bulle concernée. */}
+                      associées à plusieurs entreprises : juste l'avatar et
+                      le nom, chaque détention étant portée par son propre
+                      trait (avec le %) plutôt que listée en dessous. */}
                   {personnesPhysiques.size > 0 && (
-                    <div className="flex flex-wrap justify-center gap-4 mb-6">
+                    <div className="flex flex-wrap justify-center gap-8 mb-8">
                       {Array.from(personnesPhysiques.entries()).map(([nom, p]) => (
-                        <div key={nom} className="bg-white rounded-xl border-2 border-sky-300 p-3 shadow-sm w-44 flex flex-col items-center">
+                        <div key={nom} className="flex flex-col items-center">
                           <div
                             ref={(el) => {
                               if (el) personRefs.current.set(nom, el);
@@ -560,14 +576,6 @@ export function BilanPatrimonial({
                             {p.genre === 'homme' ? '👨' : p.genre === 'femme' ? '👩' : '🧑'}
                           </div>
                           <span className="text-sm font-semibold text-gray-900 mt-1 text-center">{nom}</span>
-                          <div className="w-full mt-2 space-y-1">
-                            {p.holdings.map((h, i) => (
-                              <div key={i} className="flex items-center justify-between text-xs bg-sky-50 rounded px-2 py-1">
-                                <span className="text-gray-700 truncate">🏢 {h.entreprise}</span>
-                                <span className="font-bold text-indigo-700 shrink-0 ml-1">{h.parts}%</span>
-                              </div>
-                            ))}
-                          </div>
                         </div>
                       ))}
                     </div>
