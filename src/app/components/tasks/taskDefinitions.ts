@@ -26,6 +26,10 @@ export function getStatusColor(status: string): string {
   return COLOR_MAP[status] || '#6b7280';
 }
 
+// Les 8 statuts du pipeline, dans l'ordre - même ordre que COLOR_MAP et que
+// le tableau STATUSES local de TasksTab.tsx.
+export const PIPELINE_STATUSES = Object.keys(COLOR_MAP);
+
 export const TASK_DEFINITIONS: Record<string, TaskDef[]> = {
   'Prospect': [
     {

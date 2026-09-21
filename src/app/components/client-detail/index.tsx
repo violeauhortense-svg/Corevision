@@ -37,6 +37,7 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
   const {
     state,
     handleUpdateClient,
+    handleUpdateStatusOuvert,
     handleUpdateFamily,
     handleUpdateRevenus,
     handleUpdateImposition,
@@ -193,6 +194,7 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
           clientData={state.clientData}
           onBack={onBack}
           onUpdate={handleUpdateClient}
+          onUpdateStatus={handleUpdateStatusOuvert}
         />
       </div>
 

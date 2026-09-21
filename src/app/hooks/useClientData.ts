@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { clientAPI, taskAPI } from '../services/api';
+import { apiBaseUrl } from '../utils/api/info';
 import { addTimestamps, markNewItems } from '../utils/traceability';
 import { validateClientData, validateFinancialData } from '../utils/validation';
 import { Events } from '../utils/eventEmitter';
@@ -274,6 +275,49 @@ export function useClientData(clientId: string, onSave?: (data: ClientDataState)
     return persistState(newState);
   }, [clientId, persistState]);
 
+  // Statut réellement avancé dans le pipeline (voir statusOuvert sur
+  // ClientData). Patché directement, PAS via persistState/buildFullData:
+  // celui-ci exclut délibérément statusOuvert de son payload (seule
+  // l'Agenda/TasksTab doivent l'écrire normalement), et clientAPI.update()
+  // force par ailleurs nom/prenom/telephone à '' quand ils sont absents du
+  // payload - un PATCH complet écraserait le reste du client. Même route
+  // et même forme de payload que TasksTab.tsx.
+  const handleUpdateStatusOuvert = useCallback(async (newStatus: string) => {
+    const previousStatus = stateRef.current.clientData.statusOuvert || stateRef.current.clientData.status;
+    const newState = { ...stateRef.current, clientData: { ...stateRef.current.clientData, statusOuvert: newStatus } };
+    setState(newState);
+    stateRef.current = newState;
+
+    try {
+      const token = localStorage.getItem('auth_token');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const response = await fetch(`${apiBaseUrl}/api/clients/${clientId}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ statusOuvert: newStatus }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erreur serveur ${response.status}`);
+      }
+
+      if (previousStatus && previousStatus !== newStatus) {
+        Events.clientStatusChanged(clientId, previousStatus, newStatus);
+      }
+      return true;
+    } catch (error) {
+      console.error('❌ Erreur mise à jour statut:', error);
+      toast.error('Erreur lors de la mise à jour du statut - non enregistré');
+      // Revert optimistic update
+      const revertState = { ...stateRef.current, clientData: { ...stateRef.current.clientData, statusOuvert: previousStatus } };
+      setState(revertState);
+      stateRef.current = revertState;
+      return false;
+    }
+  }, [clientId]);
+
   const handleUpdateFamily = useCallback(async (family: FamilyInfo) => {
     const familyWithTimestamp = addTimestamps(family, !stateRef.current.familyInfo.maritalStatus);
     const newState = { ...stateRef.current, familyInfo: familyWithTimestamp };
@@ -507,6 +551,7 @@ export function useClientData(clientId: string, onSave?: (data: ClientDataState)
     calcPatrimoine: () => calcPatrimoine(state),
     // Handlers
     handleUpdateClient,
+    handleUpdateStatusOuvert,
     handleUpdateFamily,
     handleUpdateRevenus,
     handleUpdateImposition,

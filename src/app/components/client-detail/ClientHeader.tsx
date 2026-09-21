@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ArrowLeft, User, Phone, Mail, MapPin, Calendar, Edit, X, Save, Briefcase } from 'lucide-react';
 import type { ClientData } from './types';
-import { getStatusColor as getPipelineColor } from '../tasks/taskDefinitions';
+import { getStatusColor as getPipelineColor, PIPELINE_STATUSES } from '../tasks/taskDefinitions';
 
 const SECTEUR_LABELS: Record<'secteur_1' | 'secteur_2' | 'na', string> = {
   secteur_1: 'Secteur 1',
@@ -13,15 +13,18 @@ interface ClientHeaderProps {
   clientData: ClientData;
   onBack: () => void;
   onUpdate: (updates: Partial<ClientData>) => void;
+  onUpdateStatus: (newStatus: string) => Promise<boolean> | void;
 }
 
 export function ClientHeader({
   clientData,
   onBack,
   onUpdate,
+  onUpdateStatus,
 }: ClientHeaderProps) {
   const [isEditingClient, setIsEditingClient] = useState(false);
   const [tempClientData, setTempClientData] = useState(clientData);
+  const [isEditingStatus, setIsEditingStatus] = useState(false);
 
 
   const startEditClient = () => {
@@ -109,13 +112,32 @@ export function ClientHeader({
             
             <div className="text-left sm:text-right shrink-0">
               <p className="text-sm text-gray-600">Statut</p>
-              <span
-                className="inline-flex mt-2 px-4 py-2 rounded-full text-sm font-medium text-white"
-                style={{ backgroundColor: getPipelineColor(clientData.statusOuvert || clientData.status) }}
-              >
-                {clientData.statusOuvert || clientData.status}
-              </span>
-              
+              {isEditingStatus ? (
+                <select
+                  autoFocus
+                  defaultValue={clientData.statusOuvert || clientData.status}
+                  onChange={async (e) => {
+                    setIsEditingStatus(false);
+                    await onUpdateStatus(e.target.value);
+                  }}
+                  onBlur={() => setIsEditingStatus(false)}
+                  className="mt-2 px-4 py-2 rounded-full text-sm font-medium border border-gray-300 focus:outline-none focus:border-blue-500"
+                >
+                  {PIPELINE_STATUSES.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              ) : (
+                <button
+                  onClick={() => setIsEditingStatus(true)}
+                  className="inline-flex mt-2 px-4 py-2 rounded-full text-sm font-medium text-white hover:opacity-90 transition-opacity"
+                  style={{ backgroundColor: getPipelineColor(clientData.statusOuvert || clientData.status) }}
+                  title="Cliquer pour changer le statut"
+                >
+                  {clientData.statusOuvert || clientData.status}
+                </button>
+              )}
+
               <button
                 onClick={startEditClient}
                 className="flex items-center gap-2 mt-3 px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
