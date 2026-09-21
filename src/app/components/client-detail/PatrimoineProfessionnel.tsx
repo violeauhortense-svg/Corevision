@@ -8,6 +8,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { toast } from 'sonner';
 import { ValorisationSection } from './ValorisationSection';
 import { OptimisationRemunerationModal } from '../OptimisationRemunerationModal';
+import { PIPELINE_STATUSES } from '../tasks/taskDefinitions';
 
 interface Associe {
   id: string;
@@ -91,10 +92,21 @@ interface PatrimoineProfessionnelProps {
 }
 
 const STATUTS_JURIDIQUES = ['SARL', 'SAS', 'SASU', 'EURL', 'SA', 'SCI', 'EI', 'EIRL', 'SELARL', 'SELAS', 'SPFPL', 'Autre'];
+// L'arbitrage de rémunération n'a de sens que pour les sociétés soumises à
+// l'IS avec un dirigeant assimilé-salarié ou TNS - pas les SCI, EI/EIRL,
+// entreprises individuelles, etc.
+const STATUTS_ARBITRAGE_REMUNERATION = ['SARL', 'SAS', 'SELARL', 'SELAS'];
 const FISCALITES = ['IS (Impôt sur les Sociétés)', 'IR (Impôt sur le Revenu)', 'Micro-entreprise', 'Réel simplifié', 'Réel normal', 'Autre'];
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
 export function PatrimoineProfessionnel({ onUpdate, clientData, familyInfo, entreprises: entreprisesInitiales }: PatrimoineProfessionnelProps) {
+  // L'arbitrage de rémunération ne devient pertinent qu'une fois le
+  // client en "Suivi CSP" (ou au-delà, en "Arbitrage") - avant ça, la
+  // section reste masquée plutôt que juste désactivée.
+  const clientStatusIndex = PIPELINE_STATUSES.indexOf(clientData?.statusOuvert || clientData?.status || '');
+  const cspIndex = PIPELINE_STATUSES.indexOf('Suivi CSP');
+  const hasReachedCSP = clientStatusIndex >= 0 && clientStatusIndex >= cspIndex;
+
   // 🔥 CORRECTION : Utiliser les entreprises passées en props au lieu de [] vide
   const [entreprises, setEntreprises] = useState<Entreprise[]>(entreprisesInitiales || []);
   const [selectedEntreprise, setSelectedEntreprise] = useState<string | null>(null);
@@ -1121,7 +1133,9 @@ export function PatrimoineProfessionnel({ onUpdate, clientData, familyInfo, entr
 
                   {/* Arbitrage de rémunération (anciennement "Résultat et Dividendes") -
                       en lien direct avec la tâche "Arbitrage de rémunération" du pipeline
-                      (onglet Tâches, statut "Arbitrage"). */}
+                      (onglet Tâches, statut "Arbitrage"). Visible seulement si le client a
+                      atteint le statut "Suivi CSP" et pour les sociétés SARL/SAS/SELARL/SELAS. */}
+                  {hasReachedCSP && STATUTS_ARBITRAGE_REMUNERATION.includes(entreprise.statutJuridique) && (
                   <div className="border-2 border-gray-200 rounded-lg">
                     <button
                       onClick={() => toggleSection(`${entreprise.id}-resultat`)}
@@ -1244,6 +1258,7 @@ export function PatrimoineProfessionnel({ onUpdate, clientData, familyInfo, entr
                       </div>
                     )}
                   </div>
+                  )}
 
                   {/* 5️⃣ VALORISATION DE L'ENTREPRISE */}
                   <div className="border-2 border-gray-200 rounded-lg">
