@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState } from 'react';
 import { X, FileText, CornerDownRight } from 'lucide-react';
 import type { ClientData, FamilyInfo, PatrimoineItem, RevenuItem, ImpositionData, Objectif } from './types';
 
@@ -145,6 +146,47 @@ export function BilanPatrimonial({
       personnesPhysiques.get(a.nom)!.holdings.push({ entreprise: e.nom, parts: a.parts, typeDetention: a.typeDetention });
     });
   });
+
+  // Traits reliant chaque personne physique aux entreprises qu'elle
+  // détient : on mesure la position réelle de l'avatar et de chaque bulle
+  // après rendu (leurs refs sont enregistrées par les enfants) pour tracer
+  // un <svg> par-dessus, plutôt que de deviner des coordonnées.
+  const diagramRef = useRef<HTMLDivElement>(null);
+  const personRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const bubbleRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const [detentionLines, setDetentionLines] = useState<{ key: string; x1: number; y1: number; x2: number; y2: number; parts: number }[]>([]);
+
+  useLayoutEffect(() => {
+    const computeLines = () => {
+      const container = diagramRef.current;
+      if (!container) return;
+      const containerRect = container.getBoundingClientRect();
+      const next: { key: string; x1: number; y1: number; x2: number; y2: number; parts: number }[] = [];
+
+      personnesPhysiques.forEach((p, nom) => {
+        const personEl = personRefs.current.get(nom);
+        if (!personEl) return;
+        const personRect = personEl.getBoundingClientRect();
+        const x1 = personRect.left + personRect.width / 2 - containerRect.left;
+        const y1 = personRect.bottom - containerRect.top;
+
+        p.holdings.forEach((h, i) => {
+          const bubbleEl = bubbleRefs.current.get(h.entreprise);
+          if (!bubbleEl) return;
+          const bubbleRect = bubbleEl.getBoundingClientRect();
+          const x2 = bubbleRect.left + bubbleRect.width / 2 - containerRect.left;
+          const y2 = bubbleRect.top - containerRect.top;
+          next.push({ key: `${nom}-${h.entreprise}-${i}`, x1, y1, x2, y2, parts: h.parts });
+        });
+      });
+
+      setDetentionLines(next);
+    };
+
+    computeLines();
+    window.addEventListener('resize', computeLines);
+    return () => window.removeEventListener('resize', computeLines);
+  }, [entreprisesList, personnesPhysiques.size]);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -479,37 +521,74 @@ export function BilanPatrimonial({
                 Aucune entreprise renseignée pour ce client
               </div>
             ) : (
-              <>
-                {/* Personnes physiques - une seule fois chacune, même si
-                    associées à plusieurs entreprises, avec le détail de
-                    chaque détention (entreprise + %) en dessous. */}
-                {personnesPhysiques.size > 0 && (
-                  <div className="flex flex-wrap justify-center gap-4 mb-6">
-                    {Array.from(personnesPhysiques.entries()).map(([nom, p]) => (
-                      <div key={nom} className="bg-white rounded-xl border-2 border-sky-300 p-3 shadow-sm w-44 flex flex-col items-center">
-                        <div className="w-11 h-11 rounded-full flex items-center justify-center text-xl shadow-md border-2 bg-sky-50 border-sky-300">
-                          {p.genre === 'homme' ? '👨' : p.genre === 'femme' ? '👩' : '🧑'}
+              <div ref={diagramRef} className="relative">
+                {/* Traits reliant chaque personne physique aux entreprises
+                    qu'elle détient, tracés par-dessus le contenu à partir
+                    des positions réelles mesurées après rendu. */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }}>
+                  {detentionLines.map((l) => {
+                    const midX = (l.x1 + l.x2) / 2;
+                    const midY = (l.y1 + l.y2) / 2;
+                    return (
+                      <g key={l.key}>
+                        <line x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke="#818cf8" strokeWidth={2} />
+                        <rect x={midX - 16} y={midY - 9} width={32} height={18} rx={9} fill="white" stroke="#818cf8" />
+                        <text x={midX} y={midY + 4} textAnchor="middle" fontSize={10} fontWeight="bold" fill="#4338ca">
+                          {l.parts}%
+                        </text>
+                      </g>
+                    );
+                  })}
+                </svg>
+
+                <div className="relative" style={{ zIndex: 1 }}>
+                  {/* Personnes physiques - une seule fois chacune, même si
+                      associées à plusieurs entreprises, avec le détail de
+                      chaque détention (entreprise + %) en dessous, et un
+                      trait tracé vers chaque bulle concernée. */}
+                  {personnesPhysiques.size > 0 && (
+                    <div className="flex flex-wrap justify-center gap-4 mb-6">
+                      {Array.from(personnesPhysiques.entries()).map(([nom, p]) => (
+                        <div key={nom} className="bg-white rounded-xl border-2 border-sky-300 p-3 shadow-sm w-44 flex flex-col items-center">
+                          <div
+                            ref={(el) => {
+                              if (el) personRefs.current.set(nom, el);
+                              else personRefs.current.delete(nom);
+                            }}
+                            className="w-11 h-11 rounded-full flex items-center justify-center text-xl shadow-md border-2 bg-sky-50 border-sky-300"
+                          >
+                            {p.genre === 'homme' ? '👨' : p.genre === 'femme' ? '👩' : '🧑'}
+                          </div>
+                          <span className="text-sm font-semibold text-gray-900 mt-1 text-center">{nom}</span>
+                          <div className="w-full mt-2 space-y-1">
+                            {p.holdings.map((h, i) => (
+                              <div key={i} className="flex items-center justify-between text-xs bg-sky-50 rounded px-2 py-1">
+                                <span className="text-gray-700 truncate">🏢 {h.entreprise}</span>
+                                <span className="font-bold text-indigo-700 shrink-0 ml-1">{h.parts}%</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                        <span className="text-sm font-semibold text-gray-900 mt-1 text-center">{nom}</span>
-                        <div className="w-full mt-2 space-y-1">
-                          {p.holdings.map((h, i) => (
-                            <div key={i} className="flex items-center justify-between text-xs bg-sky-50 rounded px-2 py-1">
-                              <span className="text-gray-700 truncate">🏢 {h.entreprise}</span>
-                              <span className="font-bold text-indigo-700 shrink-0 ml-1">{h.parts}%</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap justify-center gap-8">
+                    {entreprisesRacines.map((e) => (
+                      <EntrepriseDetentionNode
+                        key={e.id}
+                        entreprise={e}
+                        getFiliales={getFiliales}
+                        depth={0}
+                        registerBubble={(nom, el) => {
+                          if (el) bubbleRefs.current.set(nom, el);
+                          else bubbleRefs.current.delete(nom);
+                        }}
+                      />
                     ))}
                   </div>
-                )}
-
-                <div className="flex flex-wrap justify-center gap-8">
-                  {entreprisesRacines.map((e) => (
-                    <EntrepriseDetentionNode key={e.id} entreprise={e} getFiliales={getFiliales} depth={0} />
-                  ))}
                 </div>
-              </>
+              </div>
             )}
           </div>
 
@@ -651,10 +730,12 @@ function EntrepriseDetentionNode({
   entreprise,
   getFiliales,
   depth,
+  registerBubble,
 }: {
   entreprise: EntrepriseBilan;
   getFiliales: (nom: string) => EntrepriseBilan[];
   depth: number;
+  registerBubble: (nom: string, el: HTMLDivElement | null) => void;
 }) {
   const filiales = getFiliales(entreprise.nom);
   const allAssocies = entreprise.associes || [];
@@ -698,7 +779,10 @@ function EntrepriseDetentionNode({
       )}
 
       {/* Bulle de l'entreprise */}
-      <div className="rounded-[2rem] border-4 border-indigo-300 bg-gradient-to-br from-indigo-100 via-white to-white px-6 py-4 text-center shadow-lg min-w-[160px] max-w-[240px]">
+      <div
+        ref={(el) => registerBubble(entreprise.nom, el)}
+        className="rounded-[2rem] border-4 border-indigo-300 bg-gradient-to-br from-indigo-100 via-white to-white px-6 py-4 text-center shadow-lg min-w-[160px] max-w-[240px]"
+      >
         <div className="text-2xl">🏢</div>
         <div className="font-bold text-gray-900 text-sm mt-1 break-words">{entreprise.nom}</div>
         <div className="inline-block mt-1 px-2 py-0.5 bg-indigo-600 text-white rounded-full text-[10px] font-bold">
@@ -718,7 +802,7 @@ function EntrepriseDetentionNode({
           <div className="w-0.5 h-4 bg-indigo-300" />
           <div className="flex flex-wrap justify-center gap-6">
             {filiales.map((f) => (
-              <EntrepriseDetentionNode key={f.id} entreprise={f} getFiliales={getFiliales} depth={depth + 1} />
+              <EntrepriseDetentionNode key={f.id} entreprise={f} getFiliales={getFiliales} depth={depth + 1} registerBubble={registerBubble} />
             ))}
           </div>
         </div>
