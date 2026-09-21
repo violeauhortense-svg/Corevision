@@ -11,7 +11,7 @@ import { FoyerTab } from './FoyerTab';
 import { RevenusTab } from './RevenuTab';
 import { PatrimoineTab } from './PatrimoineTab';
 import { ObjectifsTab } from './ObjectifsTab';
-import { PreAnalyseTab } from './PreAnalyseTab';
+import { BilanPatrimonial } from './BilanPatrimonial';
 import { AuditTab } from './AuditTab';
 import { RecommandationsModule } from './RecommandationsModule';
 import { TasksTab } from '../TasksTab';
@@ -28,7 +28,7 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
   const [activeTab, setActiveTab] = useState<TabType>('foyer');
   const [isLoading, setIsLoading] = useState(true);
   const [session, setSession] = useState<any>(null);
-  const [showPreAnalyseModal, setShowPreAnalyseModal] = useState(false);
+  const [showBilanPatrimonialModal, setShowBilanPatrimonialModal] = useState(false);
   const [showRecommandationsModal, setShowRecommandationsModal] = useState(false);
 
   // Client data management hook - consolidates 17 useState + 13 handlers.
@@ -196,14 +196,14 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
         />
       </div>
 
-      {/* Boutons Pré-analyse / Recommandations */}
+      {/* Boutons Bilan Patrimonial / Recommandations */}
       <div className="mb-6 flex flex-wrap gap-3">
         <button
-          onClick={() => setShowPreAnalyseModal(true)}
+          onClick={() => setShowBilanPatrimonialModal(true)}
           className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg"
         >
           <BarChart3 className="w-5 h-5" />
-          <span className="font-medium">📊 Voir la Pré-analyse</span>
+          <span className="font-medium">📊 Voir le Bilan Patrimonial</span>
         </button>
         <button
           onClick={() => setShowRecommandationsModal(true)}
@@ -214,38 +214,19 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
         </button>
       </div>
 
-      {/* Modal Pré-analyse */}
-      {showPreAnalyseModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl w-full max-w-7xl max-h-[90vh] overflow-hidden flex flex-col">
-            {/* En-tête de la modal */}
-            <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 flex items-center justify-between border-b border-gray-200">
-              <h2 className="text-2xl font-bold flex items-center gap-3">
-                <BarChart3 className="w-7 h-7" />
-                Pré-analyse Patrimoniale - {state.clientData.name}
-              </h2>
-              <button
-                onClick={() => setShowPreAnalyseModal(false)}
-                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            {/* Contenu scrollable de la modal */}
-            <div className="overflow-y-auto p-6">
-              <PreAnalyseTab
-                clientId={clientId}
-                clientName={state.clientData.name}
-                actifsFinanciers={state.actifsFinanciers}
-                immobilier={state.immobilier}
-                passifs={state.passifs}
-                revenus={state.revenus}
-                impositionData={state.imposition}
-              />
-            </div>
-          </div>
-        </div>
+      {/* Modal Bilan Patrimonial */}
+      {showBilanPatrimonialModal && (
+        <BilanPatrimonial
+          clientData={state.clientData}
+          familyInfo={state.familyInfo}
+          actifsFinanciers={state.actifsFinanciers}
+          immobilier={state.immobilier}
+          passifs={state.passifs}
+          revenus={state.revenus}
+          imposition={state.imposition}
+          objectifs={state.objectifs}
+          onClose={() => setShowBilanPatrimonialModal(false)}
+        />
       )}
 
       {/* Modal Recommandations */}
@@ -320,19 +301,6 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
               familyInfo={state.familyInfo}
               entreprises={state.entreprises}
               onUpdateEntreprises={handleUpdateEntreprises}
-            />
-          )}
-
-          {/* Onglet Pré-analyse */}
-          {activeTab === 'preanalyse' && (
-            <PreAnalyseTab
-              clientId={clientId}
-              clientName={state.clientData.name}
-              actifsFinanciers={state.actifsFinanciers}
-              immobilier={state.immobilier}
-              passifs={state.passifs}
-              revenus={state.revenus}
-              impositionData={state.imposition}
             />
           )}
 
