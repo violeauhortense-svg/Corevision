@@ -1657,11 +1657,18 @@ export function PatrimoineProfessionnel({ onUpdate, clientData, familyInfo, entr
                 </label>
                 <input
                   type="text"
+                  list="foyer-membres-dirigeant"
                   value={entrepriseForm.nomDirigeant || ''}
                   onChange={(e) => setEntrepriseForm({...entrepriseForm, nomDirigeant: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   placeholder="Ex: Jean Dupont"
                 />
+                {/* Saisie libre, avec suggestions des membres du foyer fiscal */}
+                <datalist id="foyer-membres-dirigeant">
+                  {getMembresFoyer().map((membre) => (
+                    <option key={membre.value} value={membre.value}>{membre.label}</option>
+                  ))}
+                </datalist>
               </div>
               <div className="flex items-center gap-2">
                 <input
