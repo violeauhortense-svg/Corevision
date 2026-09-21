@@ -1324,19 +1324,27 @@ export function PatrimoineProfessionnel({ onUpdate, clientData, familyInfo, entr
                             {entreprise.estFiliale && (
                               <div className="mt-3">
                                 <label className="text-xs font-medium text-gray-700 block mb-1">Société mère</label>
-                                <input
-                                  type="text"
+                                <select
                                   value={entreprise.societeMere || ''}
                                   onChange={(e) => {
-                                    const updated = entreprises.map(ent => 
+                                    const updated = entreprises.map(ent =>
                                       ent.id === entreprise.id ? { ...ent, societeMere: e.target.value } : ent
                                     );
                                     setEntreprises(updated);
                                     onUpdate?.(updated);
                                   }}
-                                  placeholder="Nom de la société mère"
                                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                                />
+                                >
+                                  <option value="">— Sélectionner une entreprise —</option>
+                                  {entreprises.filter(e => e.id !== entreprise.id).map(e => (
+                                    <option key={e.id} value={e.nom}>{e.nom}</option>
+                                  ))}
+                                </select>
+                                {entreprises.filter(e => e.id !== entreprise.id).length === 0 && (
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    Aucune autre entreprise enregistrée pour ce client - ajoutez d'abord la société mère.
+                                  </p>
+                                )}
                               </div>
                             )}
                           </div>
@@ -1471,13 +1479,21 @@ export function PatrimoineProfessionnel({ onUpdate, clientData, familyInfo, entr
               {entrepriseForm.estFiliale && (
                 <div>
                   <label className="text-sm font-medium text-gray-700 block mb-1">Société mère</label>
-                  <input
-                    type="text"
+                  <select
                     value={entrepriseForm.societeMere || ''}
                     onChange={(e) => setEntrepriseForm({...entrepriseForm, societeMere: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    placeholder="Nom de la société mère"
-                  />
+                  >
+                    <option value="">— Sélectionner une entreprise —</option>
+                    {entreprises.map(e => (
+                      <option key={e.id} value={e.nom}>{e.nom}</option>
+                    ))}
+                  </select>
+                  {entreprises.length === 0 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Aucune autre entreprise enregistrée pour ce client - ajoutez d'abord la société mère.
+                    </p>
+                  )}
                 </div>
               )}
             </div>
