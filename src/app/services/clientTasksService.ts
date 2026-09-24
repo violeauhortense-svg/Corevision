@@ -65,6 +65,19 @@ export async function getAllOpenClientTasks(): Promise<OpenClientTask[]> {
 
   for (const client of clients) {
     const status = normalizedClientStatus(client);
+
+    // Un client réellement suivi tâche par tâche accumule un historique
+    // dans `taches` pour chaque statut déjà franchi (applyTaskChange y
+    // écrit avant de faire avancer statusOuvert) - donc un client qui
+    // n'est plus au tout premier statut ("Prospect") mais dont `taches`
+    // est totalement vide n'a pu y arriver que par un changement de
+    // statut direct depuis le header, pas par la case à cocher. Dans ce
+    // cas, comme pour les statuts antérieurs déjà traités comme
+    // "COMPLÉTÉ" dans l'onglet Tâches, on ne fait pas non plus remonter
+    // les tâches de son statut courant ici.
+    const hasAnyTaskHistory = Object.keys(client.taches || {}).length > 0;
+    if (!hasAnyTaskHistory && status !== 'Prospect') continue;
+
     const taskDefs = getTaskDefs(status);
     const existing = client.taches?.[status] || [];
     const clientName = `${client.prenom || ''} ${client.nom || ''}`.trim() || 'Client sans nom';
