@@ -46,8 +46,11 @@ class Config:
     OUTPUT_DIR.mkdir(exist_ok=True)
     LOGS_DIR.mkdir(exist_ok=True)
 
-    # Logging
-    LOG_FILE = LOGS_DIR / f'bridge_{datetime.now().strftime("%Y%m%d")}.log'
+    # Logging - nom fixe (pas daté) car la rotation par taille ci-dessous
+    # s'en occupe ; un nom daté ne "tournait" en pratique jamais puisqu'il
+    # n'est calculé qu'une fois, au démarrage du process, qui reste
+    # ensuite actif plusieurs jours d'affilée.
+    LOG_FILE = LOGS_DIR / 'bridge.log'
 
 # ============================================
 # LOGGING
@@ -61,11 +64,16 @@ import sys
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
+from logging.handlers import RotatingFileHandler
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(Config.LOG_FILE, encoding='utf-8'),
+        # Plafonné à 10 Mo x 5 fichiers (50 Mo max au total) - le bridge
+        # tourne en continu plusieurs jours sans redémarrage, un fichier
+        # non plafonné grossissait donc indéfiniment.
+        RotatingFileHandler(Config.LOG_FILE, maxBytes=10 * 1024 * 1024, backupCount=5, encoding='utf-8'),
         logging.StreamHandler(sys.stdout)
     ]
 )
