@@ -6,6 +6,7 @@ import { DashboardView } from "./components/DashboardView";
 import { ClientsView } from "./components/ClientsView";
 import { AgendaView } from "./components/AgendaView";
 import { TodoView } from "./components/TodoView";
+import { RecommandationsGlobalView } from "./components/RecommandationsGlobalView";
 import { LoginView } from "./components/LoginView";
 import { ProfileView } from "./components/ProfileView";
 import { CoreVisionAdminView } from "./components/CoreVisionAdminView";
@@ -23,6 +24,7 @@ export type ViewType =
   | "mails"
   | "agenda"
   | "todo"
+  | "recommandations"
   | "profile"
   | "corevision"
   | "knowledge-base"
@@ -145,6 +147,11 @@ export default function App() {
           setCurrentView('clients');
           setSelectedClientId(clientId);
           setOpenTasksTab(true);
+        }} />;
+      case "recommandations":
+        return <RecommandationsGlobalView onNavigateToClient={(clientId) => {
+          setCurrentView('clients');
+          setSelectedClientId(clientId);
         }} />;
       case "profile":
         return <ProfileView session={session} onLogout={handleLogout} />;

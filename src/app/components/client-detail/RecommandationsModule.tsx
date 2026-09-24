@@ -7,7 +7,9 @@ interface RecommandationsModuleProps {
   onUpdate: (recommendations: AuditRecommendation[]) => Promise<boolean | undefined> | Promise<void> | void;
 }
 
-const STATUS_LABELS: Record<AuditRecommendationStatus, string> = {
+// Exportées pour être réutilisées par la vue globale "Recommandations"
+// (toutes clients confondus, src/app/components/RecommandationsGlobalView.tsx).
+export const STATUS_LABELS: Record<AuditRecommendationStatus, string> = {
   proposee: '📝 Proposée',
   refusee: '❌ Refusée',
   acceptee: '✅ Acceptée',
@@ -16,7 +18,7 @@ const STATUS_LABELS: Record<AuditRecommendationStatus, string> = {
   termine: '🏁 Terminée',
 };
 
-const STATUS_COLORS: Record<AuditRecommendationStatus, string> = {
+export const STATUS_COLORS: Record<AuditRecommendationStatus, string> = {
   proposee: 'bg-gray-100 text-gray-700 border-gray-300',
   refusee: 'bg-red-100 text-red-700 border-red-300',
   acceptee: 'bg-blue-100 text-blue-700 border-blue-300',
@@ -31,7 +33,7 @@ const SERVICE_LABELS: Record<AuditRecommendationService, string> = {
   ingenierie_patrimoniale: '🏛️ Ingénierie patrimoniale',
 };
 
-const VENDEUR_LABELS: Record<AuditRecommendationVendeur, string> = {
+export const VENDEUR_LABELS: Record<AuditRecommendationVendeur, string> = {
   moi: '👤 Hortense Violeau',
   lecler: '👤 M. Lecler',
   service_juridique: '⚖️ Service juridique',
@@ -39,7 +41,7 @@ const VENDEUR_LABELS: Record<AuditRecommendationVendeur, string> = {
   service_ingenierie_patrimoniale: '🏛️ Service ingénierie patrimoniale',
 };
 
-function formatEuro(value: number): string {
+export function formatEuro(value: number): string {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value || 0);
 }
 

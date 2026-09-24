@@ -30,6 +30,7 @@ export function Sidebar({ currentView, onViewChange, onLogout, session }: Sideba
     { id: 'mails' as ViewType, label: 'Hub Communication', icon: Mail },
     { id: 'agenda' as ViewType, label: 'Agenda', icon: Calendar },
     { id: 'todo' as ViewType, label: 'To Do List', icon: CheckSquare },
+    { id: 'recommandations' as ViewType, label: 'Recommandations', icon: Lightbulb },
   ];
 
   return (
