@@ -6,7 +6,7 @@ import type { ContactProfessionnel } from './types';
 
 interface ContactsProfessionnelsTabProps {
   contacts: ContactProfessionnel[];
-  onUpdateContacts: (contacts: ContactProfessionnel[]) => void;
+  onUpdateContacts: (contacts: ContactProfessionnel[]) => Promise<boolean | undefined> | void;
 }
 
 export function ContactsProfessionnelsTab({ contacts, onUpdateContacts }: ContactsProfessionnelsTabProps) {
@@ -54,14 +54,15 @@ export function ContactsProfessionnelsTab({ contacts, onUpdateContacts }: Contac
     );
   };
 
-  const saveContacts = () => {
-    // Validation des contacts avant sauvegarde
-    const invalidContacts = localContacts.filter(
-      (c) => !c.nom || !c.prenom || !c.structure || (!c.email && !c.telephone)
-    );
-
-    if (invalidContacts.length > 0) {
-      toast.error('Veuillez remplir tous les champs obligatoires (nom, prénom, structure, email ou téléphone)');
+  const saveContacts = async () => {
+    // Seuls nom et prénom sont vraiment nécessaires pour identifier le
+    // contact - structure/email/téléphone restent utiles mais ne doivent
+    // pas bloquer l'enregistrement (c'était trop strict).
+    const invalidIndex = localContacts.findIndex((c) => !c.nom?.trim() || !c.prenom?.trim());
+    if (invalidIndex !== -1) {
+      const num = invalidIndex + 1;
+      toast.error(`Contact n°${num} : le nom et le prénom sont obligatoires`);
+      setEditingContact(localContacts[invalidIndex].id);
       return;
     }
 
@@ -71,7 +72,15 @@ export function ContactsProfessionnelsTab({ contacts, onUpdateContacts }: Contac
       return addTimestamps(contact, isNew);
     });
 
-    onUpdateContacts(contactsWithTimestamps);
+    // La sauvegarde peut échouer côté serveur (réseau, backend indisponible,
+    // ...) - dans ce cas onUpdateContacts renvoie false/undefined et affiche
+    // déjà sa propre erreur : on ne doit alors ni fermer le mode édition, ni
+    // afficher un faux succès.
+    const result = await onUpdateContacts(contactsWithTimestamps);
+    if (result === false) {
+      return;
+    }
+
     setIsEditing(false);
     setEditingContact(null);
     toast.success('Contacts professionnels mis à jour');
