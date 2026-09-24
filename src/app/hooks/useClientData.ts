@@ -402,10 +402,20 @@ export function useClientData(clientId: string, onSave?: (data: ClientDataState)
   }, [persistState]);
 
   const handleUpdateAuditRecommendations = useCallback(async (newRecommendations: AuditRecommendation[]) => {
+    const previousRecommendations = stateRef.current.auditRecommendations;
     const newState = { ...stateRef.current, auditRecommendations: newRecommendations };
     setState(newState);
     stateRef.current = newState;
-    return persistState(newState);
+    const ok = await persistState(newState);
+    if (!ok) {
+      // La sauvegarde a réellement échoué côté serveur - annuler la mise à
+      // jour optimiste pour ne pas laisser une recommandation non
+      // enregistrée apparaître comme sauvegardée dans la liste.
+      const revertState = { ...stateRef.current, auditRecommendations: previousRecommendations };
+      setState(revertState);
+      stateRef.current = revertState;
+    }
+    return ok;
   }, [persistState]);
 
   const handleUpdateDocuments = useCallback(async (newDocuments: Document[]) => {

@@ -4,7 +4,7 @@ import type { AuditRecommendation, AuditRecommendationStatus, AuditRecommendatio
 
 interface RecommandationsModuleProps {
   recommendations: AuditRecommendation[];
-  onUpdate: (recommendations: AuditRecommendation[]) => Promise<void> | void;
+  onUpdate: (recommendations: AuditRecommendation[]) => Promise<boolean | undefined> | Promise<void> | void;
 }
 
 const STATUS_LABELS: Record<AuditRecommendationStatus, string> = {
@@ -54,8 +54,12 @@ export function RecommandationsModule({ recommendations, onUpdate }: Recommandat
   const [choosingServiceFor, setChoosingServiceFor] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  const persist = async (next: AuditRecommendation[]) => {
-    await onUpdate(next);
+  // Renvoie true/false plutôt que rien, pour permettre aux appelants de ne
+  // pas fermer/vider un formulaire (et perdre la saisie) quand la
+  // sauvegarde échoue réellement côté serveur.
+  const persist = async (next: AuditRecommendation[]): Promise<boolean> => {
+    const result = await onUpdate(next);
+    return result !== false;
   };
 
   const openNewForm = () => {
@@ -75,13 +79,14 @@ export function RecommandationsModule({ recommendations, onUpdate }: Recommandat
     const now = new Date().toISOString();
     const venduPar = form.venduPar || undefined;
 
+    let ok: boolean;
     if (editingId) {
       const next = recommendations.map((r) =>
         r.id === editingId
           ? { ...r, title: form.title.trim(), detail: form.detail.trim(), chiffreAffaires: Number(form.chiffreAffaires) || 0, venduPar, updatedDate: now }
           : r
       );
-      await persist(next);
+      ok = await persist(next);
     } else {
       const newRec: AuditRecommendation = {
         id: `rec_${Date.now()}`,
@@ -92,8 +97,13 @@ export function RecommandationsModule({ recommendations, onUpdate }: Recommandat
         status: 'proposee',
         createdDate: now,
       };
-      await persist([newRec, ...recommendations]);
+      ok = await persist([newRec, ...recommendations]);
     }
+
+    // En cas d'échec réel de la sauvegarde (persistState affiche déjà son
+    // propre message d'erreur), on garde le formulaire ouvert avec la
+    // saisie intacte plutôt que de la perdre et forcer à tout retaper.
+    if (!ok) return;
 
     setShowForm(false);
     setForm(emptyForm());
