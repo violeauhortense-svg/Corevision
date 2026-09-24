@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import type { TaskButtonType } from './taskDefinitions';
 import type { Task } from '../types/client';
+import { clientAPI } from '../../services/api';
 
 interface TaskModalsProps {
   isOpen: boolean;
@@ -22,6 +23,25 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<any>({});
+  const [clientsList, setClientsList] = useState<{ id: string; label: string }[]>([]);
+
+  // Chargée à la demande seulement pour le menu "Origine du prospect" (pas
+  // besoin d'aller chercher tous les clients pour les autres modales).
+  useEffect(() => {
+    if (isOpen && modalType === 'origine') {
+      clientAPI
+        .getAll()
+        .then((clients: any[]) => {
+          setClientsList(
+            clients
+              .filter((c) => c.id !== clientId)
+              .map((c) => ({ id: c.id, label: c.name || `${c.firstName || ''} ${c.lastName || ''}`.trim() || 'Client sans nom' }))
+              .sort((a, b) => a.label.localeCompare(b.label))
+          );
+        })
+        .catch((err) => console.error('❌ Erreur chargement liste clients:', err));
+    }
+  }, [isOpen, modalType, clientId]);
 
   if (!isOpen || !modalType || !task) return null;
 
@@ -68,14 +88,59 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
           <div className="space-y-4">
             <label className="block">
               <span className="text-sm font-medium text-gray-700">Origine du prospect</span>
-              <input
-                type="text"
-                placeholder="Recommandation, Publicité, Appel froid..."
-                value={formData.origine || ''}
-                onChange={(e) => setFormData({ ...formData, origine: e.target.value })}
+              <select
+                value={formData.origineType || ''}
+                onChange={(e) => setFormData({ ...formData, origineType: e.target.value, origineDetail: '' })}
                 className="mt-1 w-full px-3 py-2 border rounded-lg"
-              />
+              >
+                <option value="">— Sélectionner —</option>
+                <option value="fiteco">Fiteco</option>
+                <option value="expert_comptable">Expert-comptable</option>
+                <option value="client">Client</option>
+              </select>
             </label>
+
+            {formData.origineType === 'fiteco' && (
+              <label className="block">
+                <span className="text-sm font-medium text-gray-700">Quelle agence Fiteco ?</span>
+                <input
+                  type="text"
+                  placeholder="Nom de l'agence"
+                  value={formData.origineDetail || ''}
+                  onChange={(e) => setFormData({ ...formData, origineDetail: e.target.value })}
+                  className="mt-1 w-full px-3 py-2 border rounded-lg"
+                />
+              </label>
+            )}
+
+            {formData.origineType === 'expert_comptable' && (
+              <label className="block">
+                <span className="text-sm font-medium text-gray-700">Quel expert-comptable / cabinet ?</span>
+                <input
+                  type="text"
+                  placeholder="Nom de l'expert-comptable ou du cabinet"
+                  value={formData.origineDetail || ''}
+                  onChange={(e) => setFormData({ ...formData, origineDetail: e.target.value })}
+                  className="mt-1 w-full px-3 py-2 border rounded-lg"
+                />
+              </label>
+            )}
+
+            {formData.origineType === 'client' && (
+              <label className="block">
+                <span className="text-sm font-medium text-gray-700">Quel client ?</span>
+                <select
+                  value={formData.origineDetail || ''}
+                  onChange={(e) => setFormData({ ...formData, origineDetail: e.target.value })}
+                  className="mt-1 w-full px-3 py-2 border rounded-lg"
+                >
+                  <option value="">— Sélectionner un client —</option>
+                  {clientsList.map((c) => (
+                    <option key={c.id} value={c.label}>{c.label}</option>
+                  ))}
+                </select>
+              </label>
+            )}
           </div>
         </Modal>
       );

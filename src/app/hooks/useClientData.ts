@@ -489,6 +489,7 @@ export function useClientData(clientId: string, onSave?: (data: ClientDataState)
           // seule source d'écriture ; ici on ne fait que l'afficher.
           dateNextRdv: client.dateNextRdv || '',
           nextRdvDetails: client.nextRdvDetails || undefined,
+          origineProspect: client.origineProspect || undefined,
         },
         familyInfo: {
           maritalStatus: client.maritalStatus || 'Célibataire',

@@ -336,6 +336,13 @@ export interface ClientData {
     locationType?: string;
     meetingType?: string;
   };
+  // Origine du prospect, saisie depuis la tâche "Origine du prospect" -
+  // même principe que dateNextRdv : seule TasksTab.tsx l'écrit, ici en
+  // lecture seule.
+  origineProspect?: {
+    type: 'fiteco' | 'expert_comptable' | 'client';
+    detail: string;
+  };
 }
 
 export { type PipelineStage, type Task };

@@ -632,6 +632,16 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
             await updateClientField('dateNextRdv', dateNextRdv);
           }
 
+          // Comme pour le RDV ci-dessus : cette valeur était saisie puis
+          // jetée, la tâche n'étant marquée que "complétée" sans jamais
+          // être réellement enregistrée nulle part.
+          if (activeModal.type === 'origine' && taskData?.modalData?.origineType) {
+            await updateClientField('origineProspect', {
+              type: taskData.modalData.origineType,
+              detail: taskData.modalData.origineDetail || '',
+            });
+          }
+
           await handleTaskUpdate(activeModal.status, activeModal.taskId, true);
         }}
       />
