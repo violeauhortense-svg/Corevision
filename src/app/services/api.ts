@@ -57,23 +57,33 @@ function taskToServer(taskData: any): any {
 // =============================================================================
 
 function clientToFrontend(client: any): any {
+  // "||" plutôt que "??" : une chaîne vide doit retomber sur la valeur
+  // FR, sinon elle "gagne" contre ?? (qui ne retombe que sur null/undefined)
+  // et un client dont seuls nom/prenom sont renseignés (import, ancienne
+  // fiche jamais rouverte dans "Modifier") se retrouve avec firstName/
+  // lastName vides côté front.
   return {
     ...client,
-    firstName: client.firstName ?? client.prenom ?? '',
-    lastName: client.lastName ?? client.nom ?? '',
-    phone: client.phone ?? client.telephone ?? '',
-    status: client.status ?? client.statut ?? 'R0 - Prospect',
+    firstName: client.firstName || client.prenom || '',
+    lastName: client.lastName || client.nom || '',
+    phone: client.phone || client.telephone || '',
+    status: client.status || client.statut || 'R0 - Prospect',
     name: `${client.prenom || client.firstName || ''} ${client.nom || client.lastName || ''}`.trim(),
   };
 }
 
 function clientToServer(clientData: any): any {
+  // Même correction dans l'autre sens : "nom" est un champ obligatoire
+  // côté PocketBase - lui envoyer une chaîne vide (ce que faisait ?? dès
+  // que lastName était "" plutôt que null/undefined) fait échouer TOUTE
+  // sauvegarde pour ce client avec une erreur 500 générique, silencieuse
+  // pour l'utilisatrice au-delà du toast d'erreur.
   return {
     ...clientData,
-    nom: clientData.lastName ?? clientData.nom ?? '',
-    prenom: clientData.firstName ?? clientData.prenom ?? '',
-    telephone: clientData.phone ?? clientData.telephone ?? '',
-    statut: clientData.status ?? clientData.statut ?? 'R0 - Prospect',
+    nom: clientData.lastName || clientData.nom || '',
+    prenom: clientData.firstName || clientData.prenom || '',
+    telephone: clientData.phone || clientData.telephone || '',
+    statut: clientData.status || clientData.statut || 'R0 - Prospect',
   };
 }
 

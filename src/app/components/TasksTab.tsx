@@ -17,7 +17,7 @@ interface TasksTabProps {
   clientStatus?: string;
   objectifs?: any[];
   auditRecommendations?: AuditRecommendation[];
-  onUpdateAuditRecommendations?: (recommendations: AuditRecommendation[]) => Promise<void> | void;
+  onUpdateAuditRecommendations?: (recommendations: AuditRecommendation[]) => Promise<boolean | undefined> | Promise<void> | void;
   entreprises?: any[];
   contacts?: any[];
   // Nom du statut/bloc à déplier automatiquement à l'arrivée sur cet
@@ -590,7 +590,12 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
               <RecommandationsModule
                 recommendations={auditRecommendations}
                 onUpdate={async (recs) => {
-                  if (onUpdateAuditRecommendations) await onUpdateAuditRecommendations(recs);
+                  // Renvoyer le vrai résultat, pas juste attendre dessus -
+                  // sinon RecommandationsModule croit toujours que la
+                  // sauvegarde a réussi et ferme le formulaire même quand
+                  // elle a vraiment échoué côté serveur.
+                  if (onUpdateAuditRecommendations) return await onUpdateAuditRecommendations(recs);
+                  return true;
                 }}
               />
             </div>
