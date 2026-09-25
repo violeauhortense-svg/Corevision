@@ -26,6 +26,13 @@ async function requireAdmin(c: any): Promise<string | null> {
       headers: { 'Content-Type': 'application/json', Authorization: token },
     });
     const data = await res.json();
+    // Un 401 ici veut dire "token PocketBase invalide/expiré" (la session
+    // dure 5 jours sans rafraîchissement automatique côté front) - c'est
+    // un cas très différent de "vous n'êtes pas l'admin" et mérite un
+    // message qui pousse à se reconnecter plutôt qu'à soupçonner ses droits.
+    if (res.status === 401) {
+      return 'Votre session a expiré, veuillez vous reconnecter.';
+    }
     if (!res.ok || data?.record?.email !== ADMIN_EMAIL) {
       return 'Seule l\'administratrice peut effectuer cette action.';
     }
