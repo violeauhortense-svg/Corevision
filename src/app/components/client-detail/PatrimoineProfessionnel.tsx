@@ -2,12 +2,11 @@ import { useState, useEffect } from 'react';
 import { 
   Edit2, Plus, Trash2, Building2, Users, FileText, TrendingUp, 
   ChevronDown, ChevronUp, Save, X, BarChart3, DollarSign, Link2,
-  Briefcase, Calculator, PieChart as PieChartIcon, TrendingDown, Sparkles
+  Briefcase, Calculator, PieChart as PieChartIcon, TrendingDown
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { toast } from 'sonner';
 import { ValorisationSection } from './ValorisationSection';
-import { OptimisationRemunerationModal } from '../OptimisationRemunerationModal';
 import { PIPELINE_STATUSES } from '../tasks/taskDefinitions';
 
 interface Associe {
@@ -119,7 +118,6 @@ export function PatrimoineProfessionnel({ onUpdate, clientData, familyInfo, entr
   const [showAddExercice, setShowAddExercice] = useState<string | null>(null);
   const [showAddActif, setShowAddActif] = useState<string | null>(null);
   const [showAddPassif, setShowAddPassif] = useState<string | null>(null);
-  const [showOptimisation, setShowOptimisation] = useState<string | null>(null);
 
   // Form states
   const [entrepriseForm, setEntrepriseForm] = useState({
@@ -1165,13 +1163,6 @@ export function PatrimoineProfessionnel({ onUpdate, clientData, familyInfo, entr
                           <h5 className="font-semibold text-gray-900">Historique des exercices</h5>
                           <div className="flex items-center gap-3">
                             <button
-                              onClick={() => setShowOptimisation(entreprise.id)}
-                              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-md text-sm font-medium"
-                            >
-                              <Sparkles className="w-4 h-4" />
-                              Optimiser la rémunération
-                            </button>
-                            <button
                               onClick={() => setShowAddExercice(entreprise.id)}
                               className="flex items-center gap-1 text-sm text-purple-600 hover:text-purple-700"
                             >
@@ -1824,34 +1815,6 @@ export function PatrimoineProfessionnel({ onUpdate, clientData, familyInfo, entr
         </div>
       )}
 
-      {/* Modal Optimisation Rémunération */}
-      {showOptimisation && (() => {
-        const entreprise = entreprises.find(e => e.id === showOptimisation);
-        if (!entreprise) return null;
-        
-        return (
-          <OptimisationRemunerationModal
-            entreprise={{
-              id: entreprise.id,
-              nom: entreprise.nom,
-              formeJuridique: entreprise.formeJuridique,
-              capital: entreprise.capital,
-              compteCourant: entreprise.compteCourantAssocie,
-              regimeFiscal: entreprise.regimeFiscal,
-              exercices: entreprise.exercices
-            }}
-            foyerData={{
-              autresRevenus: 0,
-              nbParts: 1
-            }}
-            onClose={() => setShowOptimisation(null)}
-            onApply={(remuneration, dividendes) => {
-              // Optionnel : appliquer automatiquement les valeurs dans un nouvel exercice
-              toast.success(`Scénario appliqué : ${formatEuro(remuneration)} en rémunération + ${formatEuro(dividendes)} en dividendes`);
-            }}
-          />
-        );
-      })()}
     </div>
   );
 }
