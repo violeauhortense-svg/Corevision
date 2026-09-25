@@ -130,32 +130,6 @@ export function Sidebar({ currentView, onViewChange, onLogout, session }: Sideba
           </button>
         )}
         
-        {/* Bouton Knowledge Base - Visible uniquement pour l'admin */}
-        {isAdmin && (
-          <button
-            onClick={() => navigate('knowledge-base')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-              currentView === 'knowledge-base'
-                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
-                : 'bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 hover:from-indigo-100 hover:to-purple-100 border border-indigo-200'
-            }`}
-          >
-            <Lightbulb className="w-5 h-5" />
-            <div className="text-left flex-1">
-              <p className={`text-sm font-semibold ${
-                currentView === 'knowledge-base' ? 'text-white' : 'text-indigo-900'
-              }`}>
-                Base de Connaissances
-              </p>
-              <p className={`text-xs ${
-                currentView === 'knowledge-base' ? 'text-indigo-100' : 'text-indigo-600'
-              }`}>
-                Ingestion IA
-              </p>
-            </div>
-          </button>
-        )}
-
         {/* Bouton Barèmes Fiscaux - Visible uniquement pour l'admin */}
         {isAdmin && (
           <button

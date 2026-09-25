@@ -11,7 +11,6 @@ import { UserManagementView } from "./components/UserManagementView";
 import { LoginView } from "./components/LoginView";
 import { ProfileView } from "./components/ProfileView";
 import { CoreVisionAdminView } from "./components/CoreVisionAdminView";
-import { AdminKnowledgeBase } from "./components/AdminKnowledgeBase";
 import { BaremesFiscauxView } from "./components/BaremesFiscauxView";
 import { HubCommunicationView } from "./components/communications/HubCommunicationViewUpdated";
 import { BaremeUpdateNotification } from "./components/BaremeUpdateNotification";
@@ -28,7 +27,6 @@ export type ViewType =
   | "recommandations"
   | "profile"
   | "corevision"
-  | "knowledge-base"
   | "baremes-fiscaux"
   | "user-management";
 
@@ -64,7 +62,7 @@ export default function App() {
   
   const page = urlParams.get('page') || hashParams.get('page');
   const token = urlParams.get('token') || hashParams.get('token');
-  const isPublicRoute = page === 'core-vision' || page === 'knowledge-base';
+  const isPublicRoute = page === 'core-vision';
 
   // 🗑️ NETTOYAGE DES DONNÉES DE TEST (une seule fois)
   useEffect(() => {
@@ -140,14 +138,6 @@ export default function App() {
         </div>
       );
     }
-    if (page === 'knowledge-base' && token) {
-      return (
-        <div>
-          <Toaster position="top-right" richColors />
-          <AdminKnowledgeBase token={token} />
-        </div>
-      );
-    }
   }
 
   const renderView = () => {
@@ -182,8 +172,6 @@ export default function App() {
         return <ProfileView session={session} onLogout={handleLogout} />;
       case "corevision":
         return <CoreVisionAdminView session={session} />;
-      case "knowledge-base":
-        return <AdminKnowledgeBase session={session} />;
       case "baremes-fiscaux":
         return <BaremesFiscauxView />;
       case "user-management":
