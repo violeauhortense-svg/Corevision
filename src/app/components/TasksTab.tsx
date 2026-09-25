@@ -219,39 +219,6 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
     await applyTaskChange(status, taskId, { completed: false, taskStatus: 'na' });
   };
 
-  // Manual progression (used by the "Passer au statut suivant" button, for
-  // when the advisor wants to move on without completing every task). Uses
-  // the same generic client PATCH endpoint as applyTaskChange - the
-  // dedicated /progress route this used to call was never implemented.
-  const handleProgressToNextStatus = async (currentStatus: string, nextStatus: string) => {
-    if (!client) return;
-
-    try {
-      const token = localStorage.getItem('auth_token');
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-
-      const response = await fetch(`${apiBaseUrl}/api/clients/${clientId}`, {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify({ statusOuvert: nextStatus }),
-      });
-
-      if (response.ok) {
-        toast.success(`✅ Passage à "${nextStatus}" complété`);
-        setClient((prev) => (prev ? { ...prev, statusOuvert: nextStatus } : prev));
-        ClientService.clearCache();
-      } else {
-        const error = await response.json().catch(() => ({}));
-        console.error('❌ Erreur progression:', error);
-        toast.error(`Erreur: ${error.error || 'échec de la progression'}`);
-      }
-    } catch (err) {
-      console.error('❌ Erreur progression:', err);
-      toast.error('Erreur réseau');
-    }
-  };
-
   const saveArbitrageFields = async () => {
     try {
       const url = `/api/clients/${clientId}`;
@@ -549,14 +516,6 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
                             <p className="text-orange-700 font-bold">⏳ {remainingTasks} tâche(s) en attente</p>
                             <p className="text-orange-600 text-xs mt-1">Validez ou marquez N/A pour continuer</p>
                           </div>
-                        )}
-                        {nextStatus && (
-                          <button
-                            onClick={() => handleProgressToNextStatus(status, nextStatus)}
-                            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
-                          >
-                            ➡️ Passer manuellement à "{nextStatus}"
-                          </button>
                         )}
                       </div>
                     );
