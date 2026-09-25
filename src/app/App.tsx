@@ -7,6 +7,7 @@ import { ClientsView } from "./components/ClientsView";
 import { AgendaView } from "./components/AgendaView";
 import { TodoView } from "./components/TodoView";
 import { RecommandationsGlobalView } from "./components/RecommandationsGlobalView";
+import { UserManagementView } from "./components/UserManagementView";
 import { LoginView } from "./components/LoginView";
 import { ProfileView } from "./components/ProfileView";
 import { CoreVisionAdminView } from "./components/CoreVisionAdminView";
@@ -28,7 +29,8 @@ export type ViewType =
   | "profile"
   | "corevision"
   | "knowledge-base"
-  | "baremes-fiscaux";
+  | "baremes-fiscaux"
+  | "user-management";
 
 export default function App() {
   const [session, setSession] = useState<any>(null);
@@ -43,7 +45,7 @@ export default function App() {
   // {email, name, role}, pas un wrapper .user).
   const ADMIN_EMAIL = 'violeau.hortense@gmail.com';
   const isAdmin = session?.email === ADMIN_EMAIL;
-  const ADMIN_ONLY_VIEWS: ViewType[] = ['mails', 'agenda', 'todo'];
+  const ADMIN_ONLY_VIEWS: ViewType[] = ['mails', 'agenda', 'todo', 'user-management'];
 
   // Filet de sécurité si jamais currentView se retrouve sur une vue admin
   // alors que l'utilisateur ne l'est pas (état existant avant connexion,
@@ -184,6 +186,8 @@ export default function App() {
         return <AdminKnowledgeBase session={session} />;
       case "baremes-fiscaux":
         return <BaremesFiscauxView />;
+      case "user-management":
+        return <UserManagementView />;
       default:
         return <DashboardView session={session} />;
     }

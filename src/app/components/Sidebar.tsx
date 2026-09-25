@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, Users, FileText, Calendar, CheckSquare, LogOut, Settings, Package, Lightbulb, Calculator, Mail, Terminal, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Calendar, CheckSquare, LogOut, Settings, Package, Lightbulb, Calculator, Mail, Terminal, Menu, X, UserCog } from 'lucide-react';
 import type { ViewType } from '../App';
 
 interface SidebarProps {
@@ -177,6 +177,32 @@ export function Sidebar({ currentView, onViewChange, onLogout, session }: Sideba
                 currentView === 'baremes-fiscaux' ? 'text-green-100' : 'text-green-600'
               }`}>
                 IR, IFI, PS
+              </p>
+            </div>
+          </button>
+        )}
+
+        {/* Bouton Gestion des utilisateurs - Visible uniquement pour l'admin */}
+        {isAdmin && (
+          <button
+            onClick={() => navigate('user-management')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+              currentView === 'user-management'
+                ? 'bg-gradient-to-r from-slate-700 to-slate-900 text-white shadow-lg'
+                : 'bg-gradient-to-r from-slate-50 to-gray-50 text-slate-700 hover:from-slate-100 hover:to-gray-100 border border-slate-200'
+            }`}
+          >
+            <UserCog className="w-5 h-5" />
+            <div className="text-left flex-1">
+              <p className={`text-sm font-semibold ${
+                currentView === 'user-management' ? 'text-white' : 'text-slate-900'
+              }`}>
+                Gestion des utilisateurs
+              </p>
+              <p className={`text-xs ${
+                currentView === 'user-management' ? 'text-slate-200' : 'text-slate-600'
+              }`}>
+                Créer / voir les comptes
               </p>
             </div>
           </button>
