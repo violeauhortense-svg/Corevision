@@ -2,6 +2,7 @@
 // Uses PocketBase's built-in "users" auth collection (bcrypt-hashed passwords, real JWTs)
 
 import { Hono } from 'hono';
+import { pb } from './pocketbase_client.tsx';
 
 const app = new Hono();
 
@@ -135,14 +136,13 @@ app.get('/users', async (c) => {
   }
 
   try {
-    const res = await fetch(`${PB_URL}/api/collections/users/records?perPage=200&sort=-created`, {
-      headers: { 'Content-Type': 'application/json' },
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      return c.json({ success: false, error: data.message || 'Erreur' }, 500);
-    }
-    const users = (data.items || []).map((u: any) => ({
+    // La requête doit passer par le client superuser (`pb`), pas un fetch
+    // anonyme : les règles d'accès de la collection `users` de PocketBase
+    // limitent ce qu'un appel non-authentifié peut lister (généralement
+    // rien), ce qui faisait toujours remonter 0 compte ici même quand des
+    // comptes réels existaient.
+    const { items } = await pb.listRecords('users', { perPage: 200, sort: '-created' });
+    const users = items.map((u: any) => ({
       id: u.id,
       email: u.email,
       name: u.name,
