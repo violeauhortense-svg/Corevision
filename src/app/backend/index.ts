@@ -15,6 +15,7 @@ import tasksRoutes from './tasks_routes_pb.tsx';
 import dashboardRoutes from './dashboard_routes_pb.tsx';
 import communicationsRoutes from './communications_routes_pb.tsx';
 import agendaEventsRoutes from './agenda_events_routes_pb.tsx';
+import baremesRoutes from './baremes_routes_pb.tsx';
 
 const app = new Hono();
 const PORT = Deno.env.get('PORT') || '3000';
@@ -71,6 +72,10 @@ app.get('/test', (c) => {
 });
 
 // ─── Routes ───────────────────────────────────────────────────────────
+// Mounted at root (not /api) - the frontend (fiscalCalculatorDynamic.ts,
+// BaremesFiscauxAdmin.tsx, BaremeUpdateNotification.tsx) already calls
+// `${apiBaseUrl}/baremes/...` without an /api prefix.
+app.route('/baremes', baremesRoutes);
 app.route('/api/auth', authRoutes);
 app.route('/api/hub', hubMailsRoutes);
 app.route('/api/clients', clientsRoutes);

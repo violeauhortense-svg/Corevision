@@ -255,6 +255,14 @@ export async function initializePocketBase(pbUrl: string) {
       { name: 'status', type: 'text' },
     ]);
 
+    await ensureCollection(pbUrl, 'baremes_fiscaux', [
+      { name: 'annee', type: 'text', required: true },
+      { name: 'baremeIR', type: 'json' },
+      { name: 'baremeIFI', type: 'json' },
+      { name: 'prelevementsSociaux', type: 'json' },
+      { name: 'abattements', type: 'json' },
+    ]);
+
     console.log('✅ Collections initialized');
     return true;
   } catch (err: any) {
