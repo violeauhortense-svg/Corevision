@@ -38,6 +38,22 @@ export default function App() {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [openTasksTab, setOpenTasksTab] = useState(false);
 
+  // Hub Communication, Agenda et To Do List sont réservés à l'administratrice
+  // - même vérification que Sidebar.tsx (session EST l'objet utilisateur
+  // {email, name, role}, pas un wrapper .user).
+  const ADMIN_EMAIL = 'violeau.hortense@gmail.com';
+  const isAdmin = session?.email === ADMIN_EMAIL;
+  const ADMIN_ONLY_VIEWS: ViewType[] = ['mails', 'agenda', 'todo'];
+
+  // Filet de sécurité si jamais currentView se retrouve sur une vue admin
+  // alors que l'utilisateur ne l'est pas (état existant avant connexion,
+  // etc.) - en plus du menu qui ne propose déjà plus ces entrées.
+  useEffect(() => {
+    if (!isAdmin && ADMIN_ONLY_VIEWS.includes(currentView)) {
+      setCurrentView('dashboard');
+    }
+  }, [isAdmin, currentView]);
+
   // Détecter les routes publiques via query parameters
   const urlParams = new URLSearchParams(window.location.search);
   const hashParams = window.location.hash.includes('?') 
@@ -133,6 +149,13 @@ export default function App() {
   }
 
   const renderView = () => {
+    // Filet de sécurité supplémentaire (en plus du useEffect ci-dessus, qui
+    // ne s'exécute qu'après le premier rendu) : ne jamais rendre une vue
+    // admin-only pour un compte non-admin, même un instant.
+    if (!isAdmin && ADMIN_ONLY_VIEWS.includes(currentView)) {
+      return <DashboardView session={session} />;
+    }
+
     switch (currentView) {
       case "dashboard":
         return <DashboardView session={session} />;

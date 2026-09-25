@@ -18,7 +18,12 @@ interface DashboardViewProps {
   session: any;
 }
 
+// Cartes liées à l'agenda/aux tâches/au hub mail - réservées à
+// l'administratrice, même logique que Sidebar.tsx/App.tsx.
+const ADMIN_EMAIL = 'violeau.hortense@gmail.com';
+
 export function DashboardView({ session }: DashboardViewProps) {
+  const isAdmin = session?.email === ADMIN_EMAIL;
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -63,36 +68,42 @@ export function DashboardView({ session }: DashboardViewProps) {
     <div className="w-full p-8 max-w-7xl mx-auto">
       {/* 6 CARDS DE MÉTRIQUES */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        <MetricsCard
-          icon="📞"
-          title="RDV Aujourd'hui"
-          value={metrics?.rdvAujourdHui || 0}
-          color="blue"
-        />
-        <MetricsCard
-          icon="📅"
-          title="RDV Cette Semaine"
-          value={metrics?.rdvCetteSemaine || 0}
-          color="blue"
-        />
-        <MetricsCard
-          icon="📋"
-          title="Tâches Aujourd'hui"
-          value={metrics?.tachesAujourdHui || 0}
-          color="purple"
-        />
+        {isAdmin && (
+          <>
+            <MetricsCard
+              icon="📞"
+              title="RDV Aujourd'hui"
+              value={metrics?.rdvAujourdHui || 0}
+              color="blue"
+            />
+            <MetricsCard
+              icon="📅"
+              title="RDV Cette Semaine"
+              value={metrics?.rdvCetteSemaine || 0}
+              color="blue"
+            />
+            <MetricsCard
+              icon="📋"
+              title="Tâches Aujourd'hui"
+              value={metrics?.tachesAujourdHui || 0}
+              color="purple"
+            />
+          </>
+        )}
         <MetricsCard
           icon="💰"
           title="Chiffre d'Affaires"
           value={`${(metrics?.caTotal || 0).toLocaleString()} €`}
           color="green"
         />
-        <MetricsCard
-          icon="📧"
-          title="Mails à Traiter"
-          value={metrics?.mailsATraiter || 0}
-          color="orange"
-        />
+        {isAdmin && (
+          <MetricsCard
+            icon="📧"
+            title="Mails à Traiter"
+            value={metrics?.mailsATraiter || 0}
+            color="orange"
+          />
+        )}
         <MetricsCard
           icon="📊"
           title="Suivi Dossiers"

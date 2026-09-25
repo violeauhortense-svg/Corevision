@@ -10,9 +10,13 @@ interface SidebarProps {
 }
 
 export function Sidebar({ currentView, onViewChange, onLogout, session }: SidebarProps) {
-  // Vérifier si l'utilisateur est admin
+  // Vérifier si l'utilisateur est admin - `session` EST l'objet utilisateur
+  // renvoyé par /api/auth/signin ({ email, name, role }), pas un wrapper
+  // avec un champ .user : `session?.user?.email` était donc toujours
+  // undefined et cette vérification échouait pour tout le monde, y
+  // compris Hortense elle-même.
   const ADMIN_EMAIL = 'violeau.hortense@gmail.com';
-  const isAdmin = session?.user?.email === ADMIN_EMAIL;
+  const isAdmin = session?.email === ADMIN_EMAIL;
 
   // En dessous du breakpoint md, la sidebar est un tiroir hors-écran ouvert
   // via ce hamburger, plutôt qu'une colonne fixe de 256px qui ne laissait
@@ -24,12 +28,15 @@ export function Sidebar({ currentView, onViewChange, onLogout, session }: Sideba
     setMobileOpen(false);
   };
 
+  // Hub Communication, Agenda et To Do List sont réservés à l'administratrice
+  // - un compte "normal" (ex: Léa Depond) ne doit ni les voir dans le menu
+  // ni pouvoir y accéder.
   const menuItems = [
     { id: 'dashboard' as ViewType, label: 'Tableau de bord', icon: LayoutDashboard },
     { id: 'clients' as ViewType, label: 'Clients', icon: Users },
-    { id: 'mails' as ViewType, label: 'Hub Communication', icon: Mail },
-    { id: 'agenda' as ViewType, label: 'Agenda', icon: Calendar },
-    { id: 'todo' as ViewType, label: 'To Do List', icon: CheckSquare },
+    ...(isAdmin ? [{ id: 'mails' as ViewType, label: 'Hub Communication', icon: Mail }] : []),
+    ...(isAdmin ? [{ id: 'agenda' as ViewType, label: 'Agenda', icon: Calendar }] : []),
+    ...(isAdmin ? [{ id: 'todo' as ViewType, label: 'To Do List', icon: CheckSquare }] : []),
     { id: 'recommandations' as ViewType, label: 'Recommandations', icon: Lightbulb },
   ];
 
