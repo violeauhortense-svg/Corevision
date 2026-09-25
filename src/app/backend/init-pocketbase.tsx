@@ -190,7 +190,6 @@ export async function initializePocketBase(pbUrl: string) {
       { name: 'patrimoineData', type: 'json' },
       { name: 'auditRecommendations', type: 'json' },
       { name: 'documents', type: 'json' },
-      { name: 'regulatoryDocs', type: 'json' },
       { name: 'contactsProfessionnels', type: 'json' },
     ]);
 

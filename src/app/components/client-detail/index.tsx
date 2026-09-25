@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { clientAPI } from '../../services/api';
 import { toast } from 'sonner';
 import { BarChart3, Lightbulb, X } from 'lucide-react';
-import { useClientData, initializeRequiredDocuments } from '../../hooks/useClientData';
+import { useClientData } from '../../hooks/useClientData';
 
 // Import des composants modulaires
 import { ClientHeader } from './ClientHeader';
@@ -20,7 +20,7 @@ import { HistoriqueTab } from './HistoriqueTab';
 import { ContactsProfessionnelsTab } from './ContactsProfessionnelsTab';
 
 // Import des types
-import type { ClientDetailProps, ClientData, TabType, FamilyInfo, RevenuItem, ImpositionData, PatrimoineItem, Objectif, AuditRecommendation, Document, RegulatoryDocument, PipelineStage, ContactProfessionnel } from './types';
+import type { ClientDetailProps, ClientData, TabType, FamilyInfo, RevenuItem, ImpositionData, PatrimoineItem, Objectif, AuditRecommendation, Document, PipelineStage, ContactProfessionnel } from './types';
 
 
 export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailProps) {
@@ -49,7 +49,6 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
     handleUpdateObjectifs,
     handleUpdateAuditRecommendations,
     handleUpdateDocuments,
-    handleUpdateRegulatoryDocs,
     handleUpdateContactsProfessionnels,
     loadFromAPI,
     saveToAPI,
@@ -148,9 +147,7 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
     try {
       const client = await clientAPI.getById(clientId);
       if (client) {
-        const initializedRegulatoryDocs = initializeRequiredDocuments(client.status, client.regulatoryDocs || []);
         handleUpdateDocuments(client.documents || []);
-        handleUpdateRegulatoryDocs(initializedRegulatoryDocs);
       }
     } catch (error) {
       console.error('❌ Erreur lors du rechargement des documents:', error);

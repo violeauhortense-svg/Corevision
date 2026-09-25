@@ -15,7 +15,6 @@ import type {
   Objectif,
   AuditRecommendation,
   Document,
-  RegulatoryDocument,
   ContactProfessionnel,
   Task
 } from '../components/client-detail/types';
@@ -32,72 +31,8 @@ interface ClientDataState {
   objectifs: Objectif[];
   auditRecommendations: AuditRecommendation[];
   documents: Document[];
-  regulatoryDocs: RegulatoryDocument[];
   contactsProfessionnels: ContactProfessionnel[];
   tasks: Task[]; // ✨ Tasks linked to client
-}
-
-// Helper: Initialize required documents for a given stage
-export function initializeRequiredDocuments(
-  clientStatus: string,
-  existingDocs: RegulatoryDocument[]
-): RegulatoryDocument[] {
-  const requiredDocsByStage: Record<string, Array<{ id: string; name: string; requiredForStage: string }>> = {
-    'R0 - Prospect': [],
-    'R0-R1 - Découverte': [
-      { id: 'r1', name: "Document d'Entrée en Relation (DER)", requiredForStage: 'R0-R1 - Découverte' },
-    ],
-    'R1 - Audit patrimonial': [
-      { id: 'r1', name: "Document d'Entrée en Relation (DER)", requiredForStage: 'R0-R1 - Découverte' },
-      { id: 'r3', name: 'LAB-FT (Lutte Anti-Blanchiment)', requiredForStage: 'R1 - Audit patrimonial' },
-      { id: 'r4', name: 'Gel des avoirs', requiredForStage: 'R1 - Audit patrimonial' },
-      { id: 'r6', name: 'Questionnaire investisseur - Client', requiredForStage: 'R1 - Audit patrimonial' },
-    ],
-    'R1-R2 - Stratégie définie': [
-      { id: 'r1', name: "Document d'Entrée en Relation (DER)", requiredForStage: 'R0-R1 - Découverte' },
-      { id: 'r3', name: 'LAB-FT (Lutte Anti-Blanchiment)', requiredForStage: 'R1 - Audit patrimonial' },
-      { id: 'r4', name: 'Gel des avoirs', requiredForStage: 'R1 - Audit patrimonial' },
-      { id: 'r6', name: 'Questionnaire investisseur - Client', requiredForStage: 'R1 - Audit patrimonial' },
-      { id: 'r7', name: 'Mail compte rendu + bilan', requiredForStage: 'R1-R2 - Stratégie définie' },
-      { id: 'r8', name: 'Lettre de mission', requiredForStage: 'R1-R2 - Stratégie définie' },
-      { id: 'r9', name: 'Mandat de recherche IAS', requiredForStage: 'R1-R2 - Stratégie définie' },
-    ],
-    'R2 - Recommandation proposée': [
-      { id: 'r1', name: "Document d'Entrée en Relation (DER)", requiredForStage: 'R0-R1 - Découverte' },
-      { id: 'r3', name: 'LAB-FT (Lutte Anti-Blanchiment)', requiredForStage: 'R1 - Audit patrimonial' },
-      { id: 'r4', name: 'Gel des avoirs', requiredForStage: 'R1 - Audit patrimonial' },
-      { id: 'r6', name: 'Questionnaire investisseur - Client', requiredForStage: 'R1 - Audit patrimonial' },
-      { id: 'r7', name: 'Mail compte rendu + bilan', requiredForStage: 'R1-R2 - Stratégie définie' },
-      { id: 'r8', name: 'Lettre de mission', requiredForStage: 'R1-R2 - Stratégie définie' },
-      { id: 'r9', name: 'Mandat de recherche IAS', requiredForStage: 'R1-R2 - Stratégie définie' },
-    ],
-    'Rsuivi - Suivi patrimonial': [
-      { id: 'r1', name: "Document d'Entrée en Relation (DER)", requiredForStage: 'R0-R1 - Découverte' },
-      { id: 'r3', name: 'LAB-FT (Lutte Anti-Blanchiment)', requiredForStage: 'R1 - Audit patrimonial' },
-      { id: 'r4', name: 'Gel des avoirs', requiredForStage: 'R1 - Audit patrimonial' },
-      { id: 'r6', name: 'Questionnaire investisseur - Client', requiredForStage: 'R1 - Audit patrimonial' },
-      { id: 'r7', name: 'Mail compte rendu + bilan', requiredForStage: 'R1-R2 - Stratégie définie' },
-      { id: 'r8', name: 'Lettre de mission', requiredForStage: 'R1-R2 - Stratégie définie' },
-      { id: 'r9', name: 'Mandat de recherche IAS', requiredForStage: 'R1-R2 - Stratégie définie' },
-    ],
-  };
-
-  const requiredDocs = requiredDocsByStage[clientStatus] || [];
-  const result = [...existingDocs];
-
-  requiredDocs.forEach((requiredDoc) => {
-    const exists = existingDocs.some(doc => doc.id === requiredDoc.id);
-    if (!exists) {
-      result.push({
-        id: requiredDoc.id,
-        name: requiredDoc.name,
-        status: 'required',
-        requiredForStage: requiredDoc.requiredForStage,
-      });
-    }
-  });
-
-  return result;
 }
 
 // Build the full API payload from a ClientDataState snapshot
@@ -135,7 +70,6 @@ function buildFullData(clientId: string, state: ClientDataState) {
     objectifs: state.objectifs,
     auditRecommendations: state.auditRecommendations,
     documents: state.documents,
-    regulatoryDocs: state.regulatoryDocs,
     contactsProfessionnels: state.contactsProfessionnels,
   };
 }
@@ -192,7 +126,6 @@ export function useClientData(clientId: string, onSave?: (data: ClientDataState)
     objectifs: [],
     auditRecommendations: [],
     documents: [],
-    regulatoryDocs: [],
     contactsProfessionnels: [],
     tasks: [],
   };
@@ -425,13 +358,6 @@ export function useClientData(clientId: string, onSave?: (data: ClientDataState)
     return persistState(newState);
   }, [persistState]);
 
-  const handleUpdateRegulatoryDocs = useCallback(async (newDocs: RegulatoryDocument[]) => {
-    const newState = { ...stateRef.current, regulatoryDocs: newDocs };
-    setState(newState);
-    stateRef.current = newState;
-    return persistState(newState);
-  }, [persistState]);
-
   const handleUpdateContactsProfessionnels = useCallback(async (newContacts: ContactProfessionnel[]) => {
     const newState = { ...stateRef.current, contactsProfessionnels: newContacts };
     setState(newState);
@@ -462,7 +388,6 @@ export function useClientData(clientId: string, onSave?: (data: ClientDataState)
         : (client.patrimoine || 0);
 
       const patrimoineData = client.patrimoineData || {};
-      const initializedRegulatoryDocs = client.regulatoryDocs || [];
 
       const loadedState: ClientDataState = {
         clientData: {
@@ -526,7 +451,6 @@ export function useClientData(clientId: string, onSave?: (data: ClientDataState)
         objectifs: client.objectifs || [],
         auditRecommendations: client.auditRecommendations || [],
         documents: client.documents || [],
-        regulatoryDocs: initializedRegulatoryDocs,
         contactsProfessionnels: client.contactsProfessionnels || [],
         tasks: [], // Will be loaded separately via loadTasks
       };
@@ -576,7 +500,6 @@ export function useClientData(clientId: string, onSave?: (data: ClientDataState)
     handleUpdateObjectifs,
     handleUpdateAuditRecommendations,
     handleUpdateDocuments,
-    handleUpdateRegulatoryDocs,
     handleUpdateContactsProfessionnels,
     handleUpdateTasks,
     // Data loading/saving

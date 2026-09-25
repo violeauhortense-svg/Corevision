@@ -128,23 +128,6 @@ export interface Document {
   content?: string;
 }
 
-export interface RegulatoryDocument {
-  id: string;
-  name: string;
-  status: 'pending' | 'completed' | 'required' | 'signed' | 'validated'; // ✅ Ajouté 'validated' pour rétrocompatibilité
-  requiredForStage: PipelineStage;
-  uploadedFile?: Document;
-  completedDate?: string;
-  signedAt?: string;
-  signedBy?: string;
-  documentType?: string;
-  validatedAt?: string;
-  content?: string;
-  date?: string;
-  alertStatus?: string;
-  data?: any;
-}
-
 export interface PatrimoineItem {
   id: string;
   name: string;
