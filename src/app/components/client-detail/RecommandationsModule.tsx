@@ -398,7 +398,10 @@ export function RecommandationsModule({ recommendations, onUpdate }: Recommandat
                       className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 text-sm font-medium"
                     >
                       <ArrowRight className="w-4 h-4" />
-                      Passer en cours
+                      <span className="flex flex-col items-start leading-tight">
+                        <span>Passer en cours</span>
+                        <span className="text-[10px] font-normal text-amber-100">en attente de règlement</span>
+                      </span>
                     </button>
                   )}
                   {rec.status === 'en_cours' && (
