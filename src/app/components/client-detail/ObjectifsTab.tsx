@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import {
-  CheckCircle, Circle, Target, Calendar, TrendingUp, Clock,
-  Play, Check, Plus, Edit2, ChevronDown, ChevronUp,
-  Flag, Users, DollarSign, AlertCircle, X, FileText, TrendingDown,
-  Building2, Briefcase, PiggyBank, Home, Shield, Gift, BarChart3, ShoppingCart
+  CheckCircle, Circle, Target, AlertCircle, X, FileText, TrendingDown,
+  Users, DollarSign, Building2, Briefcase, PiggyBank, Home, Shield,
+  Gift, ShoppingCart, Clock
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { apiBaseUrl, publicAnonKey } from '../../utils/api/info';
+import { apiBaseUrl } from '../../utils/api/info';
 import type { Objectif } from './types';
-import { DetailPanelEnriched } from './DetailPanelEnriched';
 
 interface ObjectifsTabProps {
   clientId: string;
@@ -142,8 +140,6 @@ export function ObjectifsTab({
   session,
   bilanData,
 }: ObjectifsTabProps) {
-  const [selectedObjectifId, setSelectedObjectifId] = useState<string | null>(null);
-  const [showDetailPanel, setShowDetailPanel] = useState(false);
   const [showDevisModal, setShowDevisModal] = useState(false);
   const [devisGenere, setDevisGenere] = useState(false);
   const [devisId, setDevisId] = useState('');
@@ -166,10 +162,6 @@ export function ObjectifsTab({
       if (confirm('Voulez-vous supprimer cet objectif ?')) {
         onUpdateObjectifs(objectifs.filter(obj => obj.id !== predefinedId));
         toast.success('Objectif retiré');
-        if (selectedObjectifId === predefinedId) {
-          setSelectedObjectifId(null);
-          setShowDetailPanel(false);
-        }
       }
     } else {
       // Cocher : ajouter l'objectif avec valeurs par défaut
@@ -188,70 +180,8 @@ export function ObjectifsTab({
       };
       onUpdateObjectifs([...objectifs, newObjectif]);
       toast.success('Objectif ajouté');
-      // Ouvrir automatiquement le panneau de détails
-      setSelectedObjectifId(predefinedId);
-      setShowDetailPanel(true);
     }
   };
-
-  // Ouvrir le panneau de détails
-  const handleOpenDetail = (predefinedId: string) => {
-    if (!isObjectifSelected(predefinedId)) {
-      toast.error('Veuillez d\'abord cocher cet objectif');
-      return;
-    }
-    setSelectedObjectifId(predefinedId);
-    setShowDetailPanel(true);
-  };
-
-  // Sauvegarder les détails
-  const handleSaveDetails = (details: Partial<Objectif>) => {
-    if (!selectedObjectifId) return;
-
-    const now = new Date().toISOString();
-    onUpdateObjectifs(objectifs.map(obj =>
-      obj.id === selectedObjectifId ? {
-        ...obj,
-        ...details,
-        dateCreation: obj.dateCreation || now,
-        dateModification: now,
-      } : obj
-    ));
-    toast.success('Détails sauvegardés');
-  };
-
-  // Statistiques
-  const stats = {
-    total: objectifs.length,
-    enCours: objectifs.filter(o => o.status === 'En cours').length,
-    termines: objectifs.filter(o => o.status === 'Terminé').length,
-    planifier: objectifs.filter(o => o.status === 'À planifier').length,
-    progressMoyen: objectifs.length > 0
-      ? Math.round(objectifs.reduce((sum, o) => sum + (o.progress || 0), 0) / objectifs.length)
-      : 0,
-  };
-
-  // Obtenir la couleur du statut
-  const getStatusColor = (status?: string) => {
-    switch (status) {
-      case 'À planifier': return 'bg-gray-100 text-gray-700 border-gray-300';
-      case 'En cours': return 'bg-blue-100 text-blue-700 border-blue-300';
-      case 'Terminé': return 'bg-green-100 text-green-700 border-green-300';
-      case 'En pause': return 'bg-orange-100 text-orange-700 border-orange-300';
-      default: return 'bg-gray-100 text-gray-700 border-gray-300';
-    }
-  };
-
-  const getPriorityColor = (priority?: string) => {
-    switch (priority) {
-      case 'high': return 'bg-red-100 text-red-700';
-      case 'medium': return 'bg-orange-100 text-orange-700';
-      case 'low': return 'bg-blue-100 text-blue-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
-  };
-
-  const selectedObjectif = selectedObjectifId ? getObjectifDetails(selectedObjectifId) : null;
 
   // Calcul du montant du devis
   const calculerMontantDevis = () => {
@@ -300,14 +230,11 @@ export function ObjectifsTab({
     try {
       const orderId = `order-${clientId}-${Date.now()}`;
 
-      // 🔍 Récupérer les infos CGP depuis la session
-      const cgpName = session?.user?.user_metadata?.name || session?.user?.email?.split('@')[0] || 'CGP';
-      const cgpEmail = session?.user?.email || '';
-
-      console.log('🔍 DEBUG - Session complète:', session);
-      console.log('🔍 DEBUG - CGP Name:', cgpName);
-      console.log('🔍 DEBUG - CGP Email:', cgpEmail);
-      console.log('🔍 DEBUG - Objectifs sélectionnés:', objectifs.filter(o => o.included));
+      // `session` EST l'objet utilisateur ({email, name, role}) renvoyé par
+      // /api/auth/signin, pas un wrapper avec un champ .user (même piège
+      // que Sidebar.tsx/App.tsx avant leur correction).
+      const cgpName = session?.name || session?.email?.split('@')[0] || 'CGP';
+      const cgpEmail = session?.email || '';
 
       // Préparer la commande CoreVision
       const order = {
@@ -325,17 +252,14 @@ export function ObjectifsTab({
         bilanData: bilanData || null,
       };
 
-      console.log('🔍 DEBUG - Commande à envoyer:', order);
-
-      // Envoyer au serveur — pas de fallback localStorage (données sensibles)
-      const token = session?.access_token || publicAnonKey;
+      const token = localStorage.getItem('auth_token');
       const response = await fetch(
-        `${apiBaseUrl}/corevision/orders`,
+        `${apiBaseUrl}/api/corevision/orders`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: JSON.stringify(order),
         }
@@ -365,245 +289,101 @@ export function ObjectifsTab({
         </div>
       </div>
 
-      {/* Dashboard capacités financières */}
-      <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">💰 Vue financière du foyer</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg p-4 border border-blue-200">
-            <div className="flex items-center gap-2 mb-2">
-              <Shield className="w-5 h-5 text-blue-600" />
-              <span className="text-xs text-gray-600">Matelas de sécurité</span>
-            </div>
-            <p className="text-2xl font-bold text-blue-600">
-              {bilanData?.revenusData ?
-                (Math.round((bilanData.revenusData.revenusNetsMensuel || 0) * 3)).toLocaleString('fr-FR')
-                : '—'}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">3x revenus mensuel</p>
-          </div>
+      {/* Liste des objectifs prédéfinis */}
+      <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">
+            🎯 Sélectionnez vos objectifs
+          </h3>
 
-          <div className="bg-white rounded-lg p-4 border border-green-200">
-            <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="w-5 h-5 text-green-600" />
-              <span className="text-xs text-gray-600">Liquidité perso</span>
+          {/* Bouton Commander l'audit */}
+          {!devisGenere ? (
+            <button
+              onClick={genererDevis}
+              disabled={objectifs.filter(o => o.included).length === 0}
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transform hover:scale-105"
+            >
+              <ShoppingCart className="w-5 h-5" />
+              <span className="font-medium">Commander l'audit</span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-lg px-4 py-2">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+              <span className="text-sm font-medium text-green-900">Devis généré</span>
+              <button
+                onClick={() => setShowDevisModal(true)}
+                className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Voir
+              </button>
             </div>
-            <p className="text-2xl font-bold text-green-600">
-              {bilanData?.patrimoineData?.liquiditesPersonnelles ?
-                (bilanData.patrimoineData.liquiditesPersonnelles).toLocaleString('fr-FR')
-                : '—'}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">Disponible après matelas</p>
-          </div>
-
-          <div className="bg-white rounded-lg p-4 border border-orange-200">
-            <div className="flex items-center gap-2 mb-2">
-              <PiggyBank className="w-5 h-5 text-orange-600" />
-              <span className="text-xs text-gray-600">Capacité épargne</span>
-            </div>
-            <p className="text-2xl font-bold text-orange-600">
-              {bilanData?.revenusData ?
-                (Math.round((bilanData.revenusData.revenusNetsMensuel || 0) * 0.2)).toLocaleString('fr-FR')
-                : '—'}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">20% des revenus mensuels</p>
-          </div>
-
-          <div className="bg-white rounded-lg p-4 border border-purple-200">
-            <div className="flex items-center gap-2 mb-2">
-              <Building2 className="w-5 h-5 text-purple-600" />
-              <span className="text-xs text-gray-600">Liquidité pro</span>
-            </div>
-            <p className="text-2xl font-bold text-purple-600">
-              {bilanData?.entreprises && bilanData.entreprises.length > 0 ?
-                (Math.round((bilanData.entreprises[0]?.tresorerie || 0) - (bilanData.entreprises[0]?.bfr || 0))).toLocaleString('fr-FR')
-                : '—'}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">Trésorerie - BFR</p>
-          </div>
+          )}
         </div>
-      </div>
 
-      {/* Layout principal : Liste + Panneau de détails */}
-      <div className="grid grid-cols-12 gap-6">
-        {/* Liste des objectifs prédéfinis */}
-        <div className={showDetailPanel ? 'col-span-5' : 'col-span-12'}>
-          <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                🎯 Sélectionnez vos objectifs
-              </h3>
+        <p className="text-sm text-gray-600 mb-4">
+          Cochez les objectifs qui correspondent aux besoins du client.
+        </p>
 
-              {/* Bouton Commander l'audit */}
-              {!devisGenere ? (
-                <button
-                  onClick={genererDevis}
-                  disabled={objectifs.filter(o => o.included).length === 0}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transform hover:scale-105"
+        <div className="space-y-3">
+          {OBJECTIFS_PREDEFINIS.map((obj) => {
+            const isSelected = isObjectifSelected(obj.id);
+            const details = getObjectifDetails(obj.id);
+            const Icon = obj.icon;
+
+            return (
+              <div
+                key={obj.id}
+                className={`group relative overflow-hidden rounded-xl border-2 transition-all transform hover:scale-[1.02] ${
+                  isSelected
+                    ? `${obj.bgColor} ${obj.borderColor} shadow-lg`
+                    : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-md'
+                }`}
+              >
+                {/* Bande de couleur latérale */}
+                <div className={`absolute left-0 top-0 bottom-0 w-2 bg-gradient-to-b ${obj.color}`}></div>
+
+                <div
+                  className="flex items-center gap-4 p-4 pl-6 cursor-pointer"
+                  onClick={() => handleToggleObjectif(obj.id, obj.label, obj.category)}
                 >
-                  <ShoppingCart className="w-5 h-5" />
-                  <span className="font-medium">Commander l'audit</span>
-                </button>
-              ) : (
-                <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-lg px-4 py-2">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <span className="text-sm font-medium text-green-900">Devis généré</span>
-                  <button
-                    onClick={() => setShowDevisModal(true)}
-                    className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
-                  >
-                    Voir
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <p className="text-sm text-gray-600 mb-4">
-              Cochez les objectifs qui correspondent aux besoins du client, puis cliquez dessus pour renseigner les détails.
-            </p>
-
-            <div className="space-y-3">
-              {OBJECTIFS_PREDEFINIS.map((obj) => {
-                const isSelected = isObjectifSelected(obj.id);
-                const details = getObjectifDetails(obj.id);
-                const Icon = obj.icon;
-
-                return (
-                  <div
-                    key={obj.id}
-                    className={`group relative overflow-hidden rounded-xl border-2 transition-all cursor-pointer transform hover:scale-[1.02] ${
-                      isSelected
-                        ? `${obj.bgColor} ${obj.borderColor} shadow-lg`
-                        : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-md'
-                    } ${selectedObjectifId === obj.id ? 'ring-4 ring-blue-400 ring-opacity-50' : ''}`}
-                    onClick={() => isSelected && handleOpenDetail(obj.id)}
-                  >
-                    {/* Bande de couleur latérale */}
-                    <div className={`absolute left-0 top-0 bottom-0 w-2 bg-gradient-to-b ${obj.color}`}></div>
-
-                    <div className="flex items-center gap-4 p-4 pl-6">
-                      {/* Icône colorée avec dégradé */}
-                      <div className={`flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br ${obj.color} flex items-center justify-center shadow-lg transform transition-transform group-hover:rotate-6`}>
-                        <Icon className="w-7 h-7 text-white" />
-                      </div>
-
-                      {/* Checkbox */}
-                      <div
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleObjectif(obj.id, obj.label, obj.category);
-                        }}
-                        className="flex-shrink-0"
-                      >
-                        {isSelected ? (
-                          <CheckCircle className="w-7 h-7 text-blue-600 cursor-pointer hover:text-blue-700 transform transition-transform hover:scale-110" />
-                        ) : (
-                          <Circle className="w-7 h-7 text-gray-400 cursor-pointer hover:text-gray-600 transform transition-transform hover:scale-110" />
-                        )}
-                      </div>
-
-                      {/* Label */}
-                      <div className="flex-1 min-w-0">
-                        <p className={`font-semibold text-base ${isSelected ? 'text-gray-900' : 'text-gray-600'}`}>
-                          {obj.label}
-                        </p>
-                        <p className={`text-xs font-medium ${obj.textColor}`}>
-                          {obj.category}
-                        </p>
-
-                        {/* 📅 TRAÇABILITÉ */}
-                        {isSelected && details && (details.dateCreation || details.dateModification || details.dateSaisie) && (
-                          <p className="text-xs text-gray-400 mt-1">
-                            {details.dateCreation && `📅 Créé le ${new Date(details.dateCreation).toLocaleDateString('fr-FR')}`}
-                            {details.dateModification && ` • 🔄 Modifié le ${new Date(details.dateModification).toLocaleDateString('fr-FR')}`}
-                            {!details.dateCreation && !details.dateModification && details.dateSaisie && `📅 ${new Date(details.dateSaisie).toLocaleDateString('fr-FR')}`}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Badge statut et progression */}
-                      {isSelected && details && (
-                        <div className="flex items-center gap-3">
-                          {/* Priorité */}
-                          <span className={`text-xs font-bold px-3 py-1.5 rounded-full shadow-sm ${getPriorityColor(details.priority)}`}>
-                            {details.priority === 'high' ? '🔴 Haute' : details.priority === 'medium' ? '🟡 Moyenne' : '🟢 Basse'}
-                          </span>
-
-                          {/* Statut */}
-                          <span className={`text-xs font-medium px-3 py-1.5 rounded-full border-2 shadow-sm ${getStatusColor(details.status)}`}>
-                            {details.status}
-                          </span>
-
-                          {/* Progression circulaire */}
-                          {details.progress !== undefined && (
-                            <div className="relative w-12 h-12">
-                              <svg className="transform -rotate-90 w-12 h-12">
-                                <circle
-                                  cx="24"
-                                  cy="24"
-                                  r="20"
-                                  stroke="currentColor"
-                                  strokeWidth="4"
-                                  fill="none"
-                                  className="text-gray-200"
-                                />
-                                <circle
-                                  cx="24"
-                                  cy="24"
-                                  r="20"
-                                  stroke="currentColor"
-                                  strokeWidth="4"
-                                  fill="none"
-                                  strokeDasharray={`${2 * Math.PI * 20}`}
-                                  strokeDashoffset={`${2 * Math.PI * 20 * (1 - details.progress / 100)}`}
-                                  className={`${
-                                    details.progress === 100 ? 'text-green-600' :
-                                    details.progress >= 50 ? 'text-blue-600' :
-                                    'text-orange-500'
-                                  } transition-all duration-500`}
-                                  strokeLinecap="round"
-                                />
-                              </svg>
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="text-xs font-bold text-gray-700">{details.progress}%</span>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Flèche */}
-                      {isSelected && (
-                        <ChevronDown
-                          className={`w-6 h-6 text-gray-400 transition-transform ${
-                            selectedObjectifId === obj.id ? 'rotate-180' : ''
-                          }`}
-                        />
-                      )}
-                    </div>
-
-                    {/* Effet de brillance au survol */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-10 transform -skew-x-12 group-hover:translate-x-full transition-all duration-700"></div>
+                  {/* Icône colorée avec dégradé */}
+                  <div className={`flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br ${obj.color} flex items-center justify-center shadow-lg transform transition-transform group-hover:rotate-6`}>
+                    <Icon className="w-7 h-7 text-white" />
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
 
-        {/* Panneau de détails (à droite) */}
-        {showDetailPanel && selectedObjectif && (
-          <div className="col-span-7">
-            <DetailPanelEnriched
-              objectif={selectedObjectif}
-              allObjectifs={objectifs}
-              onSave={handleSaveDetails}
-              onClose={() => {
-                setShowDetailPanel(false);
-                setSelectedObjectifId(null);
-              }}
-            />
-          </div>
-        )}
+                  {/* Checkbox */}
+                  <div className="flex-shrink-0">
+                    {isSelected ? (
+                      <CheckCircle className="w-7 h-7 text-blue-600 transform transition-transform hover:scale-110" />
+                    ) : (
+                      <Circle className="w-7 h-7 text-gray-400 transform transition-transform hover:scale-110" />
+                    )}
+                  </div>
+
+                  {/* Label */}
+                  <div className="flex-1 min-w-0">
+                    <p className={`font-semibold text-base ${isSelected ? 'text-gray-900' : 'text-gray-600'}`}>
+                      {obj.label}
+                    </p>
+                    <p className={`text-xs font-medium ${obj.textColor}`}>
+                      {obj.category}
+                    </p>
+
+                    {/* 📅 TRAÇABILITÉ */}
+                    {isSelected && details && details.dateCreation && (
+                      <p className="text-xs text-gray-400 mt-1">
+                        📅 Ajouté le {new Date(details.dateCreation).toLocaleDateString('fr-FR')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Effet de brillance au survol */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-10 transform -skew-x-12 group-hover:translate-x-full transition-all duration-700"></div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Modale devis */}

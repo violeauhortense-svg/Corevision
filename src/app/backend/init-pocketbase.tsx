@@ -263,6 +263,28 @@ export async function initializePocketBase(pbUrl: string) {
       { name: 'abattements', type: 'json' },
     ]);
 
+    await ensureCollection(pbUrl, 'corevision_orders', [
+      { name: 'orderId', type: 'text', required: true },
+      { name: 'clientId', type: 'text', required: true },
+      { name: 'clientName', type: 'text' },
+      { name: 'cgpName', type: 'text' },
+      { name: 'cgpEmail', type: 'text' },
+      { name: 'objectifs', type: 'json' },
+      { name: 'montant', type: 'number' },
+      { name: 'validatedAt', type: 'text' },
+      { name: 'status', type: 'text' },
+      { name: 'createdAt', type: 'text' },
+      { name: 'updatedAt', type: 'text' },
+      { name: 'adminNotes', type: 'text' },
+      // Rapport d'audit et préconisations produits par l'admin depuis le
+      // panneau CoreVision - peuvent être longs, comme "body" pour hub_mails.
+      { name: 'audit', type: 'text', max: 1000000 },
+      { name: 'presentationClient', type: 'text', max: 1000000 },
+      { name: 'preconisations', type: 'json' },
+      { name: 'validatedByAdmin', type: 'bool' },
+      { name: 'bilanData', type: 'json' },
+    ]);
+
     console.log('✅ Collections initialized');
     return true;
   } catch (err: any) {
