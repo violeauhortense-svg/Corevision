@@ -5,6 +5,7 @@
 
 import { Hono } from 'hono';
 import { pb } from './pocketbase_client.tsx';
+import { findMatchingClient } from './clientMatcher.tsx';
 
 const app = new Hono();
 
@@ -34,6 +35,16 @@ app.post('/receive', async (c) => {
     // join an array of recipients into a single string.
     const toStr = Array.isArray(body.to) ? body.to.join('; ') : (body.to || '');
 
+    // Identification automatique du client (email exact, puis nom complet
+    // dans le sujet/corps) - si rien ne correspond, le mail reste dans
+    // "Interne/Externe" pour une association manuelle, comme avant. Une
+    // erreur ici (PocketBase temporairement indisponible, etc.) ne doit
+    // jamais bloquer la réception du mail lui-même.
+    const match = await findMatchingClient(body.from || '', body.subject || '', body.body || '').catch((err) => {
+      console.error('Error matching client for incoming mail:', err.message);
+      return null;
+    });
+
     await pb.createRecord('hub_mails', {
       from: body.from || '',
       to: toStr,
@@ -47,10 +58,13 @@ app.post('/receive', async (c) => {
       duplicateKey: duplicateKey || '',
       deviceId: body.device_id || body.deviceId || '',
       direction: 'received',
-      // No clientId yet at receive time - the Hub Communication UI
-      // reclassifies to 'conversation_client' once the mail is
-      // associated to a client (see hub_mails_routes_pb.tsx PUT /mails/:id).
-      hubTab: 'interne_externe',
+      clientId: match?.id || '',
+      clientName: match?.name || '',
+      clientEmail: match?.email || '',
+      // Identifié automatiquement -> classé directement en Conversation
+      // Client ; sinon reste en Interne/Externe pour tri manuel (voir
+      // hub_mails_routes_pb.tsx PUT /mails/:id pour l'association manuelle).
+      hubTab: match ? 'conversation_client' : 'interne_externe',
       traitementStatus: 'a_traiter',
       read: false,
     });

@@ -5,6 +5,7 @@
 
 import { Hono } from 'hono';
 import { pb } from './pocketbase_client.tsx';
+import { findMatchingClient } from './clientMatcher.tsx';
 
 const app = new Hono();
 
@@ -136,6 +137,38 @@ app.get('/mails/client/:clientId', async (c) => {
   } catch (err: any) {
     console.error('Error fetching client mails:', err.message);
     return c.json({ mails: [], error: err.message }, 500);
+  }
+});
+
+// ─── POST /mails/auto-match (rattrapage : identifie automatiquement les
+// clients des mails déjà reçus et encore non classés, "Interne/Externe"
+// sans clientId - même logique que la réception en direct dans
+// communications_routes_pb.tsx, pour le stock existant) ────────────────
+app.post('/mails/auto-match', async (c) => {
+  try {
+    const result = await pb.listRecords('hub_mails', {
+      filter: `hubTab = "interne_externe" && clientId = ""`,
+      perPage: 500,
+    });
+
+    let matched = 0;
+    for (const m of result.items as any[]) {
+      const match = await findMatchingClient(m.from || '', m.subject || '', m.body || '').catch(() => null);
+      if (!match) continue;
+
+      await pb.updateRecord('hub_mails', m.id, {
+        clientId: match.id,
+        clientName: match.name,
+        clientEmail: match.email,
+        hubTab: 'conversation_client',
+      });
+      matched++;
+    }
+
+    return c.json({ success: true, scanned: result.items.length, matched });
+  } catch (err: any) {
+    console.error('Error auto-matching mails:', err.message);
+    return c.json({ success: false, error: err.message }, 500);
   }
 });
 

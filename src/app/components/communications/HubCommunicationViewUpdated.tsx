@@ -13,6 +13,7 @@ import {
   Mail,
   AlertCircle,
   Loader,
+  Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { hubCommunicationAPI } from '../../services/hubCommunicationAPI';
@@ -37,6 +38,7 @@ export function HubCommunicationView() {
     unread: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [autoMatching, setAutoMatching] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -98,6 +100,24 @@ export function HubCommunicationView() {
     } catch (error) {
       console.error('Erreur recherche:', error);
       toast.error('Erreur lors de la recherche');
+    }
+  };
+
+  const handleAutoMatch = async () => {
+    setAutoMatching(true);
+    try {
+      const { scanned, matched } = await hubCommunicationAPI.autoMatchClients();
+      if (matched > 0) {
+        toast.success(`${matched} mail${matched > 1 ? 's' : ''} identifié${matched > 1 ? 's' : ''} et déplacé${matched > 1 ? 's' : ''} vers Conversation Client`);
+      } else {
+        toast.info(scanned > 0 ? 'Aucun client identifié parmi les mails restants' : 'Rien à identifier');
+      }
+      await loadMailsByTab(activeTab);
+    } catch (error) {
+      console.error('Erreur identification automatique:', error);
+      toast.error('Erreur lors de l\'identification automatique');
+    } finally {
+      setAutoMatching(false);
     }
   };
 
@@ -261,8 +281,8 @@ export function HubCommunicationView() {
 
               <div className="p-6">
                 {/* Search */}
-                <div className="mb-6">
-                  <div className="relative">
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <Input
                       placeholder="Rechercher dans les mails..."
@@ -271,6 +291,22 @@ export function HubCommunicationView() {
                       className="pl-10"
                     />
                   </div>
+                  {activeTab === 'interne_externe' && (
+                    <Button
+                      onClick={handleAutoMatch}
+                      disabled={autoMatching}
+                      variant="outline"
+                      className="shrink-0 gap-2"
+                      title="Identifier automatiquement le client de ces mails (email ou nom trouvé)"
+                    >
+                      {autoMatching ? (
+                        <Loader className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="w-4 h-4" />
+                      )}
+                      Identifier les clients
+                    </Button>
+                  )}
                 </div>
 
                 {/* Mail List */}

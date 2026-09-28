@@ -107,6 +107,20 @@ export const hubCommunicationAPI = {
     return this.updateMail(mailId, { clientId, clientName, clientEmail });
   },
 
+  /**
+   * Identifie automatiquement le client des mails "Interne/Externe" pas
+   * encore associés (email exact, puis nom complet dans le sujet/corps).
+   */
+  async autoMatchClients(): Promise<{ scanned: number; matched: number }> {
+    const response = await fetch(`${API_URL}/mails/auto-match`, {
+      method: 'POST',
+      headers: this._getHeaders(),
+    });
+
+    this._handleError(response, 'Erreur identification automatique');
+    return response.json();
+  },
+
   // ============= NOTES =============
 
   /**
