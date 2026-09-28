@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Lightbulb, Loader2, RefreshCw, Filter, RotateCcw } from 'lucide-react';
 import { clientAPI } from '../services/api';
-import { STATUS_LABELS, STATUS_COLORS, SERVICE_LABELS, VENDEUR_LABELS, formatEuro } from './client-detail/RecommandationsModule';
+import { STATUS_LABELS, STATUS_COLORS, STATUS_SUBLABELS, SERVICE_LABELS, VENDEUR_LABELS, formatEuro } from './client-detail/RecommandationsModule';
 import type { AuditRecommendation, AuditRecommendationStatus, AuditRecommendationService } from './client-detail/types';
 
 interface RecommandationsGlobalViewProps {
@@ -163,6 +163,8 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
                     onClick={() => toggleStatusFilter(status)}
                     disabled={count === 0}
                     className={`px-2.5 py-1 rounded-full text-xs font-semibold border transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+                      STATUS_SUBLABELS[status] ? 'flex flex-col items-start leading-tight py-1' : ''
+                    } ${
                       active
                         ? `${STATUS_COLORS[status]} ring-2 ring-offset-1 ring-emerald-500`
                         : count === 0
@@ -170,7 +172,10 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
                         : `${STATUS_COLORS[status]} opacity-60 hover:opacity-100`
                     }`}
                   >
-                    {STATUS_LABELS[status]} ({count})
+                    <span>{STATUS_LABELS[status]} ({count})</span>
+                    {STATUS_SUBLABELS[status] && (
+                      <span className="text-[10px] font-normal opacity-75">{STATUS_SUBLABELS[status]}</span>
+                    )}
                   </button>
                 );
               })}
@@ -227,7 +232,12 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
             return (
               <div key={status} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
                 <div className={`px-5 py-3 border-b flex items-center justify-between ${STATUS_COLORS[status]}`}>
-                  <span className="font-semibold">{STATUS_LABELS[status]} ({items.length})</span>
+                  <span className="flex items-baseline gap-2">
+                    <span className="font-semibold">{STATUS_LABELS[status]} ({items.length})</span>
+                    {STATUS_SUBLABELS[status] && (
+                      <span className="text-xs font-normal opacity-75">{STATUS_SUBLABELS[status]}</span>
+                    )}
+                  </span>
                   {status !== 'refusee' && <span className="font-bold">{formatEuro(groupCA)}</span>}
                 </div>
                 <div className="divide-y divide-gray-100">

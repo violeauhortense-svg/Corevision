@@ -18,6 +18,12 @@ export const STATUS_LABELS: Record<AuditRecommendationStatus, string> = {
   termine: '🏁 Terminée',
 };
 
+// Précision affichée en plus petit sous le statut "Acceptée" - le client a
+// donné son accord mais le règlement n'a pas encore été perçu.
+export const STATUS_SUBLABELS: Partial<Record<AuditRecommendationStatus, string>> = {
+  acceptee: 'en attente de règlement',
+};
+
 export const STATUS_COLORS: Record<AuditRecommendationStatus, string> = {
   proposee: 'bg-gray-100 text-gray-700 border-gray-300',
   refusee: 'bg-red-100 text-red-700 border-red-300',
@@ -335,8 +341,11 @@ export function RecommandationsModule({ recommendations, onUpdate }: Recommandat
               </div>
 
               <div className="flex items-center gap-3 flex-wrap mt-3">
-                <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${STATUS_COLORS[rec.status]}`}>
-                  {STATUS_LABELS[rec.status]}
+                <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${STATUS_COLORS[rec.status]} ${STATUS_SUBLABELS[rec.status] ? 'flex flex-col items-start leading-tight py-1' : ''}`}>
+                  <span>{STATUS_LABELS[rec.status]}</span>
+                  {STATUS_SUBLABELS[rec.status] && (
+                    <span className="text-[10px] font-normal opacity-75">{STATUS_SUBLABELS[rec.status]}</span>
+                  )}
                 </span>
                 {rec.service && (
                   <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700 border border-indigo-300">
