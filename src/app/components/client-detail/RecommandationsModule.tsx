@@ -36,7 +36,7 @@ const PREVIOUS_STATUS: Partial<Record<AuditRecommendationStatus, AuditRecommenda
   termine: 'acte_finalise',
 };
 
-const SERVICE_LABELS: Record<AuditRecommendationService, string> = {
+export const SERVICE_LABELS: Record<AuditRecommendationService, string> = {
   juridique: '⚖️ Service juridique',
   investissement: '📈 Investissement',
   ingenierie_patrimoniale: '🏛️ Ingénierie patrimoniale',
