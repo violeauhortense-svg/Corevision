@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, X, Trash2, Pencil, CheckCircle2, XCircle, ArrowRight, FileCheck, Flag, Lightbulb, AlertTriangle } from 'lucide-react';
+import { Plus, X, Trash2, Pencil, CheckCircle2, XCircle, ArrowRight, ArrowLeft, FileCheck, Flag, Lightbulb, AlertTriangle } from 'lucide-react';
 import type { AuditRecommendation, AuditRecommendationStatus, AuditRecommendationService, AuditRecommendationVendeur } from './types';
 
 interface RecommandationsModuleProps {
@@ -25,6 +25,15 @@ export const STATUS_COLORS: Record<AuditRecommendationStatus, string> = {
   en_cours: 'bg-amber-100 text-amber-700 border-amber-300',
   acte_finalise: 'bg-purple-100 text-purple-700 border-purple-300',
   termine: 'bg-green-100 text-green-700 border-green-300',
+};
+
+// Étape précédente pour chaque statut - permet de rattraper un clic sur
+// le mauvais bouton/la mauvaise recommandation sans repartir de zéro.
+const PREVIOUS_STATUS: Partial<Record<AuditRecommendationStatus, AuditRecommendationStatus>> = {
+  acceptee: 'proposee',
+  en_cours: 'acceptee',
+  acte_finalise: 'en_cours',
+  termine: 'acte_finalise',
 };
 
 const SERVICE_LABELS: Record<AuditRecommendationService, string> = {
@@ -416,6 +425,16 @@ export function RecommandationsModule({ recommendations, onUpdate }: Recommandat
                       className="px-3 py-1.5 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 text-sm font-medium"
                     >
                       Réactiver
+                    </button>
+                  )}
+                  {PREVIOUS_STATUS[rec.status] && (
+                    <button
+                      onClick={() => updateStatus(rec.id, PREVIOUS_STATUS[rec.status]!)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 text-sm font-medium"
+                      title={`Revenir à "${STATUS_LABELS[PREVIOUS_STATUS[rec.status]!]}"`}
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      Étape précédente
                     </button>
                   )}
                 </div>
