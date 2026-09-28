@@ -108,6 +108,20 @@ export const hubCommunicationAPI = {
   },
 
   /**
+   * Liste des clients ayant au moins un mail "à traiter" dans l'onglet
+   * Conversation Client - alimente les cartouches de tri par client.
+   */
+  async getUntreatedClients(): Promise<{ clientId: string; clientName: string; count: number }[]> {
+    const response = await fetch(`${API_URL}/mails/untreated-clients`, {
+      headers: this._getHeaders(),
+    });
+
+    this._handleError(response, 'Erreur chargement clients à traiter');
+    const data = await response.json();
+    return data.clients || [];
+  },
+
+  /**
    * Identifie automatiquement le client des mails "Interne/Externe" pas
    * encore associés (email exact, puis nom complet dans le sujet/corps).
    */

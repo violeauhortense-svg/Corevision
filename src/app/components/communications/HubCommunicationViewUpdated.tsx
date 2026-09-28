@@ -39,6 +39,12 @@ export function HubCommunicationView() {
   });
   const [loading, setLoading] = useState(true);
   const [autoMatching, setAutoMatching] = useState(false);
+  // Cartouches de tri par client (onglet Conversation Client uniquement) -
+  // un client par cartouche, seulement s'il a au moins un mail "à
+  // traiter" ; cliquer dessus affiche tous ses mails, tous statuts
+  // confondus, parmi ceux déjà chargés.
+  const [untreatedClients, setUntreatedClients] = useState<{ clientId: string; clientName: string; count: number }[]>([]);
+  const [selectedClientFilter, setSelectedClientFilter] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -50,7 +56,22 @@ export function HubCommunicationView() {
     } else {
       loadMailsByTab(activeTab);
     }
+    setSelectedClientFilter(null);
+    if (activeTab === 'conversation_client') {
+      loadUntreatedClients();
+    } else {
+      setUntreatedClients([]);
+    }
   }, [activeTab, searchTerm]);
+
+  const loadUntreatedClients = async () => {
+    try {
+      const clients = await hubCommunicationAPI.getUntreatedClients();
+      setUntreatedClients(clients);
+    } catch (error) {
+      console.error('Erreur chargement cartouches clients:', error);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -113,6 +134,9 @@ export function HubCommunicationView() {
         toast.info(scanned > 0 ? 'Aucun client identifié parmi les mails restants' : 'Rien à identifier');
       }
       await loadMailsByTab(activeTab);
+      if (activeTab === 'conversation_client') {
+        await loadUntreatedClients();
+      }
     } catch (error) {
       console.error('Erreur identification automatique:', error);
       toast.error('Erreur lors de l\'identification automatique');
@@ -121,10 +145,17 @@ export function HubCommunicationView() {
     }
   };
 
+  const toggleClientFilter = (clientId: string) => {
+    setSelectedClientFilter((prev) => (prev === clientId ? null : clientId));
+  };
+
   const handleMailUpdate = async (mail: HubMail) => {
     try {
       // Actualiser les données après modification
       await loadMailsByTab(activeTab);
+      if (activeTab === 'conversation_client') {
+        await loadUntreatedClients();
+      }
       setSelectedMail(mail);
       toast.success('Mail mis à jour');
     } catch (error) {
@@ -187,7 +218,9 @@ export function HubCommunicationView() {
     );
   }
 
-  const filteredMails = mails;
+  const filteredMails = selectedClientFilter
+    ? mails.filter((m) => m.clientId === selectedClientFilter)
+    : mails;
 
   return (
     <>
@@ -308,6 +341,29 @@ export function HubCommunicationView() {
                     </Button>
                   )}
                 </div>
+
+                {/* Cartouches de tri par client - Conversation Client uniquement,
+                    une par client ayant au moins un mail "à traiter" */}
+                {activeTab === 'conversation_client' && untreatedClients.length > 0 && (
+                  <div className="mb-6 flex flex-wrap gap-2">
+                    {untreatedClients.map((client) => {
+                      const active = selectedClientFilter === client.clientId;
+                      return (
+                        <button
+                          key={client.clientId}
+                          onClick={() => toggleClientFilter(client.clientId)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                            active
+                              ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                              : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
+                          }`}
+                        >
+                          {client.clientName} ({client.count})
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
 
                 {/* Mail List */}
                 <TabsContent value={activeTab} className="mt-0">

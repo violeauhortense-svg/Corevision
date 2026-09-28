@@ -140,6 +140,33 @@ app.get('/mails/client/:clientId', async (c) => {
   }
 });
 
+// ─── GET /mails/untreated-clients (cartouches de tri par client dans
+// l'onglet Conversation Client - un client par cartouche, seulement s'il
+// a au moins un mail "à traiter". Calculé côté serveur sur l'ensemble
+// réel des mails, pas seulement les 50 chargés par la liste principale) ─
+app.get('/mails/untreated-clients', async (c) => {
+  try {
+    const result = await pb.listRecords('hub_mails', {
+      filter: `hubTab = "conversation_client" && traitementStatus = "a_traiter"`,
+      perPage: 500,
+    });
+
+    const counts = new Map<string, { clientId: string; clientName: string; count: number }>();
+    for (const m of result.items as any[]) {
+      if (!m.clientId) continue;
+      const existing = counts.get(m.clientId);
+      if (existing) existing.count++;
+      else counts.set(m.clientId, { clientId: m.clientId, clientName: m.clientName || 'Client', count: 1 });
+    }
+
+    const clients = Array.from(counts.values()).sort((a, b) => a.clientName.localeCompare(b.clientName));
+    return c.json({ clients });
+  } catch (err: any) {
+    console.error('Error computing untreated clients:', err.message);
+    return c.json({ clients: [], error: err.message }, 500);
+  }
+});
+
 // ─── POST /mails/auto-match (rattrapage : identifie automatiquement les
 // clients des mails déjà reçus et encore non classés, "Interne/Externe"
 // sans clientId - même logique que la réception en direct dans
