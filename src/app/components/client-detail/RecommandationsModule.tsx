@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, X, Trash2, Pencil, CheckCircle2, XCircle, ArrowRight, ArrowLeft, FileCheck, Flag, Lightbulb, AlertTriangle, Filter, RotateCcw } from 'lucide-react';
+import { Plus, X, Trash2, Pencil, CheckCircle2, XCircle, ArrowRight, ArrowLeft, FileCheck, Flag, Lightbulb, AlertTriangle } from 'lucide-react';
 import type { AuditRecommendation, AuditRecommendationStatus, AuditRecommendationService, AuditRecommendationVendeur } from './types';
 
 interface RecommandationsModuleProps {
@@ -64,10 +64,6 @@ export function RecommandationsModule({ recommendations, onUpdate }: Recommandat
   const [form, setForm] = useState(emptyForm());
   const [choosingServiceFor, setChoosingServiceFor] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  // Filtrage par statut et par service - multi-sélection (aucune case
-  // cochée = pas de filtre sur cette dimension, on affiche tout).
-  const [statusFilter, setStatusFilter] = useState<Set<AuditRecommendationStatus>>(new Set());
-  const [serviceFilter, setServiceFilter] = useState<Set<AuditRecommendationService>>(new Set());
 
   // Renvoie true/false plutôt que rien, pour permettre aux appelants de ne
   // pas fermer/vider un formulaire (et perdre la saisie) quand la
@@ -146,35 +142,6 @@ export function RecommandationsModule({ recommendations, onUpdate }: Recommandat
     updateStatus(id, 'acceptee', service);
   };
 
-  const toggleStatusFilter = (status: AuditRecommendationStatus) => {
-    setStatusFilter((prev) => {
-      const next = new Set(prev);
-      next.has(status) ? next.delete(status) : next.add(status);
-      return next;
-    });
-  };
-
-  const toggleServiceFilter = (service: AuditRecommendationService) => {
-    setServiceFilter((prev) => {
-      const next = new Set(prev);
-      next.has(service) ? next.delete(service) : next.add(service);
-      return next;
-    });
-  };
-
-  const resetFilters = () => {
-    setStatusFilter(new Set());
-    setServiceFilter(new Set());
-  };
-
-  const filtersActive = statusFilter.size > 0 || serviceFilter.size > 0;
-
-  const filteredRecommendations = recommendations.filter((r) => {
-    if (statusFilter.size > 0 && !statusFilter.has(r.status)) return false;
-    if (serviceFilter.size > 0 && (!r.service || !serviceFilter.has(r.service))) return false;
-    return true;
-  });
-
   const totalsByStatus = recommendations.reduce<Record<string, number>>((acc, r) => {
     acc[r.status] = (acc[r.status] || 0) + (r.chiffreAffaires || 0);
     return acc;
@@ -229,82 +196,6 @@ export function RecommandationsModule({ recommendations, onUpdate }: Recommandat
         <Plus className="w-5 h-5" />
         Nouvelle recommandation
       </button>
-
-      {/* Filtres par statut et par service */}
-      {recommendations.length > 0 && (
-        <div className="bg-white border-2 border-gray-200 rounded-lg p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-              <Filter className="w-4 h-4" />
-              Filtres
-            </div>
-            {filtersActive && (
-              <button
-                onClick={resetFilters}
-                className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 font-medium"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                Réinitialiser
-              </button>
-            )}
-          </div>
-
-          <div>
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Statut</p>
-            <div className="flex flex-wrap gap-2">
-              {(Object.keys(STATUS_LABELS) as AuditRecommendationStatus[]).map((status) => {
-                const count = recommendations.filter((r) => r.status === status).length;
-                const active = statusFilter.has(status);
-                return (
-                  <button
-                    key={status}
-                    onClick={() => toggleStatusFilter(status)}
-                    disabled={count === 0}
-                    className={`px-2.5 py-1 rounded-full text-xs font-semibold border transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
-                      active
-                        ? `${STATUS_COLORS[status]} ring-2 ring-offset-1 ring-emerald-500`
-                        : count === 0
-                        ? STATUS_COLORS[status]
-                        : `${STATUS_COLORS[status]} opacity-60 hover:opacity-100`
-                    }`}
-                  >
-                    {STATUS_LABELS[status]} ({count})
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div>
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Service</p>
-            <div className="flex flex-wrap gap-2">
-              {(Object.keys(SERVICE_LABELS) as AuditRecommendationService[]).map((service) => {
-                const count = recommendations.filter((r) => r.service === service).length;
-                const active = serviceFilter.has(service);
-                return (
-                  <button
-                    key={service}
-                    onClick={() => toggleServiceFilter(service)}
-                    disabled={count === 0}
-                    className={`px-2.5 py-1 rounded-full text-xs font-semibold border transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
-                      active
-                        ? 'bg-indigo-100 text-indigo-700 border-indigo-300 ring-2 ring-offset-1 ring-emerald-500'
-                        : count === 0
-                        ? 'bg-indigo-50 text-indigo-400 border-indigo-100'
-                        : 'bg-indigo-100 text-indigo-700 border-indigo-300 opacity-60 hover:opacity-100'
-                    }`}
-                  >
-                    {SERVICE_LABELS[service]} ({count})
-                  </button>
-                );
-              })}
-            </div>
-            <p className="text-xs text-gray-400 mt-1.5 italic">
-              Le service n'est renseigné qu'à partir du statut « Acceptée » - les recommandations encore « Proposée » n'apparaîtront pas dans ce filtre.
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Formulaire ajout/édition */}
       {showForm && (
@@ -424,17 +315,9 @@ export function RecommandationsModule({ recommendations, onUpdate }: Recommandat
           <h4 className="font-semibold text-gray-900 mb-1">Aucune recommandation</h4>
           <p className="text-gray-600 text-sm">Ajoutez la première recommandation pour ce client</p>
         </div>
-      ) : filteredRecommendations.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-          <Filter className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <h4 className="font-semibold text-gray-900 mb-1">Aucune recommandation ne correspond aux filtres</h4>
-          <button onClick={resetFilters} className="text-sm text-emerald-700 hover:underline font-medium">
-            Réinitialiser les filtres
-          </button>
-        </div>
       ) : (
         <div className="space-y-3">
-          {filteredRecommendations.map((rec) => (
+          {recommendations.map((rec) => (
             <div key={rec.id} className="bg-white border-2 border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between gap-3 mb-2">
                 <div className="flex-1 min-w-0">
