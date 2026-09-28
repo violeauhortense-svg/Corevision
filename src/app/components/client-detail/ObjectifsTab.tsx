@@ -378,8 +378,11 @@ export function ObjectifsTab({
                   </div>
                 </div>
 
-                {/* Effet de brillance au survol */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-10 transform -skew-x-12 group-hover:translate-x-full transition-all duration-700"></div>
+                {/* Effet de brillance au survol - purement décoratif : sans
+                    pointer-events-none, cet overlay absolument positionné
+                    passe devant la ligne cliquable (statique) au clic même
+                    invisible, et bloque tout clic sur la carte. */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-10 transform -skew-x-12 group-hover:translate-x-full transition-all duration-700 pointer-events-none"></div>
               </div>
             );
           })}
