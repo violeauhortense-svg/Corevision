@@ -13,6 +13,51 @@ interface TaskModalsProps {
   onSave: (taskData: any) => Promise<void>;
 }
 
+// Défini en dehors de TaskModals (et non à l'intérieur, comme avant) : un
+// composant déclaré dans le corps d'une fonction est recréé à chaque
+// render, donc à chaque frappe dans un champ (formData change -> re-render
+// -> nouvelle identité de fonction -> React démonte/remonte tout l'arbre,
+// y compris les <input>, qui perdent le focus après chaque lettre).
+function Modal({
+  title,
+  onClose,
+  onSave,
+  loading,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  onSave: () => void;
+  loading: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-96 overflow-y-auto">
+        <div className="flex justify-between items-center p-6 border-b">
+          <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X size={24} />
+          </button>
+        </div>
+        <div className="p-6">{children}</div>
+        <div className="flex gap-3 p-6 border-t justify-end">
+          <button onClick={onClose} className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-50">
+            Annuler
+          </button>
+          <button
+            onClick={onSave}
+            disabled={loading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          >
+            {loading ? 'Enregistrement...' : 'Enregistrer'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export const TaskModals: React.FC<TaskModalsProps> = ({
   isOpen,
   modalType,
@@ -24,6 +69,17 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<any>({});
   const [clientsList, setClientsList] = useState<{ id: string; label: string }[]>([]);
+
+  // Recharge la saisie précédente à chaque ouverture d'une tâche - sans ça,
+  // TaskModals restant monté en permanence (isOpen bascule mais le
+  // composant lui-même ne démonte jamais), formData d'une tâche fuyait
+  // vers la suivante, et les données déjà enregistrées ne réapparaissaient
+  // jamais en rouvrant la modale.
+  useEffect(() => {
+    if (isOpen) {
+      setFormData(task?.modalData || {});
+    }
+  }, [isOpen, task?.id]);
 
   // Chargée à la demande seulement pour le menu "Origine du prospect" (pas
   // besoin d'aller chercher tous les clients pour les autres modales).
@@ -55,36 +111,10 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
     }
   };
 
-  const Modal = ({ children }: { children: React.ReactNode }) => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-96 overflow-y-auto">
-        <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-lg font-bold text-gray-900">{task.title}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X size={24} />
-          </button>
-        </div>
-        <div className="p-6">{children}</div>
-        <div className="flex gap-3 p-6 border-t justify-end">
-          <button onClick={onClose} className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-50">
-            Annuler
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-          >
-            {loading ? 'Enregistrement...' : 'Enregistrer'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
   switch (modalType) {
     case 'origine':
       return (
-        <Modal>
+        <Modal title={task.title} onClose={onClose} onSave={handleSave} loading={loading}>
           <div className="space-y-4">
             <label className="block">
               <span className="text-sm font-medium text-gray-700">Origine du prospect</span>
@@ -147,7 +177,7 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
 
     case 'rdv':
       return (
-        <Modal>
+        <Modal title={task.title} onClose={onClose} onSave={handleSave} loading={loading}>
           <div className="space-y-4">
             <label className="block">
               <span className="text-sm font-medium text-gray-700">Date du RDV</span>
@@ -173,7 +203,7 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
 
     case 'mailComptable':
       return (
-        <Modal>
+        <Modal title={task.title} onClose={onClose} onSave={handleSave} loading={loading}>
           <div className="space-y-4">
             <label className="block">
               <span className="text-sm font-medium text-gray-700">Email du comptable</span>
@@ -209,7 +239,7 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
 
     case 'o2s':
       return (
-        <Modal>
+        <Modal title={task.title} onClose={onClose} onSave={handleSave} loading={loading}>
           <div className="space-y-3">
             <label className="flex items-center gap-2">
               <input
@@ -245,7 +275,7 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
 
     case 'conformite':
       return (
-        <Modal>
+        <Modal title={task.title} onClose={onClose} onSave={handleSave} loading={loading}>
           <div className="space-y-3">
             {['Pièce d\'identité', 'Preuve de domicile', 'Déclaration d\'impôts', 'Relevé bancaire', 'Justificatif profession'].map((item) => (
               <label key={item} className="flex items-center gap-2">
@@ -269,7 +299,7 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
 
     case 'bilanSuivi':
       return (
-        <Modal>
+        <Modal title={task.title} onClose={onClose} onSave={handleSave} loading={loading}>
           <div className="space-y-4">
             <label className="block">
               <span className="text-sm font-medium text-gray-700">Avancement (%)</span>
@@ -298,7 +328,7 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
 
     case 'noteRdv':
       return (
-        <Modal>
+        <Modal title={task.title} onClose={onClose} onSave={handleSave} loading={loading}>
           <div className="space-y-4">
             <label className="block">
               <span className="text-sm font-medium text-gray-700">Notes du RDV</span>
@@ -316,7 +346,7 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
 
     case 'verifications':
       return (
-        <Modal>
+        <Modal title={task.title} onClose={onClose} onSave={handleSave} loading={loading}>
           <div className="space-y-3">
             {['Hypothèses', 'Chiffres', 'Formules', 'Comparaisons', 'Validation'].map((item) => (
               <label key={item} className="flex items-center gap-2">
@@ -340,7 +370,7 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
 
     case 'noteRapport':
       return (
-        <Modal>
+        <Modal title={task.title} onClose={onClose} onSave={handleSave} loading={loading}>
           <div className="space-y-4">
             <label className="block">
               <span className="text-sm font-medium text-gray-700">Notes du rapport</span>
@@ -358,7 +388,7 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
 
     case 'recommandation':
       return (
-        <Modal>
+        <Modal title={task.title} onClose={onClose} onSave={handleSave} loading={loading}>
           <div className="space-y-4">
             <label className="block">
               <span className="text-sm font-medium text-gray-700">Titre de la recommandation</span>
@@ -386,7 +416,7 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
 
     case 'documents':
       return (
-        <Modal>
+        <Modal title={task.title} onClose={onClose} onSave={handleSave} loading={loading}>
           <div className="space-y-3">
             {['BILAN', '455', '641', '2035', 'IRPP'].map((doc) => (
               <label key={doc} className="flex items-center gap-2">
@@ -410,7 +440,7 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
 
     case 'treso':
       return (
-        <Modal>
+        <Modal title={task.title} onClose={onClose} onSave={handleSave} loading={loading}>
           <div className="space-y-4">
             <label className="block">
               <span className="text-sm font-medium text-gray-700">Besoin trésorerie (€)</span>
@@ -437,7 +467,7 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
 
     case 'mailComptableArb':
       return (
-        <Modal>
+        <Modal title={task.title} onClose={onClose} onSave={handleSave} loading={loading}>
           <div className="space-y-4">
             <label className="block">
               <span className="text-sm font-medium text-gray-700">Email du comptable</span>

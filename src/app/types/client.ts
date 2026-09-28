@@ -26,6 +26,11 @@ export interface Task {
   completedAt?: string; // Date et heure de validation
   completedBy?: string; // CGP qui a validé la tâche
   completionNotes?: string; // Notes de validation
+
+  // Saisie du formulaire de la modale associée (TaskModals.tsx) - email du
+  // comptable, notes, cases à cocher, etc. Forme libre selon le type de
+  // modale (voir TaskButtonType).
+  modalData?: Record<string, any>;
 }
 
 // ============= PATRIMOINE =============

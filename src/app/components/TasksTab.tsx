@@ -132,7 +132,7 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
   const applyTaskChange = async (
     status: string,
     taskId: string,
-    changes: { completed: boolean; taskStatus: 'validated' | 'pending' | 'na' }
+    changes: { completed: boolean; taskStatus: 'validated' | 'pending' | 'na'; modalData?: Record<string, any> }
   ) => {
     if (!client) return;
     setValidating(true);
@@ -150,7 +150,15 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
           status: 'pending' as const,
         };
         if (def.id === taskId) {
-          return { ...existing, id: def.id, title: def.title, description: def.description, completed: changes.completed, status: changes.taskStatus };
+          return {
+            ...existing,
+            id: def.id,
+            title: def.title,
+            description: def.description,
+            completed: changes.completed,
+            status: changes.taskStatus,
+            ...(changes.modalData !== undefined ? { modalData: changes.modalData } : {}),
+          };
         }
         return existing;
       });
@@ -211,8 +219,8 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
     }
   };
 
-  const handleTaskUpdate = async (status: string, taskId: string, completed: boolean) => {
-    await applyTaskChange(status, taskId, { completed, taskStatus: completed ? 'validated' : 'pending' });
+  const handleTaskUpdate = async (status: string, taskId: string, completed: boolean, modalData?: Record<string, any>) => {
+    await applyTaskChange(status, taskId, { completed, taskStatus: completed ? 'validated' : 'pending', modalData });
   };
 
   const handleTaskNA = async (status: string, taskId: string) => {
@@ -601,7 +609,7 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
             });
           }
 
-          await handleTaskUpdate(activeModal.status, activeModal.taskId, true);
+          await handleTaskUpdate(activeModal.status, activeModal.taskId, true, taskData?.modalData);
         }}
       />
     </div>
