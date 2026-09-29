@@ -16,13 +16,14 @@ interface Metrics {
 
 interface DashboardViewProps {
   session: any;
+  onNavigateToClient?: (clientId: string) => void;
 }
 
 // Cartes liées à l'agenda/aux tâches/au hub mail - réservées à
 // l'administratrice, même logique que Sidebar.tsx/App.tsx.
 const ADMIN_EMAIL = 'violeau.hortense@gmail.com';
 
-export function DashboardView({ session }: DashboardViewProps) {
+export function DashboardView({ session, onNavigateToClient }: DashboardViewProps) {
   const isAdmin = session?.email === ADMIN_EMAIL;
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -117,7 +118,7 @@ export function DashboardView({ session }: DashboardViewProps) {
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Pipeline par Statut</h2>
         <KanbanBoard
           token={localStorage.getItem('auth_token') || ''}
-          onClientClick={(clientId) => console.log('Click client:', clientId)}
+          onClientClick={(clientId) => onNavigateToClient?.(clientId)}
         />
       </div>
     </div>

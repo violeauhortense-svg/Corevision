@@ -139,12 +139,23 @@ app.get('/kanban', async (c) => {
       const tasksForStatus = client.taches?.[status] || [];
       const pendingActions = tasksForStatus.filter((t: any) => !t.completed && t.status !== 'na').length;
 
+      // Prochaine tâche à réaliser pour ce client, dans son statut actuel -
+      // pas pertinent pour "Suivi CSP" (aucun remplacement demandé, on
+      // l'omet) ni pour "Arbitrage" (la date de clôture d'exercice est
+      // affichée à la place, voir arbitrageClosureDate ci-dessous).
+      let nextTaskTitle = '';
+      if (status !== 'Suivi CSP' && status !== 'Arbitrage') {
+        const nextTask = tasksForStatus.find((t: any) => !t.completed && t.status !== 'na');
+        nextTaskTitle = nextTask?.title || '';
+      }
+
       kanban[status].count += 1;
       kanban[status].actions += pendingActions;
       kanban[status].clients.push({
         id: client.id,
         nom: `${client.prenom || client.firstName || ''} ${client.nom || client.lastName || ''}`.trim() || 'Sans nom',
-        email: client.email || '',
+        nextTaskTitle,
+        arbitrageClosureDate: status === 'Arbitrage' ? (client.arbitrageClosureDate || '') : '',
         taskCount: pendingActions,
         tauxCA: Number(client.tauxCA) || 0,
       });

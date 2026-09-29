@@ -150,7 +150,10 @@ export default function App() {
 
     switch (currentView) {
       case "dashboard":
-        return <DashboardView session={session} />;
+        return <DashboardView session={session} onNavigateToClient={(clientId) => {
+          setCurrentView('clients');
+          setSelectedClientId(clientId);
+        }} />;
       case "clients":
         return <ClientsView session={session} selectedClientId={selectedClientId} openTasksTab={openTasksTab} />;
       case "mails":

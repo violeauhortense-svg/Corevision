@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { ListTodo, CalendarClock } from 'lucide-react';
 import { apiBaseUrl } from '../utils/api/info';
 
 const STATUSES = [
@@ -26,10 +27,19 @@ const COLORS = [
 interface KanbanClient {
   id: string;
   nom: string;
-  email: string;
+  nextTaskTitle?: string;
+  arbitrageClosureDate?: string;
   taskCount: number;
   dateNextRdv?: string;
   tauxCA: number;
+}
+
+// Même calcul que TasksTab.tsx (calculateArbitrageDeadline) : la date
+// limite pour arbitrer est la clôture d'exercice + 3 mois.
+function arbitrageDeadline(closureDate: string): string {
+  const date = new Date(closureDate);
+  date.setMonth(date.getMonth() + 3);
+  return date.toLocaleDateString('fr-FR');
 }
 
 interface KanbanColumn {
@@ -98,7 +108,19 @@ export const KanbanBoard: React.FC<{ token?: string; onClientClick: (clientId: s
                   className="bg-white rounded-md p-2 border border-gray-200 hover:shadow-md cursor-pointer transition-all"
                 >
                   <div className="font-semibold text-xs text-gray-800 line-clamp-1">{client.nom}</div>
-                  <div className="text-xs text-gray-500 line-clamp-1">{client.email}</div>
+                  {client.arbitrageClosureDate ? (
+                    <div className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                      <CalendarClock className="w-3 h-3 flex-shrink-0" />
+                      <span className="line-clamp-1">
+                        Clôture {new Date(client.arbitrageClosureDate).toLocaleDateString('fr-FR')} · Limite {arbitrageDeadline(client.arbitrageClosureDate)}
+                      </span>
+                    </div>
+                  ) : client.nextTaskTitle ? (
+                    <div className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                      <ListTodo className="w-3 h-3 flex-shrink-0" />
+                      <span className="line-clamp-1">{client.nextTaskTitle}</span>
+                    </div>
+                  ) : null}
                   {client.taskCount > 0 && (
                     <div className="text-xs font-bold text-blue-600 mt-1">📋 {client.taskCount} tâches</div>
                   )}
