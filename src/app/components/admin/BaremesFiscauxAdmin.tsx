@@ -1,10 +1,10 @@
 /**
- * ??? INTERFACE D'ADMINISTRATION DES BAR»MES FISCAUX
- * 
- * Permet de gÈrer dynamiquement :
- * - BarËme IR (5 tranches)
- * - BarËme IFI (6 tranches)
- * - PrÈlËvements sociaux
+ * Interface d'administration des bar√®mes fiscaux
+ *
+ * Permet de g√©rer dynamiquement :
+ * - Bar√®me IR (5 tranches)
+ * - Bar√®me IFI (6 tranches)
+ * - Pr√©l√®vements sociaux
  * - Abattements et plafonds
  */
 
@@ -48,7 +48,7 @@ interface Abattements {
 export function BaremesFiscauxAdmin() {
   const [annee, setAnnee] = useState('2026');
   const { baremes, loading, error, rechargerBaremes } = useBaremesFiscaux(annee);
-  
+
   const [baremeIR, setBaremeIR] = useState<BaremeIRRow[]>([]);
   const [baremeIFI, setBaremeIFI] = useState<BaremeIFIRow[]>([]);
   const [prelevements, setPrelevements] = useState<PrelevementsSociaux>({
@@ -73,7 +73,7 @@ export function BaremesFiscauxAdmin() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [reinitializing, setReinitializing] = useState(false);
 
-  // Charger les barËmes au montage
+  // Charger les bar√®mes au montage
   useEffect(() => {
     if (baremes) {
       setBaremeIR(baremes.baremeIR);
@@ -83,9 +83,9 @@ export function BaremesFiscauxAdmin() {
     }
   }, [baremes]);
 
-  // RÈinitialiser aux barËmes officiels 2025
+  // R√©initialiser aux bar√®mes officiels 2025
   const handleReinitialiser = async () => {
-    if (!confirm('?? ATTENTION : Cette action va remplacer TOUS les barËmes par les valeurs officielles 2025 de service-public.fr.\n\nVoulez-vous continuer ?')) {
+    if (!confirm('Attention : cette action va remplacer TOUS les bar√®mes par les valeurs officielles 2025 de service-public.fr.\n\nVoulez-vous continuer ?')) {
       return;
     }
 
@@ -110,35 +110,35 @@ export function BaremesFiscauxAdmin() {
       }
 
       const result = await response.json();
-      console.log('? BarËmes rÈinitialisÈs:', result);
+      console.log('Bar√®mes r√©initialis√©s:', result);
 
       setSaveSuccess(true);
-      
-      // Recharger les barËmes
+
+      // Recharger les bar√®mes
       await rechargerBaremes();
 
-      // Message de succËs
-      alert('? BarËmes rÈinitialisÈs avec succËs aux valeurs officielles 2025 !');
-      
-      // Masquer le message aprËs 3 secondes
+      // Message de succ√®s
+      alert('Bar√®mes r√©initialis√©s avec succ√®s aux valeurs officielles 2025 !');
+
+      // Masquer le message apr√®s 3 secondes
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
-      console.error('? Erreur rÈinitialisation:', err);
+      console.error('Erreur r√©initialisation:', err);
       setSaveError(err instanceof Error ? err.message : 'Erreur inconnue');
-      alert('? Erreur lors de la rÈinitialisation : ' + (err instanceof Error ? err.message : 'Erreur inconnue'));
+      alert('Erreur lors de la r√©initialisation : ' + (err instanceof Error ? err.message : 'Erreur inconnue'));
     } finally {
       setReinitializing(false);
     }
   };
 
-  // Sauvegarder les barËmes
+  // Sauvegarder les bar√®mes
   const handleSave = async () => {
     setSaving(true);
     setSaveSuccess(false);
     setSaveError(null);
 
     try {
-      // Recalculer le total des prÈlËvements
+      // Recalculer le total des pr√©l√®vements
       const totalPrelevements = prelevements.CSG + prelevements.CRDS + prelevements.PRELEVEMENT_SOLIDARITE;
 
       const response = await fetch(
@@ -166,31 +166,31 @@ export function BaremesFiscauxAdmin() {
       }
 
       const result = await response.json();
-      console.log('? BarËmes sauvegardÈs:', result);
+      console.log('Bar√®mes sauvegard√©s:', result);
 
       setSaveSuccess(true);
-      
-      // Recharger les barËmes pour mettre ‡ jour le cache
+
+      // Recharger les bar√®mes pour mettre √† jour le cache
       await rechargerBaremes();
 
-      // Masquer le message de succËs aprËs 3 secondes
+      // Masquer le message de succ√®s apr√®s 3 secondes
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
-      console.error('? Erreur sauvegarde:', err);
+      console.error('Erreur sauvegarde:', err);
       setSaveError(err instanceof Error ? err.message : 'Erreur inconnue');
     } finally {
       setSaving(false);
     }
   };
 
-  // Mettre ‡ jour une tranche IR
+  // Mettre √† jour une tranche IR
   const updateIRTranche = (index: number, field: keyof BaremeIRRow, value: any) => {
     const newBareme = [...baremeIR];
     newBareme[index] = { ...newBareme[index], [field]: value };
     setBaremeIR(newBareme);
   };
 
-  // Mettre ‡ jour une tranche IFI
+  // Mettre √† jour une tranche IFI
   const updateIFITranche = (index: number, field: keyof BaremeIFIRow, value: any) => {
     const newBareme = [...baremeIFI];
     newBareme[index] = { ...newBareme[index], [field]: value };
@@ -201,26 +201,26 @@ export function BaremesFiscauxAdmin() {
     return (
       <div className="flex items-center justify-center p-8">
         <RefreshCw className="size-6 animate-spin text-blue-600" />
-        <span className="ml-2 text-gray-600">Chargement des barËmes...</span>
+        <span className="ml-2 text-gray-600">Chargement des bar√®mes...</span>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <div className="max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex items-start justify-between">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              BarËmes fiscaux {annee}
+              Bar√®mes fiscaux {annee}
             </h1>
             <p className="text-gray-600 mt-1">
-              Gestion dynamique des barËmes pour les calculs fiscaux
+              Gestion dynamique des bar√®mes pour les calculs fiscaux
             </p>
           </div>
-          
-          <div className="flex gap-2">
+
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={rechargerBaremes}
               disabled={loading}
@@ -229,7 +229,7 @@ export function BaremesFiscauxAdmin() {
               <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} />
               Recharger
             </button>
-            
+
             <button
               onClick={handleSave}
               disabled={saving}
@@ -246,7 +246,7 @@ export function BaremesFiscauxAdmin() {
           <div className="flex items-start gap-2">
             <Info className="size-5 text-blue-600 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-blue-900">
-              <p className="font-semibold mb-2">Sources officielles pour vÈrifier les barËmes :</p>
+              <p className="font-semibold mb-2">Sources officielles pour v√©rifier les bar√®mes :</p>
               <ul className="space-y-1">
                 <li>
                   <a
@@ -255,7 +255,7 @@ export function BaremesFiscauxAdmin() {
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:underline flex items-center gap-1"
                   >
-                    impots.gouv.fr - BarËme IR
+                    impots.gouv.fr - Bar√®me IR
                     <ExternalLink className="size-3" />
                   </a>
                 </li>
@@ -266,7 +266,7 @@ export function BaremesFiscauxAdmin() {
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:underline flex items-center gap-1"
                   >
-                    service-public.fr - ImpÙt sur le revenu
+                    service-public.fr - Imp√¥t sur le revenu
                     <ExternalLink className="size-3" />
                   </a>
                 </li>
@@ -286,23 +286,23 @@ export function BaremesFiscauxAdmin() {
           </div>
         </div>
 
-        {/* Bouton de rÈinitialisation */}
+        {/* Bouton de r√©initialisation */}
         <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
             <div className="flex items-start gap-2 flex-1">
               <AlertCircle className="size-5 text-orange-600 mt-0.5 flex-shrink-0" />
               <div className="text-sm text-orange-900">
-                <p className="font-semibold mb-1">BarËmes incorrects ?</p>
-                <p>RÈinitialisez aux valeurs officielles 2025 de service-public.fr</p>
+                <p className="font-semibold mb-1">Bar√®mes incorrects ?</p>
+                <p>R√©initialisez aux valeurs officielles 2025 de service-public.fr</p>
               </div>
             </div>
             <button
               onClick={handleReinitialiser}
               disabled={reinitializing}
-              className="px-4 py-2 text-white bg-orange-600 rounded-lg hover:bg-orange-700 disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
+              className="px-4 py-2 text-white bg-orange-600 rounded-lg hover:bg-orange-700 disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap w-full sm:w-auto"
             >
               <RefreshCw className={`size-4 ${reinitializing ? 'animate-spin' : ''}`} />
-              {reinitializing ? 'RÈinitialisation...' : 'RÈinitialiser aux barËmes 2025'}
+              {reinitializing ? 'R√©initialisation...' : 'R√©initialiser aux bar√®mes 2025'}
             </button>
           </div>
         </div>
@@ -311,7 +311,7 @@ export function BaremesFiscauxAdmin() {
         {saveSuccess && (
           <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
             <CheckCircle2 className="size-5 text-green-600" />
-            <span className="text-green-800">BarËmes sauvegardÈs avec succËs !</span>
+            <span className="text-green-800">Bar√®mes sauvegard√©s avec succ√®s !</span>
           </div>
         )}
 
@@ -330,19 +330,19 @@ export function BaremesFiscauxAdmin() {
         )}
       </div>
 
-      {/* BarËme IR */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      {/* Bar√®me IR */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          BarËme de l'impÙt sur le revenu (IR)
+          Bar√®me de l'imp√¥t sur le revenu (IR)
         </h2>
-        
+
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Tranche</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Min (Ä)</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Max (Ä)</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Min (‚Ç¨)</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Max (‚Ç¨)</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Taux (%)</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Label</th>
               </tr>
@@ -361,7 +361,7 @@ export function BaremesFiscauxAdmin() {
                   </td>
                   <td className="py-3 px-4">
                     {tranche.max === null ? (
-                      <span className="text-gray-500 italic">IllimitÈ</span>
+                      <span className="text-gray-500 italic">Illimit√©</span>
                     ) : (
                       <input
                         type="number"
@@ -395,19 +395,19 @@ export function BaremesFiscauxAdmin() {
         </div>
       </div>
 
-      {/* BarËme IFI */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      {/* Bar√®me IFI */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          BarËme de l'IFI (ImpÙt sur la Fortune ImmobiliËre)
+          Bar√®me de l'IFI (Imp√¥t sur la Fortune Immobili√®re)
         </h2>
-        
+
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Tranche</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Min (Ä)</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Max (Ä)</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Min (‚Ç¨)</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Max (‚Ç¨)</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Taux (%)</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Label</th>
               </tr>
@@ -426,7 +426,7 @@ export function BaremesFiscauxAdmin() {
                   </td>
                   <td className="py-3 px-4">
                     {tranche.max === null ? (
-                      <span className="text-gray-500 italic">IllimitÈ</span>
+                      <span className="text-gray-500 italic">Illimit√©</span>
                     ) : (
                       <input
                         type="number"
@@ -460,12 +460,12 @@ export function BaremesFiscauxAdmin() {
         </div>
       </div>
 
-      {/* PrÈlËvements sociaux */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      {/* Pr√©l√®vements sociaux */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          PrÈlËvements sociaux
+          Pr√©l√®vements sociaux
         </h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -481,7 +481,7 @@ export function BaremesFiscauxAdmin() {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               CRDS (%)
@@ -496,10 +496,10 @@ export function BaremesFiscauxAdmin() {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              PrÈlËvement solidaritÈ (%)
+              Pr√©l√®vement solidarit√© (%)
             </label>
             <input
               type="number"
@@ -514,10 +514,10 @@ export function BaremesFiscauxAdmin() {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Total (calculÈ)
+              Total (calcul√©)
             </label>
             <input
               type="number"
@@ -533,15 +533,15 @@ export function BaremesFiscauxAdmin() {
       </div>
 
       {/* Abattements et plafonds */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
           Abattements et plafonds
         </h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Plafond abattement 10% (Ä)
+              Plafond abattement 10% (‚Ç¨)
             </label>
             <input
               type="number"
@@ -555,10 +555,10 @@ export function BaremesFiscauxAdmin() {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Plancher abattement 10% (Ä)
+              Plancher abattement 10% (‚Ç¨)
             </label>
             <input
               type="number"
@@ -572,10 +572,10 @@ export function BaremesFiscauxAdmin() {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Plafond dÈcote cÈlibataire (Ä)
+              Plafond d√©cote c√©libataire (‚Ç¨)
             </label>
             <input
               type="number"
@@ -589,10 +589,10 @@ export function BaremesFiscauxAdmin() {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Plafond dÈcote couple (Ä)
+              Plafond d√©cote couple (‚Ç¨)
             </label>
             <input
               type="number"
@@ -606,10 +606,10 @@ export function BaremesFiscauxAdmin() {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              DÈcote max cÈlibataire (Ä)
+              D√©cote max c√©libataire (‚Ç¨)
             </label>
             <input
               type="number"
@@ -623,10 +623,10 @@ export function BaremesFiscauxAdmin() {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              DÈcote max couple (Ä)
+              D√©cote max couple (‚Ç¨)
             </label>
             <input
               type="number"
@@ -640,10 +640,10 @@ export function BaremesFiscauxAdmin() {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Plafond micro-foncier (Ä)
+              Plafond micro-foncier (‚Ç¨)
             </label>
             <input
               type="number"
@@ -657,7 +657,7 @@ export function BaremesFiscauxAdmin() {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Abattement micro-foncier (%)
@@ -683,10 +683,10 @@ export function BaremesFiscauxAdmin() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-6 py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+          className="w-full sm:w-auto px-6 py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
         >
           <Save className={`size-5 ${saving ? 'animate-pulse' : ''}`} />
-          {saving ? 'Sauvegarde en cours...' : 'Enregistrer tous les barËmes'}
+          {saving ? 'Sauvegarde en cours...' : 'Enregistrer tous les bar√®mes'}
         </button>
       </div>
     </div>

@@ -1,14 +1,14 @@
 /**
- * ?? SERVICE DE CALCUL FISCAL DYNAMIQUE
- * 
- * Charge les barèmes depuis Supabase pour permettre
- * une mise à jour sans redéploiement de code
- * 
+ * SERVICE DE CALCUL FISCAL DYNAMIQUE
+ *
+ * Charge les barÃ¨mes depuis Supabase pour permettre
+ * une mise Ã  jour sans redÃ©ploiement de code
+ *
  * Calculs automatiques :
- * - Impôt sur le revenu (barème progressif)
- * - Prélèvements sociaux (CSG, CRDS, etc.)
+ * - ImpÃ´t sur le revenu (barÃ¨me progressif)
+ * - PrÃ©lÃ¨vements sociaux (CSG, CRDS, etc.)
  * - TMI (Tranche Marginale d'Imposition)
- * - IFI (Impôt sur la Fortune Immobilière)
+ * - IFI (ImpÃ´t sur la Fortune ImmobiliÃ¨re)
  */
 
 import { apiBaseUrl, publicAnonKey } from '../utils/api/info';
@@ -114,7 +114,7 @@ export interface DetailCalculIFI {
 }
 
 // ============================================
-// CACHE DES BARÈMES
+// CACHE DES BARÃˆMES
 // ============================================
 
 let baremesCached: BaremesFiscaux | null = null;
@@ -122,10 +122,10 @@ let lastFetch: number = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 /**
- * Charge les barèmes fiscaux depuis Supabase
+ * Charge les barÃ¨mes fiscaux depuis Supabase
  */
 export async function loadBaremes(annee: string = '2026'): Promise<BaremesFiscaux> {
-  // Utiliser le cache si disponible et récent
+  // Utiliser le cache si disponible et rÃ©cent
   if (baremesCached && Date.now() - lastFetch < CACHE_DURATION) {
     return baremesCached;
   }
@@ -156,19 +156,19 @@ export async function loadBaremes(annee: string = '2026'): Promise<BaremesFiscau
 
     lastFetch = Date.now();
 
-    console.log(`? Barèmes ${annee} chargés depuis Supabase`);
+    console.log(`BarÃ¨mes ${annee} chargÃ©s depuis Supabase`);
     return baremesCached;
   } catch (error) {
-    console.error('? Erreur chargement barèmes:', error);
-    
-    // Fallback sur les barèmes par défaut
+    console.error('Erreur chargement barÃ¨mes:', error);
+
+    // Fallback sur les barÃ¨mes par dÃ©faut
     return getDefaultBaremes();
   }
 }
 
 /**
- * Barèmes par défaut (fallback)
- * Source officielle : service-public.fr - Barème 2025
+ * BarÃ¨mes par dÃ©faut (fallback)
+ * Source officielle : service-public.fr - BarÃ¨me 2025
  * https://www.service-public.fr/particuliers/vosdroits/F1419
  */
 function getDefaultBaremes(): BaremesFiscaux {
@@ -182,7 +182,7 @@ function getDefaultBaremes(): BaremesFiscaux {
       { min: 181917, max: null, taux: 0.45, label: 'Tranche 5 : 45%' },
     ],
     baremeIFI: [
-      { min: 0, max: 800000, taux: 0, label: 'Exonération' },
+      { min: 0, max: 800000, taux: 0, label: 'ExonÃ©ration' },
       { min: 800000, max: 1300000, taux: 0.005, label: '0,5%' },
       { min: 1300000, max: 2570000, taux: 0.007, label: '0,7%' },
       { min: 2570000, max: 5000000, taux: 0.01, label: '1%' },
@@ -213,7 +213,7 @@ function getDefaultBaremes(): BaremesFiscaux {
 // ============================================
 
 /**
- * Calcule l'impôt sur le revenu avec détails
+ * Calcule l'impÃ´t sur le revenu avec dÃ©tails
  */
 export async function calculerImpotRevenu(
   revenus: RevenuFiscal,
@@ -226,16 +226,16 @@ export async function calculerImpotRevenu(
     revenus.traitementsSalairesPensions +
     revenus.revenusTNS;
 
-  // 2. Abattement de 10% sur salaires (plafonné)
+  // 2. Abattement de 10% sur salaires (plafonnÃ©)
   const abattement10Brut = revenuBrutSalairesPensions * 0.10;
   const abattement10 = Math.max(
     Math.min(abattement10Brut, baremes.abattements.abattement10PourcentPlafond),
     baremes.abattements.abattement10PourcentPlancher
   );
 
-  // 3. Revenu net après abattement
+  // 3. Revenu net aprÃ¨s abattement
   const revenuNetSalaires = revenuBrutSalairesPensions - abattement10;
-  
+
   // 4. Total des revenus bruts (incluant TOUS les revenus)
   const revenuBrut =
     revenuBrutSalairesPensions +
@@ -244,13 +244,13 @@ export async function calculerImpotRevenu(
     revenus.reveusValeursCapitauxMobiliers +
     revenus.plusValueMobiliere;
 
-  // 5. Revenu net imposable total (salaires après abattement + autres revenus)
-  const autresRevenus = 
+  // 5. Revenu net imposable total (salaires aprÃ¨s abattement + autres revenus)
+  const autresRevenus =
     revenus.locationsMeublesNonPro +
     revenus.revenusFonciers +
     revenus.reveusValeursCapitauxMobiliers +
     revenus.plusValueMobiliere;
-    
+
   const revenuNet = revenuNetSalaires + autresRevenus;
   const revenuImposable = Math.max(0, revenuNet);
 
@@ -286,13 +286,13 @@ export async function calculerImpotRevenu(
   // 8. Multiplication par le nombre de parts
   const impotAvantDecote = impotQuotient * nombreParts;
 
-  // 9. Décote (pour les revenus modestes)
+  // 9. DÃ©cote (pour les revenus modestes)
   let decote = 0;
-  const plafondDecote = nombreParts > 1 
-    ? baremes.abattements.decoteCouplePlafond 
+  const plafondDecote = nombreParts > 1
+    ? baremes.abattements.decoteCouplePlafond
     : baremes.abattements.decoteCelibatairePlafond;
-  const decoteMax = nombreParts > 1 
-    ? baremes.abattements.decoteCoupleMax 
+  const decoteMax = nombreParts > 1
+    ? baremes.abattements.decoteCoupleMax
     : baremes.abattements.decoteCelibataireMax;
 
   if (impotAvantDecote < plafondDecote) {
@@ -302,10 +302,10 @@ export async function calculerImpotRevenu(
 
   const impotApreDecote = Math.max(0, impotAvantDecote - decote);
 
-  // 10. Plafonnement du quotient familial (simplifié)
+  // 10. Plafonnement du quotient familial (simplifiÃ©)
   const plafonnementQF = 0;
 
-  // 11. Impôt final
+  // 11. ImpÃ´t final
   const impotFinal = Math.round(impotApreDecote + plafonnementQF);
 
   // 12. TMI (Tranche Marginale d'Imposition)
@@ -338,7 +338,7 @@ export async function calculerImpotRevenu(
 }
 
 /**
- * Calcule les prélèvements sociaux
+ * Calcule les prÃ©lÃ¨vements sociaux
  */
 export async function calculerPrelevementsSociaux(
   assiette: number
@@ -369,8 +369,8 @@ export async function calculerIFI(
 ): Promise<DetailCalculIFI> {
   const baremes = await loadBaremes();
 
-  // Seuil d'imposition : 1 300 000 € avec abattement de 30% sur la résidence principale
-  const abattement = 0; // À personnaliser selon la situation
+  // Seuil d'imposition : 1 300 000 â‚¬ avec abattement de 30% sur la rÃ©sidence principale
+  const abattement = 0; // Ã€ personnaliser selon la situation
   const assiette = Math.max(0, patrimoineNetTaxable - abattement);
 
   const tranchesDetail: DetailCalculIFI['tranchesDetail'] = [];
@@ -408,10 +408,10 @@ export async function calculerIFI(
 }
 
 /**
- * Invalide le cache (à appeler après mise à jour des barèmes)
+ * Invalide le cache (Ã  appeler aprÃ¨s mise Ã  jour des barÃ¨mes)
  */
 export function invalidateCache() {
   baremesCached = null;
   lastFetch = 0;
-  console.log('??? Cache des barèmes invalidé');
+  console.log('Cache des barÃ¨mes invalidÃ©');
 }
