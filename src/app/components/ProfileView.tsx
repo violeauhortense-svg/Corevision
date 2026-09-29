@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { User, Mail, Shield, LogOut, Trash2, Phone, MapPin, Building, FileText, Edit, Save, X, Award, Calendar, Briefcase, Activity } from 'lucide-react';
 import { toast } from 'sonner';
-import { ServerDiagnostic } from './ServerDiagnostic';
 
 interface ProfileViewProps {
   session: any;
@@ -678,9 +677,6 @@ export function ProfileView({ session, onLogout }: ProfileViewProps) {
             </div>
           </div>
         </div>
-
-        {/* Diagnostic Serveur */}
-        <ServerDiagnostic />
 
         {/* Bouton déconnexion */}
         <button
