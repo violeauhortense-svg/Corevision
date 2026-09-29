@@ -55,9 +55,10 @@ export interface OpenClientTask {
 const HIDDEN_FROM_TODO = new Set(['p1', 'd1', 's2', 's4', 'lm1', 'lm3', 'ra1', 'mep1']);
 
 /**
- * Every not-yet-done task in each client's *current* pipeline block,
- * across all clients (minus HIDDEN_FROM_TODO). This is what TodoView and
- * the Dashboard's "tâches" metric both read.
+ * The single next not-yet-done task in each client's *current* pipeline
+ * block, across all clients (minus HIDDEN_FROM_TODO) - one task per client,
+ * mirroring how the pipeline only ever surfaces the next step. This is what
+ * TodoView and the Dashboard's "tâches" metric both read.
  */
 export async function getAllOpenClientTasks(): Promise<OpenClientTask[]> {
   const { clients } = await ClientService.getAllClients();
@@ -82,12 +83,13 @@ export async function getAllOpenClientTasks(): Promise<OpenClientTask[]> {
     const existing = client.taches?.[status] || [];
     const clientName = `${client.prenom || ''} ${client.nom || ''}`.trim() || 'Client sans nom';
 
-    taskDefs.forEach((def, idx) => {
-      if (HIDDEN_FROM_TODO.has(def.id)) return;
+    for (let idx = 0; idx < taskDefs.length; idx++) {
+      const def = taskDefs[idx];
+      if (HIDDEN_FROM_TODO.has(def.id)) continue;
       const task = existing[idx];
       const completed = task?.completed || false;
       const taskStatus = task?.status || 'pending';
-      if (completed || taskStatus === 'na') return;
+      if (completed || taskStatus === 'na') continue;
 
       open.push({
         id: def.id,
@@ -100,7 +102,8 @@ export async function getAllOpenClientTasks(): Promise<OpenClientTask[]> {
         clientStatus: status,
         deadline: (task as any)?.deadline,
       });
-    });
+      break;
+    }
   }
 
   return open;
