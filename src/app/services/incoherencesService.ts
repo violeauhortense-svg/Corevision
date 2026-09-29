@@ -1,16 +1,16 @@
 /**
- * ?? SERVICE INCOHÉRENCES - Interface pour la détection et gestion des incohérences
+ * SERVICE INCOHÃ‰RENCES - Interface pour la dÃ©tection et gestion des incohÃ©rences
  * 
- * Phase 3 : Amélioration processus CoreVision
- * - Détection automatique d'incohérences
- * - Validation/Ignore/Correction avec traçabilité
- * - UI de gestion structurée
+ * Phase 3 : AmÃ©lioration processus CoreVision
+ * - DÃ©tection automatique d'incohÃ©rences
+ * - Validation/Ignore/Correction avec traÃ§abilitÃ©
+ * - UI de gestion structurÃ©e
  */
 
 import { apiBaseUrl, publicAnonKey } from '../utils/api/info';
 
 // ============================================
-// TYPES (synchronisés avec le serveur)
+// TYPES (synchronisÃ©s avec le serveur)
 // ============================================
 
 export type CategorieIncoherence =
@@ -37,7 +37,7 @@ export interface Incoherence {
   description: string;
   consequence: string;
 
-  // Données concernées
+  // DonnÃ©es concernÃ©es
   champsAffectes: string[];
   valeursActuelles: any;
 
@@ -45,13 +45,13 @@ export interface Incoherence {
   suggestionsResolution: string[];
   valeursCorrigees?: any;
 
-  // Traçabilité
+  // TraÃ§abilitÃ©
   dateDetection: string;
   dateResolution?: string;
   utilisateurResolution?: string;
   commentaireResolution?: string;
 
-  // Règle appliquée
+  // RÃ¨gle appliquÃ©e
   regleId: string;
   regleDescription: string;
 }
@@ -76,10 +76,10 @@ export interface RapportIncoherences {
     corrigee: number;
   };
 
-  // Liste des incohérences
+  // Liste des incohÃ©rences
   incoherences: Incoherence[];
 
-  // Score de cohérence global
+  // Score de cohÃ©rence global
   scoreCoherence: number; // 0-100
 }
 
@@ -107,7 +107,7 @@ class IncoherencesServiceClass {
   }
 
   /**
-   * Détecte toutes les incohérences pour un client
+   * DÃ©tecte toutes les incohÃ©rences pour un client
    */
   async detecter(
     clientId: string,
@@ -135,18 +135,18 @@ class IncoherencesServiceClass {
 
       const duration = performance.now() - startTime;
       console.log(
-        `?? Détection incohérences: ${response.status} (${Math.round(duration)}ms)`
+        `DÃ©tection incohÃ©rences: ${response.status} (${Math.round(duration)}ms)`
       );
 
       if (!response.ok) {
         const errorData = await response.json();
-        return { rapport: null, error: errorData.error || 'Erreur de détection' };
+        return { rapport: null, error: errorData.error || 'Erreur de dÃ©tection' };
       }
 
       const data = await response.json();
       return { rapport: data.rapport, error: null };
     } catch (error) {
-      console.error('? Erreur détection incohérences:', error);
+      console.error('Erreur dÃ©tection incohÃ©rences:', error);
       return {
         rapport: null,
         error: error instanceof Error ? error.message : 'Erreur inconnue',
@@ -155,7 +155,7 @@ class IncoherencesServiceClass {
   }
 
   /**
-   * Récupère le rapport d'incohérences pour un client
+   * RÃ©cupÃ¨re le rapport d'incohÃ©rences pour un client
    */
   async getRapport(clientId: string): Promise<{
     rapport: RapportIncoherences | null;
@@ -173,13 +173,13 @@ class IncoherencesServiceClass {
 
       if (!response.ok) {
         const errorData = await response.json();
-        return { rapport: null, error: errorData.error || 'Rapport non trouvé' };
+        return { rapport: null, error: errorData.error || 'Rapport non trouvÃ©' };
       }
 
       const data = await response.json();
       return { rapport: data.rapport, error: null };
     } catch (error) {
-      console.error('? Erreur récupération rapport:', error);
+      console.error('Erreur rÃ©cupÃ©ration rapport:', error);
       return {
         rapport: null,
         error: error instanceof Error ? error.message : 'Erreur inconnue',
@@ -188,7 +188,7 @@ class IncoherencesServiceClass {
   }
 
   /**
-   * Valide une incohérence (accepte comme correcte)
+   * Valide une incohÃ©rence (accepte comme correcte)
    */
   async valider(
     clientId: string,
@@ -220,10 +220,10 @@ class IncoherencesServiceClass {
       }
 
       const data = await response.json();
-      console.log(`? Incohérence validée: ${incoherenceId}`);
+      console.log(`IncohÃ©rence validÃ©e: ${incoherenceId}`);
       return { rapport: data.rapport, error: null };
     } catch (error) {
-      console.error('? Erreur validation:', error);
+      console.error('Erreur validation:', error);
       return {
         rapport: null,
         error: error instanceof Error ? error.message : 'Erreur inconnue',
@@ -232,7 +232,7 @@ class IncoherencesServiceClass {
   }
 
   /**
-   * Ignore une incohérence (marque comme non pertinente)
+   * Ignore une incohÃ©rence (marque comme non pertinente)
    */
   async ignorer(
     clientId: string,
@@ -264,10 +264,10 @@ class IncoherencesServiceClass {
       }
 
       const data = await response.json();
-      console.log(`?? Incohérence ignorée: ${incoherenceId}`);
+      console.log(`IncohÃ©rence ignorÃ©e: ${incoherenceId}`);
       return { rapport: data.rapport, error: null };
     } catch (error) {
-      console.error('? Erreur ignore:', error);
+      console.error('Erreur ignore:', error);
       return {
         rapport: null,
         error: error instanceof Error ? error.message : 'Erreur inconnue',
@@ -276,7 +276,7 @@ class IncoherencesServiceClass {
   }
 
   /**
-   * Marque une incohérence comme corrigée
+   * Marque une incohÃ©rence comme corrigÃ©e
    */
   async marquerCorrigee(
     clientId: string,
@@ -308,10 +308,10 @@ class IncoherencesServiceClass {
       }
 
       const data = await response.json();
-      console.log(`?? Incohérence corrigée: ${incoherenceId}`);
+      console.log(`IncohÃ©rence corrigÃ©e: ${incoherenceId}`);
       return { rapport: data.rapport, error: null };
     } catch (error) {
-      console.error('? Erreur correction:', error);
+      console.error('Erreur correction:', error);
       return {
         rapport: null,
         error: error instanceof Error ? error.message : 'Erreur inconnue',

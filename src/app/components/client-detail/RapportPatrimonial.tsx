@@ -18,52 +18,52 @@ export function RapportPatrimonial({ clientId, clientName }: RapportPatrimonialP
 
   const genererRapport = async () => {
     setLoading(true);
-    toast.info('?? Génération du rapport avancé en 7 étapes IA...');
+    toast.info('GÃ©nÃ©ration du rapport avancÃ© en 7 Ã©tapes IA...');
 
     try {
-      console.log('?? ===== DÉBUT GÉNÉRATION RAPPORT =====');
-      console.log('?? Client ID:', clientId);
-      console.log('?? Nom du client:', clientName);
+      console.log('===== DÃ‰BUT GÃ‰NÃ‰RATION RAPPORT =====');
+      console.log('Client ID:', clientId);
+      console.log('Nom du client:', clientName);
       
-      // 1?? Récupérer les données complètes du client via ClientService
-      console.log('?? Récupération des données client via ClientService...');
-      const result = await ClientService.getClientById(clientId, true); // forceRefresh pour avoir les dernières données
+      // 1. RÃ©cupÃ©rer les donnÃ©es complÃ¨tes du client via ClientService
+      console.log('RÃ©cupÃ©ration des donnÃ©es client via ClientService...');
+      const result = await ClientService.getClientById(clientId, true); // forceRefresh pour avoir les derniÃ¨res donnÃ©es
       
       if (result.error || !result.client) {
-        console.error('? Erreur ClientService:', result.error);
+        console.error('Erreur ClientService:', result.error);
         
         // Fallback : chercher dans localStorage directement
-        console.log('?? Fallback : recherche dans localStorage...');
+        console.log('Fallback : recherche dans localStorage...');
         
         let clientData = null;
         
-        // Méthode 1 : Chercher dans les clés clients_*
+        // MÃ©thode 1 : Chercher dans les clÃ©s clients_*
         const allKeys = Object.keys(localStorage).filter(key => key.startsWith('clients_'));
-        console.log('?? Clés localStorage trouvées:', allKeys);
+        console.log('ClÃ©s localStorage trouvÃ©es:', allKeys);
         
         for (const key of allKeys) {
           try {
             const storedClients = localStorage.getItem(key);
             if (storedClients) {
               const clients = JSON.parse(storedClients);
-              console.log(`?? ${key}: ${clients.length} client(s)`);
+              console.log(`${key}: ${clients.length} client(s)`);
               clientData = clients.find((c: any) => c.id === clientId);
               if (clientData) {
-                console.log(`? Client trouvé dans ${key}:`, clientData);
+                console.log(`Client trouvÃ© dans ${key}:`, clientData);
                 break;
               }
             }
           } catch (e) {
-            console.error(`? Erreur parsing ${key}:`, e);
+            console.error(`Erreur parsing ${key}:`, e);
           }
         }
         
-        // Méthode 2 : Chercher dans client_data_* (backup)
+        // MÃ©thode 2 : Chercher dans client_data_* (backup)
         if (!clientData) {
           const clientKeys = Object.keys(localStorage).filter(key => 
             key.startsWith('client_data_') || key.includes(clientId)
           );
-          console.log('?? Recherche backup dans:', clientKeys);
+          console.log('Recherche backup dans:', clientKeys);
           
           for (const key of clientKeys) {
             try {
@@ -72,22 +72,22 @@ export function RapportPatrimonial({ clientId, clientName }: RapportPatrimonialP
                 const parsed = JSON.parse(data);
                 if (parsed.id === clientId || key.includes(clientId)) {
                   clientData = parsed;
-                  console.log(`? Client trouvé via backup dans ${key}`);
+                  console.log(`Client trouvÃ© via backup dans ${key}`);
                   break;
                 }
               }
             } catch (e) {
-              console.error(`? Erreur parsing backup ${key}:`, e);
+              console.error(`Erreur parsing backup ${key}:`, e);
             }
           }
         }
         
-        // Méthode 3 : Créer un client minimal depuis le contexte
+        // MÃ©thode 3 : CrÃ©er un client minimal depuis le contexte
         if (!clientData) {
-          console.warn('?? Client introuvable - Création d\'un profil minimal');
-          console.log('?? DEBUG - Toutes les clés localStorage:', Object.keys(localStorage));
+          console.warn('Client introuvable - CrÃ©ation d\'un profil minimal');
+          console.log('DEBUG - Toutes les clÃ©s localStorage:', Object.keys(localStorage));
           
-          // Essayer de récupérer depuis le contexte parent si disponible
+          // Essayer de rÃ©cupÃ©rer depuis le contexte parent si disponible
           clientData = {
             id: clientId,
             nom: clientName?.split(' ')[1] || 'Inconnu',
@@ -99,18 +99,18 @@ export function RapportPatrimonial({ clientId, clientName }: RapportPatrimonialP
             tmi: 30,
             revenus_salaires: 0,
             patrimoine_net: 0,
-            objectifs: ['Optimisation fiscale', 'Préparation retraite']
+            objectifs: ['Optimisation fiscale', 'PrÃ©paration retraite']
           };
           
-          console.log('?? Profil minimal créé:', clientData);
+          console.log('Profil minimal crÃ©Ã©:', clientData);
         }
         
-        console.log('? Client récupéré via fallback localStorage');
+        console.log('Client rÃ©cupÃ©rÃ© via fallback localStorage');
         
-        // 2?? Envoyer les données au backend via POST
+        // 2. Envoyer les donnÃ©es au backend via POST
         const url = `${apiBaseUrl}/rapport-patrimonial`;
-        console.log('?? URL appelée:', url);
-        console.log('?? Envoi des données client:', {
+        console.log('URL appelÃ©e:', url);
+        console.log('Envoi des donnÃ©es client:', {
           clientId,
           hasClientData: !!clientData,
           clientName: clientData.nom
@@ -128,17 +128,17 @@ export function RapportPatrimonial({ clientId, clientName }: RapportPatrimonialP
           })
         });
 
-        console.log('?? Réponse status:', response.status);
-        console.log('?? Réponse headers:', Object.fromEntries(response.headers.entries()));
+        console.log('RÃ©ponse status:', response.status);
+        console.log('RÃ©ponse headers:', Object.fromEntries(response.headers.entries()));
         
         if (!response.ok) {
           const errorText = await response.text();
-          console.error('? Erreur backend:', response.status, errorText);
+          console.error('Erreur backend:', response.status, errorText);
           
           // Parser le JSON d'erreur si possible
           try {
             const errorJson = JSON.parse(errorText);
-            console.error('? Détails erreur:', errorJson);
+            console.error('DÃ©tails erreur:', errorJson);
             throw new Error(errorJson.error || errorJson.details || `Erreur ${response.status}`);
           } catch {
             throw new Error(`Erreur ${response.status}: ${errorText}`);
@@ -146,22 +146,22 @@ export function RapportPatrimonial({ clientId, clientName }: RapportPatrimonialP
         }
 
         const data = await response.json();
-        console.log('? Rapport reçu:', data);
-        console.log('? Analyse avancée présente:', !!data.analyse_avancee);
+        console.log('Rapport reÃ§u:', data);
+        console.log('Analyse avancÃ©e prÃ©sente:', !!data.analyse_avancee);
 
         setRapport(data);
         setRapportModifie(JSON.parse(JSON.stringify(data))); // Deep copy
         setShowModal(true);
-        toast.success('? Rapport généré avec analyse IA complète');
+        toast.success('Rapport gÃ©nÃ©rÃ© avec analyse IA complÃ¨te');
         
       } else {
-        // Client récupéré via ClientService
-        console.log('? Client récupéré via ClientService:', result.client);
+        // Client rÃ©cupÃ©rÃ© via ClientService
+        console.log('Client rÃ©cupÃ©rÃ© via ClientService:', result.client);
         
-        // 2?? Envoyer les données au backend via POST
+        // 2. Envoyer les donnÃ©es au backend via POST
         const url = `${apiBaseUrl}/rapport-patrimonial`;
-        console.log('?? URL appelée:', url);
-        console.log('?? Envoi des données client:', {
+        console.log('URL appelÃ©e:', url);
+        console.log('Envoi des donnÃ©es client:', {
           clientId,
           hasClientData: !!result.client,
           clientName: result.client.nom
@@ -179,17 +179,17 @@ export function RapportPatrimonial({ clientId, clientName }: RapportPatrimonialP
           })
         });
 
-        console.log('?? Réponse status:', response.status);
-        console.log('?? Réponse headers:', Object.fromEntries(response.headers.entries()));
+        console.log('RÃ©ponse status:', response.status);
+        console.log('RÃ©ponse headers:', Object.fromEntries(response.headers.entries()));
         
         if (!response.ok) {
           const errorText = await response.text();
-          console.error('? Erreur backend:', response.status, errorText);
+          console.error('Erreur backend:', response.status, errorText);
           
           // Parser le JSON d'erreur si possible
           try {
             const errorJson = JSON.parse(errorText);
-            console.error('? Détails erreur:', errorJson);
+            console.error('DÃ©tails erreur:', errorJson);
             throw new Error(errorJson.error || errorJson.details || `Erreur ${response.status}`);
           } catch {
             throw new Error(`Erreur ${response.status}: ${errorText}`);
@@ -197,33 +197,33 @@ export function RapportPatrimonial({ clientId, clientName }: RapportPatrimonialP
         }
 
         const data = await response.json();
-        console.log('? Rapport reçu:', data);
-        console.log('? Analyse avancée présente:', !!data.analyse_avancee);
+        console.log('Rapport reÃ§u:', data);
+        console.log('Analyse avancÃ©e prÃ©sente:', !!data.analyse_avancee);
 
         setRapport(data);
         setRapportModifie(JSON.parse(JSON.stringify(data))); // Deep copy
         setShowModal(true);
-        toast.success('? Rapport généré avec analyse IA complète');
+        toast.success('Rapport gÃ©nÃ©rÃ© avec analyse IA complÃ¨te');
       }
 
     } catch (error: any) {
-      console.error('? Erreur lors de la génération du rapport:', error);
-      console.error('? Stack trace:', error.stack);
-      toast.error(`? Erreur: ${error.message || 'Impossible de générer le rapport'}`);
+      console.error('Erreur lors de la gÃ©nÃ©ration du rapport:', error);
+      console.error('Stack trace:', error.stack);
+      toast.error(`Erreur: ${error.message || 'Impossible de gÃ©nÃ©rer le rapport'}`);
     } finally {
       setLoading(false);
     }
   };
 
   const sauvegarderRapport = () => {
-    // TODO: Implémenter la sauvegarde dans le backend si nécessaire
+    // TODO: ImplÃ©menter la sauvegarde dans le backend si nÃ©cessaire
     setRapport(rapportModifie);
-    toast.success('?? Rapport sauvegardé localement');
+    toast.success('Rapport sauvegardÃ© localement');
   };
 
   const exporterPDF = () => {
-    toast.info('?? Export PDF en cours de développement');
-    // TODO: Implémenter l'export PDF
+    toast.info('Export PDF en cours de dÃ©veloppement');
+    // TODO: ImplÃ©menter l'export PDF
   };
 
   return (
@@ -239,7 +239,7 @@ export function RapportPatrimonial({ clientId, clientName }: RapportPatrimonialP
               <h3 className="text-2xl font-bold">Rapport Patrimonial</h3>
               <p className="text-indigo-100 mt-1 flex items-center gap-2">
                 <Radio className="w-4 h-4 animate-pulse" />
-                Analyse complète avec données actualisées en temps réel
+                Analyse complÃ¨te avec donnÃ©es actualisÃ©es en temps rÃ©el
               </p>
             </div>
           </div>
@@ -251,24 +251,24 @@ export function RapportPatrimonial({ clientId, clientName }: RapportPatrimonialP
             {loading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                Génération...
+                GÃ©nÃ©ration...
               </>
             ) : (
               <>
                 <Sparkles className="w-5 h-5" />
-                Générer le rapport
+                GÃ©nÃ©rer le rapport
               </>
             )}
           </button>
         </div>
       </div>
 
-      {/* Modal du rapport éditable */}
+      {/* Modal du rapport Ã©ditable */}
       {showModal && rapport && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-7xl w-full max-h-[95vh] overflow-hidden flex flex-col">
             
-            {/* En-tête */}
+            {/* En-tÃªte */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
@@ -286,7 +286,7 @@ export function RapportPatrimonial({ clientId, clientName }: RapportPatrimonialP
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
                     <Clock className="w-3.5 h-3.5" />
-                    <span>Données actualisées • Mode édition</span>
+                    <span>DonnÃ©es actualisÃ©es â€¢ Mode Ã©dition</span>
                   </div>
                 </div>
               </div>
@@ -315,19 +315,19 @@ export function RapportPatrimonial({ clientId, clientName }: RapportPatrimonialP
               </div>
             </div>
 
-            {/* Contenu scrollable - Mode édition */}
+            {/* Contenu scrollable - Mode Ã©dition */}
             <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
               <div className="max-w-5xl mx-auto space-y-6">
                 
-                {/* Indicateur analyse avancée 7 étapes IA */}
+                {/* Indicateur analyse avancÃ©e 7 Ã©tapes IA */}
                 {rapport.analyse_avancee && (
                   <AnalyseAvanceeIndicateur analyseAvancee={rapport.analyse_avancee} />
                 )}
                 
-                {/* Section 1 : Synthèse Exécutive */}
+                {/* Section 1 : SynthÃ¨se ExÃ©cutive */}
                 <SectionEditable
-                  title="1. Synthèse Exécutive"
-                  icon="??"
+                  title="1. SynthÃ¨se ExÃ©cutive"
+                  icon="ðŸ“Š"
                   gradient="from-blue-50 to-blue-100"
                   borderColor="border-blue-300"
                 >
@@ -351,7 +351,7 @@ export function RapportPatrimonial({ clientId, clientName }: RapportPatrimonialP
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Points clés
+                        Points clÃ©s
                       </label>
                       {rapportModifie.section1_synthese?.points_cles?.map((point: string, index: number) => (
                         <div key={index} className="flex items-start gap-2 mb-2">
@@ -380,7 +380,7 @@ export function RapportPatrimonial({ clientId, clientName }: RapportPatrimonialP
                 {/* Section 2 : Situation Actuelle */}
                 <SectionEditable
                   title="2. Situation Actuelle"
-                  icon="??"
+                  icon="ðŸ“"
                   gradient="from-green-50 to-green-100"
                   borderColor="border-green-300"
                 >
@@ -432,10 +432,10 @@ export function RapportPatrimonial({ clientId, clientName }: RapportPatrimonialP
                   </div>
                 </SectionEditable>
 
-                {/* Section 3 : Analyses Détaillées */}
+                {/* Section 3 : Analyses DÃ©taillÃ©es */}
                 <SectionEditable
-                  title="3. Analyses Détaillées"
-                  icon="??"
+                  title="3. Analyses DÃ©taillÃ©es"
+                  icon="ðŸ”"
                   gradient="from-purple-50 to-purple-100"
                   borderColor="border-purple-300"
                 >
@@ -491,10 +491,10 @@ export function RapportPatrimonial({ clientId, clientName }: RapportPatrimonialP
                   </div>
                 </SectionEditable>
 
-                {/* Section 4 : Problématiques Identifiées */}
+                {/* Section 4 : ProblÃ©matiques IdentifiÃ©es */}
                 <SectionEditable
-                  title="4. Problématiques Identifiées"
-                  icon="??"
+                  title="4. ProblÃ©matiques IdentifiÃ©es"
+                  icon="âš ï¸"
                   gradient="from-orange-50 to-orange-100"
                   borderColor="border-orange-300"
                 >
@@ -544,18 +544,18 @@ export function RapportPatrimonial({ clientId, clientName }: RapportPatrimonialP
                 {/* Section 5 : Objectifs */}
                 <SectionEditable
                   title="5. Objectifs"
-                  icon="??"
+                  icon="ðŸŽ¯"
                   gradient="from-indigo-50 to-indigo-100"
                   borderColor="border-indigo-300"
                 >
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Objectifs déclarés
+                        Objectifs dÃ©clarÃ©s
                       </label>
                       {rapportModifie.section5_objectifs?.objectifs_declares?.map((obj: string, index: number) => (
                         <div key={index} className="flex items-center gap-2 mb-2">
-                          <span className="text-indigo-600">•</span>
+                          <span className="text-indigo-600">â€¢</span>
                           <input
                             value={obj}
                             onChange={(e) => {
@@ -576,11 +576,11 @@ export function RapportPatrimonial({ clientId, clientName }: RapportPatrimonialP
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Objectifs déduits
+                        Objectifs dÃ©duits
                       </label>
                       {rapportModifie.section5_objectifs?.objectifs_deduits?.map((obj: string, index: number) => (
                         <div key={index} className="flex items-center gap-2 mb-2">
-                          <span className="text-indigo-600">•</span>
+                          <span className="text-indigo-600">â€¢</span>
                           <input
                             value={obj}
                             onChange={(e) => {
@@ -605,13 +605,13 @@ export function RapportPatrimonial({ clientId, clientName }: RapportPatrimonialP
                 {/* Section 6 : Recommandations */}
                 <SectionEditable
                   title="6. Recommandations"
-                  icon="??"
+                  icon="ðŸ’¡"
                   gradient="from-yellow-50 to-yellow-100"
                   borderColor="border-yellow-300"
                 >
                   <div className="space-y-4">
                     <ChampEditable
-                      label="Synthèse des recommandations"
+                      label="SynthÃ¨se des recommandations"
                       value={rapportModifie.section6_recommandations?.synthese || ''}
                       onChange={(value) => setRapportModifie({
                         ...rapportModifie,
@@ -624,11 +624,11 @@ export function RapportPatrimonial({ clientId, clientName }: RapportPatrimonialP
                     />
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Stratégies proposées ({rapportModifie.section6_recommandations?.strategies?.length || 0})
+                        StratÃ©gies proposÃ©es ({rapportModifie.section6_recommandations?.strategies?.length || 0})
                       </label>
                       <div className="bg-white border border-yellow-200 rounded-lg p-4">
                         <p className="text-sm text-gray-600">
-                          {rapportModifie.section6_recommandations?.strategies?.length || 0} stratégies identifiées automatiquement
+                          {rapportModifie.section6_recommandations?.strategies?.length || 0} stratÃ©gies identifiÃ©es automatiquement
                         </p>
                       </div>
                     </div>
@@ -638,14 +638,14 @@ export function RapportPatrimonial({ clientId, clientName }: RapportPatrimonialP
                 {/* Section 7 : Plan d'Action */}
                 <SectionEditable
                   title="7. Plan d'Action"
-                  icon="??"
+                  icon="âœ…"
                   gradient="from-teal-50 to-teal-100"
                   borderColor="border-teal-300"
                 >
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Actions immédiates
+                        Actions immÃ©diates
                       </label>
                       {rapportModifie.section7_plan_action?.actions_immediates?.map((action: string, index: number) => (
                         <div key={index} className="flex items-center gap-2 mb-2">
@@ -728,7 +728,7 @@ export function RapportPatrimonial({ clientId, clientName }: RapportPatrimonialP
             <div className="border-t border-gray-200 px-6 py-4 bg-gray-50 flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <Edit3 className="w-4 h-4" />
-                <span>Toutes les modifications sont éditables</span>
+                <span>Toutes les modifications sont Ã©ditables</span>
               </div>
               <div className="flex gap-3">
                 <button

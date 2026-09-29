@@ -1,8 +1,8 @@
 /**
- * ?? NOTIFICATION - MISE À JOUR DES BARÈMES
+ * NOTIFICATION - MISE Ã€ JOUR DES BARÃˆMES
  * 
- * Affiche une notification quand les barèmes sont mis à jour
- * Permet de recharger l'application pour utiliser les nouveaux barèmes
+ * Affiche une notification quand les barÃ¨mes sont mis Ã  jour
+ * Permet de recharger l'application pour utiliser les nouveaux barÃ¨mes
  */
 
 import React, { useState, useEffect } from 'react';
@@ -13,7 +13,7 @@ export function BaremeUpdateNotification() {
   const [showNotification, setShowNotification] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
 
-  // Vérifier les mises à jour toutes les 5 minutes
+  // VÃ©rifier les mises Ã  jour toutes les 5 minutes
   useEffect(() => {
     const checkUpdates = async () => {
       try {
@@ -29,11 +29,11 @@ export function BaremeUpdateNotification() {
         if (response.ok) {
           const data = await response.json();
           
-          // Récupérer la date de dernière mise à jour stockée localement
+          // RÃ©cupÃ©rer la date de derniÃ¨re mise Ã  jour stockÃ©e localement
           const storedUpdate = localStorage.getItem('baremes_last_update');
           
           if (storedUpdate && data.updated && storedUpdate !== data.updated) {
-            // Les barèmes ont été mis à jour
+            // Les barÃ¨mes ont Ã©tÃ© mis Ã  jour
             setLastUpdate(data.updated);
             setShowNotification(true);
           }
@@ -44,16 +44,16 @@ export function BaremeUpdateNotification() {
           }
         }
       } catch (error) {
-        // Erreur silencieuse : le serveur peut ne pas être disponible ou la route peut ne pas exister
+        // Erreur silencieuse : le serveur peut ne pas Ãªtre disponible ou la route peut ne pas exister
         // Ce n'est pas critique pour l'application
-        console.debug('?? Impossible de vérifier les mises à jour des barèmes (non critique):', error instanceof Error ? error.message : 'erreur réseau');
+        console.debug('Impossible de vÃ©rifier les mises Ã  jour des barÃ¨mes (non critique):', error instanceof Error ? error.message : 'erreur rÃ©seau');
       }
     };
 
-    // Vérifier au montage avec un délai pour laisser le temps au serveur de démarrer
+    // VÃ©rifier au montage avec un dÃ©lai pour laisser le temps au serveur de dÃ©marrer
     const initialTimeout = setTimeout(checkUpdates, 2000);
 
-    // Vérifier toutes les 5 minutes
+    // VÃ©rifier toutes les 5 minutes
     const interval = setInterval(checkUpdates, 5 * 60 * 1000);
 
     return () => {
@@ -87,10 +87,10 @@ export function BaremeUpdateNotification() {
           <AlertCircle className="size-5 flex-shrink-0 mt-0.5" />
           
           <div className="flex-1">
-            <h3 className="font-semibold mb-1">Barèmes fiscaux mis à jour</h3>
+            <h3 className="font-semibold mb-1">BarÃ¨mes fiscaux mis Ã  jour</h3>
             <p className="text-sm text-blue-100 mb-3">
-              Les barèmes fiscaux ont été actualisés. Rechargez l'application pour utiliser les nouveaux
-              barèmes dans vos calculs.
+              Les barÃ¨mes fiscaux ont Ã©tÃ© actualisÃ©s. Rechargez l'application pour utiliser les nouveaux
+              barÃ¨mes dans vos calculs.
             </p>
             
             <div className="flex gap-2">
