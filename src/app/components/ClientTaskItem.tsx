@@ -51,7 +51,7 @@ export function ClientTaskItem({ task, onToggle, onUpdateDeadline, onMarkAsNA, a
               )}
             </div>
             <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-gray-600">
-              <span>Créée le {new Date(task.createdAt).toLocaleDateString('fr-FR')}</span>
+              {task.createdAt && <span>Créée le {new Date(task.createdAt).toLocaleDateString('fr-FR')}</span>}
               {task.deadline && (
                 <span className="flex items-center gap-1 text-blue-600 font-medium">
                   <Calendar className="w-4 h-4" />

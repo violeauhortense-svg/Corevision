@@ -138,7 +138,7 @@ export function TodoView({ session, onNavigateToClient }: TodoViewProps) {
   const renderTask = (task: OpenClientTask) => (
     <ClientTaskItem
       key={`${task.clientId}-${task.id}`}
-      task={{ ...task, id: `${task.clientId}::${task.id}`, createdAt: task.deadline || new Date().toISOString() } as any}
+      task={{ ...task, id: `${task.clientId}::${task.id}` } as any}
       onToggle={toggleTask}
       onUpdateDeadline={updateDeadline}
       showClientName={true}

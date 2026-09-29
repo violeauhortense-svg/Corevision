@@ -157,6 +157,9 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
             description: def.description,
             completed: changes.completed,
             status: changes.taskStatus,
+            // Set once on first real write, preserved after - keeps the
+            // "Créée le" date shown in the aggregated To-Do list stable.
+            createdAt: (existing as any).createdAt || new Date().toISOString(),
             ...(changes.modalData !== undefined ? { modalData: changes.modalData } : {}),
           };
         }

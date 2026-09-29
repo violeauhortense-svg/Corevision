@@ -46,6 +46,7 @@ export interface OpenClientTask {
   clientName: string;
   clientStatus: string;
   deadline?: string;
+  createdAt?: string;
 }
 
 // Tâches jugées inutiles à faire remonter dans la To Do List agrégée -
@@ -101,6 +102,7 @@ export async function getAllOpenClientTasks(): Promise<OpenClientTask[]> {
         clientName,
         clientStatus: status,
         deadline: (task as any)?.deadline,
+        createdAt: (task as any)?.createdAt,
       });
       break;
     }
@@ -139,7 +141,10 @@ export async function applyClientTaskChange(
       status: 'pending' as const,
     };
     if (def.id === taskId) {
-      return { ...existing, id: def.id, title: def.title, description: def.description, completed: changes.completed, status: changes.taskStatus };
+      // Set once, on the task's first real write, and preserved on every
+      // write after that (never re-derived from `deadline` or "now" at
+      // render time) - see updateClientTaskDeadline for why this matters.
+      return { ...existing, id: def.id, title: def.title, description: def.description, completed: changes.completed, status: changes.taskStatus, createdAt: existing.createdAt || new Date().toISOString() };
     }
     return existing;
   });
@@ -198,7 +203,13 @@ export async function updateClientTaskDeadline(client: Client, taskId: string, d
       status: 'pending' as const,
     };
     if (def.id === taskId) {
-      return { ...existing, id: def.id, title: def.title, description: def.description, deadline };
+      // Setting a deadline is a real write to the task record too, so it
+      // must stamp createdAt the same way applyClientTaskChange does (not
+      // touch it if already set) - this used to be the only place a task
+      // could first come into existence, and it never set createdAt at
+      // all, which is what let TodoView's display fallback wrongly mirror
+      // the deadline as if it were the creation date.
+      return { ...existing, id: def.id, title: def.title, description: def.description, deadline, createdAt: existing.createdAt || new Date().toISOString() };
     }
     return existing;
   });
