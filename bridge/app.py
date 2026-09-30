@@ -14,6 +14,17 @@ from outlook_bridge_v3 import OutlookBridgeV3, Config
 app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
 
+# Le bouton "Forcer la synchro mails" du frontend (servi en HTTPS sur
+# Vercel) appelle ce serveur en HTTP local (127.0.0.1) depuis le
+# navigateur - sans ces en-tetes, le navigateur bloque la reponse cote
+# JS avec une erreur CORS meme si la requete HTTP a bien reussi.
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
+
 # Instance du bridge
 bridge = OutlookBridgeV3()
 

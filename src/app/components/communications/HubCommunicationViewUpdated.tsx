@@ -14,6 +14,7 @@ import {
   AlertCircle,
   Loader,
   Sparkles,
+  RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { hubCommunicationAPI } from '../../services/hubCommunicationAPI';
@@ -39,6 +40,7 @@ export function HubCommunicationView() {
   });
   const [loading, setLoading] = useState(true);
   const [autoMatching, setAutoMatching] = useState(false);
+  const [syncingMails, setSyncingMails] = useState(false);
   // Cartouches de tri par client (onglet Conversation Client uniquement) -
   // un client par cartouche, seulement s'il a au moins un mail "à
   // traiter" ; cliquer dessus affiche tous ses mails, tous statuts
@@ -142,6 +144,33 @@ export function HubCommunicationView() {
       toast.error('Erreur lors de l\'identification automatique');
     } finally {
       setAutoMatching(false);
+    }
+  };
+
+  // Parle au bridge local (launcher.bat) tournant sur CET ordinateur -
+  // 127.0.0.1 désigne toujours la machine qui exécute ce navigateur,
+  // jamais un autre poste. Ne fonctionne que si le bridge y est démarré.
+  const handleForceSync = async () => {
+    setSyncingMails(true);
+    try {
+      const response = await fetch('http://127.0.0.1:5001/sync', { method: 'POST' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const result = await response.json();
+      const mailsSynced = result?.results?.mails?.sent ?? 0;
+      toast.success(
+        mailsSynced > 0
+          ? `${mailsSynced} nouveau${mailsSynced > 1 ? 'x' : ''} mail${mailsSynced > 1 ? 's' : ''} synchronisé${mailsSynced > 1 ? 's' : ''}`
+          : 'Synchro terminée, rien de nouveau'
+      );
+      await loadMailsByTab(activeTab);
+      if (activeTab === 'conversation_client') {
+        await loadUntreatedClients();
+      }
+    } catch (error) {
+      console.error('Erreur synchro bridge:', error);
+      toast.error('Bridge introuvable sur cet ordinateur - lance launcher.bat puis réessaie');
+    } finally {
+      setSyncingMails(false);
     }
   };
 
@@ -324,6 +353,20 @@ export function HubCommunicationView() {
                       className="pl-10"
                     />
                   </div>
+                  <Button
+                    onClick={handleForceSync}
+                    disabled={syncingMails}
+                    variant="outline"
+                    className="shrink-0 gap-2"
+                    title="Récupérer les nouveaux mails depuis le bridge lancé sur cet ordinateur (launcher.bat)"
+                  >
+                    {syncingMails ? (
+                      <Loader className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="w-4 h-4" />
+                    )}
+                    Forcer la synchro mails
+                  </Button>
                   {activeTab === 'interne_externe' && (
                     <Button
                       onClick={handleAutoMatch}

@@ -240,8 +240,13 @@ class BridgeLauncher:
             self.device_id_entry.config(state=tk.NORMAL)
 
     def on_closing(self):
-        """Fermer l'application"""
-        if messagebox.askyesno("Quitter", "Voulez-vous fermer le launcher?\n\nNote: Le Bridge continuera de tourner"):
+        """Fermer l'application - arrête aussi le Bridge s'il tourne, pour
+        que fermer cette fenêtre coupe bien la synchronisation."""
+        if self.is_running:
+            if messagebox.askyesno("Quitter", "Fermer le launcher arrêtera aussi la synchronisation des mails.\n\nContinuer ?"):
+                self.stop_bridge()
+                self.root.destroy()
+        else:
             self.root.destroy()
 
 if __name__ == '__main__':

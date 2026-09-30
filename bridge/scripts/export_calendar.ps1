@@ -25,7 +25,6 @@ function Get-ResponseStatusString($OlResponseStatus) {
 try {
     $Outlook = New-Object -ComObject Outlook.Application
     $Namespace = $Outlook.GetNamespace("MAPI")
-    $CalendarFolder = $Namespace.GetDefaultFolder(9)  # olFolderCalendar
 
     # -60/+90 days with IncludeRecurrences expands every occurrence of
     # every recurring meeting across that whole 150-day window on each
@@ -40,17 +39,6 @@ try {
         $EndDate = (Get-Date).AddDays(30)
     }
 
-    # IMPORTANT: with IncludeRecurrences=$true, iterating $Items directly
-    # walks every occurrence of every recurring meeting across the item's
-    # ENTIRE series (years), then filters by date afterwards - that's what
-    # was actually timing out, regardless of how narrow $StartDate/$EndDate
-    # were. Items.Restrict() applies the date filter at the folder level
-    # BEFORE recurrence expansion, which is the correct/fast pattern for
-    # Outlook COM.
-    $Items = $CalendarFolder.Items
-    $Items.IncludeRecurrences = $true
-    $Items.Sort("[Start]")
-
     # Outlook's Restrict() parses date literals using the machine's
     # current regional settings, not a fixed format - this machine is
     # fr-FR (dd/MM/yyyy). Hardcoding "MM/dd/yyyy" here silently produced
@@ -61,9 +49,33 @@ try {
     $FilterStart = $StartDate.ToString("g")
     $FilterEnd = $EndDate.ToString("g")
     $Filter = "[Start] <= '$FilterEnd' AND [End] >= '$FilterStart'"
-    $RestrictedItems = $Items.Restrict($Filter)
 
     $Events = @()
+
+    # Namespace.Stores has one entry per mailbox added to this Outlook
+    # profile - same reasoning as export_mails.ps1: looping over every
+    # store's own calendar (instead of Namespace.GetDefaultFolder(), which
+    # only ever returns the default account's calendar) picks up every
+    # account's events, not just the first one.
+    foreach ($Store in $Namespace.Stores) {
+        try {
+            $CalendarFolder = $Store.GetDefaultFolder(9)  # olFolderCalendar
+        } catch {
+            # Some stores have no calendar folder - skip instead of failing.
+            continue
+        }
+
+    # IMPORTANT: with IncludeRecurrences=$true, iterating $Items directly
+    # walks every occurrence of every recurring meeting across the item's
+    # ENTIRE series (years), then filters by date afterwards - that's what
+    # was actually timing out, regardless of how narrow $StartDate/$EndDate
+    # were. Items.Restrict() applies the date filter at the folder level
+    # BEFORE recurrence expansion, which is the correct/fast pattern for
+    # Outlook COM.
+    $Items = $CalendarFolder.Items
+    $Items.IncludeRecurrences = $true
+    $Items.Sort("[Start]")
+    $RestrictedItems = $Items.Restrict($Filter)
 
     foreach ($Item in $RestrictedItems) {
         try {
@@ -85,6 +97,7 @@ try {
         } catch {
             # Skip items that error out
         }
+    }
     }
 
     if ($Events.Count -eq 0) {

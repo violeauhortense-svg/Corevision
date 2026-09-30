@@ -14,8 +14,6 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 try {
     $Outlook = New-Object -ComObject Outlook.Application
     $Namespace = $Outlook.GetNamespace("MAPI")
-    $Inbox = $Namespace.GetDefaultFolder(6)   # olFolderInbox
-    $Sent = $Namespace.GetDefaultFolder(5)    # olFolderSentMail
 
     # Full HTML bodies for a whole week of mail can take Outlook's COM API
     # longer to walk than the bridge's subprocess timeout allows, which
@@ -34,6 +32,22 @@ try {
     # date literals using the machine's regional settings (fr-FR here),
     # so a US-formatted date silently fails to filter correctly.
     $FilterDate = $StartDate.ToString("g")
+
+    # Namespace.Stores has one entry per mailbox added to this Outlook
+    # profile (not just the default account) - looping over every store's
+    # own Inbox/Sent, instead of Namespace.GetDefaultFolder() which only
+    # ever returns the single default account's folder, is what lets one
+    # sync pick up mail from every address open in this Outlook, not just
+    # the first one.
+    foreach ($Store in $Namespace.Stores) {
+        try {
+            $Inbox = $Store.GetDefaultFolder(6)   # olFolderInbox
+            $Sent = $Store.GetDefaultFolder(5)    # olFolderSentMail
+        } catch {
+            # Some stores (archives, public folders, ...) have no real
+            # Inbox/Sent - skip them instead of failing the whole sync.
+            continue
+        }
 
     # Restrict() filters at the folder level instead of walking every item
     # in the mailbox and checking dates after the fact - same fix as
@@ -86,6 +100,7 @@ try {
                 # Skip items that error out (e.g. non-mail items in the folder)
             }
         }
+    }
     }
 
     # ConvertTo-Json on a single-item array collapses it to a bare object
