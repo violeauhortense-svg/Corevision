@@ -130,16 +130,21 @@ class OutlookBridgeV3:
     # CYCLE 1: Récupérer les mails
     # ============================================
 
-    def sync_mails(self) -> Tuple[int, int]:
+    def sync_mails(self, days_back: int = 5) -> Tuple[int, int]:
         """
         Récupère les mails via PowerShell, les envoie au backend
+        days_back: fenêtre de récupération en jours - 5 par défaut pour la
+        synchro récurrente, une valeur bien plus grande (ex: 210) pour une
+        récupération complète ponctuelle d'une boîte. Le backend dédoublonne
+        via duplicateKey, donc une fenêtre plus large ou un doublon de run
+        ne recrée jamais un mail déjà importé.
         Retourne : (mails_envoyés, doublons)
         """
         try:
-            logger.info("📧 [CYCLE 1] Récupération des mails...")
+            logger.info(f"📧 [CYCLE 1] Récupération des mails (fenêtre: {days_back}j)...")
 
             # Exécuter le script PowerShell
-            mails_json = self._run_powershell('export_mails.ps1')
+            mails_json = self._run_powershell('export_mails.ps1', {'DaysBack': str(days_back)})
             if not mails_json:
                 logger.warning("❌ Pas de mails reçus de PowerShell")
                 return 0, 0
@@ -403,12 +408,15 @@ class OutlookBridgeV3:
             # once there's a real week of mail with full HTML bodies to
             # walk through via Outlook's COM API - it silently timed out
             # and every sync cycle reported 0 mails/events with no error.
+            # 900s (15min) leaves enough room for a one-off full mailbox
+            # backfill (months of mail, several accounts) - a normal small
+            # sync still finishes in seconds regardless of this ceiling.
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 encoding='utf-8',
                 errors='replace',
-                timeout=240
+                timeout=900
             )
 
             if result.returncode != 0:

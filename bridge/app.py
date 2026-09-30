@@ -57,16 +57,21 @@ def force_sync():
 
     Body optionnel:
     {
-        "cycles": ["mails", "calendar", "send", "respond"]  # Par défaut : tous
+        "cycles": ["mails", "calendar", "send", "respond"],  # Par défaut : tous
+        "days_back": 5  # Fenêtre de récupération des mails en jours (défaut: 5).
+                        # Utiliser une grande valeur (ex: 210) pour une
+                        # récupération complète ponctuelle d'une boîte -
+                        # sans risque de doublon, le backend dédoublonne.
     }
     """
     try:
         cycles = request.json.get('cycles', ['mails', 'calendar', 'send', 'respond']) if request.json else ['mails', 'calendar', 'send', 'respond']
+        days_back = request.json.get('days_back', 5) if request.json else 5
 
         results = {}
 
         if 'mails' in cycles:
-            sent, duplicates = bridge.sync_mails()
+            sent, duplicates = bridge.sync_mails(days_back=days_back)
             results['mails'] = {
                 'sent': sent,
                 'duplicates': duplicates

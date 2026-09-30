@@ -15,6 +15,7 @@ import {
   Loader,
   Sparkles,
   RefreshCw,
+  History,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { hubCommunicationAPI } from '../../services/hubCommunicationAPI';
@@ -41,6 +42,7 @@ export function HubCommunicationView() {
   const [loading, setLoading] = useState(true);
   const [autoMatching, setAutoMatching] = useState(false);
   const [syncingMails, setSyncingMails] = useState(false);
+  const [backfilling, setBackfilling] = useState(false);
   // Cartouches de tri par client (onglet Conversation Client uniquement) -
   // un client par cartouche, seulement s'il a au moins un mail "à
   // traiter" ; cliquer dessus affiche tous ses mails, tous statuts
@@ -171,6 +173,35 @@ export function HubCommunicationView() {
       toast.error('Bridge introuvable sur cet ordinateur - lance launcher.bat puis réessaie');
     } finally {
       setSyncingMails(false);
+    }
+  };
+
+  // Récupération complète ponctuelle (ex: nouvelle boîte mail à importer
+  // intégralement) - 210 jours (~7 mois) couvre large, le surplus ne coûte
+  // rien (Outlook ne retourne que ce qui existe réellement) et le backend
+  // dédoublonne via duplicateKey donc aucun risque à la relancer.
+  const handleFullBackfill = async () => {
+    setBackfilling(true);
+    toast.info('Récupération complète en cours - ça peut prendre plusieurs minutes...');
+    try {
+      const response = await fetch('http://127.0.0.1:5001/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cycles: ['mails'], days_back: 210 }),
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const result = await response.json();
+      const mailsSynced = result?.results?.mails?.sent ?? 0;
+      toast.success(`Récupération complète terminée : ${mailsSynced} mail${mailsSynced > 1 ? 's' : ''} importé${mailsSynced > 1 ? 's' : ''}`);
+      await loadMailsByTab(activeTab);
+      if (activeTab === 'conversation_client') {
+        await loadUntreatedClients();
+      }
+    } catch (error) {
+      console.error('Erreur récupération complète:', error);
+      toast.error('Bridge introuvable sur cet ordinateur - lance launcher.bat puis réessaie');
+    } finally {
+      setBackfilling(false);
     }
   };
 
@@ -366,6 +397,20 @@ export function HubCommunicationView() {
                       <RefreshCw className="w-4 h-4" />
                     )}
                     Forcer la synchro mails
+                  </Button>
+                  <Button
+                    onClick={handleFullBackfill}
+                    disabled={backfilling}
+                    variant="outline"
+                    className="shrink-0 gap-2"
+                    title="Récupérer tout l'historique disponible (~7 mois) d'un coup - utile une fois, par ex. pour une nouvelle boîte mail"
+                  >
+                    {backfilling ? (
+                      <Loader className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <History className="w-4 h-4" />
+                    )}
+                    Récupération complète
                   </Button>
                   {activeTab === 'interne_externe' && (
                     <Button

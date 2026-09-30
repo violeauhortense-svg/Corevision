@@ -2,7 +2,7 @@
 # Outputs a plain JSON array (not wrapped), one object per mail, using
 # the exact field names outlook_bridge_v3.py's Mail dataclass expects:
 # subject, from_address, to, received_date, body, html_body, attachments.
-param([string]$InitialSync = "false")
+param([int]$DaysBack = 5)
 
 # Force UTF-8 on the output stream - without this, Write-Host encodes
 # using the console's codepage (cp1252 on this machine), which mangles
@@ -15,16 +15,12 @@ try {
     $Outlook = New-Object -ComObject Outlook.Application
     $Namespace = $Outlook.GetNamespace("MAPI")
 
-    # Full HTML bodies for a whole week of mail can take Outlook's COM API
-    # longer to walk than the bridge's subprocess timeout allows, which
-    # silently dropped every sync ("0 mails" with no error). 2 days is
-    # enough to survive a weekend/short outage while staying fast; use a
-    # longer window only for a genuine first-time sync.
-    if ($InitialSync -eq "true") {
-        $StartDate = (Get-Date).AddDays(-7)
-    } else {
-        $StartDate = (Get-Date).AddDays(-2)
-    }
+    # Full HTML bodies for a wide window can take Outlook's COM API a long
+    # time to walk - the bridge's subprocess timeout is sized generously
+    # (see outlook_bridge_v3.py) precisely so a large -DaysBack (a one-off
+    # full mailbox backfill) has room to finish instead of silently
+    # dropping the whole sync ("0 mails" with no error).
+    $StartDate = (Get-Date).AddDays(-$DaysBack)
 
     $Mails = @()
     # See export_calendar.ps1 for why this must be culture-aware ("g")
