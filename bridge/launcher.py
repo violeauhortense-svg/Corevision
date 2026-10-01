@@ -1,17 +1,51 @@
 """
 Outlook Bridge Launcher
-Démarre le Bridge sans droits admin
+Démarre le Bridge sans droits admin - et sans aucune dépendance externe une
+fois empaqueté en .exe autonome (PyInstaller) : Python et toutes les
+librairies sont embarqués dans l'exécutable, rien à installer sur la
+machine qui le lance.
 """
 
 import tkinter as tk
 from tkinter import messagebox
-import subprocess
-import os
 import sys
 import threading
 import time
 from pathlib import Path
 import json
+
+from werkzeug.serving import make_server
+
+from outlook_bridge_v3 import Config
+import app as flask_bridge_app  # expose `app` (Flask) et `bridge` (OutlookBridgeV3)
+
+
+def _app_dir() -> Path:
+    # A côté du .exe réel une fois empaqueté (jamais dans le dossier
+    # temporaire d'extraction PyInstaller, qui disparaît à la fermeture) -
+    # c'est là que vit launcher_config.json, pour persister d'un
+    # lancement à l'autre.
+    if getattr(sys, 'frozen', False):
+        return Path(sys.executable).parent
+    return Path(__file__).parent
+
+
+class ServerThread(threading.Thread):
+    """Lance le serveur Flask dans CE process, sur un thread dédié.
+    Remplace l'ancien subprocess.Popen([sys.executable, 'app.py']) : une
+    fois empaqueté en .exe autonome, il n'y a plus de python.exe séparé ni
+    de app.py à côté - juste cet unique exécutable."""
+
+    def __init__(self, flask_app, host, port):
+        super().__init__(daemon=True)
+        self.srv = make_server(host, port, flask_app)
+
+    def run(self):
+        self.srv.serve_forever()
+
+    def shutdown(self):
+        self.srv.shutdown()
+
 
 class BridgeLauncher:
     def __init__(self, root):
@@ -20,28 +54,24 @@ class BridgeLauncher:
         self.root.geometry("500x300")
         self.root.resizable(False, False)
 
-        # Config fichier
-        self.config_file = Path(__file__).parent / "launcher_config.json"
-        self.bridge_process = None
+        self.config_file = _app_dir() / "launcher_config.json"
+        self.server_thread = None
         self.is_running = False
 
-        # Charger la config
         self.load_config()
-
-        # Interface
         self.setup_ui()
-
-        # Vérifier l'état au démarrage
-        self.check_bridge_status()
 
     def load_config(self):
         """Charger la configuration"""
         if self.config_file.exists():
-            with open(self.config_file) as f:
+            with open(self.config_file, encoding='utf-8') as f:
                 self.config = json.load(f)
         else:
             self.config = {
-                'backend_url': 'https://corevision-api.onrender.com/make-server-cac859af',
+                # URL publique du backend (tunnel ngrok) - jamais
+                # localhost, puisque ce launcher peut tourner sur un
+                # ordinateur différent de celui qui héberge le backend.
+                'backend_url': 'https://impromptu-unguided-equivocal.ngrok-free.dev/api',
                 'device_id': 'device-001',
                 'sync_interval': 30
             }
@@ -49,16 +79,14 @@ class BridgeLauncher:
 
     def save_config(self):
         """Sauvegarder la configuration"""
-        with open(self.config_file, 'w') as f:
+        with open(self.config_file, 'w', encoding='utf-8') as f:
             json.dump(self.config, f, indent=2)
 
     def setup_ui(self):
         """Créer l'interface"""
-        # Frame principal
         main_frame = tk.Frame(self.root, bg='#f0f0f0')
         main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
 
-        # Titre
         title = tk.Label(
             main_frame,
             text="🌉 Outlook Bridge",
@@ -67,7 +95,6 @@ class BridgeLauncher:
         )
         title.pack(pady=(0, 5))
 
-        # Statut
         self.status_label = tk.Label(
             main_frame,
             text="🔴 Hors ligne",
@@ -77,7 +104,6 @@ class BridgeLauncher:
         )
         self.status_label.pack(pady=10)
 
-        # Info
         self.info_label = tk.Label(
             main_frame,
             text="En attente...",
@@ -87,11 +113,9 @@ class BridgeLauncher:
         )
         self.info_label.pack(pady=5)
 
-        # Buttons frame
         button_frame = tk.Frame(main_frame, bg='#f0f0f0')
         button_frame.pack(pady=20)
 
-        # Bouton Démarrer
         self.start_btn = tk.Button(
             button_frame,
             text="▶️  Démarrer Bridge",
@@ -104,7 +128,6 @@ class BridgeLauncher:
         )
         self.start_btn.pack(pady=5)
 
-        # Bouton Arrêter
         self.stop_btn = tk.Button(
             button_frame,
             text="⏹️  Arrêter Bridge",
@@ -118,7 +141,6 @@ class BridgeLauncher:
         )
         self.stop_btn.pack(pady=5)
 
-        # Device ID
         config_frame = tk.Frame(main_frame, bg='#f0f0f0')
         config_frame.pack(pady=10, fill=tk.X)
 
@@ -146,39 +168,29 @@ class BridgeLauncher:
             fg='white'
         ).pack(side=tk.LEFT, padx=2)
 
-        # Fenêtre en arrière-plan
-        self.root.iconbitmap('NUL') if sys.platform == 'win32' else None
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
     def start_bridge(self):
         """Démarrer le Bridge"""
         try:
-            # Sauvegarder le Device ID
             self.config['device_id'] = self.device_id_entry.get()
             self.save_config()
 
-            # Créer les variables d'environnement
-            env = os.environ.copy()
-            env['BACKEND_URL'] = self.config['backend_url']
-            env['DEVICE_ID'] = self.config['device_id']
-            env['SYNC_INTERVAL'] = str(self.config['sync_interval'])
+            # Applique la config choisie avant de démarrer - Config est une
+            # classe toute simple, la modifier directement a le même effet
+            # que les variables d'environnement utilisées par le passé.
+            Config.BACKEND_URL = self.config['backend_url']
+            Config.DEVICE_ID = self.config['device_id']
+            Config.SYNC_INTERVAL = self.config['sync_interval']
 
-            # Démarrer le processus
-            bridge_dir = Path(__file__).parent
-            self.bridge_process = subprocess.Popen(
-                [sys.executable, str(bridge_dir / 'app.py')],
-                cwd=str(bridge_dir),
-                env=env,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
-            )
+            self.server_thread = ServerThread(flask_bridge_app.app, '127.0.0.1', 5001)
+            self.server_thread.start()
+            flask_bridge_app.bridge.start()
 
             self.is_running = True
             self.update_ui()
-            self.info_label.config(text=f"✅ Bridge démarré (PID: {self.bridge_process.pid})")
+            self.info_label.config(text="✅ Bridge démarré")
 
-            # Vérifier la connexion
             self.verify_bridge()
 
         except Exception as e:
@@ -186,16 +198,16 @@ class BridgeLauncher:
 
     def stop_bridge(self):
         """Arrêter le Bridge"""
-        if self.bridge_process:
-            try:
-                self.bridge_process.terminate()
-                self.bridge_process.wait(timeout=5)
-                self.is_running = False
-                self.bridge_process = None
-                self.update_ui()
-                self.info_label.config(text="Bridge arrêté")
-            except Exception as e:
-                messagebox.showerror("Erreur", f"Impossible d'arrêter: {e}")
+        try:
+            flask_bridge_app.bridge.stop()
+            if self.server_thread:
+                self.server_thread.shutdown()
+                self.server_thread = None
+            self.is_running = False
+            self.update_ui()
+            self.info_label.config(text="Bridge arrêté")
+        except Exception as e:
+            messagebox.showerror("Erreur", f"Impossible d'arrêter: {e}")
 
     def check_bridge_status(self):
         """Vérifier l'état du Bridge"""
@@ -203,14 +215,14 @@ class BridgeLauncher:
             import urllib.request
             response = urllib.request.urlopen('http://127.0.0.1:5001/health', timeout=2)
             return response.status == 200
-        except:
+        except Exception:
             return False
 
     def verify_bridge(self):
         """Vérifier que le Bridge répond"""
         def check():
-            time.sleep(2)  # Attendre le démarrage
-            for i in range(10):
+            time.sleep(1)
+            for _ in range(10):
                 if self.check_bridge_status():
                     self.status_label.config(text="🟢 En ligne!", fg='green')
                     self.info_label.config(text="Synchronisation en cours...")
@@ -249,7 +261,8 @@ class BridgeLauncher:
         else:
             self.root.destroy()
 
+
 if __name__ == '__main__':
     root = tk.Tk()
-    app = BridgeLauncher(root)
+    launcher = BridgeLauncher(root)
     root.mainloop()

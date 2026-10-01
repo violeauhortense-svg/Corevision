@@ -4,6 +4,7 @@ Récupère mails et événements via PowerShell COM, envoie au backend REST API
 """
 
 import os
+import sys
 import json
 import time
 import logging
@@ -17,11 +18,22 @@ from dataclasses import dataclass
 from hashlib import md5
 from dotenv import load_dotenv
 
+# Une fois empaqueté en .exe PyInstaller --onefile, __file__ ne pointe plus
+# vers un dossier stable : les données en lecture seule embarquées (les
+# scripts PowerShell) sont extraites dans un dossier temporaire différent
+# à chaque lancement (sys._MEIPASS), alors que tout ce qui doit persister
+# d'un lancement à l'autre (logs, .env, launcher_config.json) doit rester
+# à côté du .exe réel (Path(sys.executable).parent), jamais dans ce
+# temporaire qui est supprimé à la fermeture.
+_FROZEN = getattr(sys, 'frozen', False)
+_DATA_DIR = Path(sys._MEIPASS) if _FROZEN else Path(__file__).parent
+_APP_DIR = Path(sys.executable).parent if _FROZEN else Path(__file__).parent
+
 # python-dotenv was listed in requirements.txt but never actually called,
 # so the .env file next to this script was silently ignored and every
 # Config value below always fell back to its hardcoded default
 # (including the old Render backend URL) regardless of what .env said.
-load_dotenv(Path(__file__).parent / '.env')
+load_dotenv(_APP_DIR / '.env')
 
 # ============================================
 # CONFIGURATION
@@ -29,7 +41,7 @@ load_dotenv(Path(__file__).parent / '.env')
 
 class Config:
     # Backend
-    BACKEND_URL = os.getenv('BACKEND_URL', 'http://localhost:3000/make-server-cac859af')
+    BACKEND_URL = os.getenv('BACKEND_URL', 'http://localhost:3000/api')
     BACKEND_TIMEOUT = 30
 
     # Bridge
@@ -37,10 +49,10 @@ class Config:
     SYNC_INTERVAL = 30  # secondes
 
     # Paths
-    BRIDGE_DIR = Path(__file__).parent
-    SCRIPTS_DIR = BRIDGE_DIR / 'scripts'
-    OUTPUT_DIR = BRIDGE_DIR / 'output'
-    LOGS_DIR = BRIDGE_DIR / 'logs'
+    BRIDGE_DIR = _APP_DIR
+    SCRIPTS_DIR = _DATA_DIR / 'scripts'
+    OUTPUT_DIR = _APP_DIR / 'output'
+    LOGS_DIR = _APP_DIR / 'logs'
 
     # Créer les répertoires
     OUTPUT_DIR.mkdir(exist_ok=True)

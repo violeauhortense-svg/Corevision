@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, Users, FileText, Calendar, CheckSquare, LogOut, Settings, Package, Lightbulb, Calculator, Mail, Terminal, Menu, X, UserCog } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Calendar, CheckSquare, LogOut, Settings, Package, Lightbulb, Calculator, Mail, Terminal, Menu, X, UserCog, Download } from 'lucide-react';
 import type { ViewType } from '../App';
 
 interface SidebarProps {
@@ -180,6 +180,28 @@ export function Sidebar({ currentView, onViewChange, onLogout, session }: Sideba
               </p>
             </div>
           </button>
+        )}
+
+        {/* Téléchargement de l'outil de synchro Outlook - Visible
+            uniquement pour l'admin. Fichier .exe autonome (Python
+            embarqué) : aucune installation requise sur l'ordinateur qui le
+            lance, il suffit de le copier et de double-cliquer dessus. */}
+        {isAdmin && (
+          <a
+            href="/downloads/OutlookBridge.exe"
+            download
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors bg-gradient-to-r from-sky-50 to-cyan-50 text-sky-700 hover:from-sky-100 hover:to-cyan-100 border border-sky-200"
+          >
+            <Download className="w-5 h-5" />
+            <div className="text-left flex-1">
+              <p className="text-sm font-semibold text-sky-900">
+                Outil de synchro Outlook
+              </p>
+              <p className="text-xs text-sky-600">
+                .exe autonome, rien à installer
+              </p>
+            </div>
+          </a>
         )}
 
         <button
