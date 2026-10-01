@@ -279,6 +279,16 @@ export function HubCommunicationView() {
     return labels[status] || status;
   };
 
+  // Calculés avant tout retour anticipé (ex: l'écran de chargement
+  // ci-dessous) - un Hook comme useMemo doit s'exécuter au même rang à
+  // chaque rendu, sinon React perd le fil entre les rendus et plante tout
+  // le composant (écran blanc).
+  const filteredMails = selectedClientFilter
+    ? mails.filter((m) => m.clientId === selectedClientFilter)
+    : mails;
+
+  const threads = useMemo(() => groupMailsIntoThreads(filteredMails), [filteredMails]);
+
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -289,12 +299,6 @@ export function HubCommunicationView() {
       </div>
     );
   }
-
-  const filteredMails = selectedClientFilter
-    ? mails.filter((m) => m.clientId === selectedClientFilter)
-    : mails;
-
-  const threads = useMemo(() => groupMailsIntoThreads(filteredMails), [filteredMails]);
 
   // Ouvre un fil : sélectionne en priorité le message encore "à traiter"
   // le plus ancien (celui qui a vraiment besoin d'attention), sinon le
