@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Card } from '../ui/card';
 import { Input } from '../ui/input';
@@ -20,12 +20,17 @@ import {
 import { toast } from 'sonner';
 import { hubCommunicationAPI } from '../../services/hubCommunicationAPI';
 import { MailDetailPanel } from './MailDetailPanel';
+import { groupMailsIntoThreads, threadKeyFor } from '../../utils/mailThreading';
 import type { HubMail, CallToHandle, HubTab, HubStats } from '../../types/mail';
 
 export function HubCommunicationView() {
   const [mails, setMails] = useState<HubMail[]>([]);
   const [calls, setCalls] = useState<CallToHandle[]>([]);
   const [selectedMail, setSelectedMail] = useState<HubMail | null>(null);
+  // Autres messages du même fil de discussion que selectedMail (même sujet,
+  // même correspondant) - affichés dans MailDetailPanel comme un sélecteur
+  // permettant de passer de l'un à l'autre sans fermer le panneau.
+  const [threadSiblings, setThreadSiblings] = useState<HubMail[]>([]);
   const [activeTab, setActiveTab] = useState<HubTab>('conversation_client');
   const [searchTerm, setSearchTerm] = useState('');
   const [stats, setStats] = useState<HubStats>({
@@ -92,14 +97,16 @@ export function HubCommunicationView() {
     }
   };
 
-  const loadMailsByTab = async (tab: HubTab) => {
+  const loadMailsByTab = async (tab: HubTab): Promise<HubMail[]> => {
     try {
       const result = await hubCommunicationAPI.getMailsByTab(tab, 50, 0);
       setMails(result.mails);
       setStats(result.stats);
+      return result.mails;
     } catch (error) {
       console.error('Erreur chargement mails:', error);
       toast.error('Impossible de charger les mails');
+      return [];
     }
   };
 
@@ -212,11 +219,16 @@ export function HubCommunicationView() {
   const handleMailUpdate = async (mail: HubMail) => {
     try {
       // Actualiser les données après modification
-      await loadMailsByTab(activeTab);
+      const freshMails = await loadMailsByTab(activeTab);
       if (activeTab === 'conversation_client') {
         await loadUntreatedClients();
       }
       setSelectedMail(mail);
+      // Le fil (statuts, éventuelle nouvelle réponse) peut avoir changé -
+      // on le recalcule sur les données fraîches pour garder le panneau
+      // synchronisé sans le fermer.
+      const key = threadKeyFor(mail);
+      setThreadSiblings(freshMails.filter((m) => threadKeyFor(m) === key));
       toast.success('Mail mis à jour');
     } catch (error) {
       console.error('Erreur update:', error);
@@ -281,6 +293,17 @@ export function HubCommunicationView() {
   const filteredMails = selectedClientFilter
     ? mails.filter((m) => m.clientId === selectedClientFilter)
     : mails;
+
+  const threads = useMemo(() => groupMailsIntoThreads(filteredMails), [filteredMails]);
+
+  // Ouvre un fil : sélectionne en priorité le message encore "à traiter"
+  // le plus ancien (celui qui a vraiment besoin d'attention), sinon le
+  // plus récent du fil.
+  const handleOpenThread = (thread: (typeof threads)[number]) => {
+    const untreated = thread.messages.find((m) => m.traitementStatus === 'a_traiter');
+    setSelectedMail(untreated || thread.latest);
+    setThreadSiblings(thread.messages);
+  };
 
   return (
     <>
@@ -455,7 +478,7 @@ export function HubCommunicationView() {
 
                 {/* Mail List */}
                 <TabsContent value={activeTab} className="mt-0">
-                  {filteredMails.length === 0 ? (
+                  {threads.length === 0 ? (
                     <Card className="p-12 text-center">
                       <Mail className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                       <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucun mail trouvé</h3>
@@ -467,33 +490,42 @@ export function HubCommunicationView() {
                     </Card>
                   ) : (
                     <div className="grid gap-3">
-                      {filteredMails.map((mail) => (
-                        <Card
-                          key={mail.id}
-                          className="p-4 cursor-pointer hover:shadow-lg transition-all"
-                          onClick={() => setSelectedMail(mail)}
-                        >
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <p className={`font-semibold truncate ${!mail.read ? 'text-gray-900' : 'text-gray-700'}`}>
-                                  {mail.subject}
-                                </p>
-                                <Badge className={getStatusColor(mail.traitementStatus)}>
-                                  {getStatusLabel(mail.traitementStatus)}
-                                </Badge>
+                      {threads.map((thread) => {
+                        const mail = thread.latest;
+                        const hasUnread = thread.messages.some((m) => !m.read);
+                        return (
+                          <Card
+                            key={thread.key}
+                            className="p-4 cursor-pointer hover:shadow-lg transition-all"
+                            onClick={() => handleOpenThread(thread)}
+                          >
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <p className={`font-semibold truncate ${hasUnread ? 'text-gray-900' : 'text-gray-700'}`}>
+                                    {mail.subject}
+                                  </p>
+                                  <Badge className={getStatusColor(thread.status)}>
+                                    {getStatusLabel(thread.status)}
+                                  </Badge>
+                                  {thread.count > 1 && (
+                                    <span className="shrink-0 px-2 py-0.5 text-xs font-semibold bg-gray-100 text-gray-600 rounded-full">
+                                      {thread.count} messages
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-sm text-gray-600">{mail.from}</p>
+                                <p className="text-sm text-gray-500 truncate">{mail.body.substring(0, 80)}</p>
                               </div>
-                              <p className="text-sm text-gray-600">{mail.from}</p>
-                              <p className="text-sm text-gray-500 truncate">{mail.body.substring(0, 80)}</p>
-                            </div>
 
-                            <div className="text-right flex-shrink-0">
-                              <p className="text-xs text-gray-500 whitespace-nowrap">{formatDate(mail.sentAt)}</p>
-                              {!mail.read && <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>}
+                              <div className="text-right flex-shrink-0">
+                                <p className="text-xs text-gray-500 whitespace-nowrap">{formatDate(mail.sentAt)}</p>
+                                {hasUnread && <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 ml-auto"></div>}
+                              </div>
                             </div>
-                          </div>
-                        </Card>
-                      ))}
+                          </Card>
+                        );
+                      })}
                     </div>
                   )}
                 </TabsContent>
@@ -543,7 +575,12 @@ export function HubCommunicationView() {
       {selectedMail && (
         <MailDetailPanel
           mail={selectedMail}
-          onClose={() => setSelectedMail(null)}
+          siblings={threadSiblings}
+          onSelectSibling={setSelectedMail}
+          onClose={() => {
+            setSelectedMail(null);
+            setThreadSiblings([]);
+          }}
           onUpdate={handleMailUpdate}
         />
       )}

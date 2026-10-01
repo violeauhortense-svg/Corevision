@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
@@ -18,15 +18,27 @@ import type { HubMail, MailNote, MailTraitementStatus } from '../../types/mail';
 
 interface MailDetailPanelProps {
   mail: HubMail;
+  // Autres messages du même fil de discussion (même sujet, même
+  // correspondant) - permet de passer de l'un à l'autre sans fermer le
+  // panneau. Vide ou absent quand le mail n'a pas de fil.
+  siblings?: HubMail[];
+  onSelectSibling?: (mail: HubMail) => void;
   onClose: () => void;
   onUpdate: (mail: HubMail) => Promise<void>;
 }
 
-export function MailDetailPanel({ mail, onClose, onUpdate }: MailDetailPanelProps) {
+export function MailDetailPanel({ mail, siblings = [], onSelectSibling, onClose, onUpdate }: MailDetailPanelProps) {
   const [showSignature, setShowSignature] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<MailTraitementStatus>(mail.traitementStatus);
   const [loading, setLoading] = useState(false);
   const [replyModalOpen, setReplyModalOpen] = useState(false);
+
+  // Le panneau reste monté en passant d'un message du fil à un autre
+  // (siblings) - selectedStatus doit suivre le mail réellement affiché au
+  // lieu de garder la valeur du tout premier message ouvert.
+  useEffect(() => {
+    setSelectedStatus(mail.traitementStatus);
+  }, [mail.id, mail.traitementStatus]);
 
   const handleStatusChange = async (newStatus: MailTraitementStatus) => {
     setSelectedStatus(newStatus);
@@ -154,6 +166,39 @@ export function MailDetailPanel({ mail, onClose, onUpdate }: MailDetailPanelProp
         </div>
 
         <div className="p-6 space-y-6">
+          {/* Fil de discussion - plusieurs messages (même sujet, même
+              correspondant) regroupés dans la liste sous une seule ligne ;
+              on choisit ici lequel afficher en détail ci-dessous. */}
+          {siblings.length > 1 && (
+            <div className="space-y-2">
+              <h3 className="text-xs font-semibold text-gray-500">
+                Fil de discussion ({siblings.length} messages)
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {siblings.map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() => onSelectSibling?.(m)}
+                    title={m.subject}
+                    className={`px-3 py-1.5 rounded-lg text-xs border flex items-center gap-1.5 transition-colors ${
+                      m.id === mail.id
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span>{m.direction === 'received' ? '📥' : '📤'}</span>
+                    <span>
+                      {new Date(m.sentAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                    </span>
+                    {m.id !== mail.id && m.traitementStatus === 'a_traiter' && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500" title="À traiter" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Affichage du mail - mise en page façon client mail : sujet en
               titre, puis expéditeur/destinataires en lignes étiquetées
               plutôt qu'en colonnes serrées, pour rester lisible même avec
