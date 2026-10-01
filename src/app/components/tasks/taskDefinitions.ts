@@ -20,6 +20,11 @@ const COLOR_MAP: Record<string, string> = {
   'Suivi MEP': '#4299e1',
   'Suivi CSP': '#48bb78',
   'Arbitrage': '#a855f7',
+  // Pas un statut du pipeline (pas de bloc de tâches dans
+  // TASK_DEFINITIONS, pas de colonne Kanban) - juste le statut final
+  // sélectionnable sur la fiche client, une fois qu'il n'y a plus rien à
+  // faire dessus.
+  'Terminé': '#6b7280',
 };
 
 export function getStatusColor(status: string): string {

@@ -69,6 +69,14 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
 
   const getBlockState = (status: string) => {
     const clientStatus = client?.statusOuvert || client?.status || 'Prospect';
+
+    // "Terminé" n'est pas un statut du pipeline (pas de bloc de tâches
+    // dédié) - sans ce garde-fou, le statut serait introuvable dans
+    // STATUSES ci-dessous et retomberait sur le fallback "Prospect"
+    // (index -1 -> 0), ce qui ferait réapparaître le premier bloc comme
+    // actif pour un dossier pourtant terminé.
+    if (clientStatus.toLowerCase() === 'terminé') return 'COMPLETE';
+
     // Case-insensitive match: client.status is sometimes stored lowercase
     // ("prospect") while STATUSES uses the display casing ("Prospect").
     // STATUSES.indexOf() with a mismatched case used to return -1, which
@@ -269,6 +277,12 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
 
   return (
     <div className="space-y-4 p-4">
+      {clientStatus.toLowerCase() === 'terminé' && (
+        <div className="border-2 border-green-300 bg-green-50 p-4 rounded-lg">
+          <p className="text-green-700 font-bold">✅ Dossier terminé</p>
+          <p className="text-green-600 text-sm mt-1">Plus aucune tâche en attente sur ce client.</p>
+        </div>
+      )}
       {STATUSES.map((status) => {
         const blockState = getBlockState(status);
         const isExpanded = expandedBlocks[status];

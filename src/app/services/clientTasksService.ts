@@ -26,6 +26,11 @@ export const STATUSES = [
 
 export function normalizedClientStatus(client: Pick<Client, 'statusOuvert' | 'status'>): string {
   const raw = client.statusOuvert || client.status || 'Prospect';
+  // "Terminé" n'est pas un statut du pipeline (pas de bloc de tâches) -
+  // sans ce cas particulier, il serait introuvable dans STATUSES et
+  // retomberait sur "Prospect", ce qui ferait réapparaître les tâches du
+  // tout premier statut pour un dossier pourtant terminé.
+  if (String(raw).toLowerCase() === 'terminé') return 'Terminé';
   const match = STATUSES.find((s) => s.toLowerCase() === String(raw).toLowerCase());
   return match || 'Prospect';
 }
@@ -67,6 +72,10 @@ export async function getAllOpenClientTasks(): Promise<OpenClientTask[]> {
 
   for (const client of clients) {
     const status = normalizedClientStatus(client);
+
+    // Un client "Terminé" n'a plus aucune tâche ouverte par définition -
+    // il n'a pas de bloc dans TASK_DEFINITIONS, donc rien à calculer ici.
+    if (status === 'Terminé') continue;
 
     // Un client réellement suivi tâche par tâche accumule un historique
     // dans `taches` pour chaque statut déjà franchi (applyTaskChange y
