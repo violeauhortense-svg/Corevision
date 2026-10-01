@@ -160,40 +160,132 @@ export const DECOUVERTE_QUESTIONNAIRE: QuestionnaireSection[] = [
 const CLOSING_PARAGRAPH =
   "Vous remerciant par avance de vos réponses et restant à votre disposition pour tout renseignement complémentaire.";
 
+export interface QuestionnaireEmailOptions {
+  selectedIds: Set<string>;
+  clientFirstName?: string;
+  // Déjà formatés pour affichage (ex: "15 octobre 2026", "14h00") - le
+  // bandeau de confirmation RDV n'apparaît que si les deux sont fournis.
+  rdvDateLabel?: string;
+  rdvTimeLabel?: string;
+  // Mot personnalisé optionnel, inséré entre la formule d'appel et la
+  // phrase introduisant la liste des questions.
+  introMessage?: string;
+}
+
+function sectionsWithSelection(selectedIds: Set<string>) {
+  return DECOUVERTE_QUESTIONNAIRE.map((section) => ({
+    section,
+    groups: section.groups
+      .map((group) => ({ group, items: group.items.filter((it) => selectedIds.has(it.id)) }))
+      .filter((g) => g.items.length > 0),
+  })).filter((s) => s.groups.length > 0);
+}
+
 /**
- * Génère le corps du mail (texte brut) à partir des questions cochées -
- * un en-tête/groupe n'apparaît que s'il a au moins une question cochée en
- * dessous. Le texte retourné reste modifiable avant envoi.
+ * Génère le corps du mail en texte brut (stocké comme repli/affichage
+ * interne dans Hub Communication - le mail réellement envoyé au client
+ * utilise la version HTML ci-dessous).
  */
-export function buildQuestionnaireBody(selectedIds: Set<string>, clientFirstName?: string): string {
+export function buildQuestionnaireText(opts: QuestionnaireEmailOptions): string {
+  const { selectedIds, clientFirstName, rdvDateLabel, rdvTimeLabel, introMessage } = opts;
   const lines: string[] = [];
   lines.push(`Bonjour${clientFirstName ? ' ' + clientFirstName : ''},`);
   lines.push('');
-  lines.push('Afin de préparer au mieux votre dossier, pourriez-vous nous transmettre les éléments suivants :');
-  lines.push('');
 
-  for (const section of DECOUVERTE_QUESTIONNAIRE) {
-    const sectionItems = section.groups.flatMap((g) => g.items);
-    const anyChecked = sectionItems.some((it) => selectedIds.has(it.id));
-    if (!anyChecked) continue;
+  if (rdvDateLabel && rdvTimeLabel) {
+    lines.push(
+      `Nous confirmons notre rendez-vous du ${rdvDateLabel} à ${rdvTimeLabel}, qui se tiendra en visioconférence. Le lien de connexion vous sera communiqué dans un second e-mail.`
+    );
+    lines.push('');
+  }
 
-    lines.push(section.title);
+  if (introMessage?.trim()) {
+    lines.push(introMessage.trim());
+    lines.push('');
+  }
+
+  const sections = sectionsWithSelection(selectedIds);
+  if (sections.length > 0) {
+    lines.push('Afin de préparer au mieux votre dossier, pourriez-vous nous transmettre les éléments suivants :');
     lines.push('');
 
-    for (const group of section.groups) {
-      const checkedItems = group.items.filter((it) => selectedIds.has(it.id));
-      if (checkedItems.length === 0) continue;
-
-      if (group.label) {
-        lines.push(`${group.label} :`);
-      }
-      for (const item of checkedItems) {
-        lines.push(`- ${item.text}`);
-      }
+    for (const { section, groups } of sections) {
+      lines.push(section.title);
       lines.push('');
+      for (const { group, items } of groups) {
+        if (group.label) lines.push(`${group.label} :`);
+        for (const item of items) lines.push(`- ${item.text}`);
+        lines.push('');
+      }
     }
   }
 
   lines.push(CLOSING_PARAGRAPH);
   return lines.join('\n');
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/**
+ * Génère le corps du mail en HTML (cartes numérotées) - mise en page par
+ * tableaux et styles en ligne uniquement, pour un rendu correct dans
+ * Outlook (son moteur HTML ignore la plupart du CSS moderne).
+ */
+export function buildQuestionnaireHtml(opts: QuestionnaireEmailOptions): string {
+  const { selectedIds, clientFirstName, rdvDateLabel, rdvTimeLabel, introMessage } = opts;
+  const parts: string[] = [];
+  const FONT = "font-family:Arial,Helvetica,sans-serif;";
+
+  parts.push(`<div style="${FONT}font-size:14px;color:#1f2937;max-width:600px;">`);
+
+  if (rdvDateLabel && rdvTimeLabel) {
+    parts.push(`
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;margin-bottom:20px;">
+        <tr><td style="padding:14px 16px;">
+          <p style="margin:0 0 4px 0;font-weight:bold;color:#1e40af;">📅 RDV confirmé : ${escapeHtml(rdvDateLabel)} à ${escapeHtml(rdvTimeLabel)}</p>
+          <p style="margin:0;color:#1e40af;">En visioconférence — le lien de connexion vous sera communiqué dans un second e-mail.</p>
+        </td></tr>
+      </table>`);
+  }
+
+  parts.push(`<p>Bonjour${clientFirstName ? ' ' + escapeHtml(clientFirstName) : ''},</p>`);
+
+  if (introMessage?.trim()) {
+    parts.push(`<p>${escapeHtml(introMessage.trim()).replace(/\n/g, '<br>')}</p>`);
+  }
+
+  const sections = sectionsWithSelection(selectedIds);
+  if (sections.length > 0) {
+    parts.push('<p>Afin de préparer au mieux votre dossier, pourriez-vous nous transmettre les éléments suivants :</p>');
+
+    sections.forEach(({ section, groups }, idx) => {
+      const number = idx + 1;
+      parts.push(`
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0;border:1px solid #e5e7eb;border-radius:8px;">
+          <tr>
+            <td style="width:36px;background:#2563eb;color:#ffffff;font-weight:bold;text-align:center;vertical-align:top;border-radius:8px 0 0 8px;padding:12px 0;">${number}</td>
+            <td style="padding:12px 16px;">
+              <p style="margin:0 0 8px 0;font-weight:bold;color:#111827;">${escapeHtml(section.title.replace(/^\d+\/\s*/, ''))}</p>`);
+
+      for (const { group, items } of groups) {
+        if (group.label) {
+          parts.push(`<p style="margin:8px 0 2px 0;font-weight:bold;font-size:13px;color:#374151;">${escapeHtml(group.label)}</p>`);
+        }
+        parts.push('<ul style="margin:0 0 8px 0;padding-left:20px;">');
+        for (const item of items) {
+          parts.push(`<li style="margin:2px 0;">${escapeHtml(item.text)}</li>`);
+        }
+        parts.push('</ul>');
+      }
+
+      parts.push('</td></tr></table>');
+    });
+  }
+
+  parts.push(`<p>${CLOSING_PARAGRAPH}</p>`);
+  parts.push('</div>');
+
+  return parts.join('\n');
 }

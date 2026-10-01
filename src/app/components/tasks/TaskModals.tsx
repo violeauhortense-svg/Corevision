@@ -5,7 +5,23 @@ import type { TaskButtonType } from './taskDefinitions';
 import type { Task } from '../types/client';
 import { clientAPI } from '../../services/api';
 import { hubCommunicationAPI } from '../../services/hubCommunicationAPI';
-import { DECOUVERTE_QUESTIONNAIRE, buildQuestionnaireBody } from './decouverteQuestionnaire';
+import { DECOUVERTE_QUESTIONNAIRE, buildQuestionnaireText, buildQuestionnaireHtml } from './decouverteQuestionnaire';
+
+// "2026-10-15" -> "15 octobre 2026"
+function formatRdvDateLabel(dateStr?: string): string {
+  if (!dateStr) return '';
+  const [y, m, d] = dateStr.split('-').map(Number);
+  if (!y || !m || !d) return '';
+  return new Date(y, m - 1, d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+// "14:30" -> "14h30", "14:00" -> "14h00"
+function formatRdvTimeLabel(timeStr?: string): string {
+  if (!timeStr) return '';
+  const [h, mi] = timeStr.split(':');
+  if (h === undefined) return '';
+  return `${h}h${(mi || '00').padStart(2, '0')}`;
+}
 
 interface TaskModalsProps {
   isOpen: boolean;
@@ -193,6 +209,17 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
 
     case 'rdv': {
       const selected: Record<string, boolean> = formData.questionnaireSelected || {};
+      const rdvDateLabel = formatRdvDateLabel(formData.rdvDate);
+      const rdvTimeLabel = formatRdvTimeLabel(formData.rdvTime);
+      const selectedIds = new Set(Object.keys(selected).filter((id) => selected[id]));
+      const emailOptions = {
+        selectedIds,
+        clientFirstName: clientInfo?.firstName,
+        rdvDateLabel,
+        rdvTimeLabel,
+        introMessage: formData.introMessage,
+      };
+      const previewHtml = buildQuestionnaireHtml(emailOptions);
 
       const toggleItem = (id: string, checked: boolean) => {
         setFormData({ ...formData, questionnaireSelected: { ...selected, [id]: checked } });
@@ -204,30 +231,23 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
         setFormData({ ...formData, questionnaireSelected: next });
       };
 
-      const generatePreview = () => {
-        const ids = new Set(Object.keys(selected).filter((id) => selected[id]));
-        setFormData({
-          ...formData,
-          mailBody: buildQuestionnaireBody(ids, clientInfo?.firstName),
-          mailSubject: formData.mailSubject || 'Informations complémentaires pour la préparation de votre dossier',
-        });
-      };
-
       const handleSendMail = async () => {
         if (!clientInfo?.email) {
           toast.error('Email du client introuvable');
           return;
         }
-        if (!formData.mailBody?.trim()) {
-          toast.error("Générez d'abord l'aperçu du mail (ou écrivez son contenu)");
+        if (selectedIds.size === 0 && !formData.introMessage?.trim()) {
+          toast.error('Cochez au moins une question, ou ajoutez un message personnalisé');
           return;
         }
         setSendingMail(true);
         try {
+          const subject = formData.mailSubject || 'Informations complémentaires pour la préparation de votre dossier';
           await hubCommunicationAPI.sendNewMail({
             to: [clientInfo.email],
-            subject: formData.mailSubject || 'Informations complémentaires',
-            body: formData.mailBody,
+            subject,
+            body: buildQuestionnaireText(emailOptions),
+            bodyHtml: previewHtml,
             clientId,
             clientName: clientInfo.firstName,
           });
@@ -265,13 +285,15 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
               </label>
             </div>
             <p className="text-xs text-gray-500 -mt-3">
-              Une fois enregistrée, cette date apparaît directement dans l'Agenda.
+              Une fois enregistrée, cette date apparaît directement dans l'Agenda. Le mail ci-dessous confirme
+              automatiquement ce créneau en visioconférence si une date et une heure sont renseignées.
             </p>
 
             <div className="border-t pt-4">
               <h3 className="text-sm font-semibold text-gray-900 mb-1">📋 Questionnaire de découverte</h3>
               <p className="text-xs text-gray-500 mb-3">
-                Cochez ce que vous voulez inclure dans le mail envoyé au client.
+                Cochez ce que vous voulez inclure dans le mail envoyé au client - l'aperçu ci-dessous se met à jour
+                automatiquement.
               </p>
 
               <div className="space-y-4 max-h-64 overflow-y-auto pr-1 border rounded-lg p-3 bg-gray-50">
@@ -314,14 +336,6 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
                 })}
               </div>
 
-              <button
-                type="button"
-                onClick={generatePreview}
-                className="mt-3 px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700"
-              >
-                🔄 Générer l'aperçu du mail
-              </button>
-
               <label className="block mt-3">
                 <span className="text-sm font-medium text-gray-700">Objet</span>
                 <input
@@ -334,15 +348,23 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
               </label>
 
               <label className="block mt-3">
-                <span className="text-sm font-medium text-gray-700">Corps du mail (modifiable)</span>
+                <span className="text-sm font-medium text-gray-700">Message personnalisé (optionnel)</span>
                 <textarea
-                  value={formData.mailBody || ''}
-                  onChange={(e) => setFormData({ ...formData, mailBody: e.target.value })}
-                  className="mt-1 w-full px-3 py-2 border rounded-lg font-mono text-xs"
-                  rows={8}
-                  placeholder="Cliquez sur « Générer l'aperçu » après avoir coché vos questions..."
+                  value={formData.introMessage || ''}
+                  onChange={(e) => setFormData({ ...formData, introMessage: e.target.value })}
+                  className="mt-1 w-full px-3 py-2 border rounded-lg"
+                  rows={2}
+                  placeholder="Une phrase d'accroche personnalisée, insérée juste après la formule d'appel..."
                 />
               </label>
+
+              <div className="mt-3">
+                <span className="text-sm font-medium text-gray-700">Aperçu du mail</span>
+                <div
+                  className="mt-1 border rounded-lg p-3 bg-white max-h-72 overflow-y-auto"
+                  dangerouslySetInnerHTML={{ __html: previewHtml }}
+                />
+              </div>
 
               {clientInfo && !clientInfo.email && (
                 <p className="text-xs text-red-600 mt-1">

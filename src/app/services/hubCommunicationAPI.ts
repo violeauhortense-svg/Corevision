@@ -199,6 +199,7 @@ export const hubCommunicationAPI = {
     to: string[];
     subject: string;
     body: string;
+    bodyHtml?: string;
     cc?: string[];
     clientId?: string;
     clientName?: string;

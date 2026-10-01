@@ -214,7 +214,7 @@ app.post('/mails/auto-match', async (c) => {
 // it via the user's real Outlook, same as any reply. ──────────────────
 app.post('/mails/send', async (c) => {
   try {
-    const { to, subject, body, cc, clientId, clientName } = await c.req.json();
+    const { to, subject, body, bodyHtml, cc, clientId, clientName } = await c.req.json();
     if (!to?.length || !subject || !body) return c.json({ error: 'Missing fields' }, 400);
 
     const created = await pb.createRecord('hub_mails', {
@@ -223,6 +223,7 @@ app.post('/mails/send', async (c) => {
       cc: cc || [],
       subject,
       body,
+      bodyHtml: bodyHtml || '',
       sentAt: new Date().toISOString(),
       direction: 'pending_send',
       hubTab: clientId ? 'conversation_client' : 'interne_externe',

@@ -92,6 +92,10 @@ app.get('/pending-send', async (c) => {
         bcc: m.bcc || [],
         subject: m.subject,
         body: m.body,
+        bodyHtml: m.bodyHtml || '',
+        // Pas de champ 'isHtml' dans le schéma hub_mails - la présence
+        // de bodyHtml suffit à signaler qu'il faut envoyer en HTML.
+        isHtml: !!m.bodyHtml,
       })),
     }, 200);
   } catch (err: any) {

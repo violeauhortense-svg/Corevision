@@ -292,13 +292,20 @@ class OutlookBridgeV3:
             sent_count = 0
 
             for mail in pending_mails:
+                # bodyHtml prend le pas sur body (texte brut) quand il est
+                # présent - ex: le questionnaire de découverte, mis en
+                # forme en HTML pour un rendu propre dans Outlook.
+                is_html = bool(mail.get('isHtml') and mail.get('bodyHtml'))
+                body = mail.get('bodyHtml') if is_html else mail.get('body', '')
+
                 # Exécuter le script PowerShell pour envoyer
                 ps_result = self._run_powershell(
                     'send_email.ps1',
                     {
                         'to': ','.join(mail.get('to', [])),
                         'subject': mail.get('subject', ''),
-                        'body': mail.get('body', ''),
+                        'body': body,
+                        'isHtml': 'true' if is_html else 'false',
                         'cc': ','.join(mail.get('cc', [])),
                         'bcc': ','.join(mail.get('bcc', []))
                     }
