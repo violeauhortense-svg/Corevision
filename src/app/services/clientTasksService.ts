@@ -58,7 +58,9 @@ export interface OpenClientTask {
 // elles restent normalement présentes et exigibles dans le pipeline
 // propre à chaque client (onglet Tâches de la fiche), seule leur
 // apparition ici est supprimée. Demandé le 2026-09-24.
-const HIDDEN_FROM_TODO = new Set(['p1', 'd1', 's2', 's4', 'lm1', 'lm3', 'ra1', 'mep1']);
+// ('s2', 'lm1', 'ra1' ont depuis été supprimées de TASK_DEFINITIONS -
+// retirées d'ici aussi, ces ids n'existent plus nulle part.)
+const HIDDEN_FROM_TODO = new Set(['p1', 'd1', 's4', 'mep1']);
 
 /**
  * The single next not-yet-done task in each client's *current* pipeline
@@ -96,7 +98,10 @@ export async function getAllOpenClientTasks(): Promise<OpenClientTask[]> {
     for (let idx = 0; idx < taskDefs.length; idx++) {
       const def = taskDefs[idx];
       if (HIDDEN_FROM_TODO.has(def.id)) continue;
-      const task = existing[idx];
+      // Matched by id, not array position - removing a task definition
+      // from the middle of TASK_DEFINITIONS must not shift every
+      // already-saved task after it onto the wrong definition.
+      const task = existing.find((t: any) => t.id === def.id);
       const completed = task?.completed || false;
       const taskStatus = task?.status || 'pending';
       if (completed || taskStatus === 'na') continue;

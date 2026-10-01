@@ -70,12 +70,6 @@ export const TASK_DEFINITIONS: Record<string, TaskDef[]> = {
       description: 'Récupérer tous les docs du client',
     },
     {
-      id: 'd2',
-      title: 'Conformité 1',
-      description: 'Vérification première conformité',
-      button: 'conformite',
-    },
-    {
       id: 'd3',
       title: 'Remplissage des informations dans bilan',
       description: 'Alimenter le bilan avec infos client',
@@ -97,11 +91,6 @@ export const TASK_DEFINITIONS: Record<string, TaskDef[]> = {
       button: 'verifications',
     },
     {
-      id: 's2',
-      title: 'Validation GL de la simulation',
-      description: 'Gérant/Leader valide la simulation',
-    },
-    {
       id: 's3',
       title: 'RDV Présentation simulation chiffré',
       description: 'Présenter les résultats au client',
@@ -111,20 +100,9 @@ export const TASK_DEFINITIONS: Record<string, TaskDef[]> = {
       title: 'Confirmation client pour poursuivre',
       description: 'Client accepte de continuer',
     },
-    {
-      id: 's5',
-      title: 'Conformité 2',
-      description: 'Deuxième vérification conformité',
-      button: 'conformite',
-    },
   ],
 
   'Lettre Mission': [
-    {
-      id: 'lm1',
-      title: 'Réception des documents de vigilance',
-      description: 'Pièces de vérification client',
-    },
     {
       id: 'lm2',
       title: 'Envoi lettre de mission pour signature',
@@ -144,11 +122,6 @@ export const TASK_DEFINITIONS: Record<string, TaskDef[]> = {
   ],
 
   'Rapport/Audit': [
-    {
-      id: 'ra1',
-      title: 'Validation du rapport par GL',
-      description: 'Gérant/Leader valide le rapport',
-    },
     {
       id: 'ra2',
       title: 'Incorporation des recommandations',

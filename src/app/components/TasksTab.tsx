@@ -130,13 +130,13 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
     }
   };
 
-  // Builds the updated tasks array for a single status block (aligned by
-  // index to TASK_DEFINITIONS, like the render below reads it), applies
-  // the requested change to one task, and persists everything (including
-  // auto-progression to the next status when the block is now complete)
-  // through the generic client PATCH endpoint - the /tache/:taskId and
-  // /progress endpoints this used to call were never implemented on the
-  // backend, so every "Valider"/"N.A." click was silently failing before.
+  // Builds the updated tasks array for a single status block (matched by
+  // task id, like the render below reads it), applies the requested change
+  // to one task, and persists everything (including auto-progression to
+  // the next status when the block is now complete) through the generic
+  // client PATCH endpoint - the /tache/:taskId and /progress endpoints
+  // this used to call were never implemented on the backend, so every
+  // "Valider"/"N.A." click was silently failing before.
   const applyTaskChange = async (
     status: string,
     taskId: string,
@@ -149,8 +149,11 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
       const taskDefs = getTaskDefs(status);
       const existingTasks: any[] = client.taches?.[status] || [];
 
-      const updatedTasksForStatus = taskDefs.map((def, idx) => {
-        const existing = existingTasks[idx] || {
+      // Matched by id, not array position - removing a task definition
+      // from the middle of TASK_DEFINITIONS must not shift every
+      // already-saved task after it onto the wrong definition.
+      const updatedTasksForStatus = taskDefs.map((def) => {
+        const existing = existingTasks.find((t) => t.id === def.id) || {
           id: def.id,
           title: def.title,
           description: def.description,
@@ -383,7 +386,10 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
             {(isExpanded || blockState === 'EN_COURS') && blockState !== 'A_VENIR' && (
               <div className="mt-4 space-y-2">
                 {taskDefs.map((taskDef, idx) => {
-                  const task = tasks[idx] || {
+                  // Matched by id, not array position - see applyTaskChange
+                  // above for why a removed task definition must not shift
+                  // every saved task after it onto the wrong one.
+                  const task = tasks.find((t: any) => t.id === taskDef.id) || {
                     id: taskDef.id,
                     title: taskDef.title,
                     completed: false,
