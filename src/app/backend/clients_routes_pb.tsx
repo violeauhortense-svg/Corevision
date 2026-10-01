@@ -8,9 +8,14 @@ const app = new Hono();
 // ─── GET all clients ────────────────────────────────────────────────
 app.get('/', async (c) => {
   try {
+    // perPage était à 100 alors que rien côté frontend ne paginait au-delà
+    // de cette première page - au-delà de 100 clients, tout le reste
+    // (trié par nom, donc tout ce qui vient après "L..." alphabétiquement)
+    // disparaissait silencieusement de la liste tout en restant visible
+    // partout ailleurs (Kanban, fiche client directe...).
     const result = await pb.listRecords('clients', {
       sort: 'nom',
-      perPage: 100,
+      perPage: 500,
     });
 
     return c.json({

@@ -20,6 +20,12 @@ const STATUSES = [
 
 function normalizedStatus(client: any): string {
   const raw = client.statusOuvert || client.status || 'Prospect';
+  // "Terminé" n'est pas un statut du pipeline (pas de bloc de tâches) -
+  // sans ce cas particulier, il serait introuvable dans STATUSES et
+  // retomberait sur "Prospect", ce qui compterait les tâches (inexistantes)
+  // du premier statut pour un dossier pourtant terminé, et ferait
+  // réapparaître le client dans la colonne Kanban "Prospect".
+  if (String(raw).toLowerCase() === 'terminé') return 'Terminé';
   const match = STATUSES.find((s) => s.toLowerCase() === String(raw).toLowerCase());
   return match || 'Prospect';
 }
@@ -136,6 +142,12 @@ app.get('/kanban', async (c) => {
 
     for (const client of clients.items) {
       const status = normalizedStatus(client);
+
+      // Un dossier "Terminé" n'a pas de colonne dans ce Kanban (ce n'est
+      // pas un statut du pipeline) - sans ce skip, kanban[status] serait
+      // undefined ci-dessous et ferait planter toute la requête.
+      if (status === 'Terminé') continue;
+
       const tasksForStatus = client.taches?.[status] || [];
       const pendingActions = tasksForStatus.filter((t: any) => !t.completed && t.status !== 'na').length;
 
