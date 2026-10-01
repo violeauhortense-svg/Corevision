@@ -191,6 +191,28 @@ export const hubCommunicationAPI = {
     return response.json();
   },
 
+  /**
+   * Envoyer un nouveau mail (pas une réponse à un mail existant) - ex: le
+   * questionnaire de découverte depuis la modale "Contacter le client".
+   */
+  async sendNewMail(mail: {
+    to: string[];
+    subject: string;
+    body: string;
+    cc?: string[];
+    clientId?: string;
+    clientName?: string;
+  }): Promise<HubMail> {
+    const response = await fetch(`${API_URL}/mails/send`, {
+      method: 'POST',
+      headers: this._getHeaders(),
+      body: JSON.stringify(mail),
+    });
+
+    this._handleError(response, 'Erreur envoi du mail');
+    return response.json();
+  },
+
   // ============= RECHERCHE =============
 
   /**

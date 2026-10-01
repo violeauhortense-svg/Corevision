@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { toast } from 'sonner';
 import type { TaskButtonType } from './taskDefinitions';
 import type { Task } from '../types/client';
 import { clientAPI } from '../../services/api';
+import { hubCommunicationAPI } from '../../services/hubCommunicationAPI';
+import { DECOUVERTE_QUESTIONNAIRE, buildQuestionnaireBody } from './decouverteQuestionnaire';
 
 interface TaskModalsProps {
   isOpen: boolean;
@@ -69,6 +72,8 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<any>({});
   const [clientsList, setClientsList] = useState<{ id: string; label: string }[]>([]);
+  const [clientInfo, setClientInfo] = useState<{ email: string; firstName: string } | null>(null);
+  const [sendingMail, setSendingMail] = useState(false);
 
   // Recharge la saisie précédente à chaque ouverture d'une tâche - sans ça,
   // TaskModals restant monté en permanence (isOpen bascule mais le
@@ -96,6 +101,17 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
           );
         })
         .catch((err) => console.error('❌ Erreur chargement liste clients:', err));
+    }
+  }, [isOpen, modalType, clientId]);
+
+  // Nécessaire pour envoyer le questionnaire de découverte au bon email -
+  // TaskModals ne reçoit que clientId, pas la fiche complète.
+  useEffect(() => {
+    if (isOpen && modalType === 'rdv') {
+      clientAPI
+        .getById(clientId)
+        .then((client: any) => setClientInfo({ email: client.email || '', firstName: client.firstName || '' }))
+        .catch((err) => console.error('❌ Erreur chargement infos client:', err));
     }
   }, [isOpen, modalType, clientId]);
 
@@ -175,31 +191,184 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
         </Modal>
       );
 
-    case 'rdv':
+    case 'rdv': {
+      const selected: Record<string, boolean> = formData.questionnaireSelected || {};
+
+      const toggleItem = (id: string, checked: boolean) => {
+        setFormData({ ...formData, questionnaireSelected: { ...selected, [id]: checked } });
+      };
+
+      const toggleSection = (sectionItemIds: string[], checked: boolean) => {
+        const next = { ...selected };
+        for (const id of sectionItemIds) next[id] = checked;
+        setFormData({ ...formData, questionnaireSelected: next });
+      };
+
+      const generatePreview = () => {
+        const ids = new Set(Object.keys(selected).filter((id) => selected[id]));
+        setFormData({
+          ...formData,
+          mailBody: buildQuestionnaireBody(ids, clientInfo?.firstName),
+          mailSubject: formData.mailSubject || 'Informations complémentaires pour la préparation de votre dossier',
+        });
+      };
+
+      const handleSendMail = async () => {
+        if (!clientInfo?.email) {
+          toast.error('Email du client introuvable');
+          return;
+        }
+        if (!formData.mailBody?.trim()) {
+          toast.error("Générez d'abord l'aperçu du mail (ou écrivez son contenu)");
+          return;
+        }
+        setSendingMail(true);
+        try {
+          await hubCommunicationAPI.sendNewMail({
+            to: [clientInfo.email],
+            subject: formData.mailSubject || 'Informations complémentaires',
+            body: formData.mailBody,
+            clientId,
+            clientName: clientInfo.firstName,
+          });
+          setFormData({ ...formData, mailSentAt: new Date().toISOString() });
+          toast.success("Mail mis en file d'envoi - il partira via Outlook au prochain cycle du bridge");
+        } catch (err) {
+          console.error('Erreur envoi mail questionnaire:', err);
+          toast.error("Impossible d'envoyer le mail");
+        } finally {
+          setSendingMail(false);
+        }
+      };
+
       return (
         <Modal title={task.title} onClose={onClose} onSave={handleSave} loading={loading}>
-          <div className="space-y-4">
-            <label className="block">
-              <span className="text-sm font-medium text-gray-700">Date du RDV</span>
-              <input
-                type="date"
-                value={formData.rdvDate || ''}
-                onChange={(e) => setFormData({ ...formData, rdvDate: e.target.value })}
-                className="mt-1 w-full px-3 py-2 border rounded-lg"
-              />
-            </label>
-            <label className="block">
-              <span className="text-sm font-medium text-gray-700">Heure</span>
-              <input
-                type="time"
-                value={formData.rdvTime || ''}
-                onChange={(e) => setFormData({ ...formData, rdvTime: e.target.value })}
-                className="mt-1 w-full px-3 py-2 border rounded-lg"
-              />
-            </label>
+          <div className="space-y-5">
+            <div className="grid grid-cols-2 gap-3">
+              <label className="block">
+                <span className="text-sm font-medium text-gray-700">Date du RDV</span>
+                <input
+                  type="date"
+                  value={formData.rdvDate || ''}
+                  onChange={(e) => setFormData({ ...formData, rdvDate: e.target.value })}
+                  className="mt-1 w-full px-3 py-2 border rounded-lg"
+                />
+              </label>
+              <label className="block">
+                <span className="text-sm font-medium text-gray-700">Heure</span>
+                <input
+                  type="time"
+                  value={formData.rdvTime || ''}
+                  onChange={(e) => setFormData({ ...formData, rdvTime: e.target.value })}
+                  className="mt-1 w-full px-3 py-2 border rounded-lg"
+                />
+              </label>
+            </div>
+            <p className="text-xs text-gray-500 -mt-3">
+              Une fois enregistrée, cette date apparaît directement dans l'Agenda.
+            </p>
+
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-semibold text-gray-900 mb-1">📋 Questionnaire de découverte</h3>
+              <p className="text-xs text-gray-500 mb-3">
+                Cochez ce que vous voulez inclure dans le mail envoyé au client.
+              </p>
+
+              <div className="space-y-4 max-h-64 overflow-y-auto pr-1 border rounded-lg p-3 bg-gray-50">
+                {DECOUVERTE_QUESTIONNAIRE.map((section) => {
+                  const sectionItemIds = section.groups.flatMap((g) => g.items.map((i) => i.id));
+                  const allChecked = sectionItemIds.length > 0 && sectionItemIds.every((id) => selected[id]);
+                  return (
+                    <div key={section.id}>
+                      <label className="flex items-center gap-2 font-medium text-sm text-gray-900">
+                        <input
+                          type="checkbox"
+                          checked={allChecked}
+                          onChange={(e) => toggleSection(sectionItemIds, e.target.checked)}
+                          className="w-4 h-4"
+                        />
+                        {section.title}
+                      </label>
+                      <div className="ml-6 mt-1 space-y-1.5">
+                        {section.groups.map((group, gi) => (
+                          <div key={gi}>
+                            {group.label && (
+                              <p className="text-xs font-medium text-gray-600 mt-1.5">{group.label}</p>
+                            )}
+                            {group.items.map((item) => (
+                              <label key={item.id} className="flex items-start gap-2 text-sm text-gray-700 py-0.5">
+                                <input
+                                  type="checkbox"
+                                  checked={!!selected[item.id]}
+                                  onChange={(e) => toggleItem(item.id, e.target.checked)}
+                                  className="w-4 h-4 mt-0.5 shrink-0"
+                                />
+                                <span>{item.text}</span>
+                              </label>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <button
+                type="button"
+                onClick={generatePreview}
+                className="mt-3 px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700"
+              >
+                🔄 Générer l'aperçu du mail
+              </button>
+
+              <label className="block mt-3">
+                <span className="text-sm font-medium text-gray-700">Objet</span>
+                <input
+                  type="text"
+                  value={formData.mailSubject || ''}
+                  onChange={(e) => setFormData({ ...formData, mailSubject: e.target.value })}
+                  className="mt-1 w-full px-3 py-2 border rounded-lg"
+                  placeholder="Informations complémentaires pour la préparation de votre dossier"
+                />
+              </label>
+
+              <label className="block mt-3">
+                <span className="text-sm font-medium text-gray-700">Corps du mail (modifiable)</span>
+                <textarea
+                  value={formData.mailBody || ''}
+                  onChange={(e) => setFormData({ ...formData, mailBody: e.target.value })}
+                  className="mt-1 w-full px-3 py-2 border rounded-lg font-mono text-xs"
+                  rows={8}
+                  placeholder="Cliquez sur « Générer l'aperçu » après avoir coché vos questions..."
+                />
+              </label>
+
+              {clientInfo && !clientInfo.email && (
+                <p className="text-xs text-red-600 mt-1">
+                  ⚠️ Aucun email enregistré pour ce client - impossible d'envoyer.
+                </p>
+              )}
+
+              {formData.mailSentAt && (
+                <p className="text-xs text-green-600 mt-2">
+                  ✅ Mail mis en envoi le {new Date(formData.mailSentAt).toLocaleString('fr-FR')}
+                </p>
+              )}
+
+              <button
+                type="button"
+                onClick={handleSendMail}
+                disabled={sendingMail || !clientInfo?.email}
+                className="mt-3 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              >
+                {sendingMail ? 'Envoi...' : '✉️ Envoyer le mail au client'}
+              </button>
+            </div>
           </div>
         </Modal>
       );
+    }
 
     case 'mailComptable':
       return (

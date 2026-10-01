@@ -9,6 +9,13 @@ import { findMatchingClient } from './clientMatcher.tsx';
 
 const app = new Hono();
 
+// Toute mail sortant (réponse ou nouveau) part de cette boîte - le champ
+// 'from' de la collection hub_mails est requis (non vide) côté
+// PocketBase, donc une chaîne vide y échouait silencieusement avant
+// même d'atteindre le bridge (le bouton "Répondre" du Hub échouait sur
+// CE point depuis le début, pas à cause d'Outlook ou du bridge).
+const ADMIN_EMAIL = 'violeau.hortense@gmail.com';
+
 function toHubMail(m: any) {
   const to = typeof m.to === 'string' ? m.to.split(';').map((s: string) => s.trim()).filter(Boolean) : (m.to || []);
   // A handful of mails imported before the bridge existed never had
@@ -199,6 +206,39 @@ app.post('/mails/auto-match', async (c) => {
   }
 });
 
+// ─── POST /mails/send (queue a brand-new outgoing mail, not a reply to
+// anything) - same "pending_send" mechanism as /mails/:id/reply, but
+// usable when there's no existing mail to reply to (e.g. a first
+// discovery-questionnaire email sent from the "Contacter le client" task
+// modal). The bridge's send_pending_emails() cycle picks it up and sends
+// it via the user's real Outlook, same as any reply. ──────────────────
+app.post('/mails/send', async (c) => {
+  try {
+    const { to, subject, body, cc, clientId, clientName } = await c.req.json();
+    if (!to?.length || !subject || !body) return c.json({ error: 'Missing fields' }, 400);
+
+    const created = await pb.createRecord('hub_mails', {
+      from: ADMIN_EMAIL,
+      to: Array.isArray(to) ? to.join('; ') : to,
+      cc: cc || [],
+      subject,
+      body,
+      sentAt: new Date().toISOString(),
+      direction: 'pending_send',
+      hubTab: clientId ? 'conversation_client' : 'interne_externe',
+      traitementStatus: 'a_traiter',
+      clientId: clientId || '',
+      clientName: clientName || '',
+      read: true,
+    });
+
+    return c.json(toHubMail(created), 201);
+  } catch (err: any) {
+    console.error('Error queuing new mail:', err.message);
+    return c.json({ error: err.message }, 500);
+  }
+});
+
 // ─── GET /mails/:id (full detail) ─────────────────────────────────────
 app.get('/mails/:id', async (c) => {
   try {
@@ -304,7 +344,7 @@ app.post('/mails/:id/reply', async (c) => {
     const original = await pb.getRecord('hub_mails', id);
 
     await pb.createRecord('hub_mails', {
-      from: '',
+      from: ADMIN_EMAIL,
       to: Array.isArray(to) ? to.join('; ') : to,
       cc: cc || [],
       subject,
