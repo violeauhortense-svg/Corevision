@@ -218,6 +218,7 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
         rdvDateLabel,
         rdvTimeLabel,
         introMessage: formData.introMessage,
+        repeatCounts: formData.repeatCounts || {},
       };
       const previewHtml = buildQuestionnaireHtml(emailOptions);
 
@@ -328,6 +329,28 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
                                 <span>{item.text}</span>
                               </label>
                             ))}
+                            {group.kind === 'repeatable' && selected[group.items[0].id] && (
+                              <label className="flex items-center gap-2 text-sm text-gray-600 py-0.5 ml-6">
+                                <span>Combien de {(group.repeatNoun || 'fiche').toLowerCase()}s ?</span>
+                                <select
+                                  value={formData.repeatCounts?.[group.items[0].id] || 1}
+                                  onChange={(e) =>
+                                    setFormData({
+                                      ...formData,
+                                      repeatCounts: {
+                                        ...formData.repeatCounts,
+                                        [group.items[0].id]: parseInt(e.target.value, 10),
+                                      },
+                                    })
+                                  }
+                                  className="border rounded px-2 py-0.5 text-sm"
+                                >
+                                  {[1, 2, 3, 4, 5].map((n) => (
+                                    <option key={n} value={n}>{n}</option>
+                                  ))}
+                                </select>
+                              </label>
+                            )}
                           </div>
                         ))}
                       </div>

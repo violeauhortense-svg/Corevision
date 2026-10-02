@@ -24,6 +24,19 @@ export interface QuestionnaireGroup {
   // principale") - omis si la section n'a pas de sous-groupes.
   label?: string;
   items: QuestionnaireItem[];
+  // 'list' (défaut) : chaque item -> une ligne question/case à remplir.
+  // 'matrix' : le groupe devient un tableau à lignes fixes (le texte des
+  // items n'est pas affiché, juste utilisé comme case à cocher pour
+  // inclure le bloc) - ex: patrimoine financier, avec un type de
+  // placement par ligne et une colonne par information demandée.
+  // 'repeatable' : le groupe se répète en plusieurs fiches numérotées
+  // (une par bien), chaque fiche reprenant les mêmes champs - ex:
+  // patrimoine immobilier, pour ne pas mélanger plusieurs biens dans une
+  // seule liste de questions.
+  kind?: 'list' | 'matrix' | 'repeatable';
+  matrix?: { columns: string[]; rows: string[] };
+  repeatFields?: string[];
+  repeatNoun?: string; // "Bien" -> "Bien n°1", "Bien n°2"...
 }
 
 export interface QuestionnaireSection {
@@ -68,15 +81,20 @@ export const DECOUVERTE_QUESTIONNAIRE: QuestionnaireSection[] = [
       },
       {
         label: 'Votre patrimoine immobilier (autres biens)',
+        kind: 'repeatable',
+        repeatNoun: 'Bien',
+        repeatFields: [
+          'Bien propre ou commun (et quotité détenue par chacun si commun)',
+          'Adresse',
+          "Date d'acquisition",
+          "Valeur d'acquisition",
+          'Valeur actuelle estimée',
+          'Loyers bruts annuels',
+          'Charges locatives annuelles',
+          'Destination à terme (cession ou transmission)',
+        ],
         items: [
-          f('s1g4a', 'Bien propre ou commun (et quotité détenue par chacun si commun)'),
-          f('s1g4b', 'Adresse'),
-          f('s1g4c', 'Loyers bruts'),
-          f('s1g4d', 'Charges locatives'),
-          f('s1g4e', "Date d'acquisition"),
-          f('s1g4f', "Valeur d'acquisition"),
-          f('s1g4g', 'Valeur actuelle estimée'),
-          f('s1g4h', 'Destination à terme (cession ou transmission)'),
+          f('s1g4', 'Autres biens immobiliers (hors Pinel et location meublée)'),
           doc('s1g4i', "Tableaux d'amortissement, le cas échéant"),
         ],
       },
@@ -93,9 +111,12 @@ export const DECOUVERTE_QUESTIONNAIRE: QuestionnaireSection[] = [
       },
       {
         label: 'Votre patrimoine financier',
-        items: [
-          f('s1g6a', 'Nature et montant des actifs financiers que vous possédez (livret A, LDDS, assurance vie, PER…)'),
-        ],
+        kind: 'matrix',
+        matrix: {
+          columns: ['Placement', 'Titulaire', 'Montant (€)', "Date d'ouverture"],
+          rows: ['Livrets (A, LDDS, LEP…)', 'Assurance-vie', 'PER', 'PEA / compte-titres', 'Autres'],
+        },
+        items: [f('s1g6a', 'Nature et montant de vos actifs financiers')],
       },
     ],
   },
@@ -177,6 +198,10 @@ export interface QuestionnaireEmailOptions {
   // Mot personnalisé optionnel, inséré entre la formule d'appel et la
   // phrase introduisant la liste des questions.
   introMessage?: string;
+  // Nombre de fiches à générer pour un groupe 'repeatable', par id du
+  // premier item du groupe (ex: {"s1g4": 2} -> 2 fiches "Bien n°1/2").
+  // Défaut 1 si absent.
+  repeatCounts?: Record<string, number>;
 }
 
 interface SelectedSection {
@@ -209,7 +234,7 @@ function allSelectedDocuments(selectedIds: Set<string>): QuestionnaireItem[] {
  * utilise la version HTML ci-dessous).
  */
 export function buildQuestionnaireText(opts: QuestionnaireEmailOptions): string {
-  const { selectedIds, clientFirstName, rdvDateLabel, rdvTimeLabel, introMessage } = opts;
+  const { selectedIds, clientFirstName, rdvDateLabel, rdvTimeLabel, introMessage, repeatCounts } = opts;
   const lines: string[] = [];
   lines.push(`Bonjour${clientFirstName ? ' ' + clientFirstName : ''},`);
   lines.push('');
@@ -237,7 +262,19 @@ export function buildQuestionnaireText(opts: QuestionnaireEmailOptions): string 
       for (const { group, fields } of groups) {
         if (fields.length === 0) continue;
         if (group.label) lines.push(`${group.label} :`);
-        for (const item of fields) lines.push(`- ${item.text} : ______`);
+
+        if (group.kind === 'matrix' && group.matrix) {
+          lines.push(`(${group.matrix.columns.join(' / ')})`);
+          for (const row of group.matrix.rows) lines.push(`- ${row} : ______`);
+        } else if (group.kind === 'repeatable' && group.repeatFields) {
+          const count = repeatCounts?.[group.items[0].id] || 1;
+          for (let i = 1; i <= count; i++) {
+            lines.push(`${group.repeatNoun || 'Fiche'} n°${i} :`);
+            for (const fieldLabel of group.repeatFields) lines.push(`  - ${fieldLabel} : ______`);
+          }
+        } else {
+          for (const item of fields) lines.push(`- ${item.text} : ______`);
+        }
         lines.push('');
       }
     }
@@ -275,8 +312,42 @@ const BORDER = '#dce2df';
  * et styles en ligne uniquement : le moteur HTML d'Outlook ignore la
  * plupart du CSS moderne (flex, grid, classes...).
  */
+function answerRow(label: string): string {
+  return `
+    <tr>
+      <td width="52%" valign="top" style="${FONT}font-size:13px;line-height:1.4;color:#374151;background:${LABEL_BG};border:1px solid ${BORDER};padding:8px 10px;">${escapeHtml(label)}</td>
+      <td valign="top" style="${FONT}font-size:13px;background:${ANSWER_BG};border:1px solid ${BORDER};padding:8px 10px;">&nbsp;</td>
+    </tr>`;
+}
+
+function matrixTableHtml(matrix: { columns: string[]; rows: string[] }): string {
+  const [rowHeader, ...dataColumns] = matrix.columns;
+  const th = (text: string, width?: string) =>
+    `<td ${width ? `width="${width}"` : ''} style="${FONT}font-size:12.5px;font-weight:bold;color:#ffffff;background:${ACCENT};border:1px solid ${ACCENT};padding:8px 10px;">${escapeHtml(text)}</td>`;
+  const header = `<tr>${th(rowHeader, '34%')}${dataColumns.map((c) => th(c)).join('')}</tr>`;
+  const rows = matrix.rows
+    .map(
+      (row) =>
+        `<tr><td style="${FONT}font-size:13px;color:#374151;background:${LABEL_BG};border:1px solid ${BORDER};padding:8px 10px;">${escapeHtml(row)}</td>${dataColumns
+          .map(() => `<td style="${FONT}font-size:13px;background:${ANSWER_BG};border:1px solid ${BORDER};padding:8px 10px;">&nbsp;</td>`)
+          .join('')}</tr>`
+    )
+    .join('');
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 10px 0;">${header}${rows}</table>`;
+}
+
+function repeatableFichesHtml(group: QuestionnaireGroup, count: number): string {
+  const fields = group.repeatFields || [];
+  let html = '';
+  for (let i = 1; i <= count; i++) {
+    html += `<p style="margin:10px 0 4px 0;font-weight:bold;font-size:13px;color:${ACCENT};">${escapeHtml(group.repeatNoun || 'Fiche')} n°${i}</p>`;
+    html += `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 10px 0;">${fields.map(answerRow).join('')}</table>`;
+  }
+  return html;
+}
+
 export function buildQuestionnaireHtml(opts: QuestionnaireEmailOptions): string {
-  const { selectedIds, clientFirstName, rdvDateLabel, rdvTimeLabel, introMessage } = opts;
+  const { selectedIds, clientFirstName, rdvDateLabel, rdvTimeLabel, introMessage, repeatCounts } = opts;
   const parts: string[] = [];
 
   parts.push(`<div style="${FONT}font-size:14px;color:#1f2937;max-width:640px;">`);
@@ -345,20 +416,27 @@ export function buildQuestionnaireHtml(opts: QuestionnaireEmailOptions): string 
 
       for (const { group, fields } of groups) {
         if (fields.length === 0) continue;
+
+        if (group.kind === 'matrix' && group.matrix) {
+          if (group.label) {
+            parts.push(`<p style="margin:10px 0 4px 0;font-weight:bold;font-size:13px;color:#374151;">${escapeHtml(group.label)}</p>`);
+          }
+          parts.push(matrixTableHtml(group.matrix));
+          continue;
+        }
+
+        if (group.kind === 'repeatable' && group.repeatFields) {
+          const count = repeatCounts?.[group.items[0].id] || 1;
+          parts.push(repeatableFichesHtml(group, count));
+          continue;
+        }
+
         if (group.label) {
           parts.push(`<p style="margin:10px 0 4px 0;font-weight:bold;font-size:13px;color:#374151;">${escapeHtml(group.label)}</p>`);
         }
         parts.push(
-          `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 10px 0;">`
+          `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 10px 0;">${fields.map((item) => answerRow(item.text)).join('')}</table>`
         );
-        for (const item of fields) {
-          parts.push(`
-            <tr>
-              <td width="52%" valign="top" style="${FONT}font-size:13px;line-height:1.4;color:#374151;background:${LABEL_BG};border:1px solid ${BORDER};padding:8px 10px;">${escapeHtml(item.text)}</td>
-              <td valign="top" style="${FONT}font-size:13px;background:${ANSWER_BG};border:1px solid ${BORDER};padding:8px 10px;">&nbsp;</td>
-            </tr>`);
-        }
-        parts.push('</table>');
       }
 
       parts.push('</td></tr></table>');
