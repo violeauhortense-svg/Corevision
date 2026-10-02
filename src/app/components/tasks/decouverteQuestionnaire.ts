@@ -2,12 +2,21 @@
  * Questionnaire de découverte client - utilisé par la modale "Contacter le
  * client pour convenir d'un RDV" pour générer un mail à la carte : chaque
  * question a sa propre case, seules celles cochées apparaissent dans le
- * corps du mail généré (lui-même encore modifiable avant envoi).
+ * mail généré.
+ *
+ * Chaque question est classée 'field' (une information/un chiffre à nous
+ * renseigner - affichée avec une case à compléter directement dans le
+ * mail) ou 'document' (une pièce à joindre - regroupée séparément dans un
+ * récapitulatif de documents en fin de mail, plutôt que mélangée au
+ * milieu des questions).
  */
+
+export type QuestionnaireItemKind = 'field' | 'document';
 
 export interface QuestionnaireItem {
   id: string;
   text: string;
+  kind: QuestionnaireItemKind;
 }
 
 export interface QuestionnaireGroup {
@@ -23,6 +32,9 @@ export interface QuestionnaireSection {
   groups: QuestionnaireGroup[];
 }
 
+const f = (id: string, text: string): QuestionnaireItem => ({ id, text, kind: 'field' });
+const doc = (id: string, text: string): QuestionnaireItem => ({ id, text, kind: 'document' });
+
 export const DECOUVERTE_QUESTIONNAIRE: QuestionnaireSection[] = [
   {
     id: 'sec1',
@@ -31,61 +43,58 @@ export const DECOUVERTE_QUESTIONNAIRE: QuestionnaireSection[] = [
       {
         label: 'Régime matrimonial',
         items: [
-          { id: 's1g1a', text: 'Copie de votre livret de famille à jour de votre mariage/PACS' },
-          { id: 's1g1b', text: 'Copie de votre contrat de mariage, le cas échéant' },
+          doc('s1g1a', 'Copie de votre livret de famille à jour de votre mariage/PACS'),
+          doc('s1g1b', 'Copie de votre contrat de mariage, le cas échéant'),
         ],
       },
       {
         label: 'Train de vie familial courant',
         items: [
-          {
-            id: 's1g2a',
-            text: "Montant mensuel (ou annuel) nécessaire pour faire face à votre train de vie, hors impôt sur le revenu, remboursements de crédits et cotisations sociales",
-          },
+          f(
+            's1g2a',
+            "Montant mensuel (ou annuel) nécessaire pour faire face à votre train de vie, hors impôt sur le revenu, remboursements de crédits et cotisations sociales"
+          ),
         ],
       },
       {
         label: 'Résidence principale',
         items: [
-          { id: 's1g3a', text: 'Si propriétaire : valeur actuelle estimée' },
-          { id: 's1g3b', text: "Si propriétaire : date d'acquisition" },
-          { id: 's1g3c', text: "Si propriétaire : valeur d'acquisition" },
-          { id: 's1g3d', text: 'Si un prêt est en cours : tableau d\'amortissement complet' },
-          { id: 's1g3e', text: 'Si locataire : montant du loyer' },
+          f('s1g3a', 'Si propriétaire : valeur actuelle estimée'),
+          f('s1g3b', "Si propriétaire : date d'acquisition"),
+          f('s1g3c', "Si propriétaire : valeur d'acquisition"),
+          doc('s1g3d', "Si un prêt est en cours : tableau d'amortissement complet"),
+          f('s1g3e', 'Si locataire : montant du loyer'),
         ],
       },
       {
         label: 'Votre patrimoine immobilier (autres biens)',
         items: [
-          { id: 's1g4a', text: 'Bien propre ou commun (et quotité détenue par chacun si commun)' },
-          { id: 's1g4b', text: 'Adresse' },
-          { id: 's1g4c', text: 'Loyers bruts' },
-          { id: 's1g4d', text: 'Charges locatives' },
-          { id: 's1g4e', text: "Date d'acquisition" },
-          { id: 's1g4f', text: "Valeur d'acquisition" },
-          { id: 's1g4g', text: 'Valeur actuelle estimée' },
-          { id: 's1g4h', text: 'Destination à terme (cession ou transmission)' },
-          { id: 's1g4i', text: "Tableaux d'amortissement, le cas échéant" },
+          f('s1g4a', 'Bien propre ou commun (et quotité détenue par chacun si commun)'),
+          f('s1g4b', 'Adresse'),
+          f('s1g4c', 'Loyers bruts'),
+          f('s1g4d', 'Charges locatives'),
+          f('s1g4e', "Date d'acquisition"),
+          f('s1g4f', "Valeur d'acquisition"),
+          f('s1g4g', 'Valeur actuelle estimée'),
+          f('s1g4h', 'Destination à terme (cession ou transmission)'),
+          doc('s1g4i', "Tableaux d'amortissement, le cas échéant"),
         ],
       },
       {
         label: 'Pour chaque dispositif Pinel',
         items: [
-          { id: 's1g5a', text: 'Adresse précise' },
-          { id: 's1g5b', text: 'Date de première mise en location' },
-          { id: 's1g5c', text: "Durée initiale d'engagement de location" },
-          { id: 's1g5d', text: 'Loyers bruts' },
-          { id: 's1g5e', text: 'Charges locatives' },
-          { id: 's1g5f', text: 'Destination à terme (cession ou transmission aux enfants)' },
+          f('s1g5a', 'Adresse précise'),
+          f('s1g5b', 'Date de première mise en location'),
+          f('s1g5c', "Durée initiale d'engagement de location"),
+          f('s1g5d', 'Loyers bruts'),
+          f('s1g5e', 'Charges locatives'),
+          f('s1g5f', 'Destination à terme (cession ou transmission aux enfants)'),
         ],
       },
       {
         label: 'Votre patrimoine financier',
         items: [
-          {
-            id: 's1g6a',
-            text: 'Nature et montant des actifs financiers que vous possédez (livret A, LDDS, assurance vie, PER…)',
-          },
+          f('s1g6a', 'Nature et montant des actifs financiers que vous possédez (livret A, LDDS, assurance vie, PER…)'),
         ],
       },
     ],
@@ -96,19 +105,19 @@ export const DECOUVERTE_QUESTIONNAIRE: QuestionnaireSection[] = [
     groups: [
       {
         items: [
-          { id: 's2a', text: 'Dernier bilan de la SELARL / de votre BNC' },
-          {
-            id: 's2b',
-            text: 'Confirmation : retenir les éléments chiffrés de 2024 (chiffre d\'affaires réalisé) comme rythme de croisière pour la simulation chiffrée',
-          },
-          { id: 's2c', text: "Tableau d'amortissement des crédits professionnels en cours (acquisition de la patientèle)" },
+          doc('s2a', 'Dernier bilan de la SELARL / de votre BNC'),
+          f(
+            's2b',
+            "Confirmation : retenir les éléments chiffrés de 2024 (chiffre d'affaires réalisé) comme rythme de croisière pour la simulation chiffrée"
+          ),
+          doc('s2c', "Tableau d'amortissement des crédits professionnels en cours (acquisition de la patientèle)"),
         ],
       },
       {
         label: 'SCI/IS détenant les murs professionnels',
         items: [
-          { id: 's2g1a', text: 'Tableaux d\'amortissement des crédits bancaires en cours' },
-          { id: 's2g1b', text: "Kbis à jour de l'intégration des SEL au capital" },
+          doc('s2g1a', "Tableaux d'amortissement des crédits bancaires en cours"),
+          doc('s2g1b', "Kbis à jour de l'intégration des SEL au capital"),
         ],
       },
     ],
@@ -118,9 +127,7 @@ export const DECOUVERTE_QUESTIONNAIRE: QuestionnaireSection[] = [
     title: '3/ Concernant votre activité de marchand de biens',
     groups: [
       {
-        items: [
-          { id: 's3a', text: 'Effort de trésorerie personnelle à prévoir sur cette structure' },
-        ],
+        items: [f('s3a', 'Effort de trésorerie personnelle à prévoir sur cette structure')],
       },
     ],
   },
@@ -130,8 +137,8 @@ export const DECOUVERTE_QUESTIONNAIRE: QuestionnaireSection[] = [
     groups: [
       {
         items: [
-          { id: 's4a', text: 'Effort de trésorerie personnelle à prévoir sur cette structure' },
-          { id: 's4b', text: 'Communication des trois derniers bilans' },
+          f('s4a', 'Effort de trésorerie personnelle à prévoir sur cette structure'),
+          doc('s4b', 'Communication des trois derniers bilans'),
         ],
       },
     ],
@@ -143,14 +150,14 @@ export const DECOUVERTE_QUESTIONNAIRE: QuestionnaireSection[] = [
       {
         label: 'Pour chaque bien concerné',
         items: [
-          { id: 's5g1a', text: 'Adresse' },
-          { id: 's5g1b', text: 'Loyers bruts' },
-          { id: 's5g1c', text: 'Charges locatives' },
-          { id: 's5g1d', text: "Date d'acquisition" },
-          { id: 's5g1e', text: "Valeur d'acquisition" },
-          { id: 's5g1f', text: 'Valeur actuelle estimée' },
-          { id: 's5g1g', text: 'Destination à terme (cession ou transmission aux enfants)' },
-          { id: 's5g1h', text: "Tableaux d'amortissement, le cas échéant" },
+          f('s5g1a', 'Adresse'),
+          f('s5g1b', 'Loyers bruts'),
+          f('s5g1c', 'Charges locatives'),
+          f('s5g1d', "Date d'acquisition"),
+          f('s5g1e', "Valeur d'acquisition"),
+          f('s5g1f', 'Valeur actuelle estimée'),
+          f('s5g1g', 'Destination à terme (cession ou transmission aux enfants)'),
+          doc('s5g1h', "Tableaux d'amortissement, le cas échéant"),
         ],
       },
     ],
@@ -172,13 +179,28 @@ export interface QuestionnaireEmailOptions {
   introMessage?: string;
 }
 
-function sectionsWithSelection(selectedIds: Set<string>) {
+interface SelectedSection {
+  section: QuestionnaireSection;
+  groups: { group: QuestionnaireGroup; fields: QuestionnaireItem[]; documents: QuestionnaireItem[] }[];
+}
+
+function sectionsWithSelection(selectedIds: Set<string>): SelectedSection[] {
   return DECOUVERTE_QUESTIONNAIRE.map((section) => ({
     section,
     groups: section.groups
-      .map((group) => ({ group, items: group.items.filter((it) => selectedIds.has(it.id)) }))
-      .filter((g) => g.items.length > 0),
+      .map((group) => ({
+        group,
+        fields: group.items.filter((it) => it.kind === 'field' && selectedIds.has(it.id)),
+        documents: group.items.filter((it) => it.kind === 'document' && selectedIds.has(it.id)),
+      }))
+      .filter((g) => g.fields.length > 0 || g.documents.length > 0),
   })).filter((s) => s.groups.length > 0);
+}
+
+function allSelectedDocuments(selectedIds: Set<string>): QuestionnaireItem[] {
+  return DECOUVERTE_QUESTIONNAIRE.flatMap((s) => s.groups.flatMap((g) => g.items)).filter(
+    (it) => it.kind === 'document' && selectedIds.has(it.id)
+  );
 }
 
 /**
@@ -212,12 +234,21 @@ export function buildQuestionnaireText(opts: QuestionnaireEmailOptions): string 
     for (const { section, groups } of sections) {
       lines.push(section.title);
       lines.push('');
-      for (const { group, items } of groups) {
+      for (const { group, fields } of groups) {
+        if (fields.length === 0) continue;
         if (group.label) lines.push(`${group.label} :`);
-        for (const item of items) lines.push(`- ${item.text}`);
+        for (const item of fields) lines.push(`- ${item.text} : ______`);
         lines.push('');
       }
     }
+  }
+
+  const documents = allSelectedDocuments(selectedIds);
+  if (documents.length > 0) {
+    lines.push('Documents à joindre à votre réponse :');
+    lines.push('');
+    for (const item of documents) lines.push(`[ ] ${item.text}`);
+    lines.push('');
   }
 
   lines.push(CLOSING_PARAGRAPH);
@@ -228,21 +259,40 @@ function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+const FONT = 'font-family:Arial,Helvetica,sans-serif;';
+const ACCENT = '#2563eb';
+const ACCENT_SOFT = '#eff6ff';
+const LABEL_BG = '#f3f5f4';
+const ANSWER_BG = '#fff6d6';
+const BORDER = '#dce2df';
+
 /**
- * Génère le corps du mail en HTML (cartes numérotées) - mise en page par
- * tableaux et styles en ligne uniquement, pour un rendu correct dans
- * Outlook (son moteur HTML ignore la plupart du CSS moderne).
+ * Génère le corps du mail en HTML : bandeau d'en-tête, notice "comment
+ * répondre", sections en cartes numérotées avec, pour chaque information
+ * à renseigner, une case à compléter directement dans le mail (fond
+ * jaune pâle) - puis un récapitulatif séparé des documents à joindre, qui
+ * n'est plus mélangé au milieu des questions. Mise en page par tableaux
+ * et styles en ligne uniquement : le moteur HTML d'Outlook ignore la
+ * plupart du CSS moderne (flex, grid, classes...).
  */
 export function buildQuestionnaireHtml(opts: QuestionnaireEmailOptions): string {
   const { selectedIds, clientFirstName, rdvDateLabel, rdvTimeLabel, introMessage } = opts;
   const parts: string[] = [];
-  const FONT = "font-family:Arial,Helvetica,sans-serif;";
 
-  parts.push(`<div style="${FONT}font-size:14px;color:#1f2937;max-width:600px;">`);
+  parts.push(`<div style="${FONT}font-size:14px;color:#1f2937;max-width:640px;">`);
+
+  // Bandeau d'en-tête
+  parts.push(`
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:18px;">
+      <tr><td style="background:${ACCENT};border-radius:8px 8px 0 0;padding:18px 20px;">
+        <p style="margin:0;${FONT}font-size:18px;font-weight:bold;color:#ffffff;">Préparation de votre dossier</p>
+        <p style="margin:4px 0 0 0;${FONT}font-size:13px;color:#dbeafe;">Éléments et documents à nous transmettre</p>
+      </td></tr>
+    </table>`);
 
   if (rdvDateLabel && rdvTimeLabel) {
     parts.push(`
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;margin-bottom:20px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${ACCENT_SOFT};border:1px solid #bfdbfe;border-radius:8px;margin-bottom:18px;">
         <tr><td style="padding:14px 16px;">
           <p style="margin:0 0 4px 0;font-weight:bold;color:#1e40af;">📅 RDV confirmé : ${escapeHtml(rdvDateLabel)} à ${escapeHtml(rdvTimeLabel)}</p>
           <p style="margin:0;color:#1e40af;">En visioconférence — le lien de connexion vous sera communiqué dans un second e-mail.</p>
@@ -257,34 +307,84 @@ export function buildQuestionnaireHtml(opts: QuestionnaireEmailOptions): string 
   }
 
   const sections = sectionsWithSelection(selectedIds);
+  const documents = allSelectedDocuments(selectedIds);
+
   if (sections.length > 0) {
     parts.push('<p>Afin de préparer au mieux votre dossier, pourriez-vous nous transmettre les éléments suivants :</p>');
+
+    // Notice "comment répondre"
+    const steps = [
+      'Répondez directement à ce message (votre réponse s\'affichera sous celui-ci).',
+      'Complétez les cases jaunes ci-dessous avec vos réponses.',
+      'Joignez les documents listés dans le récapitulatif en fin de message.',
+    ];
+    parts.push(`
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:4px 0 20px 0;">
+        <tr>
+          <td width="4" style="background:${ACCENT};width:4px;font-size:1px;">&nbsp;</td>
+          <td style="background:${LABEL_BG};padding:14px 16px;">
+            <p style="margin:0 0 8px 0;font-weight:bold;color:#111827;">Comment nous répondre</p>
+            ${steps
+              .map(
+                (s, i) =>
+                  `<p style="margin:3px 0;font-size:13px;color:#374151;"><span style="font-weight:bold;color:${ACCENT};">${i + 1}.</span> ${escapeHtml(s)}</p>`
+              )
+              .join('')}
+          </td>
+        </tr>
+      </table>`);
 
     sections.forEach(({ section, groups }, idx) => {
       const number = idx + 1;
       parts.push(`
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0;border:1px solid #e5e7eb;border-radius:8px;">
           <tr>
-            <td style="width:36px;background:#2563eb;color:#ffffff;font-weight:bold;text-align:center;vertical-align:top;border-radius:8px 0 0 8px;padding:12px 0;">${number}</td>
+            <td style="width:36px;background:${ACCENT};color:#ffffff;font-weight:bold;text-align:center;vertical-align:top;border-radius:8px 0 0 8px;padding:12px 0;">${number}</td>
             <td style="padding:12px 16px;">
               <p style="margin:0 0 8px 0;font-weight:bold;color:#111827;">${escapeHtml(section.title.replace(/^\d+\/\s*/, ''))}</p>`);
 
-      for (const { group, items } of groups) {
+      for (const { group, fields } of groups) {
+        if (fields.length === 0) continue;
         if (group.label) {
-          parts.push(`<p style="margin:8px 0 2px 0;font-weight:bold;font-size:13px;color:#374151;">${escapeHtml(group.label)}</p>`);
+          parts.push(`<p style="margin:10px 0 4px 0;font-weight:bold;font-size:13px;color:#374151;">${escapeHtml(group.label)}</p>`);
         }
-        parts.push('<ul style="margin:0 0 8px 0;padding-left:20px;">');
-        for (const item of items) {
-          parts.push(`<li style="margin:2px 0;">${escapeHtml(item.text)}</li>`);
+        parts.push(
+          `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 10px 0;">`
+        );
+        for (const item of fields) {
+          parts.push(`
+            <tr>
+              <td width="52%" valign="top" style="${FONT}font-size:13px;line-height:1.4;color:#374151;background:${LABEL_BG};border:1px solid ${BORDER};padding:8px 10px;">${escapeHtml(item.text)}</td>
+              <td valign="top" style="${FONT}font-size:13px;background:${ANSWER_BG};border:1px solid ${BORDER};padding:8px 10px;">&nbsp;</td>
+            </tr>`);
         }
-        parts.push('</ul>');
+        parts.push('</table>');
       }
 
       parts.push('</td></tr></table>');
     });
   }
 
-  parts.push(`<p>${CLOSING_PARAGRAPH}</p>`);
+  if (documents.length > 0) {
+    parts.push(`
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;border:2px solid ${ACCENT};border-radius:8px;">
+        <tr><td style="background:${ACCENT};border-radius:7px 7px 0 0;padding:12px 16px;">
+          <p style="margin:0;${FONT}font-size:15px;font-weight:bold;color:#ffffff;">📎 Documents à joindre à votre réponse</p>
+        </td></tr>
+        <tr><td style="padding:12px 16px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+            ${documents
+              .map(
+                (item) =>
+                  `<tr><td width="22" valign="top" style="${FONT}font-size:15px;color:${ACCENT};padding:5px 0;">&#9744;</td><td style="${FONT}font-size:13px;line-height:1.4;color:#374151;padding:5px 0;border-bottom:1px solid ${BORDER};">${escapeHtml(item.text)}</td></tr>`
+              )
+              .join('')}
+          </table>
+        </td></tr>
+      </table>`);
+  }
+
+  parts.push(`<p style="margin-top:20px;">${CLOSING_PARAGRAPH}</p>`);
   parts.push('</div>');
 
   return parts.join('\n');
