@@ -47,7 +47,7 @@ export function AuditTab({ clientId, clientName = 'Client', recommendations, onU
     <div className="p-6 space-y-8">
 
       {/* Module Recommandations */}
-      <RecommandationsModule recommendations={recommendations} onUpdate={onUpdateRecommendations} />
+      <RecommandationsModule clientId={clientId} recommendations={recommendations} onUpdate={onUpdateRecommendations} />
 
       {/* En-tête */}
       <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg p-6 text-white">

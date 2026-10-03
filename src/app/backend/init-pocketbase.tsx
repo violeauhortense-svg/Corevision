@@ -32,9 +32,12 @@ async function getAdminToken(pbUrl: string): Promise<string | null> {
 
 interface FieldDef {
   name: string;
-  type: 'text' | 'bool' | 'date' | 'json' | 'number';
+  type: 'text' | 'bool' | 'date' | 'json' | 'number' | 'file';
   required?: boolean;
   max?: number; // text fields only; 0 (the PocketBase default) means unlimited
+  maxSelect?: number; // file fields only; 1 = single file
+  maxSize?: number; // file fields only, in bytes
+  mimeTypes?: string[]; // file fields only
 }
 
 async function ensureCollection(pbUrl: string, name: string, fields: FieldDef[]) {
@@ -46,7 +49,13 @@ async function ensureCollection(pbUrl: string, name: string, fields: FieldDef[])
     const collections = await listRes.json();
     const existing = collections.items?.find((c: any) => c.name === name);
 
-    const fieldDefs = fields.map((f) => ({ name: f.name, type: f.type, required: !!f.required, max: f.max }));
+    const fieldDefs = fields.map((f) => ({
+      name: f.name,
+      type: f.type,
+      required: !!f.required,
+      max: f.max,
+      ...(f.type === 'file' ? { maxSelect: f.maxSelect ?? 1, maxSize: f.maxSize, mimeTypes: f.mimeTypes } : {}),
+    }));
 
     if (!existing) {
       console.log(`Creating ${name} collection...`);
@@ -284,6 +293,19 @@ export async function initializePocketBase(pbUrl: string) {
       { name: 'preconisations', type: 'json' },
       { name: 'validatedByAdmin', type: 'bool' },
       { name: 'bilanData', type: 'json' },
+    ]);
+
+    // Fichiers PDF attachés à une recommandation (client.auditRecommendations
+    // est un simple tableau JSON embarqué sur la fiche client - les fichiers
+    // ont besoin de leur propre collection, liée par recommendationId,
+    // puisqu'un champ fichier PocketBase s'attache à un enregistrement, pas
+    // à un élément dans un blob JSON).
+    await ensureCollection(pbUrl, 'recommendation_documents', [
+      { name: 'recommendationId', type: 'text', required: true },
+      { name: 'clientId', type: 'text', required: true },
+      { name: 'filename', type: 'text' },
+      { name: 'uploadedAt', type: 'text' },
+      { name: 'file', type: 'file', maxSelect: 1, maxSize: 10485760, mimeTypes: ['application/pdf'] },
     ]);
 
     console.log('✅ Collections initialized');

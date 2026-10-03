@@ -1,8 +1,17 @@
-import { useState } from 'react';
-import { Plus, X, Trash2, Pencil, CheckCircle2, XCircle, ArrowRight, ArrowLeft, FileCheck, Flag, Lightbulb, AlertTriangle } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Plus, X, Trash2, Pencil, CheckCircle2, XCircle, ArrowRight, ArrowLeft, FileCheck, Flag, Lightbulb, AlertTriangle, Paperclip, Eye, Download, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import type { AuditRecommendation, AuditRecommendationStatus, AuditRecommendationService, AuditRecommendationVendeur } from './types';
+import {
+  getRecommendationDocuments,
+  uploadRecommendationDocument,
+  deleteRecommendationDocument,
+  recommendationDocumentUrl,
+  type RecommendationDocument,
+} from '../../services/recommendationDocumentsService';
 
 interface RecommandationsModuleProps {
+  clientId: string;
   recommendations: AuditRecommendation[];
   onUpdate: (recommendations: AuditRecommendation[]) => Promise<boolean | undefined> | Promise<void> | void;
 }
@@ -64,12 +73,63 @@ function emptyForm() {
   return { title: '', detail: '', chiffreAffaires: '', venduPar: '' as AuditRecommendationVendeur | '' };
 }
 
-export function RecommandationsModule({ recommendations, onUpdate }: RecommandationsModuleProps) {
+export function RecommandationsModule({ clientId, recommendations, onUpdate }: RecommandationsModuleProps) {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm());
   const [choosingServiceFor, setChoosingServiceFor] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  // PDF attachés par recommandation - chargés une fois pour toutes les
+  // recommandations affichées (généralement peu nombreuses par client).
+  const [docsByRec, setDocsByRec] = useState<Record<string, RecommendationDocument[]>>({});
+  const [uploadingFor, setUploadingFor] = useState<string | null>(null);
+  const fileInputs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const entries = await Promise.all(
+        recommendations.map(async (r) => [r.id, await getRecommendationDocuments(r.id)] as const)
+      );
+      if (!cancelled) setDocsByRec(Object.fromEntries(entries));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [recommendations.map((r) => r.id).join(',')]);
+
+  const handleUploadFile = async (recId: string, file: File) => {
+    if (file.type !== 'application/pdf') {
+      toast.error('Seuls les fichiers PDF sont acceptés');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Fichier trop volumineux (10 Mo max)');
+      return;
+    }
+    setUploadingFor(recId);
+    try {
+      const created = await uploadRecommendationDocument(recId, clientId, file);
+      setDocsByRec((prev) => ({ ...prev, [recId]: [created, ...(prev[recId] || [])] }));
+      toast.success('Document ajouté');
+    } catch (err) {
+      console.error('Erreur upload document recommandation:', err);
+      toast.error("Impossible d'envoyer le document");
+    } finally {
+      setUploadingFor(null);
+    }
+  };
+
+  const handleDeleteDocument = async (recId: string, docId: string) => {
+    const ok = await deleteRecommendationDocument(docId);
+    if (ok) {
+      setDocsByRec((prev) => ({ ...prev, [recId]: (prev[recId] || []).filter((d) => d.id !== docId) }));
+      toast.success('Document supprimé');
+    } else {
+      toast.error('Impossible de supprimer le document');
+    }
+  };
 
   // Renvoie true/false plutôt que rien, pour permettre aux appelants de ne
   // pas fermer/vider un formulaire (et perdre la saisie) quand la
@@ -360,6 +420,68 @@ export function RecommandationsModule({ recommendations, onUpdate }: Recommandat
                     {VENDEUR_LABELS[rec.venduPar]}
                   </span>
                 )}
+              </div>
+
+              {/* Documents PDF attachés */}
+              <div className="mt-3 pt-3 border-t border-gray-100">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {(docsByRec[rec.id] || []).map((doc) => (
+                    <span
+                      key={doc.id}
+                      className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200"
+                    >
+                      <Paperclip className="w-3 h-3 shrink-0" />
+                      <span className="truncate max-w-[160px]" title={doc.filename}>{doc.filename}</span>
+                      <a
+                        href={recommendationDocumentUrl(doc.id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1 hover:bg-gray-200 rounded-full"
+                        title="Voir"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                      </a>
+                      <a
+                        href={recommendationDocumentUrl(doc.id, { download: true })}
+                        className="p-1 hover:bg-gray-200 rounded-full"
+                        title="Télécharger"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                      </a>
+                      <button
+                        onClick={() => handleDeleteDocument(rec.id, doc.id)}
+                        className="p-1 hover:bg-red-100 rounded-full text-red-500"
+                        title="Supprimer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </span>
+                  ))}
+
+                  <input
+                    ref={(el) => { fileInputs.current[rec.id] = el; }}
+                    type="file"
+                    accept="application/pdf,.pdf"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleUploadFile(rec.id, file);
+                      e.target.value = '';
+                    }}
+                  />
+                  <button
+                    onClick={() => fileInputs.current[rec.id]?.click()}
+                    disabled={uploadingFor === rec.id}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border border-dashed border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    {uploadingFor === rec.id ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Paperclip className="w-3.5 h-3.5" />
+                    )}
+                    Joindre un PDF
+                  </button>
+                </div>
               </div>
 
               {/* Choix du service (après acceptation) */}

@@ -165,6 +165,41 @@ export class PocketBaseClient {
     }
   }
 
+  // Multipart upload (file fields) - deliberately not using getHeaders()
+  // here: forcing 'Content-Type: application/json' on a FormData body
+  // strips the multipart boundary fetch would otherwise set itself, and
+  // PocketBase then can't parse the uploaded file out of the request at
+  // all.
+  async createRecordWithFile(collection: string, formData: FormData): Promise<PBRecord> {
+    try {
+      const headers: Record<string, string> = {};
+      if (this.authToken) headers['Authorization'] = `Bearer ${this.authToken}`;
+
+      const res = await fetch(`${this.baseUrl}/api/collections/${collection}/records`, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(`${err.message || 'Create failed'} ${JSON.stringify(err.data || {})}`);
+      }
+      return await res.json();
+    } catch (err: any) {
+      console.error(`Error creating ${collection} with file:`, err.message);
+      throw err;
+    }
+  }
+
+  // Raw file bytes for a file-field record - PocketBase itself isn't
+  // publicly reachable (only this Deno backend is, via the ngrok tunnel),
+  // so routes that serve a recommendation's PDF to the browser fetch it
+  // here and stream/forward the response through themselves.
+  async fetchFile(collection: string, recordId: string, filename: string): Promise<Response> {
+    return this.fetchWithReauth(`${this.baseUrl}/api/files/${collection}/${recordId}/${filename}`, {});
+  }
+
   async deleteRecord(collection: string, id: string): Promise<void> {
     try {
       const res = await this.fetchWithReauth(`${this.baseUrl}/api/collections/${collection}/records/${id}`, {

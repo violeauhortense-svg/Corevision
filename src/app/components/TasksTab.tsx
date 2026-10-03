@@ -578,6 +578,7 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
             </div>
             <div className="overflow-y-auto p-6">
               <RecommandationsModule
+                clientId={clientId}
                 recommendations={auditRecommendations}
                 onUpdate={async (recs) => {
                   // Renvoyer le vrai résultat, pas juste attendre dessus -

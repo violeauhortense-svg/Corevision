@@ -249,6 +249,7 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
             </div>
             <div className="overflow-y-auto p-6">
               <RecommandationsModule
+                clientId={clientId}
                 recommendations={state.auditRecommendations}
                 onUpdate={handleUpdateAuditRecommendations}
               />
