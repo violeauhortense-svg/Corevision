@@ -121,6 +121,48 @@ export function RecommandationsModule({ clientId, recommendations, onUpdate }: R
     }
   };
 
+  // Un <a href> classique navigue directement vers l'URL ngrok et tombe
+  // sur sa page d'avertissement interstitielle (seul fetch() passe
+  // l'en-tête qui la contourne, patché globalement dans utils/api/info -
+  // une navigation de document brute ne le traverse pas). On récupère
+  // donc le PDF via fetch() et on l'ouvre/télécharge depuis un blob local.
+  const handleViewDocument = async (docId: string) => {
+    // Ouvrir la fenêtre tout de suite, de façon synchrone dans le
+    // gestionnaire de clic : Safari/iOS bloque window.open() si elle
+    // intervient après un await, car ce n'est alors plus perçu comme
+    // déclenché directement par le geste de l'utilisateur.
+    const win = window.open('', '_blank');
+    try {
+      const response = await fetch(recommendationDocumentUrl(docId));
+      if (!response.ok) throw new Error('fetch failed');
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      if (win) win.location.href = blobUrl;
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+    } catch (err) {
+      console.error('Erreur ouverture document:', err);
+      win?.close();
+      toast.error("Impossible d'ouvrir le document");
+    }
+  };
+
+  const handleDownloadDocument = async (docId: string, filename: string) => {
+    try {
+      const response = await fetch(recommendationDocumentUrl(docId, { download: true }));
+      if (!response.ok) throw new Error('fetch failed');
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error('Erreur téléchargement document:', err);
+      toast.error('Impossible de télécharger le document');
+    }
+  };
+
   const handleDeleteDocument = async (recId: string, docId: string) => {
     const ok = await deleteRecommendationDocument(docId);
     if (ok) {
@@ -432,22 +474,20 @@ export function RecommandationsModule({ clientId, recommendations, onUpdate }: R
                     >
                       <Paperclip className="w-3 h-3 shrink-0" />
                       <span className="truncate max-w-[160px]" title={doc.filename}>{doc.filename}</span>
-                      <a
-                        href={recommendationDocumentUrl(doc.id)}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        onClick={() => handleViewDocument(doc.id)}
                         className="p-1 hover:bg-gray-200 rounded-full"
                         title="Voir"
                       >
                         <Eye className="w-3.5 h-3.5" />
-                      </a>
-                      <a
-                        href={recommendationDocumentUrl(doc.id, { download: true })}
+                      </button>
+                      <button
+                        onClick={() => handleDownloadDocument(doc.id, doc.filename)}
                         className="p-1 hover:bg-gray-200 rounded-full"
                         title="Télécharger"
                       >
                         <Download className="w-3.5 h-3.5" />
-                      </a>
+                      </button>
                       <button
                         onClick={() => handleDeleteDocument(rec.id, doc.id)}
                         className="p-1 hover:bg-red-100 rounded-full text-red-500"
