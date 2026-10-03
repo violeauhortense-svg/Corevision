@@ -7,3 +7,8 @@ dist/
 .DS_Store
 .env.local
 .env.*.local
+
+# Données PocketBase - vivent hors du dossier OneDrive-synchronisé
+# depuis le 2026-10-03 (voir pocketbase/start-pocketbase.bat), jamais
+# recréées ici.
+pocketbase/pb_data/
