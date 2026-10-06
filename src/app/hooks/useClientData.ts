@@ -193,8 +193,13 @@ export function useClientData(clientId: string, onSave?: (data: ClientDataState)
   // Client handlers — each one updates local state for immediate UI
   // feedback AND persists the full record right away.
   const handleUpdateClient = useCallback(async (updates: Partial<ClientData>) => {
-    const updatedData = { ...stateRef.current.clientData, ...updates };
-    const errors = validateClientData(updatedData);
+    // Valider seulement les champs de cette mise à jour, pas l'ensemble du
+    // client déjà en mémoire - sinon une donnée invalide préexistante sur
+    // un champ qu'on ne touche même pas (ex: patrimoine resté à son objet
+    // JSON vide par défaut sur la quasi-totalité des fiches) bloque
+    // silencieusement tout edit, y compris depuis le header qui ne montre
+    // pourtant aucun champ "patrimoine".
+    const errors = validateClientData(updates);
     if (errors.length > 0) {
       const errorMessages = errors.map(e => e.message).join(', ');
       toast.error(`Validation: ${errorMessages}`);
@@ -203,6 +208,7 @@ export function useClientData(clientId: string, onSave?: (data: ClientDataState)
     if (updates.status && updates.status !== stateRef.current.clientData.status) {
       Events.clientStatusChanged(clientId, stateRef.current.clientData.status, updates.status);
     }
+    const updatedData = { ...stateRef.current.clientData, ...updates };
     const newState = { ...stateRef.current, clientData: updatedData };
     setState(newState);
     stateRef.current = newState;

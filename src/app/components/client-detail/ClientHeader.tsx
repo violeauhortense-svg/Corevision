@@ -33,7 +33,25 @@ export function ClientHeader({
   };
 
   const saveClientEdit = () => {
-    onUpdate({ ...tempClientData, name: `${tempClientData.firstName} ${tempClientData.lastName}` });
+    // Seulement les champs que cette modale affiche réellement - envoyer
+    // tempClientData en entier (clone de clientData) ferait repasser
+    // patrimoine et tout autre champ non touché ici par la validation,
+    // qui échoue dès que l'un d'eux contient une valeur restée invalide
+    // (ex: patrimoine resté à son objet JSON vide par défaut), bloquant
+    // ainsi un simple changement d'adresse ou de téléphone.
+    onUpdate({
+      firstName: tempClientData.firstName,
+      lastName: tempClientData.lastName,
+      name: `${tempClientData.firstName} ${tempClientData.lastName}`,
+      email: tempClientData.email,
+      phone: tempClientData.phone,
+      address: tempClientData.address,
+      birthDate: tempClientData.birthDate,
+      genre: tempClientData.genre,
+      activite: tempClientData.activite,
+      secteur: tempClientData.secteur,
+      majorationPartFiscale: tempClientData.majorationPartFiscale,
+    });
     setIsEditingClient(false);
   };
 

@@ -39,6 +39,13 @@ export function validateName(name: string, fieldName: string = 'Nom'): Validatio
 export function validateNumericField(value: any, fieldName: string = 'Valeur', min = 0): ValidationError | null {
   if (value === '' || value === null || value === undefined) return null;
 
+  // Un objet/tableau ne peut jamais venir d'une vraie saisie utilisateur -
+  // seulement d'un champ resté à sa valeur par défaut d'un ancien modèle
+  // de données (ex: patrimoine encore à son objet JSON vide sur la
+  // plupart des fiches). Le signaler comme une erreur de saisie bloquerait
+  // des sauvegardes sans rapport avec ce que la personne modifie vraiment.
+  if (typeof value === 'object') return null;
+
   const num = Number(value);
   if (isNaN(num)) {
     return { field: fieldName.toLowerCase(), message: `${fieldName} doit être un nombre` };
@@ -62,15 +69,24 @@ export function validateDate(dateString: string, fieldName: string = 'Date'): Va
   return null;
 }
 
+// Valide seulement les champs réellement présents dans clientData, pas
+// l'ensemble des champs possibles d'une fiche client - cette fonction est
+// appelée aussi bien sur une mise à jour partielle (ex: juste l'adresse
+// depuis le header) que sur une fiche complète, et exiger prénom/nom à
+// chaque fois ferait échouer un edit qui ne les touche même pas.
 export function validateClientData(clientData: any): ValidationError[] {
   const errors: ValidationError[] = [];
 
-  // Validate required fields
-  const firstNameError = validateName(clientData.firstName, 'Prénom');
-  if (firstNameError) errors.push(firstNameError);
+  // Validate required fields, but only when actually present in this update
+  if (clientData.firstName !== undefined) {
+    const firstNameError = validateName(clientData.firstName, 'Prénom');
+    if (firstNameError) errors.push(firstNameError);
+  }
 
-  const lastNameError = validateName(clientData.lastName, 'Nom');
-  if (lastNameError) errors.push(lastNameError);
+  if (clientData.lastName !== undefined) {
+    const lastNameError = validateName(clientData.lastName, 'Nom');
+    if (lastNameError) errors.push(lastNameError);
+  }
 
   // Validate optional fields if provided
   if (clientData.email) {
