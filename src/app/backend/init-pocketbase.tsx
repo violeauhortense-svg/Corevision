@@ -308,6 +308,19 @@ export async function initializePocketBase(pbUrl: string) {
       { name: 'file', type: 'file', maxSelect: 1, maxSize: 10485760, mimeTypes: ['application/pdf'] },
     ]);
 
+    // Même principe pour les PDF attachés à une tâche du pipeline (ex:
+    // "Pièces comptables reçues" dans Arbitrage) - les tâches elles-mêmes
+    // sont embarquées dans client.taches (JSON), pas des enregistrements
+    // à eux seuls, et leur id (ex: "arb1") est partagé par tous les
+    // clients, donc la clé ici est clientId + taskId, pas juste l'id.
+    await ensureCollection(pbUrl, 'task_documents', [
+      { name: 'clientId', type: 'text', required: true },
+      { name: 'taskId', type: 'text', required: true },
+      { name: 'filename', type: 'text' },
+      { name: 'uploadedAt', type: 'text' },
+      { name: 'file', type: 'file', maxSelect: 1, maxSize: 10485760, mimeTypes: ['application/pdf'] },
+    ]);
+
     console.log('✅ Collections initialized');
     return true;
   } catch (err: any) {

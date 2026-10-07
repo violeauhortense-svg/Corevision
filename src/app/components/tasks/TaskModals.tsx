@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Paperclip, Eye, Download, Trash2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { TaskButtonType } from './taskDefinitions';
 import type { Task } from '../types/client';
 import { clientAPI } from '../../services/api';
 import { hubCommunicationAPI } from '../../services/hubCommunicationAPI';
 import { DECOUVERTE_QUESTIONNAIRE, buildQuestionnaireText, buildQuestionnaireHtml } from './decouverteQuestionnaire';
+import {
+  getTaskDocuments,
+  uploadTaskDocument,
+  deleteTaskDocument,
+  taskDocumentUrl,
+  type TaskDocument,
+} from '../../services/taskDocumentsService';
 
 // "2026-10-15" -> "15 octobre 2026"
 function formatRdvDateLabel(dateStr?: string): string {
@@ -90,6 +97,9 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
   const [clientsList, setClientsList] = useState<{ id: string; label: string }[]>([]);
   const [clientInfo, setClientInfo] = useState<{ email: string; firstName: string } | null>(null);
   const [sendingMail, setSendingMail] = useState(false);
+  const [taskDocs, setTaskDocs] = useState<TaskDocument[]>([]);
+  const [uploadingTaskDoc, setUploadingTaskDoc] = useState(false);
+  const taskDocInput = React.useRef<HTMLInputElement | null>(null);
 
   // Recharge la saisie précédente à chaque ouverture d'une tâche - sans ça,
   // TaskModals restant monté en permanence (isOpen bascule mais le
@@ -130,6 +140,85 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
         .catch((err) => console.error('❌ Erreur chargement infos client:', err));
     }
   }, [isOpen, modalType, clientId]);
+
+  useEffect(() => {
+    if (isOpen && modalType === 'documents' && task) {
+      getTaskDocuments(clientId, task.id)
+        .then(setTaskDocs)
+        .catch((err) => console.error('❌ Erreur chargement documents tâche:', err));
+    }
+  }, [isOpen, modalType, clientId, task?.id]);
+
+  const handleUploadTaskDoc = async (file: File) => {
+    if (!task) return;
+    if (file.type !== 'application/pdf') {
+      toast.error('Seuls les fichiers PDF sont acceptés');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Fichier trop volumineux (10 Mo max)');
+      return;
+    }
+    setUploadingTaskDoc(true);
+    try {
+      const created = await uploadTaskDocument(clientId, task.id, file);
+      setTaskDocs((prev) => [created, ...prev]);
+      toast.success('Document ajouté');
+    } catch (err) {
+      console.error('Erreur upload document tâche:', err);
+      toast.error("Impossible d'envoyer le document");
+    } finally {
+      setUploadingTaskDoc(false);
+    }
+  };
+
+  const handleDeleteTaskDoc = async (docId: string) => {
+    const ok = await deleteTaskDocument(docId);
+    if (ok) {
+      setTaskDocs((prev) => prev.filter((d) => d.id !== docId));
+      toast.success('Document supprimé');
+    } else {
+      toast.error('Impossible de supprimer le document');
+    }
+  };
+
+  // Un <a href> classique vers l'URL ngrok tombe sur sa page
+  // d'avertissement interstitielle (seul fetch() passe l'en-tête qui la
+  // contourne) - on récupère donc le PDF via fetch() et on l'ouvre/
+  // télécharge depuis un blob local. window.open() est appelé de façon
+  // synchrone dans le clic pour ne pas être bloqué par Safari/iOS.
+  const handleViewTaskDoc = async (docId: string) => {
+    const win = window.open('', '_blank');
+    try {
+      const response = await fetch(taskDocumentUrl(docId));
+      if (!response.ok) throw new Error('fetch failed');
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      if (win) win.location.href = blobUrl;
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+    } catch (err) {
+      console.error('Erreur ouverture document tâche:', err);
+      win?.close();
+      toast.error("Impossible d'ouvrir le document");
+    }
+  };
+
+  const handleDownloadTaskDoc = async (docId: string, filename: string) => {
+    try {
+      const response = await fetch(taskDocumentUrl(docId, { download: true }));
+      if (!response.ok) throw new Error('fetch failed');
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error('Erreur téléchargement document tâche:', err);
+      toast.error('Impossible de télécharger le document');
+    }
+  };
 
   if (!isOpen || !modalType || !task) return null;
 
@@ -648,6 +737,63 @@ export const TaskModals: React.FC<TaskModalsProps> = ({
                 <span className="text-sm text-gray-700">{doc}</span>
               </label>
             ))}
+          </div>
+
+          <div className="mt-5 pt-4 border-t">
+            <p className="text-sm font-medium text-gray-700 mb-2">Documents déposés</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              {taskDocs.map((doc) => (
+                <span
+                  key={doc.id}
+                  className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200"
+                >
+                  <Paperclip className="w-3 h-3 shrink-0" />
+                  <span className="truncate max-w-[160px]" title={doc.filename}>{doc.filename}</span>
+                  <button
+                    onClick={() => handleViewTaskDoc(doc.id)}
+                    className="p-1 hover:bg-gray-200 rounded-full"
+                    title="Voir"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => handleDownloadTaskDoc(doc.id, doc.filename)}
+                    className="p-1 hover:bg-gray-200 rounded-full"
+                    title="Télécharger"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteTaskDoc(doc.id)}
+                    className="p-1 hover:bg-red-100 rounded-full text-red-500"
+                    title="Supprimer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </span>
+              ))}
+
+              <input
+                ref={taskDocInput}
+                type="file"
+                accept="application/pdf,.pdf"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleUploadTaskDoc(file);
+                  e.target.value = '';
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => taskDocInput.current?.click()}
+                disabled={uploadingTaskDoc}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border border-dashed border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+              >
+                {uploadingTaskDoc ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Paperclip className="w-3.5 h-3.5" />}
+                Joindre un PDF
+              </button>
+            </div>
           </div>
         </Modal>
       );

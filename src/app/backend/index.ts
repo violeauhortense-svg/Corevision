@@ -18,6 +18,7 @@ import agendaEventsRoutes from './agenda_events_routes_pb.tsx';
 import baremesRoutes from './baremes_routes_pb.tsx';
 import corevisionRoutes from './corevision_routes_pb.tsx';
 import recommendationDocumentsRoutes from './recommendation_documents_routes_pb.tsx';
+import taskDocumentsRoutes from './task_documents_routes_pb.tsx';
 
 const app = new Hono();
 const PORT = Deno.env.get('PORT') || '3000';
@@ -87,6 +88,7 @@ app.route('/api/communications', communicationsRoutes);
 app.route('/api/agenda-events', agendaEventsRoutes);
 app.route('/api/corevision/orders', corevisionRoutes);
 app.route('/api/recommendations', recommendationDocumentsRoutes);
+app.route('/api/task-documents', taskDocumentsRoutes);
 
 // ─── 404 Handler ──────────────────────────────────────────────────────
 app.notFound((c) => {

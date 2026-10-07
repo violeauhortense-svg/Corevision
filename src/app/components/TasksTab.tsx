@@ -243,13 +243,17 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
 
   const saveArbitrageFields = async () => {
     try {
-      const url = `/api/clients/${clientId}`;
-      const response = await fetch(url, {
-        method: 'PUT',
-        credentials: 'include',  // ✨ Send cookies automatically (sessionId)
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      // Était une URL relative + méthode PUT - ni l'une ni l'autre
+      // n'existent côté backend (le frontend et le backend sont sur deux
+      // domaines différents, et seule PATCH est exposée sur /clients/:id),
+      // donc cet enregistrement échouait silencieusement à chaque fois.
+      const token = localStorage.getItem('auth_token');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const response = await fetch(`${apiBaseUrl}/api/clients/${clientId}`, {
+        method: 'PATCH',
+        headers,
         body: JSON.stringify({
           arbitrageClosureDate,
           arbitrageTreasuryN1: arbitrageTreasuryN1 ? parseInt(arbitrageTreasuryN1) : undefined,
@@ -258,7 +262,10 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
 
       if (response.ok) {
         toast.success('Informations arbitrage enregistrées');
+        ClientService.clearCache();
         await loadClient();
+      } else {
+        toast.error('Erreur sauvegarde');
       }
     } catch (err) {
       console.error('❌ Erreur save arbitrage:', err);
@@ -363,7 +370,7 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
                 )}
 
                 <label className="block">
-                  <span className="text-sm font-medium text-gray-700">💰 Besoin trésorerie N-1 (€)</span>
+                  <span className="text-sm font-medium text-gray-700">💰 Besoin de trésorerie (€)</span>
                   <input
                     type="number"
                     value={arbitrageTreasuryN1}
