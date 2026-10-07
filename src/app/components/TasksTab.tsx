@@ -8,6 +8,7 @@ import { ClientService } from '../services/ClientService';
 import type { Client } from '../services/ClientService';
 import type { Task } from '../types/client';
 import { apiBaseUrl } from '../utils/api/info';
+import { archiveArbitrageCycle } from '../services/arbitrageArchiveService';
 import { toast } from 'sonner';
 
 const STATUSES = ['Prospect', 'Découverte', 'Simulation', 'Lettre Mission', 'Rapport/Audit', 'Suivi MEP', 'Suivi CSP', 'Arbitrage'];
@@ -33,6 +34,8 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
   const [showRecommandationsModule, setShowRecommandationsModule] = useState(false);
   const [arbitrageClosureDate, setArbitrageClosureDate] = useState('');
   const [arbitrageTreasuryN1, setArbitrageTreasuryN1] = useState('');
+  const [archivingArbitrage, setArchivingArbitrage] = useState(false);
+  const [confirmArchiveArbitrage, setConfirmArchiveArbitrage] = useState(false);
   const [loading, setLoading] = useState(true);
   const [validating, setValidating] = useState(false);
 
@@ -280,6 +283,43 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
     return date.toLocaleDateString('fr-FR');
   };
 
+  // "2026-06-30" -> "30/06/2026", sans passer par new Date(string) qui
+  // interprète une date "YYYY-MM-DD" comme minuit UTC - ça peut afficher
+  // la veille dans un fuseau en avance sur UTC (France l'été).
+  const formatLocalDate = (dateStr: string) => {
+    const [y, m, d] = dateStr.split('-');
+    return d && m && y ? `${d}/${m}/${y}` : dateStr;
+  };
+
+  const handleArchiveArbitrage = async () => {
+    if (!client) return;
+    setArchivingArbitrage(true);
+    try {
+      const currentTasks = client.taches?.['Arbitrage'] || [];
+      const { client: updatedClient } = await archiveArbitrageCycle(
+        clientId,
+        arbitrageClosureDate,
+        arbitrageTreasuryN1 ? parseInt(arbitrageTreasuryN1) : 0,
+        currentTasks
+      );
+      setClient((prev) => (prev ? { ...prev, ...updatedClient } : updatedClient));
+      setArbitrageClosureDate(updatedClient.arbitrageClosureDate || '');
+      setArbitrageTreasuryN1('');
+      ClientService.clearCache();
+      toast.success(
+        updatedClient.arbitrageClosureDate
+          ? `Arbitrage archivé - prochaine clôture pré-remplie au ${formatLocalDate(updatedClient.arbitrageClosureDate)}`
+          : 'Arbitrage archivé'
+      );
+    } catch (err) {
+      console.error('Erreur archivage arbitrage:', err);
+      toast.error("Impossible d'archiver l'arbitrage");
+    } finally {
+      setArchivingArbitrage(false);
+      setConfirmArchiveArbitrage(false);
+    }
+  };
+
   if (loading || !client) return <div className="p-4 text-center">Chargement...</div>;
 
   const cspSigne = client.cspSigne ?? false;
@@ -386,6 +426,45 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
                 >
                   💾 Enregistrer les informations
                 </button>
+
+                {confirmArchiveArbitrage ? (
+                  <div className="border-2 border-orange-300 bg-orange-50 rounded-lg p-3 space-y-2">
+                    <p className="text-sm text-orange-800">
+                      Archiver ce cycle dans l'Historique, réinitialiser les 5 tâches et passer la date de
+                      clôture au {arbitrageClosureDate ? formatLocalDate(
+                        (() => {
+                          const [y, m, d] = arbitrageClosureDate.split('-').map(Number);
+                          const next = new Date(y, (m || 1) - 1, d || 1);
+                          next.setFullYear(next.getFullYear() + 1);
+                          return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-${String(next.getDate()).padStart(2, '0')}`;
+                        })()
+                      ) : '(non renseignée)'} ?
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleArchiveArbitrage}
+                        disabled={archivingArbitrage}
+                        className="flex-1 px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm font-medium disabled:opacity-50"
+                      >
+                        {archivingArbitrage ? 'Archivage...' : 'Confirmer'}
+                      </button>
+                      <button
+                        onClick={() => setConfirmArchiveArbitrage(false)}
+                        disabled={archivingArbitrage}
+                        className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm font-medium"
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmArchiveArbitrage(true)}
+                    className="w-full px-4 py-2 border-2 border-orange-300 text-orange-700 rounded-lg hover:bg-orange-50 text-sm font-medium"
+                  >
+                    🗄️ Archiver cet arbitrage (passer à N+1)
+                  </button>
+                )}
               </div>
             )}
 

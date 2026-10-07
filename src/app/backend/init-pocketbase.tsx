@@ -321,6 +321,17 @@ export async function initializePocketBase(pbUrl: string) {
       { name: 'file', type: 'file', maxSelect: 1, maxSize: 10485760, mimeTypes: ['application/pdf'] },
     ]);
 
+    // Historique des cycles d'arbitrage archivés - un instantané (date de
+    // clôture, besoin de trésorerie, état des 5 tâches) à chaque fois que
+    // l'utilisatrice clôt un cycle, avant de le réinitialiser pour N+1.
+    await ensureCollection(pbUrl, 'arbitrage_archive', [
+      { name: 'clientId', type: 'text', required: true },
+      { name: 'closureDate', type: 'text' },
+      { name: 'treasuryNeed', type: 'number' },
+      { name: 'tasks', type: 'json' },
+      { name: 'archivedAt', type: 'text', required: true },
+    ]);
+
     console.log('✅ Collections initialized');
     return true;
   } catch (err: any) {

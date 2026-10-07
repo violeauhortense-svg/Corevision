@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Mail, Phone, FileText, CheckCircle, Send, Clock, Target, TrendingUp, AlertCircle } from 'lucide-react';
+import { Calendar, Mail, Phone, FileText, CheckCircle, Send, Clock, Target, TrendingUp, AlertCircle, Archive } from 'lucide-react';
 import { useClientHistory } from '../../utils/useEventSystem';
 import { taskSyncService } from '../../services/taskSyncService';
 import { hubCommunicationAPI } from '../../services/hubCommunicationAPI';
+import { getArbitrageArchive, type ArbitrageArchiveEntry } from '../../services/arbitrageArchiveService';
 import { MailDetailPanel } from '../communications/MailDetailPanel';
 import type { HistoryEvent } from '../../utils/eventEmitter';
 import type { Task } from '../client-detail/types';
@@ -21,6 +22,7 @@ export function HistoriqueTab({ clientId }: HistoriqueTabProps) {
   const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
   const [completedMails, setCompletedMails] = useState<HubMail[]>([]);
   const [selectedMail, setSelectedMail] = useState<HubMail | null>(null);
+  const [arbitrageArchive, setArbitrageArchive] = useState<ArbitrageArchiveEntry[]>([]);
 
   const loadCompletedMails = async () => {
     try {
@@ -51,6 +53,12 @@ export function HistoriqueTab({ clientId }: HistoriqueTabProps) {
   // s'affichent plus dans l'onglet "Interne" du Hub, mais se rangent ici.
   useEffect(() => {
     loadCompletedMails();
+  }, [clientId]);
+
+  useEffect(() => {
+    getArbitrageArchive(clientId)
+      .then(setArbitrageArchive)
+      .catch((error) => console.error('❌ Erreur chargement historique arbitrage:', error));
   }, [clientId]);
 
   // Combiner les événements et les tâches complétées
@@ -164,6 +172,40 @@ export function HistoriqueTab({ clientId }: HistoriqueTabProps) {
                 </p>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Arbitrages archivés - un instantané à chaque fois qu'un cycle
+          d'arbitrage (Suivi CSP > Arbitrage) est clos et réinitialisé
+          pour l'exercice suivant depuis l'onglet Tâches. */}
+      {arbitrageArchive.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <Archive className="w-5 h-5 text-orange-600" />
+            Arbitrages archivés ({arbitrageArchive.length})
+          </h3>
+          <div className="space-y-2">
+            {arbitrageArchive.map((entry) => {
+              const validated = entry.tasks.filter((t: any) => t.completed || t.status === 'na').length;
+              const [y, m, d] = (entry.closureDate || '').split('-');
+              const closureLabel = d && m && y ? `${d}/${m}/${y}` : 'non renseignée';
+              return (
+                <div key={entry.id} className="border border-gray-200 rounded-lg p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="font-medium text-gray-900 text-sm">Clôture d'exercice : {closureLabel}</p>
+                    <span className="text-xs text-gray-500 shrink-0">
+                      Archivé le {new Date(entry.archivedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    💰 Besoin de trésorerie : {entry.treasuryNeed ? `${entry.treasuryNeed.toLocaleString('fr-FR')} €` : 'non renseigné'}
+                    {' · '}
+                    {validated}/{entry.tasks.length} tâches validées
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
