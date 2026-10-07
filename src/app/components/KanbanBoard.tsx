@@ -35,10 +35,10 @@ interface KanbanClient {
 }
 
 // Même calcul que TasksTab.tsx (calculateArbitrageDeadline) : la date
-// limite pour arbitrer est la clôture d'exercice + 3 mois.
+// limite pour arbitrer est la clôture d'exercice + 6 mois.
 function arbitrageDeadline(closureDate: string): string {
   const date = new Date(closureDate);
-  date.setMonth(date.getMonth() + 3);
+  date.setMonth(date.getMonth() + 6);
   return date.toLocaleDateString('fr-FR');
 }
 

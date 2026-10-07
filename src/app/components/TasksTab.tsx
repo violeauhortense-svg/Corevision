@@ -276,7 +276,7 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
   const calculateArbitrageDeadline = (closureDate: string) => {
     if (!closureDate) return '';
     const date = new Date(closureDate);
-    date.setMonth(date.getMonth() + 3);
+    date.setMonth(date.getMonth() + 6);
     return date.toLocaleDateString('fr-FR');
   };
 
