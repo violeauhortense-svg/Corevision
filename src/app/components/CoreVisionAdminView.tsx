@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Package, Clock, CheckCircle, Loader2, RefreshCw, Trash2, Eye, User, Calendar } from 'lucide-react';
+import { Package, Clock, CheckCircle, Loader2, RefreshCw, Trash2, Eye, User, Calendar, FileSpreadsheet } from 'lucide-react';
 import { toast } from 'sonner';
 import { CoreVisionAdminDetailModal } from './CoreVisionAdminDetailModal';
 import { useCoreVision } from '../hooks/useCoreVision';
@@ -122,13 +122,24 @@ export function CoreVisionAdminView() {
           </h2>
           <p className="text-gray-600 mt-2">Gérez toutes les demandes des CGP</p>
         </div>
-        <button
-          onClick={refresh}
-          className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-        >
-          <RefreshCw className="w-4 h-4" />
-          Actualiser
-        </button>
+        <div className="flex items-center gap-3">
+          <a
+            href="/downloads/Modele_Comparatif_EI_SEL.xlsx"
+            download
+            className="flex items-center gap-2 px-4 py-2 border-2 border-purple-300 text-purple-700 rounded-lg hover:bg-purple-50 transition-colors"
+            title="Modèle comparatif EI ou SEL (37 feuilles) - référence pour le calcul des commandes"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            Modèle comparatif EI/SEL
+          </a>
+          <button
+            onClick={refresh}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Actualiser
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
