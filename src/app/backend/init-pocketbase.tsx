@@ -324,6 +324,9 @@ export async function initializePocketBase(pbUrl: string) {
       { name: 'filename', type: 'text' },
       { name: 'updatedAt', type: 'text' },
       { name: 'file', type: 'file', maxSelect: 1, maxSize: 20971520, mimeTypes: ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'] },
+      // Choix d'inclusion/exclusion par titre (coché = inclus dans le
+      // rapport à générer) - [{anchor, title, level, included}].
+      { name: 'titleSelections', type: 'json' },
     ]);
 
     // Fichiers PDF attachés à une recommandation (client.auditRecommendations

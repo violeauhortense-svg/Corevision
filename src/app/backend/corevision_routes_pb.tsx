@@ -8,7 +8,7 @@
 
 import { Hono } from 'hono';
 import { pb } from './pocketbase_client.tsx';
-import { IP_TEMPLATES, IP_TEMPLATE_MIME, findIpTemplate } from './corevision_ip_templates.tsx';
+import { IP_TEMPLATES, IP_TEMPLATE_MIME, findIpTemplate, extractIpTitles } from './corevision_ip_templates.tsx';
 
 const app = new Hono();
 
@@ -289,6 +289,55 @@ app.post('/:orderId/ip-reports/:templateKey', async (c) => {
     return c.json({ filename: updated.filename, updatedAt: updated.updatedAt });
   } catch (err: any) {
     console.error('Erreur réimport rapport IP:', err.message);
+    return c.json({ error: err.message }, 500);
+  }
+});
+
+// ─── GET /:orderId/ip-reports/:templateKey/titles - titres + sélection ──
+app.get('/:orderId/ip-reports/:templateKey/titles', async (c) => {
+  try {
+    const orderId = c.req.param('orderId');
+    const templateKey = c.req.param('templateKey');
+    const record = await findIpDocument(orderId, templateKey);
+    if (!record) return c.json({ error: "Document pas encore généré pour cette commande" }, 404);
+
+    const fileRes = await pb.fetchFile('corevision_ip_documents', record.id, record.file as string);
+    if (!fileRes.ok) return c.json({ error: 'Fichier introuvable' }, 404);
+    const bytes = new Uint8Array(await fileRes.arrayBuffer());
+
+    const extracted = await extractIpTitles(bytes);
+    const saved: Record<string, boolean> = {};
+    ((record.titleSelections as any[]) || []).forEach((t: any) => {
+      saved[t.anchor] = t.included;
+    });
+
+    const titles = extracted.map((t) => ({
+      ...t,
+      included: saved[t.anchor] !== undefined ? saved[t.anchor] : true,
+    }));
+
+    return c.json({ titles });
+  } catch (err: any) {
+    console.error('Erreur extraction titres rapport IP:', err.message);
+    return c.json({ error: err.message }, 500);
+  }
+});
+
+// ─── POST /:orderId/ip-reports/:templateKey/titles - sauvegarde la sélection ─
+app.post('/:orderId/ip-reports/:templateKey/titles', async (c) => {
+  try {
+    const orderId = c.req.param('orderId');
+    const templateKey = c.req.param('templateKey');
+    const record = await findIpDocument(orderId, templateKey);
+    if (!record) return c.json({ error: "Document pas encore généré pour cette commande" }, 404);
+
+    const body = await c.req.json();
+    const titles = Array.isArray(body.titles) ? body.titles : [];
+
+    await pb.updateRecord('corevision_ip_documents', record.id, { titleSelections: titles });
+    return c.json({ success: true });
+  } catch (err: any) {
+    console.error('Erreur sauvegarde titres rapport IP:', err.message);
     return c.json({ error: err.message }, 500);
   }
 });

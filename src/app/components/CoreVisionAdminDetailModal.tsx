@@ -9,7 +9,7 @@ import { RapportPatrimonial } from './client-detail/RapportPatrimonial';
 import { CompteRenduProgressif } from './client-detail/CompteRenduProgressif';
 import { RapportSection } from './CoreVisionAdminDetailModal-rapport-section';
 import { comparatifUrl, uploadComparatif } from '../services/comparatifService';
-import { listIpReports, generateIpReport, uploadIpReport, ipReportUrl, type IpTemplateOption, type IpGeneratedDoc } from '../services/ipReportsService';
+import { listIpReports, generateIpReport, uploadIpReport, ipReportUrl, getIpReportTitles, saveIpReportTitles, type IpTemplateOption, type IpGeneratedDoc, type IpTitleEntry } from '../services/ipReportsService';
 
 interface Preconisation {
   id: string;
@@ -37,6 +37,8 @@ export function CoreVisionAdminDetailModal({ order, onClose, onUpdate }: CoreVis
   const [loadingIpReports, setLoadingIpReports] = useState(false);
   const [generatingIpReport, setGeneratingIpReport] = useState(false);
   const [uploadingIpReport, setUploadingIpReport] = useState(false);
+  const [ipTitles, setIpTitles] = useState<IpTitleEntry[]>([]);
+  const [loadingIpTitles, setLoadingIpTitles] = useState(false);
   const [audit, setAudit] = useState(order.audit || '');
   const [presentationClient, setPresentationClient] = useState(order.presentationClient || '');
   const [preconisations, setPreconisations] = useState<Preconisation[]>(order.preconisations || []);
@@ -836,6 +838,33 @@ Fiscalité : ${strat.fiscalite}
     loadIpReports();
   }, [order.orderId]);
 
+  const loadIpTitlesFor = async (templateKey: string) => {
+    setLoadingIpTitles(true);
+    try {
+      const titles = await getIpReportTitles(order.orderId, templateKey);
+      setIpTitles(titles);
+    } catch (err) {
+      console.error('Erreur chargement titres rapport IP:', err);
+    } finally {
+      setLoadingIpTitles(false);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedIpTemplate && ipGenerated[selectedIpTemplate]) {
+      loadIpTitlesFor(selectedIpTemplate);
+    } else {
+      setIpTitles([]);
+    }
+  }, [selectedIpTemplate, ipGenerated[selectedIpTemplate]?.updatedAt]);
+
+  const handleToggleIpTitle = async (anchor: string) => {
+    const updated = ipTitles.map((t) => (t.anchor === anchor ? { ...t, included: !t.included } : t));
+    setIpTitles(updated);
+    const ok = await saveIpReportTitles(order.orderId, selectedIpTemplate, updated);
+    if (!ok) toast.error('Impossible de sauvegarder la sélection');
+  };
+
   const handleGenerateIpReport = async () => {
     if (!selectedIpTemplate) return;
     setGeneratingIpReport(true);
@@ -903,6 +932,36 @@ Fiscalité : ${strat.fiscalite}
     } finally {
       setUploadingIpReport(false);
     }
+  };
+
+  // Partagé entre l'onglet "Rapports IP" (où la sélection se fait) et
+  // l'onglet "Présentation" (où elle sert à composer la situation
+  // patrimoniale) - les deux lisent/modifient le même état.
+  const renderIpTitlesChecklist = () => {
+    if (loadingIpTitles) return <p className="text-sm text-gray-600">Chargement des titres...</p>;
+    if (ipTitles.length === 0) {
+      return <p className="text-sm text-gray-600">Aucun titre détecté dans ce document.</p>;
+    }
+    return (
+      <div className="border-2 border-gray-200 rounded-lg divide-y divide-gray-100">
+        {ipTitles.map((t) => (
+          <label
+            key={t.anchor}
+            className={`flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-gray-50 ${t.level > 1 ? 'pl-8' : ''}`}
+          >
+            <input
+              type="checkbox"
+              checked={t.included}
+              onChange={() => handleToggleIpTitle(t.anchor)}
+              className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+            />
+            <span className={`text-sm ${t.included ? 'text-gray-900' : 'text-gray-400 line-through'}`}>
+              {t.title}
+            </span>
+          </label>
+        ))}
+      </div>
+    );
   };
 
   const calculateTotalPatrimoine = () => {
@@ -1103,6 +1162,24 @@ Fiscalité : ${strat.fiscalite}
                 <Save className="w-5 h-5" />
                 {saving ? 'Sauvegarde...' : 'Sauvegarder la présentation'}
               </button>
+
+              {/* Situation patrimoniale : titres du rapport IP sélectionné dans
+                  l'onglet "Rapports IP" - même sélection, partagée entre les deux. */}
+              <div className="border-t border-gray-200 pt-4">
+                <label className="block font-semibold text-gray-900 mb-2">📊 Situation patrimoniale - Rapport IP</label>
+                {selectedIpTemplate && ipGenerated[selectedIpTemplate] ? (
+                  <>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Variante : {ipTemplates.find((t) => t.key === selectedIpTemplate)?.label} - cochez les titres à inclure.
+                    </p>
+                    {renderIpTitlesChecklist()}
+                  </>
+                ) : (
+                  <p className="text-sm text-gray-600">
+                    Générez d'abord un document dans l'onglet "Rapports IP" pour choisir les titres à inclure ici.
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
@@ -1260,6 +1337,8 @@ Fiscalité : ${strat.fiscalite}
                       ? `${ipGenerated[selectedIpTemplate].filename} · mis à jour le ${new Date(ipGenerated[selectedIpTemplate].updatedAt).toLocaleDateString('fr-FR')}`
                       : "Aucun document généré pour cette variante sur cette commande."}
                   </p>
+
+                  {selectedIpTemplate && ipGenerated[selectedIpTemplate] && renderIpTitlesChecklist()}
 
                   <div className="flex flex-wrap gap-3">
                     {selectedIpTemplate && !ipGenerated[selectedIpTemplate] ? (

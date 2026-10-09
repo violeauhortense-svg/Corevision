@@ -64,3 +64,32 @@ export async function uploadIpReport(orderId: string, templateKey: string, file:
 export function ipReportUrl(orderId: string, templateKey: string, { download = false } = {}): string {
   return `${apiBaseUrl}/api/corevision/orders/${orderId}/ip-reports/${templateKey}/download${download ? '?download=1' : ''}`;
 }
+
+export interface IpTitleEntry {
+  anchor: string;
+  title: string;
+  level: number;
+  included: boolean;
+}
+
+export async function getIpReportTitles(orderId: string, templateKey: string): Promise<IpTitleEntry[]> {
+  const response = await fetch(
+    `${apiBaseUrl}/api/corevision/orders/${orderId}/ip-reports/${templateKey}/titles`,
+    { headers: authHeaders() }
+  );
+  if (!response.ok) return [];
+  const data = await response.json();
+  return data.titles || [];
+}
+
+export async function saveIpReportTitles(orderId: string, templateKey: string, titles: IpTitleEntry[]): Promise<boolean> {
+  const response = await fetch(
+    `${apiBaseUrl}/api/corevision/orders/${orderId}/ip-reports/${templateKey}/titles`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ titles }),
+    }
+  );
+  return response.ok;
+}
