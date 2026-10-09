@@ -9,6 +9,7 @@ import { RapportPatrimonial } from './client-detail/RapportPatrimonial';
 import { CompteRenduProgressif } from './client-detail/CompteRenduProgressif';
 import { RapportSection } from './CoreVisionAdminDetailModal-rapport-section';
 import { comparatifUrl, uploadComparatif } from '../services/comparatifService';
+import { listIpReports, generateIpReport, uploadIpReport, ipReportUrl, type IpTemplateOption, type IpGeneratedDoc } from '../services/ipReportsService';
 
 interface Preconisation {
   id: string;
@@ -25,10 +26,17 @@ interface CoreVisionAdminDetailModalProps {
 }
 
 export function CoreVisionAdminDetailModal({ order, onClose, onUpdate }: CoreVisionAdminDetailModalProps) {
-  const [activeSubTab, setActiveSubTab] = useState<'preconisations' | 'presentation' | 'incoherences' | 'rapport' | 'comparatif'>('rapport');
+  const [activeSubTab, setActiveSubTab] = useState<'preconisations' | 'presentation' | 'incoherences' | 'rapport' | 'comparatif' | 'ip-reports'>('rapport');
   const [comparatifFilename, setComparatifFilename] = useState<string | undefined>(order.comparatifFilename);
   const [comparatifUpdatedAt, setComparatifUpdatedAt] = useState<string | undefined>(order.comparatifUpdatedAt);
   const [uploadingComparatif, setUploadingComparatif] = useState(false);
+
+  const [ipTemplates, setIpTemplates] = useState<IpTemplateOption[]>([]);
+  const [ipGenerated, setIpGenerated] = useState<Record<string, IpGeneratedDoc>>({});
+  const [selectedIpTemplate, setSelectedIpTemplate] = useState<string>('');
+  const [loadingIpReports, setLoadingIpReports] = useState(false);
+  const [generatingIpReport, setGeneratingIpReport] = useState(false);
+  const [uploadingIpReport, setUploadingIpReport] = useState(false);
   const [audit, setAudit] = useState(order.audit || '');
   const [presentationClient, setPresentationClient] = useState(order.presentationClient || '');
   const [preconisations, setPreconisations] = useState<Preconisation[]>(order.preconisations || []);
@@ -811,6 +819,92 @@ Fiscalité : ${strat.fiscalite}
     }
   };
 
+  useEffect(() => {
+    const loadIpReports = async () => {
+      setLoadingIpReports(true);
+      try {
+        const { templates, generated } = await listIpReports(order.orderId);
+        setIpTemplates(templates);
+        setIpGenerated(generated);
+        if (!selectedIpTemplate && templates.length > 0) setSelectedIpTemplate(templates[0].key);
+      } catch (err) {
+        console.error('Erreur chargement rapports IP:', err);
+      } finally {
+        setLoadingIpReports(false);
+      }
+    };
+    loadIpReports();
+  }, [order.orderId]);
+
+  const handleGenerateIpReport = async () => {
+    if (!selectedIpTemplate) return;
+    setGeneratingIpReport(true);
+    try {
+      const doc = await generateIpReport(order.orderId, selectedIpTemplate);
+      setIpGenerated((prev) => ({ ...prev, [selectedIpTemplate]: doc }));
+      toast.success('Document généré');
+    } catch (err) {
+      console.error('Erreur génération rapport IP:', err);
+      toast.error('Impossible de générer le document');
+    } finally {
+      setGeneratingIpReport(false);
+    }
+  };
+
+  const handleViewIpReport = async () => {
+    if (!selectedIpTemplate) return;
+    const win = window.open('', '_blank');
+    try {
+      const response = await fetch(ipReportUrl(order.orderId, selectedIpTemplate));
+      if (!response.ok) throw new Error('fetch failed');
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      if (win) win.location.href = blobUrl;
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+    } catch (err) {
+      console.error('Erreur ouverture rapport IP:', err);
+      win?.close();
+      toast.error("Impossible d'ouvrir le document");
+    }
+  };
+
+  const handleDownloadIpReport = async () => {
+    if (!selectedIpTemplate) return;
+    try {
+      const response = await fetch(ipReportUrl(order.orderId, selectedIpTemplate, { download: true }));
+      if (!response.ok) throw new Error('fetch failed');
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = ipGenerated[selectedIpTemplate]?.filename || 'Rapport_IP.docx';
+      a.click();
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error('Erreur téléchargement rapport IP:', err);
+      toast.error('Impossible de télécharger le document');
+    }
+  };
+
+  const handleUploadIpReport = async (file: File) => {
+    if (!selectedIpTemplate) return;
+    if (!file.name.toLowerCase().endsWith('.docx')) {
+      toast.error('Seuls les fichiers .docx sont acceptés');
+      return;
+    }
+    setUploadingIpReport(true);
+    try {
+      const doc = await uploadIpReport(order.orderId, selectedIpTemplate, file);
+      setIpGenerated((prev) => ({ ...prev, [selectedIpTemplate]: doc }));
+      toast.success('Document mis à jour');
+    } catch (err) {
+      console.error('Erreur import rapport IP:', err);
+      toast.error("Impossible d'importer le fichier");
+    } finally {
+      setUploadingIpReport(false);
+    }
+  };
+
   const calculateTotalPatrimoine = () => {
     if (!bilanData?.patrimoine) return 0;
     const actifs = (bilanData.patrimoine.actifsFinanciers || []).reduce((sum: number, a: any) => sum + (a.value || 0), 0);
@@ -844,6 +938,7 @@ Fiscalité : ${strat.fiscalite}
             { id: 'presentation', label: 'Présentation', icon: '📋' },
             { id: 'incoherences', label: 'Incohérences', icon: '⚠️' },
             { id: 'comparatif', label: 'Comparatif EI/SEL', icon: '📊' },
+            { id: 'ip-reports', label: 'Rapports IP', icon: '📄' },
           ].map((tab: any) => (
             <button
               key={tab.id}
@@ -1128,6 +1223,90 @@ Fiscalité : ${strat.fiscalite}
                   />
                 </label>
               </div>
+            </div>
+          )}
+
+          {activeSubTab === 'ip-reports' && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <FileText className="w-8 h-8 text-purple-600" />
+                <div>
+                  <h3 className="font-semibold text-gray-900">Rapports IP</h3>
+                  <p className="text-sm text-gray-600">
+                    Choisissez la variante qui concerne cette commande, puis générez, téléchargez ou réimportez le document.
+                  </p>
+                </div>
+              </div>
+
+              {loadingIpReports ? (
+                <p className="text-sm text-gray-600">Chargement...</p>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Variante</label>
+                    <select
+                      value={selectedIpTemplate}
+                      onChange={(e) => setSelectedIpTemplate(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    >
+                      {ipTemplates.map((t) => (
+                        <option key={t.key} value={t.key}>{t.label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <p className="text-sm text-gray-600">
+                    {selectedIpTemplate && ipGenerated[selectedIpTemplate]
+                      ? `${ipGenerated[selectedIpTemplate].filename} · mis à jour le ${new Date(ipGenerated[selectedIpTemplate].updatedAt).toLocaleDateString('fr-FR')}`
+                      : "Aucun document généré pour cette variante sur cette commande."}
+                  </p>
+
+                  <div className="flex flex-wrap gap-3">
+                    {selectedIpTemplate && !ipGenerated[selectedIpTemplate] ? (
+                      <button
+                        onClick={handleGenerateIpReport}
+                        disabled={generatingIpReport}
+                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+                      >
+                        <FileText className="w-4 h-4" />
+                        {generatingIpReport ? 'Génération...' : 'Générer le document'}
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          onClick={handleViewIpReport}
+                          className="flex items-center gap-2 px-4 py-2 border-2 border-purple-300 text-purple-700 rounded-lg hover:bg-purple-50 transition-colors"
+                        >
+                          <Eye className="w-4 h-4" />
+                          Voir
+                        </button>
+                        <button
+                          onClick={handleDownloadIpReport}
+                          className="flex items-center gap-2 px-4 py-2 border-2 border-purple-300 text-purple-700 rounded-lg hover:bg-purple-50 transition-colors"
+                        >
+                          <Download className="w-4 h-4" />
+                          Télécharger
+                        </button>
+                        <label className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors cursor-pointer">
+                          <Upload className="w-4 h-4" />
+                          {uploadingIpReport ? 'Import en cours...' : 'Importer le fichier finalisé'}
+                          <input
+                            type="file"
+                            accept=".docx"
+                            className="hidden"
+                            disabled={uploadingIpReport}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleUploadIpReport(file);
+                              e.target.value = '';
+                            }}
+                          />
+                        </label>
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>

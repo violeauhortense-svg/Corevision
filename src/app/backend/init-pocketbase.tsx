@@ -313,6 +313,19 @@ export async function initializePocketBase(pbUrl: string) {
       { name: 'comparatifUpdatedAt', type: 'text' },
     ]);
 
+    // Rapports IP (6 matrices Word selon profession/structure) propres à
+    // une commande - une ligne par (orderId, templateKey), créée à la
+    // demande quand l'admin choisit cette variante dans l'onglet "Rapports
+    // IP" (contrairement au comparatif EI/SEL, pas de copie automatique à
+    // la commande : elle ne concerne souvent qu'une seule des 6 variantes).
+    await ensureCollection(pbUrl, 'corevision_ip_documents', [
+      { name: 'orderId', type: 'text', required: true },
+      { name: 'templateKey', type: 'text', required: true },
+      { name: 'filename', type: 'text' },
+      { name: 'updatedAt', type: 'text' },
+      { name: 'file', type: 'file', maxSelect: 1, maxSize: 20971520, mimeTypes: ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'] },
+    ]);
+
     // Fichiers PDF attachés à une recommandation (client.auditRecommendations
     // est un simple tableau JSON embarqué sur la fiche client - les fichiers
     // ont besoin de leur propre collection, liée par recommendationId,

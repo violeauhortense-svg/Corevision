@@ -8,6 +8,7 @@
 
 import { Hono } from 'hono';
 import { pb } from './pocketbase_client.tsx';
+import { IP_TEMPLATES, IP_TEMPLATE_MIME, findIpTemplate } from './corevision_ip_templates.tsx';
 
 const app = new Hono();
 
@@ -177,6 +178,117 @@ app.post('/:orderId/comparatif', async (c) => {
     return c.json({ success: true, order: updated });
   } catch (err: any) {
     console.error('Erreur réimport comparatif CoreVision:', err.message);
+    return c.json({ error: err.message }, 500);
+  }
+});
+
+async function findIpDocument(orderId: string, templateKey: string) {
+  const { items } = await pb.listRecords('corevision_ip_documents', {
+    filter: `orderId = "${orderId}" && templateKey = "${templateKey}"`,
+    perPage: 1,
+  });
+  return items[0] || null;
+}
+
+// ─── GET /:orderId/ip-reports - liste des variantes + ce qui existe déjà ──
+app.get('/:orderId/ip-reports', async (c) => {
+  try {
+    const orderId = c.req.param('orderId');
+    const { items } = await pb.listRecords('corevision_ip_documents', {
+      filter: `orderId = "${orderId}"`,
+      perPage: 50,
+    });
+    const generated: Record<string, { filename: string; updatedAt: string }> = {};
+    items.forEach((rec: any) => {
+      generated[rec.templateKey] = { filename: rec.filename, updatedAt: rec.updatedAt };
+    });
+    return c.json({ templates: IP_TEMPLATES.map((t) => ({ key: t.key, label: t.label })), generated });
+  } catch (err: any) {
+    console.error('Erreur liste rapports IP:', err.message);
+    return c.json({ error: err.message }, 500);
+  }
+});
+
+// ─── POST /:orderId/ip-reports/:templateKey/generate - 1ère copie à la demande
+app.post('/:orderId/ip-reports/:templateKey/generate', async (c) => {
+  try {
+    const orderId = c.req.param('orderId');
+    const templateKey = c.req.param('templateKey');
+    const template = findIpTemplate(templateKey);
+    if (!template) return c.json({ error: 'Modèle inconnu' }, 404);
+
+    const existing = await findIpDocument(orderId, templateKey);
+    if (existing) return c.json({ filename: existing.filename, updatedAt: existing.updatedAt });
+
+    const templatePath = new URL(`../../../public/downloads/${template.filename}`, import.meta.url);
+    const templateBytes = await Deno.readFile(templatePath);
+
+    const formData = new FormData();
+    formData.set('orderId', orderId);
+    formData.set('templateKey', templateKey);
+    formData.set('filename', template.filename);
+    formData.set('updatedAt', new Date().toISOString());
+    formData.set('file', new Blob([templateBytes], { type: IP_TEMPLATE_MIME }), template.filename);
+
+    const created = await pb.createRecordWithFile('corevision_ip_documents', formData);
+    return c.json({ filename: created.filename, updatedAt: created.updatedAt }, 201);
+  } catch (err: any) {
+    console.error('Erreur génération rapport IP:', err.message);
+    return c.json({ error: err.message }, 500);
+  }
+});
+
+// ─── GET /:orderId/ip-reports/:templateKey/download ────────────────────
+app.get('/:orderId/ip-reports/:templateKey/download', async (c) => {
+  try {
+    const orderId = c.req.param('orderId');
+    const templateKey = c.req.param('templateKey');
+    const record = await findIpDocument(orderId, templateKey);
+    if (!record) return c.json({ error: 'Document introuvable' }, 404);
+
+    const fileRes = await pb.fetchFile('corevision_ip_documents', record.id, record.file as string);
+    if (!fileRes.ok) return c.json({ error: 'Fichier introuvable' }, 404);
+
+    const forceDownload = c.req.query('download') === '1';
+    const filename = (record.filename as string) || (record.file as string);
+
+    return new Response(fileRes.body, {
+      status: 200,
+      headers: {
+        'Content-Type': IP_TEMPLATE_MIME,
+        'Content-Disposition': `${forceDownload ? 'attachment' : 'inline'}; filename="${filename.replace(/"/g, '')}"`,
+      },
+    });
+  } catch (err: any) {
+    console.error('Erreur téléchargement rapport IP:', err.message);
+    return c.json({ error: err.message }, 404);
+  }
+});
+
+// ─── POST /:orderId/ip-reports/:templateKey - réimporte le fichier finalisé
+app.post('/:orderId/ip-reports/:templateKey', async (c) => {
+  try {
+    const orderId = c.req.param('orderId');
+    const templateKey = c.req.param('templateKey');
+    const record = await findIpDocument(orderId, templateKey);
+    if (!record) return c.json({ error: "Document pas encore généré pour cette commande" }, 404);
+
+    const incoming = await c.req.formData();
+    const file = incoming.get('file');
+    if (!(file instanceof File)) return c.json({ error: 'Fichier manquant' }, 400);
+    if (!file.name.toLowerCase().endsWith('.docx')) {
+      return c.json({ error: 'Seuls les fichiers .docx sont acceptés' }, 400);
+    }
+
+    const outgoing = new FormData();
+    outgoing.set('filename', file.name);
+    outgoing.set('updatedAt', new Date().toISOString());
+    outgoing.set('file', file, file.name);
+
+    const updated = await pb.updateRecordWithFile('corevision_ip_documents', record.id, outgoing);
+    return c.json({ filename: updated.filename, updatedAt: updated.updatedAt });
+  } catch (err: any) {
+    console.error('Erreur réimport rapport IP:', err.message);
     return c.json({ error: err.message }, 500);
   }
 });
