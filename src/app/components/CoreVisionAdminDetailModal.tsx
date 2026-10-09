@@ -9,7 +9,7 @@ import { RapportPatrimonial } from './client-detail/RapportPatrimonial';
 import { CompteRenduProgressif } from './client-detail/CompteRenduProgressif';
 import { RapportSection } from './CoreVisionAdminDetailModal-rapport-section';
 import { comparatifUrl, uploadComparatif } from '../services/comparatifService';
-import { listIpReports, generateIpReport, uploadIpReport, ipReportUrl, getIpReportTitles, saveIpReportTitles, type IpTemplateOption, type IpGeneratedDoc, type IpTitleEntry } from '../services/ipReportsService';
+import { listIpReports, generateIpReport, uploadIpReport, ipReportUrl, getIpReportTitles, saveIpReportTitles, generateIpReportDocument, generatedIpReportUrl, type IpTemplateOption, type IpGeneratedDoc, type IpTitleEntry, type IpGeneratedReport } from '../services/ipReportsService';
 
 interface Preconisation {
   id: string;
@@ -39,6 +39,8 @@ export function CoreVisionAdminDetailModal({ order, onClose, onUpdate }: CoreVis
   const [uploadingIpReport, setUploadingIpReport] = useState(false);
   const [ipTitles, setIpTitles] = useState<IpTitleEntry[]>([]);
   const [loadingIpTitles, setLoadingIpTitles] = useState(false);
+  const [ipGeneratedReports, setIpGeneratedReports] = useState<Record<string, IpGeneratedReport>>({});
+  const [generatingIpReportDoc, setGeneratingIpReportDoc] = useState(false);
   const [audit, setAudit] = useState(order.audit || '');
   const [presentationClient, setPresentationClient] = useState(order.presentationClient || '');
   const [preconisations, setPreconisations] = useState<Preconisation[]>(order.preconisations || []);
@@ -865,6 +867,56 @@ Fiscalité : ${strat.fiscalite}
     if (!ok) toast.error('Impossible de sauvegarder la sélection');
   };
 
+  const handleGenerateFilteredReport = async () => {
+    if (!selectedIpTemplate) return;
+    setGeneratingIpReportDoc(true);
+    try {
+      const report = await generateIpReportDocument(order.orderId, selectedIpTemplate);
+      setIpGeneratedReports((prev) => ({ ...prev, [selectedIpTemplate]: report }));
+      toast.success('Rapport généré');
+    } catch (err) {
+      console.error('Erreur génération rapport filtré:', err);
+      toast.error('Impossible de générer le rapport');
+    } finally {
+      setGeneratingIpReportDoc(false);
+    }
+  };
+
+  const handleViewGeneratedReport = async () => {
+    if (!selectedIpTemplate) return;
+    const win = window.open('', '_blank');
+    try {
+      const response = await fetch(generatedIpReportUrl(order.orderId, selectedIpTemplate));
+      if (!response.ok) throw new Error('fetch failed');
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      if (win) win.location.href = blobUrl;
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+    } catch (err) {
+      console.error('Erreur ouverture rapport généré:', err);
+      win?.close();
+      toast.error("Impossible d'ouvrir le rapport");
+    }
+  };
+
+  const handleDownloadGeneratedReport = async () => {
+    if (!selectedIpTemplate) return;
+    try {
+      const response = await fetch(generatedIpReportUrl(order.orderId, selectedIpTemplate, { download: true }));
+      if (!response.ok) throw new Error('fetch failed');
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = ipGeneratedReports[selectedIpTemplate]?.filename || 'Rapport_final.docx';
+      a.click();
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error('Erreur téléchargement rapport généré:', err);
+      toast.error('Impossible de télécharger le rapport');
+    }
+  };
+
   const handleGenerateIpReport = async () => {
     if (!selectedIpTemplate) return;
     setGeneratingIpReport(true);
@@ -942,24 +994,59 @@ Fiscalité : ${strat.fiscalite}
     if (ipTitles.length === 0) {
       return <p className="text-sm text-gray-600">Aucun titre détecté dans ce document.</p>;
     }
+    const generatedReport = ipGeneratedReports[selectedIpTemplate];
     return (
-      <div className="border-2 border-gray-200 rounded-lg divide-y divide-gray-100">
-        {ipTitles.map((t) => (
-          <label
-            key={t.anchor}
-            className={`flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-gray-50 ${t.level > 1 ? 'pl-8' : ''}`}
+      <div className="space-y-3">
+        <div className="border-2 border-gray-200 rounded-lg divide-y divide-gray-100">
+          {ipTitles.map((t) => (
+            <label
+              key={t.anchor}
+              className={`flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-gray-50 ${t.level > 1 ? 'pl-8' : ''}`}
+            >
+              <input
+                type="checkbox"
+                checked={t.included}
+                onChange={() => handleToggleIpTitle(t.anchor)}
+                className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+              />
+              <span className={`text-sm ${t.included ? 'text-gray-900' : 'text-gray-400 line-through'}`}>
+                {t.title}
+              </span>
+            </label>
+          ))}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={handleGenerateFilteredReport}
+            disabled={generatingIpReportDoc}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
           >
-            <input
-              type="checkbox"
-              checked={t.included}
-              onChange={() => handleToggleIpTitle(t.anchor)}
-              className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
-            />
-            <span className={`text-sm ${t.included ? 'text-gray-900' : 'text-gray-400 line-through'}`}>
-              {t.title}
-            </span>
-          </label>
-        ))}
+            <FileText className="w-4 h-4" />
+            {generatingIpReportDoc ? 'Génération...' : generatedReport ? 'Régénérer le rapport' : 'Générer le rapport'}
+          </button>
+          {generatedReport && (
+            <>
+              <span className="text-sm text-gray-600">
+                {generatedReport.filename} · {new Date(generatedReport.generatedAt).toLocaleDateString('fr-FR')}
+              </span>
+              <button
+                onClick={handleViewGeneratedReport}
+                className="flex items-center gap-2 px-3 py-2 border-2 border-purple-300 text-purple-700 rounded-lg hover:bg-purple-50 transition-colors text-sm"
+              >
+                <Eye className="w-4 h-4" />
+                Voir
+              </button>
+              <button
+                onClick={handleDownloadGeneratedReport}
+                className="flex items-center gap-2 px-3 py-2 border-2 border-purple-300 text-purple-700 rounded-lg hover:bg-purple-50 transition-colors text-sm"
+              >
+                <Download className="w-4 h-4" />
+                Télécharger
+              </button>
+            </>
+          )}
+        </div>
       </div>
     );
   };

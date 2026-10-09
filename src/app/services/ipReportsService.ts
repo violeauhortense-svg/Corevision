@@ -82,6 +82,27 @@ export async function getIpReportTitles(orderId: string, templateKey: string): P
   return data.titles || [];
 }
 
+export interface IpGeneratedReport {
+  filename: string;
+  generatedAt: string;
+}
+
+export async function generateIpReportDocument(orderId: string, templateKey: string): Promise<IpGeneratedReport> {
+  const response = await fetch(
+    `${apiBaseUrl}/api/corevision/orders/${orderId}/ip-reports/${templateKey}/generate-report`,
+    { method: 'POST', headers: authHeaders() }
+  );
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || 'Échec de la génération du rapport');
+  }
+  return response.json();
+}
+
+export function generatedIpReportUrl(orderId: string, templateKey: string, { download = false } = {}): string {
+  return `${apiBaseUrl}/api/corevision/orders/${orderId}/ip-reports/${templateKey}/generated-report/download${download ? '?download=1' : ''}`;
+}
+
 export async function saveIpReportTitles(orderId: string, templateKey: string, titles: IpTitleEntry[]): Promise<boolean> {
   const response = await fetch(
     `${apiBaseUrl}/api/corevision/orders/${orderId}/ip-reports/${templateKey}/titles`,

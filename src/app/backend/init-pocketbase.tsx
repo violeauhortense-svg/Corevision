@@ -327,6 +327,12 @@ export async function initializePocketBase(pbUrl: string) {
       // Choix d'inclusion/exclusion par titre (coché = inclus dans le
       // rapport à générer) - [{anchor, title, level, included}].
       { name: 'titleSelections', type: 'json' },
+      // Rapport filtré produit à partir de la sélection de titres -
+      // distinct du fichier de base (file) pour pouvoir régénérer après
+      // avoir changé des coches sans perdre la copie complète d'origine.
+      { name: 'generatedFile', type: 'file', maxSelect: 1, maxSize: 20971520, mimeTypes: ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'] },
+      { name: 'generatedFilename', type: 'text' },
+      { name: 'generatedAt', type: 'text' },
     ]);
 
     // Fichiers PDF attachés à une recommandation (client.auditRecommendations

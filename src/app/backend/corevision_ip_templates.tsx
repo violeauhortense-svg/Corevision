@@ -75,3 +75,104 @@ export async function extractIpTitles(fileBytes: Uint8Array): Promise<IpTitleEnt
 
   return entries;
 }
+
+export interface TitleSelection {
+  anchor: string;
+  included: boolean;
+}
+
+interface XmlBlock {
+  start: number;
+  end: number;
+  text: string;
+}
+
+// Scinde le corps du document en éléments de premier niveau (paragraphes
+// <w:p>, tableaux <w:tbl>, sectPr final) en suivant la profondeur
+// d'imbrication des balises - une regex "un seul <w:p>...</w:p>" ne
+// suffit pas car un tableau contient lui-même des <w:p> imbriqués, qu'il
+// ne faut pas traiter comme des blocs indépendants.
+function splitTopLevelBlocks(body: string): XmlBlock[] {
+  const tagRe = /<(\/?)([A-Za-z0-9:]+)((?:\s[^<>]*?)?)(\/?)>/g;
+  let depth = 0;
+  let curStart = -1;
+  const blocks: XmlBlock[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = tagRe.exec(body)) !== null) {
+    const isClose = m[1] === '/';
+    const isSelfClose = m[4] === '/' || m[3].replace(/\s+$/, '').endsWith('/');
+    if (isSelfClose && !isClose) continue;
+    if (!isClose) {
+      if (depth === 0) curStart = m.index;
+      depth++;
+    } else {
+      depth--;
+      if (depth === 0) {
+        const end = m.index + m[0].length;
+        blocks.push({ start: curStart, end, text: body.slice(curStart, end) });
+      }
+    }
+  }
+  return blocks;
+}
+
+// Construit le rapport filtré : supprime, pour chaque titre décoché, à la
+// fois le contenu de sa section (tout ce qui suit son paragraphe de titre
+// jusqu'au prochain titre de la table des matières) et l'entrée
+// correspondante dans la table des matières elle-même (sinon le sommaire
+// garderait un lien mort vers une section qui n'existe plus). Les 6
+// modèles n'ont qu'une seule section Word (un seul sectPr, en toute fin
+// de corps), donc aucun saut de section à préserver en cours de route.
+export async function buildFilteredIpReport(fileBytes: Uint8Array, selections: TitleSelection[]): Promise<Uint8Array> {
+  const zip = await JSZip.loadAsync(fileBytes);
+  const docFile = zip.file('word/document.xml');
+  if (!docFile) throw new Error('word/document.xml introuvable dans le fichier');
+  const xml: string = await docFile.async('string');
+
+  const bodyStart = xml.indexOf('<w:body>') + '<w:body>'.length;
+  const bodyEnd = xml.indexOf('</w:body>');
+  const preBody = xml.slice(0, bodyStart);
+  const body = xml.slice(bodyStart, bodyEnd);
+  const postBody = xml.slice(bodyEnd);
+
+  const blocks = splitTopLevelBlocks(body);
+
+  const allAnchors = selections.map((s) => s.anchor);
+  const excludedAnchors = new Set(selections.filter((s) => !s.included).map((s) => s.anchor));
+
+  const headingBlockIdx = new Map<string, number>();
+  for (const anchor of allAnchors) {
+    const idx = blocks.findIndex(
+      (b) => b.text.includes('<w:bookmarkStart') && b.text.includes(`w:name="${anchor}"`)
+    );
+    if (idx !== -1) headingBlockIdx.set(anchor, idx);
+  }
+
+  const tocBlockIdx = new Map<string, number[]>();
+  blocks.forEach((b, i) => {
+    if (!/w:pStyle w:val="TM\d+"/.test(b.text)) return;
+    const am = b.text.match(/w:anchor="([^"]+)"/);
+    if (am && allAnchors.includes(am[1])) {
+      const list = tocBlockIdx.get(am[1]) || [];
+      list.push(i);
+      tocBlockIdx.set(am[1], list);
+    }
+  });
+
+  const ordered = [...headingBlockIdx.entries()].sort((a, b) => a[1] - b[1]);
+  const keep = new Array(blocks.length).fill(true);
+  ordered.forEach(([anchor, bidx], idx) => {
+    const end = idx + 1 < ordered.length ? ordered[idx + 1][1] : blocks.length;
+    const included = !excludedAnchors.has(anchor);
+    for (let i = bidx; i < end; i++) keep[i] = included;
+  });
+  for (const anchor of excludedAnchors) {
+    for (const i of tocBlockIdx.get(anchor) || []) keep[i] = false;
+  }
+
+  const newBody = blocks.filter((_, i) => keep[i]).map((b) => b.text).join('');
+  const newXml = preBody + newBody + postBody;
+
+  zip.file('word/document.xml', newXml);
+  return await zip.generateAsync({ type: 'uint8array' });
+}

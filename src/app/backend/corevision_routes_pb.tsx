@@ -8,7 +8,7 @@
 
 import { Hono } from 'hono';
 import { pb } from './pocketbase_client.tsx';
-import { IP_TEMPLATES, IP_TEMPLATE_MIME, findIpTemplate, extractIpTitles } from './corevision_ip_templates.tsx';
+import { IP_TEMPLATES, IP_TEMPLATE_MIME, findIpTemplate, extractIpTitles, buildFilteredIpReport, type TitleSelection } from './corevision_ip_templates.tsx';
 
 const app = new Hono();
 
@@ -293,6 +293,28 @@ app.post('/:orderId/ip-reports/:templateKey', async (c) => {
   }
 });
 
+// Relit le fichier de base d'une commande/variante et fusionne la
+// sélection déjà sauvegardée (par anchor) avec les titres fraîchement
+// extraits - si le fichier a été réimporté avec une structure différente,
+// les titres disparus sont simplement ignorés plutôt que de laisser
+// l'ancienne sélection désynchronisée.
+async function getMergedIpTitles(record: any): Promise<(TitleSelection & { title: string; level: number })[]> {
+  const fileRes = await pb.fetchFile('corevision_ip_documents', record.id, record.file as string);
+  if (!fileRes.ok) throw new Error('Fichier introuvable');
+  const bytes = new Uint8Array(await fileRes.arrayBuffer());
+
+  const extracted = await extractIpTitles(bytes);
+  const saved: Record<string, boolean> = {};
+  ((record.titleSelections as any[]) || []).forEach((t: any) => {
+    saved[t.anchor] = t.included;
+  });
+
+  return extracted.map((t) => ({
+    ...t,
+    included: saved[t.anchor] !== undefined ? saved[t.anchor] : true,
+  }));
+}
+
 // ─── GET /:orderId/ip-reports/:templateKey/titles - titres + sélection ──
 app.get('/:orderId/ip-reports/:templateKey/titles', async (c) => {
   try {
@@ -301,21 +323,7 @@ app.get('/:orderId/ip-reports/:templateKey/titles', async (c) => {
     const record = await findIpDocument(orderId, templateKey);
     if (!record) return c.json({ error: "Document pas encore généré pour cette commande" }, 404);
 
-    const fileRes = await pb.fetchFile('corevision_ip_documents', record.id, record.file as string);
-    if (!fileRes.ok) return c.json({ error: 'Fichier introuvable' }, 404);
-    const bytes = new Uint8Array(await fileRes.arrayBuffer());
-
-    const extracted = await extractIpTitles(bytes);
-    const saved: Record<string, boolean> = {};
-    ((record.titleSelections as any[]) || []).forEach((t: any) => {
-      saved[t.anchor] = t.included;
-    });
-
-    const titles = extracted.map((t) => ({
-      ...t,
-      included: saved[t.anchor] !== undefined ? saved[t.anchor] : true,
-    }));
-
+    const titles = await getMergedIpTitles(record);
     return c.json({ titles });
   } catch (err: any) {
     console.error('Erreur extraction titres rapport IP:', err.message);
@@ -339,6 +347,64 @@ app.post('/:orderId/ip-reports/:templateKey/titles', async (c) => {
   } catch (err: any) {
     console.error('Erreur sauvegarde titres rapport IP:', err.message);
     return c.json({ error: err.message }, 500);
+  }
+});
+
+// ─── POST /:orderId/ip-reports/:templateKey/generate-report - filtre le docx
+app.post('/:orderId/ip-reports/:templateKey/generate-report', async (c) => {
+  try {
+    const orderId = c.req.param('orderId');
+    const templateKey = c.req.param('templateKey');
+    const record = await findIpDocument(orderId, templateKey);
+    if (!record) return c.json({ error: "Document pas encore généré pour cette commande" }, 404);
+
+    const fileRes = await pb.fetchFile('corevision_ip_documents', record.id, record.file as string);
+    if (!fileRes.ok) return c.json({ error: 'Fichier introuvable' }, 404);
+    const bytes = new Uint8Array(await fileRes.arrayBuffer());
+
+    const titles = await getMergedIpTitles(record);
+    const filteredBytes = await buildFilteredIpReport(bytes, titles);
+
+    const baseFilename = (record.filename as string) || 'Rapport_IP.docx';
+    const generatedFilename = baseFilename.replace(/\.docx$/i, '_Rapport_final.docx');
+
+    const formData = new FormData();
+    formData.set('generatedFilename', generatedFilename);
+    formData.set('generatedAt', new Date().toISOString());
+    formData.set('generatedFile', new Blob([filteredBytes], { type: IP_TEMPLATE_MIME }), generatedFilename);
+
+    const updated = await pb.updateRecordWithFile('corevision_ip_documents', record.id, formData);
+    return c.json({ filename: updated.generatedFilename, generatedAt: updated.generatedAt });
+  } catch (err: any) {
+    console.error('Erreur génération du rapport filtré:', err.message);
+    return c.json({ error: err.message }, 500);
+  }
+});
+
+// ─── GET /:orderId/ip-reports/:templateKey/generated-report/download ───
+app.get('/:orderId/ip-reports/:templateKey/generated-report/download', async (c) => {
+  try {
+    const orderId = c.req.param('orderId');
+    const templateKey = c.req.param('templateKey');
+    const record = await findIpDocument(orderId, templateKey);
+    if (!record || !record.generatedFile) return c.json({ error: 'Rapport pas encore généré' }, 404);
+
+    const fileRes = await pb.fetchFile('corevision_ip_documents', record.id, record.generatedFile as string);
+    if (!fileRes.ok) return c.json({ error: 'Fichier introuvable' }, 404);
+
+    const forceDownload = c.req.query('download') === '1';
+    const filename = (record.generatedFilename as string) || (record.generatedFile as string);
+
+    return new Response(fileRes.body, {
+      status: 200,
+      headers: {
+        'Content-Type': IP_TEMPLATE_MIME,
+        'Content-Disposition': `${forceDownload ? 'attachment' : 'inline'}; filename="${filename.replace(/"/g, '')}"`,
+      },
+    });
+  } catch (err: any) {
+    console.error('Erreur téléchargement du rapport filtré:', err.message);
+    return c.json({ error: err.message }, 404);
   }
 });
 
