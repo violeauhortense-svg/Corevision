@@ -661,41 +661,12 @@ Fiscalité : ${strat.fiscalite}
         return;
       }
 
-      // ÉTAPE 2 : Récupérer les données du client
+      // ÉTAPE 2 : Pousser le dossier validé sur la vraie fiche client (lue
+      // par l'onglet Audit du CGP) - en fusionnant avec ses recommandations
+      // existantes plutôt que de les écraser.
       const clientId = order.clientId;
-      console.log('Mise à jour du client:', clientId);
-      
-      // Récupérer le vrai userId depuis la session Supabase
-      const userId = session?.user?.id || 'default';
-      console.log('User ID récupéré:', userId);
-      
-      // Charger le client depuis localStorage
-      const clientDetailKey = `client_detail_${userId}_${clientId}`;
-      const storedClient = localStorage.getItem(clientDetailKey);
-      
-      if (!storedClient) {
-        console.warn('Client non trouvé en localStorage avec clé:', clientDetailKey);
-        toast.success('Audit validé et envoyé au CGP !');
-        onUpdate();
-        onClose();
-        return;
-      }
+      const currentClient = await clientAPI.getById(clientId);
 
-      const clientData = JSON.parse(storedClient);
-      console.log('Données client chargées:', clientData);
-
-      // ÉTAPE 3 : Ajouter l'audit, la présentation et les préconisations CoreVision au client
-      clientData.auditCoreVision = audit;
-      clientData.presentationCoreVision = presentationClient;
-      clientData.preconisationsCoreVision = preconisations;
-      
-      console.log('Données CoreVision sauvegardées:', {
-        audit: audit.substring(0, 100) + '...',
-        presentation: presentationClient.substring(0, 100) + '...',
-        nbPreconisations: preconisations.length
-      });
-
-      // ÉTAPE 4 : Convertir les préconisations en recommandations
       const corevisionRecommendations = preconisations.map((preco) => ({
         id: preco.id,
         category: preco.category || 'Autre',
@@ -707,53 +678,20 @@ Fiscalité : ${strat.fiscalite}
         source: 'corevision' as const,
         validatedByCGP: false, // À valider par le CGP
       }));
+      const existingRecommendations = currentClient.auditRecommendations || [];
 
-      // Fusionner avec les recommandations existantes
-      const existingRecommendations = clientData.auditRecommendations || [];
-      clientData.auditRecommendations = [...existingRecommendations, ...corevisionRecommendations];
-
-      // ÉTAPE 5 : Mettre à jour les tâches R1-R2
-      const tasksKey = `client_tasks_${userId}_${clientId}`;
-      const storedTasks = localStorage.getItem(tasksKey);
-      
-      if (storedTasks) {
-        const tasks = JSON.parse(storedTasks);
-
-        // Trouver et valider les tâches R1-R2
-        tasks.forEach((task: any) => {
-          // Tâche 1 : "Élaboration de la stratégie patrimoniale"
-          if (task.title === 'Élaboration de la stratégie patrimoniale' && task.stage === 'R1-R2') {
-            task.completed = true;
-            task.notes = 'Stratégie établie par CoreVision - Analyse terminée';
-            task.completedAt = new Date().toISOString();
-          }
-
-          // Tâche 2 : "Préparation du bilan détaillé"
-          if (task.title === 'Préparation du bilan détaillé' && task.stage === 'R1-R2') {
-            task.completed = true;
-            task.notes = `Bilan préparé par CoreVision\n\n${audit}`;
-            task.completedAt = new Date().toISOString();
-          }
-
-          // Tâche 3 : "Validation des recommandations" → Ajouter les recommandations
-          if (task.title === 'Validation des recommandations' && task.stage === 'R1-R2') {
-            // Ne pas marquer comme complétée, juste ajouter les recommandations dans les notes
-            task.notes = `${preconisations.length} recommandation(s) CoreVision reçues. Consultez-les dans l'onglet Audit pour validation.`;
-          }
-        });
-
-        localStorage.setItem(tasksKey, JSON.stringify(tasks));
-      }
-
-      // ÉTAPE 6 : Sauvegarder le client
-      localStorage.setItem(clientDetailKey, JSON.stringify(clientData));
-      console.log('Client mis à jour avec audit et recommandations');
-
-      // ÉTAPE 7 : Émettre l'vénement de validation admin pour rafraîchir les tâches en temps réel
-      window.dispatchEvent(new CustomEvent('adminValidated', { 
-        detail: { clientId: order.clientId } 
-      }));
-      console.log('Événement adminValidated émis pour clientId:', order.clientId);
+      // clientAPI.update() recalcule nom/prénom/téléphone/statut à partir
+      // de ce qu'on lui passe (voir clientToServer) - un objet partiel se
+      // retrouverait avec ces champs vidés. On repart donc du client
+      // complet tel que lu, en ne changeant que les champs CoreVision.
+      await clientAPI.update(clientId, {
+        ...currentClient,
+        auditCoreVision: audit,
+        presentationCoreVision: presentationClient,
+        preconisationsCoreVision: preconisations,
+        auditCoreVisionValidatedAt: new Date().toISOString(),
+        auditRecommendations: [...existingRecommendations, ...corevisionRecommendations],
+      });
 
       toast.success('Audit validé et envoyé au CGP !');
       onUpdate();

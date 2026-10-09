@@ -305,6 +305,7 @@ export interface ClientData {
   auditCoreVision?: string; // Texte de l'audit CoreVision
   presentationCoreVision?: string; // 🔥 Nouveau : Présentation client CoreVision
   preconisationsCoreVision?: any[]; // 🔥 Nouveau : Préconisations brutes CoreVision
+  auditCoreVisionValidatedAt?: string; // Date de validation par l'admin CoreVision
   // 🆕 Nouveaux champs pour la refonte stratégique
   activite?: string; // Activité professionnelle du client
   secteur?: 'secteur_1' | 'secteur_2' | 'na'; // Secteur conventionnel (medecins)

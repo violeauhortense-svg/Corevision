@@ -360,6 +360,10 @@ export function ClientDetailView({ clientId, onBack, onDelete }: ClientDetailPro
               clientName={`${state.clientData.firstName} ${state.clientData.lastName}`}
               recommendations={state.auditRecommendations}
               onUpdateRecommendations={handleUpdateAuditRecommendations}
+              auditCoreVision={state.clientData.auditCoreVision}
+              presentationCoreVision={state.clientData.presentationCoreVision}
+              preconisationsCoreVision={state.clientData.preconisationsCoreVision}
+              auditCoreVisionValidatedAt={state.clientData.auditCoreVisionValidatedAt}
             />
           )}
 

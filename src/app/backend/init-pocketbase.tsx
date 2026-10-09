@@ -198,6 +198,7 @@ export async function initializePocketBase(pbUrl: string) {
       { name: 'auditCoreVision', type: 'json' },
       { name: 'presentationCoreVision', type: 'json' },
       { name: 'preconisationsCoreVision', type: 'json' },
+      { name: 'auditCoreVisionValidatedAt', type: 'text' },
       { name: 'maritalStatus', type: 'text' },
       { name: 'regimeMatrimonial', type: 'text' },
       { name: 'spouse', type: 'json' },
