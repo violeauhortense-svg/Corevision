@@ -39,7 +39,21 @@ app.get('/:clientId', async (c) => {
 // ─── POST / (archive the current cycle, reset for N+1) ────────────────
 app.post('/', async (c) => {
   try {
-    const { clientId, closureDate, treasuryNeed, tasks } = await c.req.json();
+    const {
+      clientId,
+      closureDate,
+      treasuryNeed,
+      tasks,
+      structureType,
+      goldenShareHolding,
+      goldenShareDocteur,
+      creancesRestitution,
+      resultatAnnee,
+      capitalSocialReserves,
+      ccaDocteur,
+      disponibilites,
+      noteSynthese,
+    } = await c.req.json();
     if (!clientId) return c.json({ error: 'clientId manquant' }, 400);
 
     const archived = await pb.createRecord('arbitrage_archive', {
@@ -48,6 +62,15 @@ app.post('/', async (c) => {
       treasuryNeed: treasuryNeed || 0,
       tasks: tasks || [],
       archivedAt: new Date().toISOString(),
+      structureType: structureType || '',
+      goldenShareHolding: goldenShareHolding || '',
+      goldenShareDocteur: goldenShareDocteur || '',
+      creancesRestitution: creancesRestitution || 0,
+      resultatAnnee: resultatAnnee || 0,
+      capitalSocialReserves: capitalSocialReserves || 0,
+      ccaDocteur: ccaDocteur || 0,
+      disponibilites: disponibilites || 0,
+      noteSynthese: noteSynthese || '',
     });
 
     // Repart à zéro pour le cycle suivant : mêmes tâches (id/titre/
@@ -60,10 +83,20 @@ app.post('/', async (c) => {
     const client = await pb.getRecord('clients', clientId);
     const newTaches = { ...(client.taches || {}), Arbitrage: resetTasks };
 
+    // La structure (SHP/SGF + golden shares) n'est pas propre à un
+    // exercice - volontairement absente de ce PATCH pour rester telle
+    // quelle sur la fiche client. Seuls les chiffres de l'exercice et la
+    // note de synthèse sont remis à vide.
     const updatedClient = await pb.updateRecord('clients', clientId, {
       taches: newTaches,
       arbitrageClosureDate: nextClosureDate,
       arbitrageTreasuryN1: 0,
+      arbitrageCreancesRestitution: 0,
+      arbitrageResultatAnnee: 0,
+      arbitrageCapitalSocialReserves: 0,
+      arbitrageCCADocteur: 0,
+      arbitrageDisponibilites: 0,
+      arbitrageNoteSynthese: '',
     });
 
     return c.json({ archived, client: updatedClient }, 201);

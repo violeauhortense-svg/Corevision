@@ -203,6 +203,29 @@ export function HistoriqueTab({ clientId }: HistoriqueTabProps) {
                     {' · '}
                     {validated}/{entry.tasks.length} tâches validées
                   </p>
+                  {entry.structureType && (
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Structure : {entry.structureType}
+                      {entry.structureType === 'SHP' && (
+                        <>
+                          {' · '}Golden share holding : {entry.goldenShareHolding || '—'}
+                          {' · '}Golden share docteur : {entry.goldenShareDocteur || '—'}
+                        </>
+                      )}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Créances de restitution : {entry.creancesRestitution ? `${entry.creancesRestitution.toLocaleString('fr-FR')} €` : '—'}
+                    {' · '}Résultat de l'année : {entry.resultatAnnee ? `${entry.resultatAnnee.toLocaleString('fr-FR')} €` : '—'}
+                    {' · '}Capital social et réserves : {entry.capitalSocialReserves ? `${entry.capitalSocialReserves.toLocaleString('fr-FR')} €` : '—'}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    CCA docteur : {entry.ccaDocteur ? `${entry.ccaDocteur.toLocaleString('fr-FR')} €` : '—'}
+                    {' · '}Disponibilités : {entry.disponibilites ? `${entry.disponibilites.toLocaleString('fr-FR')} €` : '—'}
+                  </p>
+                  {entry.noteSynthese && (
+                    <p className="text-xs text-gray-600 mt-2 bg-gray-50 rounded p-2 whitespace-pre-wrap">{entry.noteSynthese}</p>
+                  )}
                 </div>
               );
             })}

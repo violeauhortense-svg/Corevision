@@ -34,6 +34,20 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
   const [showRecommandationsModule, setShowRecommandationsModule] = useState(false);
   const [arbitrageClosureDate, setArbitrageClosureDate] = useState('');
   const [arbitrageTreasuryN1, setArbitrageTreasuryN1] = useState('');
+  // Structurel (SHP/SGF + golden shares) - propre à la structure du
+  // client, pas à un exercice donné, donc conservé d'un cycle à l'autre
+  // lors de l'archivage (contrairement aux chiffres ci-dessous).
+  const [arbitrageStructureType, setArbitrageStructureType] = useState<'' | 'SHP' | 'SGF'>('');
+  const [arbitrageGoldenShareHolding, setArbitrageGoldenShareHolding] = useState('');
+  const [arbitrageGoldenShareDocteur, setArbitrageGoldenShareDocteur] = useState('');
+  // Propre à l'exercice en cours - remis à vide lors de l'archivage, comme
+  // le besoin de trésorerie.
+  const [arbitrageCreancesRestitution, setArbitrageCreancesRestitution] = useState('');
+  const [arbitrageResultatAnnee, setArbitrageResultatAnnee] = useState('');
+  const [arbitrageCapitalSocialReserves, setArbitrageCapitalSocialReserves] = useState('');
+  const [arbitrageCCADocteur, setArbitrageCCADocteur] = useState('');
+  const [arbitrageDisponibilites, setArbitrageDisponibilites] = useState('');
+  const [arbitrageNoteSynthese, setArbitrageNoteSynthese] = useState('');
   const [archivingArbitrage, setArchivingArbitrage] = useState(false);
   const [confirmArchiveArbitrage, setConfirmArchiveArbitrage] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -58,6 +72,15 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
       setClient(data);
       setArbitrageClosureDate(data.arbitrageClosureDate || '');
       setArbitrageTreasuryN1(String(data.arbitrageTreasuryN1 || ''));
+      setArbitrageStructureType((data as any).arbitrageStructureType || '');
+      setArbitrageGoldenShareHolding((data as any).arbitrageGoldenShareHolding || '');
+      setArbitrageGoldenShareDocteur((data as any).arbitrageGoldenShareDocteur || '');
+      setArbitrageCreancesRestitution(String((data as any).arbitrageCreancesRestitution || ''));
+      setArbitrageResultatAnnee(String((data as any).arbitrageResultatAnnee || ''));
+      setArbitrageCapitalSocialReserves(String((data as any).arbitrageCapitalSocialReserves || ''));
+      setArbitrageCCADocteur(String((data as any).arbitrageCCADocteur || ''));
+      setArbitrageDisponibilites(String((data as any).arbitrageDisponibilites || ''));
+      setArbitrageNoteSynthese((data as any).arbitrageNoteSynthese || '');
       setExpandedBlocks({
         [data.statusOuvert || 'Prospect']: true,
         ...(expandBlock ? { [expandBlock]: true } : {}),
@@ -260,6 +283,15 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
         body: JSON.stringify({
           arbitrageClosureDate,
           arbitrageTreasuryN1: arbitrageTreasuryN1 ? parseInt(arbitrageTreasuryN1) : undefined,
+          arbitrageStructureType,
+          arbitrageGoldenShareHolding: arbitrageStructureType === 'SHP' ? arbitrageGoldenShareHolding : '',
+          arbitrageGoldenShareDocteur: arbitrageStructureType === 'SHP' ? arbitrageGoldenShareDocteur : '',
+          arbitrageCreancesRestitution: arbitrageCreancesRestitution ? parseFloat(arbitrageCreancesRestitution) : undefined,
+          arbitrageResultatAnnee: arbitrageResultatAnnee ? parseFloat(arbitrageResultatAnnee) : undefined,
+          arbitrageCapitalSocialReserves: arbitrageCapitalSocialReserves ? parseFloat(arbitrageCapitalSocialReserves) : undefined,
+          arbitrageCCADocteur: arbitrageCCADocteur ? parseFloat(arbitrageCCADocteur) : undefined,
+          arbitrageDisponibilites: arbitrageDisponibilites ? parseFloat(arbitrageDisponibilites) : undefined,
+          arbitrageNoteSynthese,
         }),
       });
 
@@ -296,15 +328,30 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
     setArchivingArbitrage(true);
     try {
       const currentTasks = client.taches?.['Arbitrage'] || [];
-      const { client: updatedClient } = await archiveArbitrageCycle(
+      const { client: updatedClient } = await archiveArbitrageCycle({
         clientId,
-        arbitrageClosureDate,
-        arbitrageTreasuryN1 ? parseInt(arbitrageTreasuryN1) : 0,
-        currentTasks
-      );
+        closureDate: arbitrageClosureDate,
+        treasuryNeed: arbitrageTreasuryN1 ? parseInt(arbitrageTreasuryN1) : 0,
+        tasks: currentTasks,
+        structureType: arbitrageStructureType,
+        goldenShareHolding: arbitrageStructureType === 'SHP' ? arbitrageGoldenShareHolding : '',
+        goldenShareDocteur: arbitrageStructureType === 'SHP' ? arbitrageGoldenShareDocteur : '',
+        creancesRestitution: arbitrageCreancesRestitution ? parseFloat(arbitrageCreancesRestitution) : 0,
+        resultatAnnee: arbitrageResultatAnnee ? parseFloat(arbitrageResultatAnnee) : 0,
+        capitalSocialReserves: arbitrageCapitalSocialReserves ? parseFloat(arbitrageCapitalSocialReserves) : 0,
+        ccaDocteur: arbitrageCCADocteur ? parseFloat(arbitrageCCADocteur) : 0,
+        disponibilites: arbitrageDisponibilites ? parseFloat(arbitrageDisponibilites) : 0,
+        noteSynthese: arbitrageNoteSynthese,
+      });
       setClient((prev) => (prev ? { ...prev, ...updatedClient } : updatedClient));
       setArbitrageClosureDate(updatedClient.arbitrageClosureDate || '');
       setArbitrageTreasuryN1('');
+      setArbitrageCreancesRestitution('');
+      setArbitrageResultatAnnee('');
+      setArbitrageCapitalSocialReserves('');
+      setArbitrageCCADocteur('');
+      setArbitrageDisponibilites('');
+      setArbitrageNoteSynthese('');
       ClientService.clearCache();
       toast.success(
         updatedClient.arbitrageClosureDate
@@ -417,6 +464,113 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
                     onChange={(e) => setArbitrageTreasuryN1(e.target.value)}
                     className="mt-1 w-full px-3 py-2 border rounded-lg text-sm"
                     placeholder="0"
+                  />
+                </label>
+
+                <div className="pt-2 border-t">
+                  <span className="text-sm font-medium text-gray-700 block mb-1.5">Structure</span>
+                  <div className="flex gap-2">
+                    {(['SHP', 'SGF'] as const).map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => setArbitrageStructureType(opt)}
+                        className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border-2 ${
+                          arbitrageStructureType === opt
+                            ? 'bg-blue-600 border-blue-600 text-white'
+                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {arbitrageStructureType === 'SHP' && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="block">
+                      <span className="text-sm font-medium text-gray-700">Golden share (holding)</span>
+                      <input
+                        type="text"
+                        value={arbitrageGoldenShareHolding}
+                        onChange={(e) => setArbitrageGoldenShareHolding(e.target.value)}
+                        className="mt-1 w-full px-3 py-2 border rounded-lg text-sm"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="text-sm font-medium text-gray-700">Golden share (docteur)</span>
+                      <input
+                        type="text"
+                        value={arbitrageGoldenShareDocteur}
+                        onChange={(e) => setArbitrageGoldenShareDocteur(e.target.value)}
+                        className="mt-1 w-full px-3 py-2 border rounded-lg text-sm"
+                      />
+                    </label>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="block">
+                    <span className="text-sm font-medium text-gray-700">Créances de restitution (€)</span>
+                    <input
+                      type="number"
+                      value={arbitrageCreancesRestitution}
+                      onChange={(e) => setArbitrageCreancesRestitution(e.target.value)}
+                      className="mt-1 w-full px-3 py-2 border rounded-lg text-sm"
+                      placeholder="0"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium text-gray-700">Résultat de l'année (€)</span>
+                    <input
+                      type="number"
+                      value={arbitrageResultatAnnee}
+                      onChange={(e) => setArbitrageResultatAnnee(e.target.value)}
+                      className="mt-1 w-full px-3 py-2 border rounded-lg text-sm"
+                      placeholder="0"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium text-gray-700">Capital social et autres réserves (€)</span>
+                    <input
+                      type="number"
+                      value={arbitrageCapitalSocialReserves}
+                      onChange={(e) => setArbitrageCapitalSocialReserves(e.target.value)}
+                      className="mt-1 w-full px-3 py-2 border rounded-lg text-sm"
+                      placeholder="0"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium text-gray-700">CCA du docteur (€)</span>
+                    <input
+                      type="number"
+                      value={arbitrageCCADocteur}
+                      onChange={(e) => setArbitrageCCADocteur(e.target.value)}
+                      className="mt-1 w-full px-3 py-2 border rounded-lg text-sm"
+                      placeholder="0"
+                    />
+                  </label>
+                  <label className="block col-span-2">
+                    <span className="text-sm font-medium text-gray-700">Disponibilités (€)</span>
+                    <input
+                      type="number"
+                      value={arbitrageDisponibilites}
+                      onChange={(e) => setArbitrageDisponibilites(e.target.value)}
+                      className="mt-1 w-full px-3 py-2 border rounded-lg text-sm"
+                      placeholder="0"
+                    />
+                  </label>
+                </div>
+
+                <label className="block">
+                  <span className="text-sm font-medium text-gray-700">📝 Note de synthèse d'arbitrage de rémunération</span>
+                  <textarea
+                    value={arbitrageNoteSynthese}
+                    onChange={(e) => setArbitrageNoteSynthese(e.target.value)}
+                    rows={5}
+                    className="mt-1 w-full px-3 py-2 border rounded-lg text-sm"
+                    placeholder="Analyse, recommandation, points d'attention..."
                   />
                 </label>
 

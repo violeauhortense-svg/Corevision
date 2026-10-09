@@ -11,6 +11,31 @@ export interface ArbitrageArchiveEntry {
   treasuryNeed: number;
   tasks: any[];
   archivedAt: string;
+  structureType?: string;
+  goldenShareHolding?: string;
+  goldenShareDocteur?: string;
+  creancesRestitution?: number;
+  resultatAnnee?: number;
+  capitalSocialReserves?: number;
+  ccaDocteur?: number;
+  disponibilites?: number;
+  noteSynthese?: string;
+}
+
+export interface ArchiveArbitrageInput {
+  clientId: string;
+  closureDate: string;
+  treasuryNeed: number;
+  tasks: any[];
+  structureType?: string;
+  goldenShareHolding?: string;
+  goldenShareDocteur?: string;
+  creancesRestitution?: number;
+  resultatAnnee?: number;
+  capitalSocialReserves?: number;
+  ccaDocteur?: number;
+  disponibilites?: number;
+  noteSynthese?: string;
 }
 
 function authHeaders(): Record<string, string> {
@@ -28,15 +53,12 @@ export async function getArbitrageArchive(clientId: string): Promise<ArbitrageAr
 }
 
 export async function archiveArbitrageCycle(
-  clientId: string,
-  closureDate: string,
-  treasuryNeed: number,
-  tasks: any[]
+  input: ArchiveArbitrageInput
 ): Promise<{ archived: ArbitrageArchiveEntry; client: any }> {
   const response = await fetch(`${apiBaseUrl}/api/arbitrage-archive`, {
     method: 'POST',
     headers: authHeaders(),
-    body: JSON.stringify({ clientId, closureDate, treasuryNeed, tasks }),
+    body: JSON.stringify(input),
   });
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));

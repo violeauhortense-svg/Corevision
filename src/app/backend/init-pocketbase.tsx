@@ -176,6 +176,15 @@ export async function initializePocketBase(pbUrl: string) {
       { name: 'categoriesDossier', type: 'json' },
       { name: 'arbitrageClosureDate', type: 'text' },
       { name: 'arbitrageTreasuryN1', type: 'number' },
+      { name: 'arbitrageStructureType', type: 'text' },
+      { name: 'arbitrageGoldenShareHolding', type: 'text' },
+      { name: 'arbitrageGoldenShareDocteur', type: 'text' },
+      { name: 'arbitrageCreancesRestitution', type: 'number' },
+      { name: 'arbitrageResultatAnnee', type: 'number' },
+      { name: 'arbitrageCapitalSocialReserves', type: 'number' },
+      { name: 'arbitrageCCADocteur', type: 'number' },
+      { name: 'arbitrageDisponibilites', type: 'number' },
+      { name: 'arbitrageNoteSynthese', type: 'text', max: 50000 },
       // Fields used by the detailed client edit view (useClientData.ts /
       // saveToAPI), which uses a different field naming scheme than
       // ClientService.ts's Client type above.
@@ -330,6 +339,18 @@ export async function initializePocketBase(pbUrl: string) {
       { name: 'treasuryNeed', type: 'number' },
       { name: 'tasks', type: 'json' },
       { name: 'archivedAt', type: 'text', required: true },
+      // Structure (conservée telle quelle sur la fiche client d'un cycle à
+      // l'autre) et chiffres propres à l'exercice archivé (remis à vide sur
+      // la fiche client après archivage) - gardés ici pour l'historique.
+      { name: 'structureType', type: 'text' },
+      { name: 'goldenShareHolding', type: 'text' },
+      { name: 'goldenShareDocteur', type: 'text' },
+      { name: 'creancesRestitution', type: 'number' },
+      { name: 'resultatAnnee', type: 'number' },
+      { name: 'capitalSocialReserves', type: 'number' },
+      { name: 'ccaDocteur', type: 'number' },
+      { name: 'disponibilites', type: 'number' },
+      { name: 'noteSynthese', type: 'text', max: 50000 },
     ]);
 
     console.log('✅ Collections initialized');
