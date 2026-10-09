@@ -302,6 +302,15 @@ export async function initializePocketBase(pbUrl: string) {
       { name: 'preconisations', type: 'json' },
       { name: 'validatedByAdmin', type: 'bool' },
       { name: 'bilanData', type: 'json' },
+      // Copie du modèle comparatif EI/SEL propre à cette commande - créée
+      // automatiquement à la commande (copie vierge du modèle, aucune
+      // donnée client injectée pour l'instant), puis remplacée quand
+      // l'admin réimporte le fichier finalisé après l'avoir édité dans
+      // Excel. Pas de lien avec les données client pour l'instant -
+      // volontairement différé à une instruction ultérieure.
+      { name: 'comparatifFile', type: 'file', maxSelect: 1, maxSize: 20971520, mimeTypes: ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'] },
+      { name: 'comparatifFilename', type: 'text' },
+      { name: 'comparatifUpdatedAt', type: 'text' },
     ]);
 
     // Fichiers PDF attachés à une recommandation (client.auditRecommendations

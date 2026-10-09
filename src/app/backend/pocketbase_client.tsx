@@ -192,6 +192,32 @@ export class PocketBaseClient {
     }
   }
 
+  // Same multipart constraint as createRecordWithFile (no explicit
+  // Content-Type - fetch must set its own boundary), but PATCHing an
+  // existing record instead of creating one (e.g. replacing a comparatif
+  // file after re-import).
+  async updateRecordWithFile(collection: string, id: string, formData: FormData): Promise<PBRecord> {
+    try {
+      const headers: Record<string, string> = {};
+      if (this.authToken) headers['Authorization'] = `Bearer ${this.authToken}`;
+
+      const res = await fetch(`${this.baseUrl}/api/collections/${collection}/records/${id}`, {
+        method: 'PATCH',
+        headers,
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(`${err.message || 'Update failed'} ${JSON.stringify(err.data || {})}`);
+      }
+      return await res.json();
+    } catch (err: any) {
+      console.error(`Error updating ${collection}/${id} with file:`, err.message);
+      throw err;
+    }
+  }
+
   // Raw file bytes for a file-field record - PocketBase itself isn't
   // publicly reachable (only this Deno backend is, via the ngrok tunnel),
   // so routes that serve a recommendation's PDF to the browser fetch it

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Eye, Save, Plus, Trash2, Send, CheckCircle2, Euro, User, Users, Baby, Heart, FileText, Sparkles, TrendingUp, AlertTriangle, Target, BarChart3, Loader, Copy, Edit } from 'lucide-react';
+import { X, Eye, Save, Plus, Trash2, Send, CheckCircle2, Euro, User, Users, Baby, Heart, FileText, Sparkles, TrendingUp, AlertTriangle, Target, BarChart3, Loader, Copy, Edit, FileSpreadsheet, Download, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiBaseUrl, publicAnonKey } from '../utils/api/info';
 import { clientAPI } from '../services/api';
@@ -8,6 +8,7 @@ import { IncoherencesPanel } from './IncoherencesPanel';
 import { RapportPatrimonial } from './client-detail/RapportPatrimonial';
 import { CompteRenduProgressif } from './client-detail/CompteRenduProgressif';
 import { RapportSection } from './CoreVisionAdminDetailModal-rapport-section';
+import { comparatifUrl, uploadComparatif } from '../services/comparatifService';
 
 interface Preconisation {
   id: string;
@@ -24,7 +25,10 @@ interface CoreVisionAdminDetailModalProps {
 }
 
 export function CoreVisionAdminDetailModal({ order, onClose, onUpdate }: CoreVisionAdminDetailModalProps) {
-  const [activeSubTab, setActiveSubTab] = useState<'preconisations' | 'presentation' | 'incoherences' | 'rapport'>('rapport');
+  const [activeSubTab, setActiveSubTab] = useState<'preconisations' | 'presentation' | 'incoherences' | 'rapport' | 'comparatif'>('rapport');
+  const [comparatifFilename, setComparatifFilename] = useState<string | undefined>(order.comparatifFilename);
+  const [comparatifUpdatedAt, setComparatifUpdatedAt] = useState<string | undefined>(order.comparatifUpdatedAt);
+  const [uploadingComparatif, setUploadingComparatif] = useState(false);
   const [audit, setAudit] = useState(order.audit || '');
   const [presentationClient, setPresentationClient] = useState(order.presentationClient || '');
   const [preconisations, setPreconisations] = useState<Preconisation[]>(order.preconisations || []);
@@ -750,6 +754,63 @@ Fiscalité : ${strat.fiscalite}
     }
   };
 
+  // Même contournement de l'interstitiel ngrok que pour les documents de
+  // tâche : fetch() passe l'en-tête qui le court-circuite, un <a href>
+  // classique tomberait dessus. window.open() synchrone dans le clic pour
+  // ne pas être bloqué par Safari/iOS.
+  const handleViewComparatif = async () => {
+    const win = window.open('', '_blank');
+    try {
+      const response = await fetch(comparatifUrl(order.orderId));
+      if (!response.ok) throw new Error('fetch failed');
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      if (win) win.location.href = blobUrl;
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+    } catch (err) {
+      console.error('Erreur ouverture comparatif:', err);
+      win?.close();
+      toast.error("Impossible d'ouvrir le comparatif");
+    }
+  };
+
+  const handleDownloadComparatif = async () => {
+    try {
+      const response = await fetch(comparatifUrl(order.orderId, { download: true }));
+      if (!response.ok) throw new Error('fetch failed');
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = comparatifFilename || 'Comparatif_EI_SEL.xlsx';
+      a.click();
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error('Erreur téléchargement comparatif:', err);
+      toast.error('Impossible de télécharger le comparatif');
+    }
+  };
+
+  const handleUploadComparatif = async (file: File) => {
+    if (!file.name.toLowerCase().endsWith('.xlsx')) {
+      toast.error('Seuls les fichiers .xlsx sont acceptés');
+      return;
+    }
+    setUploadingComparatif(true);
+    try {
+      const updated = await uploadComparatif(order.orderId, file);
+      setComparatifFilename(updated.comparatifFilename);
+      setComparatifUpdatedAt(updated.comparatifUpdatedAt);
+      toast.success('Comparatif mis à jour');
+      onUpdate();
+    } catch (err) {
+      console.error('Erreur import comparatif:', err);
+      toast.error("Impossible d'importer le fichier");
+    } finally {
+      setUploadingComparatif(false);
+    }
+  };
+
   const calculateTotalPatrimoine = () => {
     if (!bilanData?.patrimoine) return 0;
     const actifs = (bilanData.patrimoine.actifsFinanciers || []).reduce((sum: number, a: any) => sum + (a.value || 0), 0);
@@ -782,6 +843,7 @@ Fiscalité : ${strat.fiscalite}
             { id: 'preconisations', label: 'Préconisations', icon: '💡' },
             { id: 'presentation', label: 'Présentation', icon: '📋' },
             { id: 'incoherences', label: 'Incohérences', icon: '⚠️' },
+            { id: 'comparatif', label: 'Comparatif EI/SEL', icon: '📊' },
           ].map((tab: any) => (
             <button
               key={tab.id}
@@ -1012,6 +1074,60 @@ Fiscalité : ${strat.fiscalite}
                   <p className="text-gray-600">Aucune incohérence détectée.</p>
                 </div>
               )}
+            </div>
+          )}
+
+          {activeSubTab === 'comparatif' && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <FileSpreadsheet className="w-8 h-8 text-purple-600" />
+                <div>
+                  <h3 className="font-semibold text-gray-900">Comparatif EI/SEL de cette commande</h3>
+                  <p className="text-sm text-gray-600">
+                    {comparatifFilename
+                      ? `${comparatifFilename}${comparatifUpdatedAt ? ' · mis à jour le ' + new Date(comparatifUpdatedAt).toLocaleDateString('fr-FR') : ''}`
+                      : "Aucun fichier pour l'instant."}
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-600">
+                Téléchargez le fichier, modifiez-le dans Excel, puis réimportez la version finalisée ci-dessous.
+              </p>
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={handleViewComparatif}
+                  disabled={!comparatifFilename}
+                  className="flex items-center gap-2 px-4 py-2 border-2 border-purple-300 text-purple-700 rounded-lg hover:bg-purple-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Eye className="w-4 h-4" />
+                  Voir
+                </button>
+                <button
+                  onClick={handleDownloadComparatif}
+                  disabled={!comparatifFilename}
+                  className="flex items-center gap-2 px-4 py-2 border-2 border-purple-300 text-purple-700 rounded-lg hover:bg-purple-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Download className="w-4 h-4" />
+                  Télécharger
+                </button>
+                <label className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors cursor-pointer">
+                  <Upload className="w-4 h-4" />
+                  {uploadingComparatif ? 'Import en cours...' : 'Importer le fichier finalisé'}
+                  <input
+                    type="file"
+                    accept=".xlsx"
+                    className="hidden"
+                    disabled={uploadingComparatif}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleUploadComparatif(file);
+                      e.target.value = '';
+                    }}
+                  />
+                </label>
+              </div>
             </div>
           )}
         </div>

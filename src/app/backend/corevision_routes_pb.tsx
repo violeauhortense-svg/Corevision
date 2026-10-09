@@ -11,6 +11,14 @@ import { pb } from './pocketbase_client.tsx';
 
 const app = new Hono();
 
+// Modèle comparatif EI/SEL (37 feuilles) - copié tel quel sur chaque
+// commande à sa création, aucune donnée client injectée pour l'instant
+// (le lien sera ajouté plus tard, sur instruction). Chemin résolu depuis
+// ce fichier plutôt que depuis cwd pour ne pas dépendre d'où `deno run`
+// est lancé.
+const TEMPLATE_PATH = new URL('../../../public/downloads/Modele_Comparatif_EI_SEL.xlsx', import.meta.url);
+const TEMPLATE_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
 async function findByOrderId(orderId: string) {
   const { items } = await pb.listRecords('corevision_orders', {
     filter: `orderId = "${orderId}"`,
@@ -56,7 +64,22 @@ app.post('/', async (c) => {
       bilanData: body.bilanData || null,
     });
 
-    return c.json({ success: true, order: record }, 201);
+    // Copie du modèle comparatif pour cette commande - best-effort : si le
+    // fichier modèle est introuvable sur ce poste, la commande est quand
+    // même créée, juste sans comparatif pré-rempli.
+    try {
+      const templateBytes = await Deno.readFile(TEMPLATE_PATH);
+      const filename = `Comparatif_EI_SEL_${(body.clientName || body.clientId).replace(/[^a-zA-Z0-9_-]+/g, '_')}.xlsx`;
+      const formData = new FormData();
+      formData.set('comparatifFilename', filename);
+      formData.set('comparatifUpdatedAt', new Date().toISOString());
+      formData.set('comparatifFile', new Blob([templateBytes], { type: TEMPLATE_MIME }), filename);
+      const updated = await pb.updateRecordWithFile('corevision_orders', record.id, formData);
+      return c.json({ success: true, order: updated }, 201);
+    } catch (templateErr: any) {
+      console.error('Comparatif EI/SEL non initialisé pour la commande:', templateErr.message);
+      return c.json({ success: true, order: record }, 201);
+    }
   } catch (err: any) {
     console.error('Erreur création commande CoreVision:', err.message);
     return c.json({ error: err.message }, 500);
@@ -100,6 +123,60 @@ app.delete('/:orderId', async (c) => {
     return c.json({ success: true });
   } catch (err: any) {
     console.error('Erreur suppression commande CoreVision:', err.message);
+    return c.json({ error: err.message }, 500);
+  }
+});
+
+// ─── GET /:orderId/comparatif/download - récupère le fichier comparatif ─
+app.get('/:orderId/comparatif/download', async (c) => {
+  try {
+    const orderId = c.req.param('orderId');
+    const record = await findByOrderId(orderId);
+    if (!record) return c.json({ error: 'Commande introuvable' }, 404);
+    if (!record.comparatifFile) return c.json({ error: 'Aucun comparatif pour cette commande' }, 404);
+
+    const fileRes = await pb.fetchFile('corevision_orders', record.id, record.comparatifFile as string);
+    if (!fileRes.ok) return c.json({ error: 'Fichier introuvable' }, 404);
+
+    const forceDownload = c.req.query('download') === '1';
+    const filename = (record.comparatifFilename as string) || (record.comparatifFile as string);
+
+    return new Response(fileRes.body, {
+      status: 200,
+      headers: {
+        'Content-Type': TEMPLATE_MIME,
+        'Content-Disposition': `${forceDownload ? 'attachment' : 'inline'}; filename="${filename.replace(/"/g, '')}"`,
+      },
+    });
+  } catch (err: any) {
+    console.error('Erreur téléchargement comparatif CoreVision:', err.message);
+    return c.json({ error: err.message }, 404);
+  }
+});
+
+// ─── POST /:orderId/comparatif - réimporte le fichier finalisé (remplace) ─
+app.post('/:orderId/comparatif', async (c) => {
+  try {
+    const orderId = c.req.param('orderId');
+    const record = await findByOrderId(orderId);
+    if (!record) return c.json({ error: 'Commande introuvable' }, 404);
+
+    const incoming = await c.req.formData();
+    const file = incoming.get('file');
+    if (!(file instanceof File)) return c.json({ error: 'Fichier manquant' }, 400);
+    if (!file.name.toLowerCase().endsWith('.xlsx')) {
+      return c.json({ error: 'Seuls les fichiers .xlsx sont acceptés' }, 400);
+    }
+
+    const outgoing = new FormData();
+    outgoing.set('comparatifFilename', file.name);
+    outgoing.set('comparatifUpdatedAt', new Date().toISOString());
+    outgoing.set('comparatifFile', file, file.name);
+
+    const updated = await pb.updateRecordWithFile('corevision_orders', record.id, outgoing);
+    return c.json({ success: true, order: updated });
+  } catch (err: any) {
+    console.error('Erreur réimport comparatif CoreVision:', err.message);
     return c.json({ error: err.message }, 500);
   }
 });

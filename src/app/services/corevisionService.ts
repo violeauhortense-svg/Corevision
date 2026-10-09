@@ -25,6 +25,9 @@ export interface CoreVisionOrder {
   audit?: string;
   preconisations?: string;
   presentation?: string;
+  comparatifFile?: string;
+  comparatifFilename?: string;
+  comparatifUpdatedAt?: string;
 }
 
 interface CacheMetadata {
