@@ -914,24 +914,24 @@ Fiscalité : ${strat.fiscalite}
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 sm:p-4">
+      <div className="bg-white sm:rounded-xl shadow-2xl w-full h-full sm:h-auto max-w-6xl sm:max-h-[95vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6 flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold">{order.clientName}</h2>
-            <p className="text-purple-100 text-sm mt-1">CGP: {order.cgpName} • {order.cgpEmail}</p>
+        <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4 sm:p-6 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="text-lg sm:text-2xl font-bold truncate">{order.clientName}</h2>
+            <p className="text-purple-100 text-xs sm:text-sm mt-1 truncate">CGP: {order.cgpName} • {order.cgpEmail}</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+            className="shrink-0 p-2 hover:bg-white/20 rounded-lg transition-colors"
           >
             <X className="w-6 h-6" />
           </button>
         </div>
 
         {/* Sub-tabs */}
-        <div className="flex border-b border-gray-200 bg-gray-50 px-6">
+        <div className="flex overflow-x-auto border-b border-gray-200 bg-gray-50 px-2 sm:px-6">
           {[
             { id: 'rapport', label: 'Rapport Patrimonial', icon: '📄' },
             { id: 'preconisations', label: 'Préconisations', icon: '💡' },
@@ -943,7 +943,7 @@ Fiscalité : ${strat.fiscalite}
             <button
               key={tab.id}
               onClick={() => setActiveSubTab(tab.id)}
-              className={`px-6 py-3 font-medium text-sm transition-colors border-b-2 ${
+              className={`shrink-0 whitespace-nowrap px-3 sm:px-6 py-3 font-medium text-sm transition-colors border-b-2 ${
                 activeSubTab === tab.id
                   ? 'text-purple-600 border-purple-600'
                   : 'text-gray-600 border-transparent hover:text-gray-900'
@@ -955,7 +955,7 @@ Fiscalité : ${strat.fiscalite}
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           {activeSubTab === 'rapport' && (
             <div>
               <RapportSection 
@@ -1312,15 +1312,15 @@ Fiscalité : ${strat.fiscalite}
         </div>
 
         {/* Footer avec validation finale */}
-        <div className="border-t border-gray-200 p-6 bg-gray-50">
-          <div className="flex items-center justify-between">
+        <div className="border-t border-gray-200 p-4 sm:p-6 bg-gray-50">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <p className="text-sm text-gray-600">
               Une fois validé, l'audit et les préconisations seront accessibles au CGP
             </p>
             <button
               onClick={handleValidateAndSend}
               disabled={sending || !audit || preconisations.length === 0}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:shadow-lg transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:shadow-lg transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
             >
               {sending ? (
                 <>
