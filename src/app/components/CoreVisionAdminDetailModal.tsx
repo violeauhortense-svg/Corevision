@@ -88,7 +88,7 @@ export function CoreVisionAdminDetailModal({ order, onClose, onUpdate }: CoreVis
     // Essayer de mettre à jour sur le serveur
     try {
       const response = await fetch(
-        `${apiBaseUrl}/corevision/orders/${order.orderId}`,
+        `${apiBaseUrl}/api/corevision/orders/${order.orderId}`,
         {
           method: 'PUT',
           headers: {
