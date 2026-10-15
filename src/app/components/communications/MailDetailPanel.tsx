@@ -7,6 +7,7 @@ import {
   Send,
   ChevronDown,
   Calendar,
+  Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { hubCommunicationAPI } from '../../services/hubCommunicationAPI';
@@ -25,13 +26,15 @@ interface MailDetailPanelProps {
   onSelectSibling?: (mail: HubMail) => void;
   onClose: () => void;
   onUpdate: (mail: HubMail) => Promise<void>;
+  onDelete: (mailId: string) => Promise<void>;
 }
 
-export function MailDetailPanel({ mail, siblings = [], onSelectSibling, onClose, onUpdate }: MailDetailPanelProps) {
+export function MailDetailPanel({ mail, siblings = [], onSelectSibling, onClose, onUpdate, onDelete }: MailDetailPanelProps) {
   const [showSignature, setShowSignature] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<MailTraitementStatus>(mail.traitementStatus);
   const [loading, setLoading] = useState(false);
   const [replyModalOpen, setReplyModalOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Le panneau reste monté en passant d'un message du fil à un autre
   // (siblings) - selectedStatus doit suivre le mail réellement affiché au
@@ -131,6 +134,22 @@ export function MailDetailPanel({ mail, siblings = [], onSelectSibling, onClose,
       throw error;
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm('Supprimer définitivement ce mail ? Cette action est irréversible.')) {
+      return;
+    }
+    setDeleting(true);
+    try {
+      await hubCommunicationAPI.deleteMail(mail.id);
+      toast.success('Mail supprimé');
+      await onDelete(mail.id);
+    } catch (error) {
+      console.error('Erreur suppression mail:', error);
+      toast.error('Impossible de supprimer le mail');
+      setDeleting(false);
     }
   };
 
@@ -354,6 +373,15 @@ export function MailDetailPanel({ mail, siblings = [], onSelectSibling, onClose,
             </Button>
             <Button onClick={onClose} variant="outline" className="w-full" disabled={loading}>
               Fermer
+            </Button>
+            <Button
+              onClick={handleDelete}
+              variant="outline"
+              disabled={loading || deleting}
+              className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              {deleting ? 'Suppression...' : 'Supprimer ce mail'}
             </Button>
           </div>
         </div>

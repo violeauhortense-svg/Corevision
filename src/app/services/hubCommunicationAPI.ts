@@ -108,6 +108,18 @@ export const hubCommunicationAPI = {
   },
 
   /**
+   * Supprime définitivement un mail.
+   */
+  async deleteMail(mailId: string): Promise<void> {
+    const response = await fetch(`${API_URL}/mails/${mailId}`, {
+      method: 'DELETE',
+      headers: this._getHeaders(),
+    });
+
+    this._handleError(response, 'Erreur suppression mail');
+  },
+
+  /**
    * Liste des clients ayant au moins un mail "à traiter" dans l'onglet
    * Conversation Client - alimente les cartouches de tri par client.
    */

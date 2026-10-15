@@ -236,6 +236,15 @@ export function HubCommunicationView() {
     }
   };
 
+  const handleMailDelete = async () => {
+    setSelectedMail(null);
+    setThreadSiblings([]);
+    await loadMailsByTab(activeTab);
+    if (activeTab === 'conversation_client') {
+      await loadUntreatedClients();
+    }
+  };
+
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     const now = new Date();
@@ -586,6 +595,7 @@ export function HubCommunicationView() {
             setThreadSiblings([]);
           }}
           onUpdate={handleMailUpdate}
+          onDelete={handleMailDelete}
         />
       )}
     </>
