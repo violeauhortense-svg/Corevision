@@ -8,6 +8,7 @@
 
 import { Hono } from 'hono';
 import { pb } from './pocketbase_client.tsx';
+import { contentDisposition } from './http_headers.tsx';
 
 const app = new Hono();
 
@@ -83,7 +84,7 @@ app.get('/documents/:id/download', async (c) => {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `${forceDownload ? 'attachment' : 'inline'}; filename="${filename.replace(/"/g, '')}"`,
+        'Content-Disposition': contentDisposition(forceDownload ? 'attachment' : 'inline', filename),
       },
     });
   } catch (err: any) {

@@ -9,6 +9,7 @@
 import { Hono } from 'hono';
 import { pb } from './pocketbase_client.tsx';
 import { IP_TEMPLATES, IP_TEMPLATE_MIME, findIpTemplate, extractIpTitles, buildFilteredIpReport, type TitleSelection } from './corevision_ip_templates.tsx';
+import { contentDisposition } from './http_headers.tsx';
 
 const app = new Hono();
 
@@ -146,7 +147,7 @@ app.get('/:orderId/comparatif/download', async (c) => {
       status: 200,
       headers: {
         'Content-Type': TEMPLATE_MIME,
-        'Content-Disposition': `${forceDownload ? 'attachment' : 'inline'}; filename="${filename.replace(/"/g, '')}"`,
+        'Content-Disposition': contentDisposition(forceDownload ? 'attachment' : 'inline', filename),
       },
     });
   } catch (err: any) {
@@ -256,7 +257,7 @@ app.get('/:orderId/ip-reports/:templateKey/download', async (c) => {
       status: 200,
       headers: {
         'Content-Type': IP_TEMPLATE_MIME,
-        'Content-Disposition': `${forceDownload ? 'attachment' : 'inline'}; filename="${filename.replace(/"/g, '')}"`,
+        'Content-Disposition': contentDisposition(forceDownload ? 'attachment' : 'inline', filename),
       },
     });
   } catch (err: any) {
@@ -399,7 +400,7 @@ app.get('/:orderId/ip-reports/:templateKey/generated-report/download', async (c)
       status: 200,
       headers: {
         'Content-Type': IP_TEMPLATE_MIME,
-        'Content-Disposition': `${forceDownload ? 'attachment' : 'inline'}; filename="${filename.replace(/"/g, '')}"`,
+        'Content-Disposition': contentDisposition(forceDownload ? 'attachment' : 'inline', filename),
       },
     });
   } catch (err: any) {
