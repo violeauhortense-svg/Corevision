@@ -99,7 +99,13 @@ export function HubCommunicationView() {
 
   const loadMailsByTab = async (tab: HubTab): Promise<HubMail[]> => {
     try {
-      const result = await hubCommunicationAPI.getMailsByTab(tab, 50, 0);
+      // 50 ne couvrait pas tout : l'onglet Conversation Client a déjà
+      // dépassé ce nombre, et les cartouches de tri par client sont
+      // calculées côté serveur sur l'ensemble réel des mails - un client
+      // dont les mails "à traiter" tombent après les 50 premiers chargés
+      // affichait un chiffre sur sa cartouche mais 0 mail une fois
+      // cliqué. 500 couvre tout le volume actuel (385 mails au total).
+      const result = await hubCommunicationAPI.getMailsByTab(tab, 500, 0);
       setMails(result.mails);
       setStats(result.stats);
       return result.mails;

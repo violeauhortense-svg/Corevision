@@ -69,11 +69,15 @@ async function computeStats() {
 
   for (const m of result.items as any[]) {
     const status = m.traitementStatus || 'a_traiter';
-    const tab = status === 'termine' ? 'archive' : (m.hubTab || 'interne_externe');
+    const hubTab = m.hubTab || 'interne_externe';
 
-    if (tab === 'conversation_client') stats.conversation_client++;
-    else if (tab === 'archive') stats.archive++;
-    else stats.interne_externe++;
+    // Reproduit exactement les filtres des 3 listes réelles (GET /mails) -
+    // un mail "conversation_client" terminé part dans l'Historique du
+    // client, pas dans l'onglet Archive : le compter ici gonflait le
+    // badge Archive bien au-delà de ce que l'onglet affiche vraiment.
+    if (hubTab === 'conversation_client' && status !== 'termine') stats.conversation_client++;
+    else if (status === 'termine' && hubTab !== 'conversation_client') stats.archive++;
+    else if (hubTab === 'interne_externe' && status !== 'termine') stats.interne_externe++;
 
     if (status in stats) (stats as any)[status]++;
     if (!m.read) stats.unread++;
