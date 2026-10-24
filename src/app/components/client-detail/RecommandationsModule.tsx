@@ -71,7 +71,15 @@ export function formatEuro(value: number): string {
 }
 
 function emptyForm() {
-  return { title: '', detail: '', chiffreAffaires: '', venduPar: '' as AuditRecommendationVendeur | '' };
+  return {
+    title: '',
+    detail: '',
+    chiffreAffaires: '',
+    venduPar: '' as AuditRecommendationVendeur | '',
+    acceptedDate: '',
+    paymentDate: '',
+    signatureDate: '',
+  };
 }
 
 export function RecommandationsModule({ clientId, recommendations, onUpdate }: RecommandationsModuleProps) {
@@ -200,7 +208,15 @@ export function RecommandationsModule({ clientId, recommendations, onUpdate }: R
 
   const openEditForm = (rec: AuditRecommendation) => {
     setEditingId(rec.id);
-    setForm({ title: rec.title, detail: rec.detail, chiffreAffaires: String(rec.chiffreAffaires || ''), venduPar: rec.venduPar || '' });
+    setForm({
+      title: rec.title,
+      detail: rec.detail,
+      chiffreAffaires: String(rec.chiffreAffaires || ''),
+      venduPar: rec.venduPar || '',
+      acceptedDate: rec.acceptedDate ? rec.acceptedDate.slice(0, 10) : '',
+      paymentDate: rec.paymentDate ? rec.paymentDate.slice(0, 10) : '',
+      signatureDate: rec.signatureDate ? rec.signatureDate.slice(0, 10) : '',
+    });
     setShowForm(true);
   };
 
@@ -211,9 +227,23 @@ export function RecommandationsModule({ clientId, recommendations, onUpdate }: R
 
     let ok: boolean;
     if (editingId) {
+      // Permet de corriger ou de saisir après coup une date qui n'a pas
+      // (ou mal) été capturée au moment du clic sur le bouton d'origine -
+      // vidé dans le formulaire, le champ est explicitement effacé plutôt
+      // que de garder une ancienne valeur fantôme.
       const next = recommendations.map((r) =>
         r.id === editingId
-          ? { ...r, title: form.title.trim(), detail: form.detail.trim(), chiffreAffaires: Number(form.chiffreAffaires) || 0, venduPar, updatedDate: now }
+          ? {
+              ...r,
+              title: form.title.trim(),
+              detail: form.detail.trim(),
+              chiffreAffaires: Number(form.chiffreAffaires) || 0,
+              venduPar,
+              acceptedDate: form.acceptedDate ? new Date(form.acceptedDate).toISOString() : undefined,
+              paymentDate: form.paymentDate ? new Date(form.paymentDate).toISOString() : undefined,
+              signatureDate: form.signatureDate ? new Date(form.signatureDate).toISOString() : undefined,
+              updatedDate: now,
+            }
           : r
       );
       ok = await persist(next);
@@ -407,6 +437,45 @@ export function RecommandationsModule({ clientId, recommendations, onUpdate }: R
                   ))}
                 </select>
               </div>
+
+              {/* Dates du cycle de vie - éditables ici pour corriger ou
+                  saisir après coup une recommandation déjà avancée avant
+                  l'ajout de ces champs (ou dont la date cliquée différait
+                  de la réalité). */}
+              {editingId && (
+                <div className="pt-3 border-t border-gray-100 space-y-3">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Dates (facultatif)</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Acceptation</label>
+                      <input
+                        type="date"
+                        value={form.acceptedDate}
+                        onChange={(e) => setForm({ ...form, acceptedDate: e.target.value })}
+                        className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Règlement</label>
+                      <input
+                        type="date"
+                        value={form.paymentDate}
+                        onChange={(e) => setForm({ ...form, paymentDate: e.target.value })}
+                        className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Signature</label>
+                      <input
+                        type="date"
+                        value={form.signatureDate}
+                        onChange={(e) => setForm({ ...form, signatureDate: e.target.value })}
+                        className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="p-6 border-t border-gray-200 flex gap-3 justify-end">
               <button
