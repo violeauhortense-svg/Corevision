@@ -31,6 +31,15 @@ function countsTowardCA(status: AuditRecommendationStatus): boolean {
   return status !== 'refusee' && status !== 'proposee';
 }
 
+type DateFilterField = 'createdDate' | 'acceptedDate' | 'paymentDate' | 'signatureDate';
+
+const DATE_FIELD_LABELS: Record<DateFilterField, string> = {
+  createdDate: 'Date de création',
+  acceptedDate: "Date d'acceptation",
+  paymentDate: 'Date de règlement',
+  signatureDate: 'Date de signature',
+};
+
 export function RecommandationsGlobalView({ onNavigateToClient }: RecommandationsGlobalViewProps) {
   const [loading, setLoading] = useState(true);
   const [recos, setRecos] = useState<RecoWithClient[]>([]);
@@ -40,6 +49,14 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
   const [serviceFilter, setServiceFilter] = useState<Set<AuditRecommendationService>>(new Set());
   const [showSynthese, setShowSynthese] = useState(false);
   const [syntheseMode, setSyntheseMode] = useState<'statut' | 'service'>('statut');
+  // Filtre par date dans la synthèse - sur le champ de son choix (création,
+  // acceptation, règlement, signature), plage du/au, les deux bornes
+  // optionnelles. Une recommandation sans valeur pour le champ choisi est
+  // exclue dès qu'une borne est active (impossible de savoir si elle
+  // tombe dans la plage).
+  const [syntheseDateField, setSyntheseDateField] = useState<DateFilterField>('createdDate');
+  const [syntheseDateFrom, setSyntheseDateFrom] = useState('');
+  const [syntheseDateTo, setSyntheseDateTo] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -107,15 +124,27 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
 
   // Synthèse CA par personne (venduPar) - calculée sur filteredRecos pour
   // que le cumul reflète les filtres statut/service déjà choisis plutôt
-  // que de repartir de tout le portefeuille à chaque fois. "Refusée" et
+  // que de repartir de tout le portefeuille à chaque fois, puis affinée
+  // par la plage de date de la synthèse elle-même. "Refusée" et
   // "Proposée" ne comptent pour aucun CA (opportunité perdue / pas encore
   // signée ni envoyée) mais restent visibles en nombre pour ne pas faire
   // disparaître ces lignes silencieusement.
+  const syntheseDateActive = Boolean(syntheseDateFrom || syntheseDateTo);
+  const synthRecos = filteredRecos.filter((r) => {
+    if (!syntheseDateActive) return true;
+    const value = r[syntheseDateField];
+    if (!value) return false; // pas de valeur pour ce champ = ne peut pas être dans la plage
+    const time = new Date(value).getTime();
+    if (syntheseDateFrom && time < new Date(syntheseDateFrom).getTime()) return false;
+    if (syntheseDateTo && time > new Date(syntheseDateTo).getTime() + 86400000 - 1) return false;
+    return true;
+  });
+
   const UNASSIGNED = '__unassigned__';
   const vendeurKeys = [...(Object.keys(VENDEUR_LABELS) as AuditRecommendationVendeur[]), UNASSIGNED];
   const syntheseParPersonne = vendeurKeys
     .map((v) => {
-      const items = filteredRecos.filter((r) => (r.venduPar || UNASSIGNED) === v);
+      const items = synthRecos.filter((r) => (r.venduPar || UNASSIGNED) === v);
       if (items.length === 0) return null;
       const totalCA = items.filter((r) => countsTowardCA(r.status)).reduce((s, r) => s + (r.chiffreAffaires || 0), 0);
       const byStatus = STATUS_ORDER.map((status) => {
@@ -378,6 +407,54 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
               </button>
             </div>
 
+            {/* Filtre par date - champ au choix, plage du/au optionnelle */}
+            <div className="px-5 pt-3 flex items-end gap-3 flex-wrap">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Date</label>
+                <select
+                  value={syntheseDateField}
+                  onChange={(e) => setSyntheseDateField(e.target.value as DateFilterField)}
+                  className="px-2.5 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                >
+                  {(Object.keys(DATE_FIELD_LABELS) as DateFilterField[]).map((f) => (
+                    <option key={f} value={f}>{DATE_FIELD_LABELS[f]}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Du</label>
+                <input
+                  type="date"
+                  value={syntheseDateFrom}
+                  onChange={(e) => setSyntheseDateFrom(e.target.value)}
+                  className="px-2.5 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Au</label>
+                <input
+                  type="date"
+                  value={syntheseDateTo}
+                  onChange={(e) => setSyntheseDateTo(e.target.value)}
+                  className="px-2.5 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                />
+              </div>
+              {syntheseDateActive && (
+                <button
+                  onClick={() => { setSyntheseDateFrom(''); setSyntheseDateTo(''); }}
+                  className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 font-medium pb-2"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Réinitialiser la date
+                </button>
+              )}
+            </div>
+            {syntheseDateActive && (
+              <p className="px-5 pt-1.5 text-xs text-gray-400 italic">
+                Les recommandations sans {DATE_FIELD_LABELS[syntheseDateField].toLowerCase()} sont exclues de ce filtre.
+              </p>
+            )}
+
             <div className="flex-1 overflow-y-auto p-5 space-y-4">
               {syntheseParPersonne.map(({ vendeur, count, totalCA, byStatus, byService }) => (
                 <div key={vendeur} className="border-2 border-gray-200 rounded-lg overflow-hidden">
@@ -423,10 +500,10 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
 
             <div className="border-t border-gray-200 p-4 bg-gray-50 flex items-center justify-between">
               <span className="text-sm text-gray-600">
-                Total {filtersActive ? 'filtré' : ''} ({filteredRecos.length} recommandation{filteredRecos.length > 1 ? 's' : ''})
+                Total {(filtersActive || syntheseDateActive) ? 'filtré' : ''} ({synthRecos.length} recommandation{synthRecos.length > 1 ? 's' : ''})
               </span>
               <span className="text-lg font-bold text-emerald-700">
-                {formatEuro(filteredRecos.filter((r) => countsTowardCA(r.status)).reduce((s, r) => s + (r.chiffreAffaires || 0), 0))}
+                {formatEuro(synthRecos.filter((r) => countsTowardCA(r.status)).reduce((s, r) => s + (r.chiffreAffaires || 0), 0))}
               </span>
             </div>
           </div>
