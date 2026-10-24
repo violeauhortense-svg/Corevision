@@ -31,6 +31,10 @@ function countsTowardCA(status: AuditRecommendationStatus): boolean {
   return status !== 'refusee' && status !== 'proposee';
 }
 
+function formatShortDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
 export function RecommandationsGlobalView({ onNavigateToClient }: RecommandationsGlobalViewProps) {
   const [loading, setLoading] = useState(true);
   const [recos, setRecos] = useState<RecoWithClient[]>([]);
@@ -315,13 +319,21 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
                             </span>
                           )}
                           {r.venduPar && <span>{VENDEUR_LABELS[r.venduPar]}</span>}
-                          <span>
-                            {new Date(r.updatedDate || r.createdDate).toLocaleDateString('fr-FR', {
-                              day: 'numeric',
-                              month: 'long',
-                              year: 'numeric',
-                            })}
-                          </span>
+                        </div>
+
+                        {/* Historique des dates - "Créée" toujours présente,
+                            les autres uniquement si cette étape a été
+                            franchie depuis l'ajout de leur saisie (les
+                            recommandations plus anciennes n'ont que
+                            Créée/Dernière mise à jour). */}
+                        <div className="flex items-center gap-x-3 gap-y-1 flex-wrap mt-1.5 text-xs text-gray-400">
+                          <span>📅 Créée le {formatShortDate(r.createdDate)}</span>
+                          {r.acceptedDate && <span>✅ Acceptée le {formatShortDate(r.acceptedDate)}</span>}
+                          {r.paymentDate && <span>💶 Réglée le {formatShortDate(r.paymentDate)}</span>}
+                          {r.signatureDate && <span>✍️ Signée le {formatShortDate(r.signatureDate)}</span>}
+                          {r.updatedDate && r.updatedDate !== r.createdDate && (
+                            <span>🕓 MAJ le {formatShortDate(r.updatedDate)}</span>
+                          )}
                         </div>
                       </div>
                       <span className="font-bold text-gray-900 shrink-0">{formatEuro(r.chiffreAffaires)}</span>
