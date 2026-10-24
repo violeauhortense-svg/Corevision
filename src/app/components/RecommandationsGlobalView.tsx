@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Lightbulb, Loader2, RefreshCw, Filter, RotateCcw } from 'lucide-react';
+import { Lightbulb, Loader2, RefreshCw, Filter, RotateCcw, Users, X } from 'lucide-react';
 import { clientAPI } from '../services/api';
 import { STATUS_LABELS, STATUS_COLORS, STATUS_SUBLABELS, SERVICE_LABELS, VENDEUR_LABELS, formatEuro } from './client-detail/RecommandationsModule';
-import type { AuditRecommendation, AuditRecommendationStatus, AuditRecommendationService } from './client-detail/types';
+import type { AuditRecommendation, AuditRecommendationStatus, AuditRecommendationService, AuditRecommendationVendeur } from './client-detail/types';
 
 interface RecommandationsGlobalViewProps {
   onNavigateToClient: (clientId: string) => void;
@@ -31,6 +31,7 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
   // cochée = pas de filtre sur cette dimension).
   const [statusFilter, setStatusFilter] = useState<Set<AuditRecommendationStatus>>(new Set());
   const [serviceFilter, setServiceFilter] = useState<Set<AuditRecommendationService>>(new Set());
+  const [showSynthese, setShowSynthese] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -96,6 +97,41 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
 
   const totalCA = recos.filter((r) => r.status !== 'refusee').reduce((sum, r) => sum + (r.chiffreAffaires || 0), 0);
 
+  // Synthèse CA par personne (venduPar) - calculée sur filteredRecos pour
+  // que le cumul reflète les filtres statut/service déjà choisis plutôt
+  // que de repartir de tout le portefeuille à chaque fois. "Refusée" ne
+  // compte pour aucun CA (opportunité perdue) mais reste visible en
+  // nombre pour ne pas faire disparaître ces lignes silencieusement.
+  const UNASSIGNED = '__unassigned__';
+  const vendeurKeys = [...(Object.keys(VENDEUR_LABELS) as AuditRecommendationVendeur[]), UNASSIGNED];
+  const syntheseParPersonne = vendeurKeys
+    .map((v) => {
+      const items = filteredRecos.filter((r) => (r.venduPar || UNASSIGNED) === v);
+      if (items.length === 0) return null;
+      const totalCA = items.filter((r) => r.status !== 'refusee').reduce((s, r) => s + (r.chiffreAffaires || 0), 0);
+      const byStatus = STATUS_ORDER.map((status) => {
+        const statusItems = items.filter((r) => r.status === status);
+        return {
+          status,
+          count: statusItems.length,
+          ca: statusItems.reduce((s, r) => s + (r.chiffreAffaires || 0), 0),
+        };
+      }).filter((g) => g.count > 0);
+      const byService = (Object.keys(SERVICE_LABELS) as AuditRecommendationService[])
+        .map((service) => {
+          const serviceItems = items.filter((r) => r.service === service && r.status !== 'refusee');
+          return {
+            service,
+            count: serviceItems.length,
+            ca: serviceItems.reduce((s, r) => s + (r.chiffreAffaires || 0), 0),
+          };
+        })
+        .filter((g) => g.count > 0);
+      return { vendeur: v, count: items.length, totalCA, byStatus, byService };
+    })
+    .filter((g): g is NonNullable<typeof g> => g !== null)
+    .sort((a, b) => b.totalCA - a.totalCA);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full p-12">
@@ -121,6 +157,14 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
               <p className="text-xs text-emerald-100 uppercase tracking-wide mb-1">CA potentiel (hors refusées)</p>
               <p className="text-3xl font-bold">{formatEuro(totalCA)}</p>
             </div>
+            <button
+              onClick={() => setShowSynthese(true)}
+              disabled={filteredRecos.length === 0}
+              className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors shrink-0 font-medium text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Users className="w-4 h-4" />
+              Synthèse CA par personne
+            </button>
             <button
               onClick={load}
               className="p-2 hover:bg-white/20 rounded-lg transition-colors shrink-0"
@@ -278,6 +322,88 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Synthèse CA par personne - calculée sur filteredRecos, donc sur
+          les mêmes filtres statut/service que la liste en dessous. */}
+      {showSynthese && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-5 flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Synthèse CA par personne
+                </h2>
+                <p className="text-emerald-100 text-sm mt-1">
+                  {filtersActive
+                    ? 'Sur les recommandations correspondant aux filtres actifs ci-dessous'
+                    : 'Sur l\'ensemble des recommandations (hors refusées pour le CA)'}
+                </p>
+              </div>
+              <button onClick={() => setShowSynthese(false)} className="p-1 hover:bg-white/20 rounded-lg shrink-0">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              {syntheseParPersonne.map(({ vendeur, count, totalCA, byStatus, byService }) => (
+                <div key={vendeur} className="border-2 border-gray-200 rounded-lg overflow-hidden">
+                  <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                    <span className="font-semibold text-gray-900">
+                      {vendeur === UNASSIGNED ? '❓ Non attribué' : VENDEUR_LABELS[vendeur as AuditRecommendationVendeur]}
+                      <span className="text-gray-400 font-normal text-sm ml-2">({count})</span>
+                    </span>
+                    <span className="font-bold text-emerald-700">{formatEuro(totalCA)}</span>
+                  </div>
+                  <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Par statut</p>
+                      <div className="space-y-1.5">
+                        {byStatus.map(({ status, count, ca }) => (
+                          <div key={status} className="flex items-center justify-between text-sm">
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${STATUS_COLORS[status]}`}>
+                              {STATUS_LABELS[status]} ({count})
+                            </span>
+                            <span className="font-medium text-gray-900">
+                              {status === 'refusee' ? '—' : formatEuro(ca)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Par service</p>
+                      {byService.length === 0 ? (
+                        <p className="text-sm text-gray-400 italic">Aucun service renseigné</p>
+                      ) : (
+                        <div className="space-y-1.5">
+                          {byService.map(({ service, count, ca }) => (
+                            <div key={service} className="flex items-center justify-between text-sm">
+                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700 border border-indigo-300">
+                                {SERVICE_LABELS[service]} ({count})
+                              </span>
+                              <span className="font-medium text-gray-900">{formatEuro(ca)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t border-gray-200 p-4 bg-gray-50 flex items-center justify-between">
+              <span className="text-sm text-gray-600">
+                Total {filtersActive ? 'filtré' : ''} ({filteredRecos.length} recommandation{filteredRecos.length > 1 ? 's' : ''})
+              </span>
+              <span className="text-lg font-bold text-emerald-700">
+                {formatEuro(filteredRecos.filter((r) => r.status !== 'refusee').reduce((s, r) => s + (r.chiffreAffaires || 0), 0))}
+              </span>
+            </div>
+          </div>
         </div>
       )}
     </div>
