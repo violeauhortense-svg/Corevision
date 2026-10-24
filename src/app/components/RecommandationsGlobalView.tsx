@@ -24,6 +24,13 @@ const STATUS_ORDER: AuditRecommendationStatus[] = [
   'refusee',
 ];
 
+// Un CA "Proposée" n'est ni signé ni envoyé, "Refusée" est une
+// opportunité perdue - aucun des deux ne doit compter dans un total de
+// chiffre d'affaires, seulement à partir d'"Acceptée".
+function countsTowardCA(status: AuditRecommendationStatus): boolean {
+  return status !== 'refusee' && status !== 'proposee';
+}
+
 export function RecommandationsGlobalView({ onNavigateToClient }: RecommandationsGlobalViewProps) {
   const [loading, setLoading] = useState(true);
   const [recos, setRecos] = useState<RecoWithClient[]>([]);
@@ -32,6 +39,7 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
   const [statusFilter, setStatusFilter] = useState<Set<AuditRecommendationStatus>>(new Set());
   const [serviceFilter, setServiceFilter] = useState<Set<AuditRecommendationService>>(new Set());
   const [showSynthese, setShowSynthese] = useState(false);
+  const [syntheseMode, setSyntheseMode] = useState<'statut' | 'service'>('statut');
 
   const load = async () => {
     setLoading(true);
@@ -95,20 +103,21 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
       .sort((a, b) => new Date(b.updatedDate || b.createdDate).getTime() - new Date(a.updatedDate || a.createdDate).getTime()),
   })).filter((g) => g.items.length > 0);
 
-  const totalCA = recos.filter((r) => r.status !== 'refusee').reduce((sum, r) => sum + (r.chiffreAffaires || 0), 0);
+  const totalCA = recos.filter((r) => countsTowardCA(r.status)).reduce((sum, r) => sum + (r.chiffreAffaires || 0), 0);
 
   // Synthèse CA par personne (venduPar) - calculée sur filteredRecos pour
   // que le cumul reflète les filtres statut/service déjà choisis plutôt
-  // que de repartir de tout le portefeuille à chaque fois. "Refusée" ne
-  // compte pour aucun CA (opportunité perdue) mais reste visible en
-  // nombre pour ne pas faire disparaître ces lignes silencieusement.
+  // que de repartir de tout le portefeuille à chaque fois. "Refusée" et
+  // "Proposée" ne comptent pour aucun CA (opportunité perdue / pas encore
+  // signée ni envoyée) mais restent visibles en nombre pour ne pas faire
+  // disparaître ces lignes silencieusement.
   const UNASSIGNED = '__unassigned__';
   const vendeurKeys = [...(Object.keys(VENDEUR_LABELS) as AuditRecommendationVendeur[]), UNASSIGNED];
   const syntheseParPersonne = vendeurKeys
     .map((v) => {
       const items = filteredRecos.filter((r) => (r.venduPar || UNASSIGNED) === v);
       if (items.length === 0) return null;
-      const totalCA = items.filter((r) => r.status !== 'refusee').reduce((s, r) => s + (r.chiffreAffaires || 0), 0);
+      const totalCA = items.filter((r) => countsTowardCA(r.status)).reduce((s, r) => s + (r.chiffreAffaires || 0), 0);
       const byStatus = STATUS_ORDER.map((status) => {
         const statusItems = items.filter((r) => r.status === status);
         return {
@@ -119,7 +128,7 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
       }).filter((g) => g.count > 0);
       const byService = (Object.keys(SERVICE_LABELS) as AuditRecommendationService[])
         .map((service) => {
-          const serviceItems = items.filter((r) => r.service === service && r.status !== 'refusee');
+          const serviceItems = items.filter((r) => r.service === service && countsTowardCA(r.status));
           return {
             service,
             count: serviceItems.length,
@@ -154,7 +163,7 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-xs text-emerald-100 uppercase tracking-wide mb-1">CA potentiel (hors refusées)</p>
+              <p className="text-xs text-emerald-100 uppercase tracking-wide mb-1">CA (à partir d'Acceptée)</p>
               <p className="text-3xl font-bold">{formatEuro(totalCA)}</p>
             </div>
             <button
@@ -282,7 +291,7 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
                       <span className="text-xs font-normal opacity-75">{STATUS_SUBLABELS[status]}</span>
                     )}
                   </span>
-                  {status !== 'refusee' && <span className="font-bold">{formatEuro(groupCA)}</span>}
+                  {countsTowardCA(status) && <span className="font-bold">{formatEuro(groupCA)}</span>}
                 </div>
                 <div className="divide-y divide-gray-100">
                   {items.map((r) => (
@@ -339,11 +348,32 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
                 <p className="text-emerald-100 text-sm mt-1">
                   {filtersActive
                     ? 'Sur les recommandations correspondant aux filtres actifs ci-dessous'
-                    : 'Sur l\'ensemble des recommandations (hors refusées pour le CA)'}
+                    : 'Sur l\'ensemble des recommandations'}
+                  {' '}(CA à partir d'Acceptée uniquement)
                 </p>
               </div>
               <button onClick={() => setShowSynthese(false)} className="p-1 hover:bg-white/20 rounded-lg shrink-0">
                 <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Bascule statut/service - l'un ou l'autre, pas les deux empilés */}
+            <div className="px-5 pt-4 flex items-center gap-2">
+              <button
+                onClick={() => setSyntheseMode('statut')}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  syntheseMode === 'statut' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Par statut
+              </button>
+              <button
+                onClick={() => setSyntheseMode('service')}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  syntheseMode === 'service' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Par service
               </button>
             </div>
 
@@ -357,9 +387,8 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
                     </span>
                     <span className="font-bold text-emerald-700">{formatEuro(totalCA)}</span>
                   </div>
-                  <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Par statut</p>
+                  <div className="p-4">
+                    {syntheseMode === 'statut' ? (
                       <div className="space-y-1.5">
                         {byStatus.map(({ status, count, ca }) => (
                           <div key={status} className="flex items-center justify-between text-sm">
@@ -367,29 +396,25 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
                               {STATUS_LABELS[status]} ({count})
                             </span>
                             <span className="font-medium text-gray-900">
-                              {status === 'refusee' ? '—' : formatEuro(ca)}
+                              {countsTowardCA(status) ? formatEuro(ca) : '—'}
                             </span>
                           </div>
                         ))}
                       </div>
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Par service</p>
-                      {byService.length === 0 ? (
-                        <p className="text-sm text-gray-400 italic">Aucun service renseigné</p>
-                      ) : (
-                        <div className="space-y-1.5">
-                          {byService.map(({ service, count, ca }) => (
-                            <div key={service} className="flex items-center justify-between text-sm">
-                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700 border border-indigo-300">
-                                {SERVICE_LABELS[service]} ({count})
-                              </span>
-                              <span className="font-medium text-gray-900">{formatEuro(ca)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    ) : byService.length === 0 ? (
+                      <p className="text-sm text-gray-400 italic">Aucun service renseigné</p>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {byService.map(({ service, count, ca }) => (
+                          <div key={service} className="flex items-center justify-between text-sm">
+                            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700 border border-indigo-300">
+                              {SERVICE_LABELS[service]} ({count})
+                            </span>
+                            <span className="font-medium text-gray-900">{formatEuro(ca)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -400,7 +425,7 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
                 Total {filtersActive ? 'filtré' : ''} ({filteredRecos.length} recommandation{filteredRecos.length > 1 ? 's' : ''})
               </span>
               <span className="text-lg font-bold text-emerald-700">
-                {formatEuro(filteredRecos.filter((r) => r.status !== 'refusee').reduce((s, r) => s + (r.chiffreAffaires || 0), 0))}
+                {formatEuro(filteredRecos.filter((r) => countsTowardCA(r.status)).reduce((s, r) => s + (r.chiffreAffaires || 0), 0))}
               </span>
             </div>
           </div>
