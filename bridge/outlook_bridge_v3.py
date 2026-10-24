@@ -48,6 +48,18 @@ class Config:
     DEVICE_ID = os.getenv('DEVICE_ID', 'default-device')
     SYNC_INTERVAL = 30  # secondes
 
+    # Seuls les mails où l'une de ces adresses figure en expéditeur OU en
+    # destinataire sont synchronisés - tout le reste (mail d'un collègue à
+    # un autre où Hortense n'apparaît nulle part, notifications d'un autre
+    # compte partageant ce profil Outlook, etc.) n'est plus importé du
+    # tout plutôt que d'être trié après coup dans le CRM. Override
+    # possible via la variable d'environnement ALLOWED_MAIL_ADDRESSES
+    # (adresses séparées par des virgules) sans toucher au code.
+    _default_allowed = 'h.violeau@efipatrimoine.com,hortense.violeau@prudentia.fr,h.violeau@fiteco.com'
+    ALLOWED_MAIL_ADDRESSES = [
+        a.strip().lower() for a in os.getenv('ALLOWED_MAIL_ADDRESSES', _default_allowed).split(',') if a.strip()
+    ]
+
     # Paths
     BRIDGE_DIR = _APP_DIR
     SCRIPTS_DIR = _DATA_DIR / 'scripts'
@@ -155,8 +167,14 @@ class OutlookBridgeV3:
         try:
             logger.info(f"📧 [CYCLE 1] Récupération des mails (fenêtre: {days_back}j)...")
 
-            # Exécuter le script PowerShell
-            mails_json = self._run_powershell('export_mails.ps1', {'DaysBack': str(days_back)})
+            # Exécuter le script PowerShell - le filtre par adresse se fait
+            # déjà côté PowerShell (plus efficace : les mails hors liste ne
+            # sont même pas renvoyés par Outlook), AllowedAddresses lui est
+            # passé pour garder Config comme seule source de vérité.
+            mails_json = self._run_powershell('export_mails.ps1', {
+                'DaysBack': str(days_back),
+                'AllowedAddresses': ','.join(Config.ALLOWED_MAIL_ADDRESSES),
+            })
             if not mails_json:
                 logger.warning("❌ Pas de mails reçus de PowerShell")
                 return 0, 0
@@ -166,9 +184,20 @@ class OutlookBridgeV3:
 
             sent_count = 0
             duplicate_count = 0
+            filtered_count = 0
 
             for mail_data in mails:
                 mail = Mail(**mail_data)
+
+                # Filet de sécurité si le script PowerShell déployé est une
+                # version antérieure à ce filtre (ou a été modifié à part) -
+                # ne jamais transmettre au backend un mail dont ni
+                # l'expéditeur ni aucun destinataire ne figure dans la liste.
+                recipients = [t.strip().lower() for t in mail.to.split(';') if t.strip()]
+                if not self._mail_matches_allowed(mail.from_address, recipients):
+                    filtered_count += 1
+                    logger.debug(f"⊘ Filtré (hors adresses autorisées) : {mail.subject}")
+                    continue
 
                 # Vérifier les doublons
                 duplicate_key = mail.get_duplicate_key()
@@ -200,12 +229,23 @@ class OutlookBridgeV3:
                 else:
                     logger.error(f"❌ Erreur envoi mail : {response.status_code} - {response.text}")
 
-            logger.info(f"📧 [CYCLE 1] Résumé : {sent_count} envoyés, {duplicate_count} doublons")
+            logger.info(f"📧 [CYCLE 1] Résumé : {sent_count} envoyés, {duplicate_count} doublons, {filtered_count} filtrés (adresse non autorisée)")
             return sent_count, duplicate_count
 
         except Exception as e:
             logger.error(f"❌ [CYCLE 1] Erreur : {e}")
             return 0, 0
+
+    def _mail_matches_allowed(self, from_address: str, recipients: List[str]) -> bool:
+        """True si l'expéditeur ou au moins un destinataire est l'une des
+        adresses autorisées (Config.ALLOWED_MAIL_ADDRESSES). Liste vide =
+        filtre désactivé (tout passe), pour ne jamais bloquer la synchro
+        si elle est un jour vidée par erreur."""
+        if not Config.ALLOWED_MAIL_ADDRESSES:
+            return True
+        if (from_address or '').strip().lower() in Config.ALLOWED_MAIL_ADDRESSES:
+            return True
+        return any(r in Config.ALLOWED_MAIL_ADDRESSES for r in recipients)
 
     # ============================================
     # CYCLE 2: Récupérer les événements

@@ -2,7 +2,12 @@
 # Outputs a plain JSON array (not wrapped), one object per mail, using
 # the exact field names outlook_bridge_v3.py's Mail dataclass expects:
 # subject, from_address, to, received_date, body, html_body, attachments.
-param([int]$DaysBack = 5)
+#
+# AllowedAddresses (comma-separated, optional): when non-empty, only mails
+# where the sender OR at least one recipient resolves to one of these
+# addresses are returned at all - everything else is skipped before it
+# ever reaches the CRM, instead of being imported and sorted out later.
+param([int]$DaysBack = 5, [string]$AllowedAddresses = "")
 
 # Force UTF-8 on the output stream - without this, Write-Host encodes
 # using the console's codepage (cp1252 on this machine), which mangles
@@ -12,6 +17,8 @@ param([int]$DaysBack = 5)
 $OutputEncoding = [System.Text.Encoding]::UTF8
 
 try {
+    $AllowedList = @($AllowedAddresses -split ',' | ForEach-Object { $_.Trim().ToLower() } | Where-Object { $_ -ne '' })
+
     $Outlook = New-Object -ComObject Outlook.Application
     $Namespace = $Outlook.GetNamespace("MAPI")
 
@@ -80,7 +87,39 @@ try {
                         [string]$Item.SenderEmailAddress
                     }
                 } catch { [string]$Item.SenderName }
-                $ToAddress = try { [string]$Item.To } catch { "" }
+
+                # $Item.To is a display-name line ("Hortense VIOLEAU; ..."),
+                # not addresses - resolving each Recipient individually
+                # (same EX-vs-SMTP logic as the sender above) is what makes
+                # both the address filter below and any later "who is this
+                # mail actually to" check possible at all.
+                $ToAddresses = @()
+                try {
+                    foreach ($Recipient in $Item.Recipients) {
+                        try {
+                            $RecipAddr = if ($Recipient.AddressEntry.Type -eq "EX") {
+                                $Recipient.AddressEntry.GetExchangeUser().PrimarySmtpAddress
+                            } else {
+                                $Recipient.Address
+                            }
+                            if ($RecipAddr) { $ToAddresses += [string]$RecipAddr }
+                        } catch {
+                            # Unresolvable recipient (stale distribution list
+                            # entry, external contact without GAL match...) -
+                            # skip just this one, not the whole mail.
+                        }
+                    }
+                } catch {}
+                $ToAddress = $ToAddresses -join "; "
+
+                # Adresse autorisée en expéditeur OU en destinataire - sinon
+                # ce mail n'a rien à faire dans le CRM, on ne le renvoie
+                # même pas à Python.
+                if ($AllowedList.Count -gt 0) {
+                    $FromMatches = $AllowedList -contains $FromAddress.ToLower()
+                    $ToMatches = ($ToAddresses | Where-Object { $AllowedList -contains $_.ToLower() }).Count -gt 0
+                    if (-not ($FromMatches -or $ToMatches)) { continue }
+                }
 
                 $Mail = @{
                     subject       = [string]$Item.Subject
