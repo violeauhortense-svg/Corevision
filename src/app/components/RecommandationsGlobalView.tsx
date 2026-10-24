@@ -49,14 +49,21 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
   const [serviceFilter, setServiceFilter] = useState<Set<AuditRecommendationService>>(new Set());
   const [showSynthese, setShowSynthese] = useState(false);
   const [syntheseMode, setSyntheseMode] = useState<'statut' | 'service'>('statut');
-  // Filtre par date dans la synthèse - sur le champ de son choix (création,
-  // acceptation, règlement, signature), plage du/au, les deux bornes
-  // optionnelles. Une recommandation sans valeur pour le champ choisi est
-  // exclue dès qu'une borne est active (impossible de savoir si elle
-  // tombe dans la plage).
-  const [syntheseDateField, setSyntheseDateField] = useState<DateFilterField>('createdDate');
+  // Filtre par date dans la synthèse - sur un ou plusieurs champs à la
+  // fois (création, acceptation, règlement, signature : une recommandation
+  // correspond dès qu'AU MOINS UN des champs cochés tombe dans la plage),
+  // plage du/au, les deux bornes optionnelles.
+  const [syntheseDateFields, setSyntheseDateFields] = useState<Set<DateFilterField>>(new Set());
   const [syntheseDateFrom, setSyntheseDateFrom] = useState('');
   const [syntheseDateTo, setSyntheseDateTo] = useState('');
+
+  const toggleSyntheseDateField = (field: DateFilterField) => {
+    setSyntheseDateFields((prev) => {
+      const next = new Set(prev);
+      next.has(field) ? next.delete(field) : next.add(field);
+      return next;
+    });
+  };
 
   const load = async () => {
     setLoading(true);
@@ -129,15 +136,23 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
   // "Proposée" ne comptent pour aucun CA (opportunité perdue / pas encore
   // signée ni envoyée) mais restent visibles en nombre pour ne pas faire
   // disparaître ces lignes silencieusement.
-  const syntheseDateActive = Boolean(syntheseDateFrom || syntheseDateTo);
-  const synthRecos = filteredRecos.filter((r) => {
-    if (!syntheseDateActive) return true;
-    const value = r[syntheseDateField];
-    if (!value) return false; // pas de valeur pour ce champ = ne peut pas être dans la plage
+  const syntheseDateActive = (syntheseDateFrom || syntheseDateTo) && syntheseDateFields.size > 0;
+  const matchesDateRange = (value: string) => {
     const time = new Date(value).getTime();
     if (syntheseDateFrom && time < new Date(syntheseDateFrom).getTime()) return false;
     if (syntheseDateTo && time > new Date(syntheseDateTo).getTime() + 86400000 - 1) return false;
     return true;
+  };
+  const synthRecos = filteredRecos.filter((r) => {
+    if (!syntheseDateActive) return true;
+    // Une recommandation correspond dès qu'AU MOINS UN des champs cochés
+    // a une valeur dans la plage - les champs cochés sans valeur pour
+    // cette recommandation sont simplement ignorés, pas excluants à eux
+    // seuls.
+    return [...syntheseDateFields].some((field) => {
+      const value = r[field];
+      return Boolean(value) && matchesDateRange(value as string);
+    });
   });
 
   const UNASSIGNED = '__unassigned__';
@@ -407,20 +422,31 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
               </button>
             </div>
 
-            {/* Filtre par date - champ au choix, plage du/au optionnelle */}
-            <div className="px-5 pt-3 flex items-end gap-3 flex-wrap">
-              <div>
-                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Date</label>
-                <select
-                  value={syntheseDateField}
-                  onChange={(e) => setSyntheseDateField(e.target.value as DateFilterField)}
-                  className="px-2.5 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                >
-                  {(Object.keys(DATE_FIELD_LABELS) as DateFilterField[]).map((f) => (
-                    <option key={f} value={f}>{DATE_FIELD_LABELS[f]}</option>
-                  ))}
-                </select>
+            {/* Filtre par date - un ou plusieurs champs à la fois (une
+                recommandation correspond dès qu'UN des champs cochés tombe
+                dans la plage), plage du/au optionnelle */}
+            <div className="px-5 pt-3">
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Date(s)</label>
+              <div className="flex flex-wrap gap-2">
+                {(Object.keys(DATE_FIELD_LABELS) as DateFilterField[]).map((f) => {
+                  const active = syntheseDateFields.has(f);
+                  return (
+                    <button
+                      key={f}
+                      onClick={() => toggleSyntheseDateField(f)}
+                      className={`px-2.5 py-1 rounded-full text-xs font-semibold border transition-all ${
+                        active
+                          ? 'bg-emerald-100 text-emerald-700 border-emerald-300 ring-2 ring-offset-1 ring-emerald-500'
+                          : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100'
+                      }`}
+                    >
+                      {DATE_FIELD_LABELS[f]}
+                    </button>
+                  );
+                })}
               </div>
+            </div>
+            <div className="px-5 pt-3 flex items-end gap-3 flex-wrap">
               <div>
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Du</label>
                 <input
@@ -439,9 +465,9 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
                   className="px-2.5 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 />
               </div>
-              {syntheseDateActive && (
+              {(syntheseDateFields.size > 0 || syntheseDateFrom || syntheseDateTo) && (
                 <button
-                  onClick={() => { setSyntheseDateFrom(''); setSyntheseDateTo(''); }}
+                  onClick={() => { setSyntheseDateFields(new Set()); setSyntheseDateFrom(''); setSyntheseDateTo(''); }}
                   className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 font-medium pb-2"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
@@ -449,11 +475,17 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
                 </button>
               )}
             </div>
-            {syntheseDateActive && (
-              <p className="px-5 pt-1.5 text-xs text-gray-400 italic">
-                Les recommandations sans {DATE_FIELD_LABELS[syntheseDateField].toLowerCase()} sont exclues de ce filtre.
-              </p>
-            )}
+            {syntheseDateFrom || syntheseDateTo ? (
+              syntheseDateFields.size === 0 ? (
+                <p className="px-5 pt-1.5 text-xs text-amber-600 italic">
+                  Coche au moins une date ci-dessus pour appliquer la plage.
+                </p>
+              ) : (
+                <p className="px-5 pt-1.5 text-xs text-gray-400 italic">
+                  Une recommandation est incluse dès qu'une des dates cochées tombe dans la plage.
+                </p>
+              )
+            ) : null}
 
             <div className="flex-1 overflow-y-auto p-5 space-y-4">
               {syntheseParPersonne.map(({ vendeur, count, totalCA, byStatus, byService }) => (
