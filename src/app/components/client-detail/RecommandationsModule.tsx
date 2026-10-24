@@ -79,6 +79,16 @@ export function RecommandationsModule({ clientId, recommendations, onUpdate }: R
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm());
   const [choosingServiceFor, setChoosingServiceFor] = useState<string | null>(null);
+  // Date d'acceptation par le client et date de règlement - modifiables
+  // car souvent saisies après coup (l'événement a lieu un jour, la saisie
+  // dans le CRM un autre).
+  const [acceptedDate, setAcceptedDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [choosingPaymentDateFor, setChoosingPaymentDateFor] = useState<string | null>(null);
+  const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().slice(0, 10));
+  // Date de signature du rapport - optionnelle ("Non concerné" si elle ne
+  // s'applique pas à cette recommandation), donc pas de valeur par défaut.
+  const [choosingSignatureDateFor, setChoosingSignatureDateFor] = useState<string | null>(null);
+  const [signatureDate, setSignatureDate] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // PDF attachés par recommandation - chargés une fois pour toutes les
@@ -235,20 +245,55 @@ export function RecommandationsModule({ clientId, recommendations, onUpdate }: R
     setConfirmDeleteId(null);
   };
 
-  const updateStatus = async (id: string, status: AuditRecommendationStatus, service?: AuditRecommendationService) => {
+  const updateStatus = async (
+    id: string,
+    status: AuditRecommendationStatus,
+    service?: AuditRecommendationService,
+    extraFields?: Partial<AuditRecommendation>
+  ) => {
     const next = recommendations.map((r) =>
-      r.id === id ? { ...r, status, ...(service ? { service } : {}), updatedDate: new Date().toISOString() } : r
+      r.id === id
+        ? { ...r, status, ...(service ? { service } : {}), ...extraFields, updatedDate: new Date().toISOString() }
+        : r
     );
     await persist(next);
     setChoosingServiceFor(null);
+    setChoosingPaymentDateFor(null);
+    setChoosingSignatureDateFor(null);
   };
 
+  // Un input date="2026-10-24" parse en minuit UTC - en heure de Paris
+  // (UTC+1/+2) ça retombe toujours sur le même jour calendaire, donc pas
+  // besoin d'un traitement spécial comme pour un affichage transfrontalier.
   const handleAccept = (id: string) => {
+    setAcceptedDate(new Date().toISOString().slice(0, 10));
     setChoosingServiceFor(id);
   };
 
   const handleChooseService = (id: string, service: AuditRecommendationService) => {
-    updateStatus(id, 'acceptee', service);
+    updateStatus(id, 'acceptee', service, { acceptedDate: new Date(acceptedDate).toISOString() });
+  };
+
+  const handleStartPassEnCours = (id: string) => {
+    setPaymentDate(new Date().toISOString().slice(0, 10));
+    setChoosingPaymentDateFor(id);
+  };
+
+  const handleConfirmPassEnCours = (id: string, service?: AuditRecommendationService) => {
+    updateStatus(id, 'en_cours', service, { paymentDate: new Date(paymentDate).toISOString() });
+  };
+
+  const handleStartActeFinalise = (id: string) => {
+    setSignatureDate('');
+    setChoosingSignatureDateFor(id);
+  };
+
+  const handleConfirmActeFinalise = (id: string, service?: AuditRecommendationService) => {
+    updateStatus(id, 'acte_finalise', service, { signatureDate: new Date(signatureDate).toISOString() });
+  };
+
+  const handleSkipSignatureDate = (id: string, service?: AuditRecommendationService) => {
+    updateStatus(id, 'acte_finalise', service);
   };
 
   const totalsByStatus = recommendations.reduce<Record<string, number>>((acc, r) => {
@@ -465,6 +510,20 @@ export function RecommandationsModule({ clientId, recommendations, onUpdate }: R
                 )}
               </div>
 
+              {(rec.acceptedDate || rec.paymentDate || rec.signatureDate) && (
+                <div className="flex items-center gap-3 flex-wrap mt-2 text-xs text-gray-500">
+                  {rec.acceptedDate && (
+                    <span>✅ Acceptée le {new Date(rec.acceptedDate).toLocaleDateString('fr-FR')}</span>
+                  )}
+                  {rec.paymentDate && (
+                    <span>💶 Réglée le {new Date(rec.paymentDate).toLocaleDateString('fr-FR')}</span>
+                  )}
+                  {rec.signatureDate && (
+                    <span>✍️ Signée le {new Date(rec.signatureDate).toLocaleDateString('fr-FR')}</span>
+                  )}
+                </div>
+              )}
+
               {/* Documents PDF attachés */}
               <div className="mt-3 pt-3 border-t border-gray-100">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -528,6 +587,17 @@ export function RecommandationsModule({ clientId, recommendations, onUpdate }: R
               {/* Choix du service (après acceptation) */}
               {choosingServiceFor === rec.id && (
                 <div className="mt-4 pt-4 border-t border-gray-100">
+                  <div className="mb-3">
+                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                      Date d'acceptation par le client
+                    </label>
+                    <input
+                      type="date"
+                      value={acceptedDate}
+                      onChange={(e) => setAcceptedDate(e.target.value)}
+                      className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
                   <p className="text-sm font-semibold text-gray-900 mb-2">Transmettre l'information au service :</p>
                   <div className="flex flex-wrap gap-2">
                     {(Object.keys(SERVICE_LABELS) as AuditRecommendationService[]).map((svc) => (
@@ -543,8 +613,74 @@ export function RecommandationsModule({ clientId, recommendations, onUpdate }: R
                 </div>
               )}
 
+              {/* Date de règlement (au passage "En cours") */}
+              {choosingPaymentDateFor === rec.id && (
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                    Date de règlement
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="date"
+                      value={paymentDate}
+                      onChange={(e) => setPaymentDate(e.target.value)}
+                      className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    />
+                    <button
+                      onClick={() => handleConfirmPassEnCours(rec.id, rec.service)}
+                      className="px-3 py-1.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 text-sm font-medium"
+                    >
+                      Confirmer
+                    </button>
+                    <button
+                      onClick={() => setChoosingPaymentDateFor(null)}
+                      className="px-3 py-1.5 text-gray-500 hover:text-gray-700 text-sm font-medium"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Date de signature du rapport (au passage "Acte finalisé") -
+                  optionnelle, "Non concerné" si elle ne s'applique pas. */}
+              {choosingSignatureDateFor === rec.id && (
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                    Date de signature du rapport
+                  </label>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <input
+                      type="date"
+                      value={signatureDate}
+                      onChange={(e) => setSignatureDate(e.target.value)}
+                      className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    />
+                    <button
+                      onClick={() => handleConfirmActeFinalise(rec.id, rec.service)}
+                      disabled={!signatureDate}
+                      className="px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      Confirmer
+                    </button>
+                    <button
+                      onClick={() => handleSkipSignatureDate(rec.id, rec.service)}
+                      className="px-3 py-1.5 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 text-sm font-medium"
+                    >
+                      Non concerné
+                    </button>
+                    <button
+                      onClick={() => setChoosingSignatureDateFor(null)}
+                      className="px-3 py-1.5 text-gray-500 hover:text-gray-700 text-sm font-medium"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Actions selon le statut */}
-              {choosingServiceFor !== rec.id && (
+              {choosingServiceFor !== rec.id && choosingPaymentDateFor !== rec.id && choosingSignatureDateFor !== rec.id && (
                 <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap gap-2">
                   {rec.status === 'proposee' && (
                     <>
@@ -566,7 +702,7 @@ export function RecommandationsModule({ clientId, recommendations, onUpdate }: R
                   )}
                   {rec.status === 'acceptee' && (
                     <button
-                      onClick={() => updateStatus(rec.id, 'en_cours', rec.service)}
+                      onClick={() => handleStartPassEnCours(rec.id)}
                       className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 text-sm font-medium"
                     >
                       <ArrowRight className="w-4 h-4" />
@@ -578,7 +714,7 @@ export function RecommandationsModule({ clientId, recommendations, onUpdate }: R
                   )}
                   {rec.status === 'en_cours' && (
                     <button
-                      onClick={() => updateStatus(rec.id, 'acte_finalise', rec.service)}
+                      onClick={() => handleStartActeFinalise(rec.id)}
                       className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium"
                     >
                       <FileCheck className="w-4 h-4" />

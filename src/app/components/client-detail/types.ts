@@ -191,6 +191,9 @@ export interface AuditRecommendation {
   service?: AuditRecommendationService; // Choisi une fois la recommandation acceptee
   createdDate: string;
   updatedDate?: string;
+  acceptedDate?: string; // Date (saisie manuellement) d'acceptation par le client
+  paymentDate?: string; // Date (saisie manuellement) du règlement, au passage "En cours"
+  signatureDate?: string; // Date (saisie manuellement, optionnelle) de signature du rapport
 }
 
 export interface RevenuItem {
