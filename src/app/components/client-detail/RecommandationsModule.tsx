@@ -55,6 +55,7 @@ export const SERVICE_LABELS: Record<AuditRecommendationService, string> = {
   juridique: '⚖️ Service juridique',
   investissement: '📈 Investissement',
   ingenierie_patrimoniale: '🏛️ Ingénierie patrimoniale',
+  fiteco: '🧮 FITECO',
 };
 
 export const VENDEUR_LABELS: Record<AuditRecommendationVendeur, string> = {

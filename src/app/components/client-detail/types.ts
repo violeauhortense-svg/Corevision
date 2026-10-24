@@ -175,7 +175,7 @@ export type AuditRecommendationStatus =
   | 'acte_finalise'
   | 'termine';
 
-export type AuditRecommendationService = 'juridique' | 'investissement' | 'ingenierie_patrimoniale';
+export type AuditRecommendationService = 'juridique' | 'investissement' | 'ingenierie_patrimoniale' | 'fiteco';
 
 // A qui affecter le CA de la vente - distinct du "service" ci-dessus, qui
 // designe le service qui execute la recommandation une fois acceptee.
