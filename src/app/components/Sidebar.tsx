@@ -253,6 +253,22 @@ export function Sidebar({ currentView, onViewChange, onLogout, session }: Sideba
                 </p>
               </div>
             </a>
+            <div className="flex gap-1.5">
+              <a
+                href="/downloads/install_autostart.bat"
+                download
+                className="flex-1 text-center px-2 py-2 rounded-lg text-xs font-medium bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200"
+              >
+                ⬇️ Lancement auto (.bat)
+              </a>
+              <a
+                href="/downloads/install_autostart.ps1"
+                download
+                className="flex-1 text-center px-2 py-2 rounded-lg text-xs font-medium bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200"
+              >
+                ⬇️ (.ps1)
+              </a>
+            </div>
           </>
         )}
 
