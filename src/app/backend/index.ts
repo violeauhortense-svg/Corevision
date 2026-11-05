@@ -20,6 +20,7 @@ import corevisionRoutes from './corevision_routes_pb.tsx';
 import recommendationDocumentsRoutes from './recommendation_documents_routes_pb.tsx';
 import taskDocumentsRoutes from './task_documents_routes_pb.tsx';
 import arbitrageArchiveRoutes from './arbitrage_archive_routes_pb.tsx';
+import bridgeStatusRoutes from './bridge_status_routes_pb.tsx';
 
 const app = new Hono();
 const PORT = Deno.env.get('PORT') || '3000';
@@ -86,6 +87,7 @@ app.route('/api/clients', clientsRoutes);
 app.route('/api/tasks', tasksRoutes);
 app.route('/api/dashboard', dashboardRoutes);
 app.route('/api/communications', communicationsRoutes);
+app.route('/api/bridge', bridgeStatusRoutes);
 app.route('/api/agenda-events', agendaEventsRoutes);
 app.route('/api/corevision/orders', corevisionRoutes);
 app.route('/api/recommendations', recommendationDocumentsRoutes);

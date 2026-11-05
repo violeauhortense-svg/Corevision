@@ -213,6 +213,19 @@ export async function initializePocketBase(pbUrl: string) {
       { name: 'contactsProfessionnels', type: 'json' },
     ]);
 
+    // Pulsation du bridge Outlook - un seul enregistrement par poste
+    // (deviceId), mis à jour à chaque cycle de synchro. Sert à calculer
+    // "bridge en ligne / hors ligne" côté backend plutôt que de dépendre
+    // d'un appel direct à http://127.0.0.1:5001 (qui ne marche que si on
+    // regarde le CRM depuis le même poste que le bridge).
+    await ensureCollection(pbUrl, 'bridge_heartbeats', [
+      { name: 'deviceId', type: 'text', required: true },
+      { name: 'lastSeenAt', type: 'text' },
+      { name: 'lastMailsSynced', type: 'number' },
+      { name: 'lastDuplicates', type: 'number' },
+      { name: 'lastFiltered', type: 'number' },
+    ]);
+
     await ensureCollection(pbUrl, 'hub_mails', [
       { name: 'from', type: 'text', required: true },
       // "to" was created as text before the bridge existed and

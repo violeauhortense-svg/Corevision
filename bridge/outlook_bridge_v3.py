@@ -154,7 +154,7 @@ class OutlookBridgeV3:
     # CYCLE 1: Récupérer les mails
     # ============================================
 
-    def sync_mails(self, days_back: int = 5) -> Tuple[int, int]:
+    def sync_mails(self, days_back: int = 5) -> Tuple[int, int, int]:
         """
         Récupère les mails via PowerShell, les envoie au backend
         days_back: fenêtre de récupération en jours - 5 par défaut pour la
@@ -162,7 +162,7 @@ class OutlookBridgeV3:
         récupération complète ponctuelle d'une boîte. Le backend dédoublonne
         via duplicateKey, donc une fenêtre plus large ou un doublon de run
         ne recrée jamais un mail déjà importé.
-        Retourne : (mails_envoyés, doublons)
+        Retourne : (mails_envoyés, doublons, filtrés)
         """
         try:
             logger.info(f"📧 [CYCLE 1] Récupération des mails (fenêtre: {days_back}j)...")
@@ -177,7 +177,7 @@ class OutlookBridgeV3:
             })
             if not mails_json:
                 logger.warning("❌ Pas de mails reçus de PowerShell")
-                return 0, 0
+                return 0, 0, 0
 
             mails = json.loads(mails_json)
             logger.info(f"📧 {len(mails)} mails reçus de PowerShell")
@@ -230,11 +230,11 @@ class OutlookBridgeV3:
                     logger.error(f"❌ Erreur envoi mail : {response.status_code} - {response.text}")
 
             logger.info(f"📧 [CYCLE 1] Résumé : {sent_count} envoyés, {duplicate_count} doublons, {filtered_count} filtrés (adresse non autorisée)")
-            return sent_count, duplicate_count
+            return sent_count, duplicate_count, filtered_count
 
         except Exception as e:
             logger.error(f"❌ [CYCLE 1] Erreur : {e}")
-            return 0, 0
+            return 0, 0, 0
 
     def _mail_matches_allowed(self, from_address: str, recipients: List[str]) -> bool:
         """True si l'expéditeur ou au moins un destinataire est l'une des
@@ -507,12 +507,35 @@ class OutlookBridgeV3:
         self.running = False
         logger.info("🛑 Bridge stopped")
 
+    def _send_heartbeat(self, mails_synced: int, duplicates: int, filtered: int):
+        """Signale au backend que le bridge est bien vivant, avec un
+        résumé du dernier cycle mail - c'est ce qui permet au CRM
+        d'afficher "bridge en ligne/hors ligne" depuis n'importe où,
+        plutôt que seulement depuis le poste qui héberge le bridge."""
+        try:
+            self.session.post(
+                f"{Config.BACKEND_URL}/bridge/heartbeat",
+                json={
+                    'device_id': Config.DEVICE_ID,
+                    'mails_synced': mails_synced,
+                    'duplicates': duplicates,
+                    'filtered': filtered,
+                },
+                timeout=10,
+            )
+        except Exception as e:
+            # Une pulsation ratée ne doit jamais interrompre la synchro -
+            # au pire le statut affiché dans le CRM reste "hors ligne"
+            # jusqu'à la prochaine pulsation réussie.
+            logger.debug(f"⚠️ Pulsation non envoyée : {e}")
+
     def _polling_loop(self):
         """Boucle de polling continu"""
         while self.running:
             try:
                 # Cycle 1: Mails
-                self.sync_mails()
+                sent, duplicates, filtered = self.sync_mails()
+                self._send_heartbeat(sent, duplicates, filtered)
                 time.sleep(5)
 
                 # Cycle 2: Calendar

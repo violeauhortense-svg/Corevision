@@ -1,6 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LayoutDashboard, Users, FileText, Calendar, CheckSquare, LogOut, Settings, Package, Lightbulb, Calculator, Mail, Terminal, Menu, X, UserCog, Download } from 'lucide-react';
 import type { ViewType } from '../App';
+import { apiBaseUrl } from '../utils/api/info';
+
+// Doit correspondre au DEVICE_ID réellement configuré dans bridge/.env,
+// pas à un identifiant inventé - sinon le badge resterait "hors ligne"
+// même avec un bridge qui tourne et envoie bien ses pulsations.
+const BRIDGE_DEVICE_ID = 'pc-hortense-001';
 
 interface SidebarProps {
   currentView: ViewType;
@@ -22,6 +28,31 @@ export function Sidebar({ currentView, onViewChange, onLogout, session }: Sideba
   // via ce hamburger, plutôt qu'une colonne fixe de 256px qui ne laissait
   // presque plus de place au contenu sur un écran de téléphone.
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Statut du bridge Outlook - visible en permanence dans la sidebar
+  // (plutôt que sur une page à part qu'il faudrait penser à aller
+  // consulter), pour remarquer tout de suite s'il s'est arrêté plutôt
+  // que de le découvrir un mois plus tard.
+  const [bridgeOnline, setBridgeOnline] = useState<boolean | null>(null);
+  const [bridgeLastSync, setBridgeLastSync] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const checkBridge = async () => {
+      try {
+        const res = await fetch(`${apiBaseUrl}/api/bridge/status/${BRIDGE_DEVICE_ID}`);
+        if (!res.ok) throw new Error('status check failed');
+        const data = await res.json();
+        setBridgeOnline(!!data.bridge_running);
+        setBridgeLastSync(data.last_sync || null);
+      } catch {
+        setBridgeOnline(null);
+      }
+    };
+    checkBridge();
+    const interval = setInterval(checkBridge, 60000);
+    return () => clearInterval(interval);
+  }, [isAdmin]);
 
   const navigate = (view: ViewType) => {
     onViewChange(view);
@@ -187,21 +218,42 @@ export function Sidebar({ currentView, onViewChange, onLogout, session }: Sideba
             embarqué) : aucune installation requise sur l'ordinateur qui le
             lance, il suffit de le copier et de double-cliquer dessus. */}
         {isAdmin && (
-          <a
-            href="/downloads/OutlookBridge.exe"
-            download
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors bg-gradient-to-r from-sky-50 to-cyan-50 text-sky-700 hover:from-sky-100 hover:to-cyan-100 border border-sky-200"
-          >
-            <Download className="w-5 h-5" />
-            <div className="text-left flex-1">
-              <p className="text-sm font-semibold text-sky-900">
-                Outil de synchro Outlook
-              </p>
-              <p className="text-xs text-sky-600">
-                .exe autonome, rien à installer
-              </p>
+          <>
+            <div
+              className={`w-full flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium ${
+                bridgeOnline === true
+                  ? 'bg-green-50 text-green-700'
+                  : bridgeOnline === false
+                  ? 'bg-red-50 text-red-700'
+                  : 'bg-gray-50 text-gray-500'
+              }`}
+              title={bridgeLastSync ? `Dernière synchro : ${new Date(bridgeLastSync).toLocaleString('fr-FR')}` : undefined}
+            >
+              <span className={`w-2 h-2 rounded-full shrink-0 ${
+                bridgeOnline === true ? 'bg-green-500' : bridgeOnline === false ? 'bg-red-500' : 'bg-gray-400'
+              }`} />
+              {bridgeOnline === true
+                ? 'Bridge Outlook actif'
+                : bridgeOnline === false
+                ? 'Bridge Outlook arrêté'
+                : 'Bridge Outlook : statut inconnu'}
             </div>
-          </a>
+            <a
+              href="/downloads/OutlookBridge.exe"
+              download
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors bg-gradient-to-r from-sky-50 to-cyan-50 text-sky-700 hover:from-sky-100 hover:to-cyan-100 border border-sky-200"
+            >
+              <Download className="w-5 h-5" />
+              <div className="text-left flex-1">
+                <p className="text-sm font-semibold text-sky-900">
+                  Outil de synchro Outlook
+                </p>
+                <p className="text-xs text-sky-600">
+                  .exe autonome, rien à installer
+                </p>
+              </div>
+            </a>
+          </>
         )}
 
         <button

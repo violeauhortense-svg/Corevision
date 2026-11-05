@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Play, RefreshCw, CheckCircle2, AlertCircle, Terminal, Settings, Download } from 'lucide-react';
+import { RefreshCw, CheckCircle2, AlertCircle, Terminal, Settings } from 'lucide-react';
 import { Card } from './ui/card';
 import { toast } from 'sonner';
 import { apiBaseUrl } from '../utils/api/info';
@@ -17,7 +17,11 @@ export function BridgeManager() {
   const [bridgeStatus, setBridgeStatus] = useState<BridgeStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  const [deviceId, setDeviceId] = useState(localStorage.getItem('bridge_device_id') || 'device-001');
+  // 'pc-hortense-001' correspond au DEVICE_ID réellement configuré dans
+  // bridge/.env - l'ancien défaut ('device-001') ne correspondait à rien
+  // de réel, donc le statut n'aurait jamais pu s'afficher "en ligne"
+  // même une fois le bridge correctement démarré.
+  const [deviceId, setDeviceId] = useState(localStorage.getItem('bridge_device_id') || 'pc-hortense-001');
   const [logs, setLogs] = useState<string[]>([]);
 
   useEffect(() => {
@@ -28,7 +32,7 @@ export function BridgeManager() {
 
   const checkBridgeStatus = async () => {
     try {
-      const response = await fetch(`${apiBaseUrl}/bridge/status/${deviceId}`);
+      const response = await fetch(`${apiBaseUrl}/api/bridge/status/${deviceId}`);
       if (response.ok) {
         const data = await response.json();
         setBridgeStatus(data);
@@ -93,44 +97,18 @@ export function BridgeManager() {
     toast.success(`Device ID: ${deviceId}`);
   };
 
-  const downloadInstaller = async () => {
-    try {
-      const response = await fetch(`${apiBaseUrl}/download/install-bridge-service`);
-      if (!response.ok) throw new Error('Téléchargement échoué');
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'install_bridge_service.bat';
-      document.body.appendChild(link);
-      link.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(link);
-      toast.success('✅ install_bridge_service.bat téléchargé!');
-    } catch (error) {
-      toast.error('Erreur téléchargement');
-    }
-  };
-
-  const downloadLauncher = async () => {
-    try {
-      const response = await fetch(`${apiBaseUrl}/download/bridge-launcher`);
-      if (!response.ok) throw new Error('Téléchargement échoué');
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'bridge_launcher.bat';
-      document.body.appendChild(link);
-      link.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(link);
-      toast.success('✅ bridge_launcher.bat téléchargé!');
-    } catch (error) {
-      toast.error('Erreur téléchargement');
-    }
+  // Fichiers statiques (public/downloads/) plutôt que des routes backend
+  // dédiées - ni /download/install-bridge-service ni /download/bridge-
+  // launcher n'ont jamais existé côté backend, ces deux boutons ne
+  // téléchargeaient donc jamais rien.
+  const downloadAutostartScript = (filename: 'install_autostart.bat' | 'install_autostart.ps1') => {
+    const link = document.createElement('a');
+    link.href = `/downloads/${filename}`;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success(`✅ ${filename} téléchargé`);
   };
 
   return (
@@ -182,27 +160,18 @@ export function BridgeManager() {
             {bridgeStatus?.bridge_running ? (
               <>
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 mb-3">La synchronisation est automatique toutes les 15 secondes</p>
+                  <p className="text-sm text-gray-600 mb-3">La synchronisation est automatique toutes les 30 secondes</p>
                   <p className="text-xs text-gray-500">Les nouveaux mails et événements apparaissent automatiquement</p>
                 </div>
               </>
             ) : (
-              <>
-                <button
-                  onClick={downloadInstaller}
-                  className="px-8 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-bold text-lg flex items-center gap-2"
-                >
-                  <Download className="w-5 h-5" />
-                  Installer le Bridge
-                </button>
-                <button
-                  onClick={checkBridgeStatus}
-                  className="px-8 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-bold flex items-center gap-2"
-                >
-                  <RefreshCw className="w-5 h-5" />
-                  Vérifier
-                </button>
-              </>
+              <button
+                onClick={checkBridgeStatus}
+                className="px-8 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-bold flex items-center gap-2"
+              >
+                <RefreshCw className="w-5 h-5" />
+                Vérifier
+              </button>
             )}
           </div>
         </Card>
@@ -210,48 +179,36 @@ export function BridgeManager() {
         {/* Setup Instructions */}
         {!bridgeStatus?.bridge_running && (
           <div className="space-y-4 mb-8">
-            {/* Option 1: Service Windows */}
-            <Card className="p-6 bg-blue-50 border border-blue-200">
-              <h3 className="font-bold text-blue-900 mb-4 flex items-center gap-2">
-                ⚙️ Option 1: Service Windows (Recommandé avec droits admin)
-              </h3>
-              <div className="space-y-3 text-sm text-blue-800">
-                <p>Démarrage automatique au boot, tourne 24/7 en arrière-plan</p>
-                <div className="bg-white p-3 rounded space-y-2">
-                  <p><strong>Étape 1:</strong> Clique sur le bouton ci-dessus</p>
-                  <p><strong>Étape 2:</strong> Clique droit sur le fichier → "Exécuter en tant qu'administrateur"</p>
-                  <p><strong>Étape 3:</strong> Attends 2-3 min (l'installateur configure tout)</p>
-                  <p><strong>Étape 4:</strong> Reviens ici et clique "Synchroniser Maintenant"</p>
-                </div>
-              </div>
-              <button
-                onClick={downloadInstaller}
-                className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold"
-              >
-                ⬇️ Télécharger installateur service
-              </button>
-            </Card>
-
-            {/* Option 2: Launcher GUI */}
             <Card className="p-6 bg-green-50 border border-green-200">
               <h3 className="font-bold text-green-900 mb-4 flex items-center gap-2">
-                ✨ Option 2: Launcher GUI (Sans droits admin)
+                ✨ Lancement automatique (sans droits admin)
               </h3>
               <div className="space-y-3 text-sm text-green-800">
-                <p>Interface graphique, pas besoin de droits admin, démarrage manuel</p>
+                <p>
+                  OutlookBridge.exe se relance tout seul à chaque ouverture de session Windows, et se relance
+                  automatiquement s'il plante - plus besoin d'y penser.
+                </p>
                 <div className="bg-white p-3 rounded space-y-2">
-                  <p><strong>Étape 1:</strong> Clique sur le bouton ci-dessous</p>
-                  <p><strong>Étape 2:</strong> Double-clique sur le fichier téléchargé</p>
-                  <p><strong>Étape 3:</strong> Clique "Démarrer Bridge" dans la fenêtre</p>
-                  <p><strong>Étape 4:</strong> Reviens ici et clique "Synchroniser Maintenant"</p>
+                  <p><strong>Étape 1:</strong> Télécharge <code>OutlookBridge.exe</code> (menu de gauche) et les deux fichiers ci-dessous</p>
+                  <p><strong>Étape 2:</strong> Place les 3 fichiers dans le même dossier</p>
+                  <p><strong>Étape 3:</strong> Double-clique sur <code>install_autostart.bat</code> (lance aussi le bridge immédiatement)</p>
+                  <p><strong>Étape 4:</strong> Reviens ici et clique "Vérifier"</p>
                 </div>
               </div>
-              <button
-                onClick={downloadLauncher}
-                className="mt-4 w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold"
-              >
-                ⬇️ Télécharger launcher (sans admin)
-              </button>
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={() => downloadAutostartScript('install_autostart.bat')}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold"
+                >
+                  ⬇️ install_autostart.bat
+                </button>
+                <button
+                  onClick={() => downloadAutostartScript('install_autostart.ps1')}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold"
+                >
+                  ⬇️ install_autostart.ps1
+                </button>
+              </div>
             </Card>
           </div>
         )}

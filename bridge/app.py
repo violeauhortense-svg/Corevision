@@ -71,10 +71,11 @@ def force_sync():
         results = {}
 
         if 'mails' in cycles:
-            sent, duplicates = bridge.sync_mails(days_back=days_back)
+            sent, duplicates, filtered = bridge.sync_mails(days_back=days_back)
             results['mails'] = {
                 'sent': sent,
-                'duplicates': duplicates
+                'duplicates': duplicates,
+                'filtered': filtered
             }
 
         if 'calendar' in cycles:
