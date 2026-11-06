@@ -7,7 +7,12 @@
 # where the sender OR at least one recipient resolves to one of these
 # addresses are returned at all - everything else is skipped before it
 # ever reaches the CRM, instead of being imported and sorted out later.
-param([int]$DaysBack = 5, [string]$AllowedAddresses = "")
+#
+# BlockedSenders (comma-separated, optional): a mail from one of these
+# addresses is always skipped, even when it matches AllowedAddresses as a
+# recipient (a colleague forwarding/cc'ing her own correspondence isn't
+# Hortense's own exchange just because she's on it).
+param([int]$DaysBack = 5, [string]$AllowedAddresses = "", [string]$BlockedSenders = "")
 
 # Force UTF-8 on the output stream - without this, Write-Host encodes
 # using the console's codepage (cp1252 on this machine), which mangles
@@ -18,6 +23,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 
 try {
     $AllowedList = @($AllowedAddresses -split ',' | ForEach-Object { $_.Trim().ToLower() } | Where-Object { $_ -ne '' })
+    $BlockedList = @($BlockedSenders -split ',' | ForEach-Object { $_.Trim().ToLower() } | Where-Object { $_ -ne '' })
 
     $Outlook = New-Object -ComObject Outlook.Application
     $Namespace = $Outlook.GetNamespace("MAPI")
@@ -111,6 +117,14 @@ try {
                     }
                 } catch {}
                 $ToAddress = $ToAddresses -join "; "
+
+                # Expéditeur bloqué (ex: un·e collègue dont les transferts/
+                # mises en copie ne doivent jamais compter comme la
+                # correspondance d'Hortense) - prioritaire sur tout le
+                # reste, même si Hortense est destinataire.
+                if ($BlockedList.Count -gt 0 -and ($BlockedList -contains $FromAddress.ToLower())) {
+                    continue
+                }
 
                 # Adresse autorisée en expéditeur OU en destinataire - sinon
                 # ce mail n'a rien à faire dans le CRM, on ne le renvoie

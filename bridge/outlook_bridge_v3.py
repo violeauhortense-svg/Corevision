@@ -55,9 +55,20 @@ class Config:
     # tout plutôt que d'être trié après coup dans le CRM. Override
     # possible via la variable d'environnement ALLOWED_MAIL_ADDRESSES
     # (adresses séparées par des virgules) sans toucher au code.
-    _default_allowed = 'h.violeau@efipatrimoine.com,hortense.violeau@prudentia.fr,h.violeau@fiteco.com'
+    _default_allowed = 'h.violeau@efipatrimoine.com'
     ALLOWED_MAIL_ADDRESSES = [
         a.strip().lower() for a in os.getenv('ALLOWED_MAIL_ADDRESSES', _default_allowed).split(',') if a.strip()
+    ]
+
+    # Un mail d'une personne de cette liste n'est jamais synchronisé, même
+    # quand Hortense figure en destinataire/Cc - un transfert ou une
+    # mise en copie par un·e collègue ne doit pas faire entrer sa propre
+    # correspondance dans le CRM comme si c'était celle d'Hortense.
+    # Prioritaire sur ALLOWED_MAIL_ADDRESSES. Override via la variable
+    # d'environnement BLOCKED_SENDERS (adresses séparées par des virgules).
+    _default_blocked = 'agathe.loubens@prudentia.fr'
+    BLOCKED_SENDERS = [
+        a.strip().lower() for a in os.getenv('BLOCKED_SENDERS', _default_blocked).split(',') if a.strip()
     ]
 
     # Paths
@@ -174,6 +185,7 @@ class OutlookBridgeV3:
             mails_json = self._run_powershell('export_mails.ps1', {
                 'DaysBack': str(days_back),
                 'AllowedAddresses': ','.join(Config.ALLOWED_MAIL_ADDRESSES),
+                'BlockedSenders': ','.join(Config.BLOCKED_SENDERS),
             })
             if not mails_json:
                 logger.warning("❌ Pas de mails reçus de PowerShell")
@@ -194,6 +206,13 @@ class OutlookBridgeV3:
                 # ne jamais transmettre au backend un mail dont ni
                 # l'expéditeur ni aucun destinataire ne figure dans la liste.
                 recipients = [t.strip().lower() for t in mail.to.split(';') if t.strip()]
+                from_lower = (mail.from_address or '').strip().lower()
+
+                if from_lower in Config.BLOCKED_SENDERS:
+                    filtered_count += 1
+                    logger.debug(f"⊘ Filtré (expéditeur bloqué) : {mail.subject}")
+                    continue
+
                 if not self._mail_matches_allowed(mail.from_address, recipients):
                     filtered_count += 1
                     logger.debug(f"⊘ Filtré (hors adresses autorisées) : {mail.subject}")
