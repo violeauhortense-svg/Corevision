@@ -24,6 +24,11 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 try {
     $AllowedList = @($AllowedAddresses -split ',' | ForEach-Object { $_.Trim().ToLower() } | Where-Object { $_ -ne '' })
     $BlockedList = @($BlockedSenders -split ',' | ForEach-Object { $_.Trim().ToLower() } | Where-Object { $_ -ne '' })
+    # Echantillon de diagnostic : les toutes premieres adresses rejetees par
+    # AllowedList, pour voir sur stderr la vraie forme (alias vs adresse
+    # SMTP primaire resolue par Exchange) sans avoir a deviner. Limite a 5
+    # pour ne pas noyer le log sur une grosse boite.
+    $RejectedSamplesLogged = 0
 
     $Outlook = New-Object -ComObject Outlook.Application
     $Namespace = $Outlook.GetNamespace("MAPI")
@@ -146,7 +151,13 @@ try {
                 if ($AllowedList.Count -gt 0) {
                     $FromMatches = $AllowedList -contains $FromAddress.ToLower()
                     $ToMatches = ($ToAddresses | Where-Object { $AllowedList -contains $_.ToLower() }).Count -gt 0
-                    if (-not ($FromMatches -or $ToMatches)) { continue }
+                    if (-not ($FromMatches -or $ToMatches)) {
+                        if ($RejectedSamplesLogged -lt 5) {
+                            [Console]::Error.WriteLine("Rejete (hors liste autorisee) - From='$FromAddress' To='$ToAddress' Subject='$($Item.Subject)'")
+                            $RejectedSamplesLogged++
+                        }
+                        continue
+                    }
                 }
 
                 $Mail = @{
