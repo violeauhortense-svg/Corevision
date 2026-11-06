@@ -501,6 +501,15 @@ class OutlookBridgeV3:
                 logger.error(f"❌ PowerShell error : {result.stderr}")
                 return None
 
+            # Les scripts (export_mails.ps1...) attrapent eux-mêmes leurs
+            # erreurs internes et sortent "[]" avec code 0 pour ne jamais
+            # faire planter tout le cycle de synchro - mais ça voulait dire
+            # que la vraie erreur (écrite sur stderr) n'était jamais loggée
+            # du tout, et qu'un "0 mails" ressemblait à une boîte vide au
+            # lieu d'un script qui a réellement planté.
+            if result.stderr and result.stderr.strip():
+                logger.warning(f"⚠️ {script_name} a écrit sur stderr (code 0) : {result.stderr.strip()}")
+
             return result.stdout.strip()
 
         except subprocess.TimeoutExpired:

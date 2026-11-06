@@ -55,8 +55,21 @@ try {
         } catch {
             # Some stores (archives, public folders, ...) have no real
             # Inbox/Sent - skip them instead of failing the whole sync.
+            # Mais on logge quand meme sur stderr: sans ca, un store qui
+            # devrait avoir une Inbox (le mailbox principal) et qui echoue
+            # pour une autre raison (permission, profil pas charge...)
+            # disparaissait silencieusement et le sync rapportait juste
+            # "0 mails" comme si la boite etait vide.
+            [Console]::Error.WriteLine("Store '$($Store.DisplayName)' ignore (GetDefaultFolder a echoue) : $($_.Exception.Message)")
             continue
         }
+
+        # Diagnostic sur stderr (jamais sur stdout - ca casserait le JSON
+        # cote Python) : combien d'items au total, avant tout filtre par
+        # date ou par adresse. Sans ca, "0 mails" ne dit pas si la boite
+        # est vraiment vide ou si c'est Restrict()/le filtre d'adresse qui
+        # exclut tout.
+        [Console]::Error.WriteLine("Store '$($Store.DisplayName)' : Inbox=$($Inbox.Items.Count) items, Sent=$($Sent.Items.Count) items (avant filtre date/adresse)")
 
     # Restrict() filters at the folder level instead of walking every item
     # in the mailbox and checking dates after the fact - same fix as
@@ -67,6 +80,7 @@ try {
     )) {
         $Filter = "[$($FolderInfo.DateField)] >= '$FilterDate'"
         $RestrictedItems = $FolderInfo.Folder.Items.Restrict($Filter)
+        [Console]::Error.WriteLine("  $($FolderInfo.Folder.Name) : filtre '$Filter' -> $($RestrictedItems.Count) items matches (avant filtre classe/adresse)")
 
         foreach ($Item in $RestrictedItems) {
             try {
