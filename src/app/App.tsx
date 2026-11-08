@@ -14,6 +14,7 @@ import { CoreVisionAdminView } from "./components/CoreVisionAdminView";
 import { BaremesFiscauxView } from "./components/BaremesFiscauxView";
 import { HubCommunicationView } from "./components/communications/HubCommunicationViewUpdated";
 import { BaremeUpdateNotification } from "./components/BaremeUpdateNotification";
+import { AIChatWidget } from "./components/ai-assistant/AIChatWidget";
 import { cleanupObsoleteTasks } from './utils/cleanupObsoleteTasks';
 import { clearAllTestData } from './utils/dataCleanup';
 import { auditAndCleanupOrphanedData } from './utils/cleanupClientData';
@@ -208,6 +209,7 @@ export default function App() {
               <div className="flex h-screen bg-gray-50">
                 <Toaster position="top-right" richColors />
                 <BaremeUpdateNotification />
+                <AIChatWidget session={session} />
                 <Sidebar
                   currentView={currentView}
                   session={session}

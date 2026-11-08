@@ -288,6 +288,22 @@ export async function initializePocketBase(pbUrl: string) {
       { name: 'status', type: 'text' },
     ]);
 
+    // Assistant IA d'organisation (bulle de chat flottante) - historique
+    // d'un seul fil de discussion (pas de userId/conversationId : un seul
+    // compte admin utilise cette fonctionnalité) et mémoire éditable
+    // (texte libre injecté dans le prompt système à chaque requête,
+    // plutôt qu'un vrai entraînement/fine-tuning).
+    await ensureCollection(pbUrl, 'ai_messages', [
+      { name: 'role', type: 'text', required: true }, // 'user' | 'assistant'
+      { name: 'content', type: 'text', max: 50000, required: true },
+      { name: 'createdAt', type: 'text', required: true },
+    ]);
+
+    await ensureCollection(pbUrl, 'ai_assistant_preferences', [
+      { name: 'notes', type: 'text', max: 50000 },
+      { name: 'updatedAt', type: 'text' },
+    ]);
+
     await ensureCollection(pbUrl, 'baremes_fiscaux', [
       { name: 'annee', type: 'text', required: true },
       { name: 'baremeIR', type: 'json' },
