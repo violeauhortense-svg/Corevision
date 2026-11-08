@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Users, FileText, Calendar, CheckSquare, LogOut, Settings, Package, Lightbulb, Calculator, Mail, Terminal, Menu, X, UserCog, Download } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Calendar, CheckSquare, LogOut, Settings, Package, Lightbulb, Calculator, Mail, Terminal, Menu, X, UserCog, Download, ChevronDown, ChevronRight } from 'lucide-react';
 import type { ViewType } from '../App';
 import { apiBaseUrl } from '../utils/api/info';
 
@@ -28,6 +28,12 @@ export function Sidebar({ currentView, onViewChange, onLogout, session }: Sideba
   // via ce hamburger, plutôt qu'une colonne fixe de 256px qui ne laissait
   // presque plus de place au contenu sur un écran de téléphone.
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Le bloc d'outils admin (CoreVision, Barèmes, Gestion utilisateurs,
+  // bridge Outlook) prenait toute la hauteur visible de la sidebar en
+  // permanence - replié par défaut, dépliable au clic, pour laisser de la
+  // place au menu principal au quotidien.
+  const [adminToolsOpen, setAdminToolsOpen] = useState(false);
 
   // Statut du bridge Outlook - visible en permanence dans la sidebar
   // (plutôt que sur une page à part qu'il faudrait penser à aller
@@ -135,8 +141,21 @@ export function Sidebar({ currentView, onViewChange, onLogout, session }: Sideba
       </nav>
       
       <div className="p-4 border-t border-gray-200 space-y-2">
-        {/* Bouton CoreVision - Visible uniquement pour l'admin */}
+        {/* Bloc d'outils admin replié par défaut - clic pour déplier */}
         {isAdmin && (
+          <button
+            onClick={() => setAdminToolsOpen((o) => !o)}
+            className="w-full flex items-center justify-between gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 border border-gray-200"
+          >
+            <span className="flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              Outils admin
+            </span>
+            {adminToolsOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          </button>
+        )}
+
+        {isAdmin && adminToolsOpen && (
           <button
             onClick={() => navigate('corevision')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
@@ -162,7 +181,7 @@ export function Sidebar({ currentView, onViewChange, onLogout, session }: Sideba
         )}
         
         {/* Bouton Barèmes Fiscaux - Visible uniquement pour l'admin */}
-        {isAdmin && (
+        {isAdmin && adminToolsOpen && (
           <button
             onClick={() => navigate('baremes-fiscaux')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
@@ -188,7 +207,7 @@ export function Sidebar({ currentView, onViewChange, onLogout, session }: Sideba
         )}
 
         {/* Bouton Gestion des utilisateurs - Visible uniquement pour l'admin */}
-        {isAdmin && (
+        {isAdmin && adminToolsOpen && (
           <button
             onClick={() => navigate('user-management')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
@@ -217,7 +236,7 @@ export function Sidebar({ currentView, onViewChange, onLogout, session }: Sideba
             uniquement pour l'admin. Fichier .exe autonome (Python
             embarqué) : aucune installation requise sur l'ordinateur qui le
             lance, il suffit de le copier et de double-cliquer dessus. */}
-        {isAdmin && (
+        {isAdmin && adminToolsOpen && (
           <>
             <div
               className={`w-full flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium ${
