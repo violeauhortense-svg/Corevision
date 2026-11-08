@@ -96,17 +96,81 @@ export function AIChatWidget({ session }: AIChatWidgetProps) {
     }
   };
 
+  // Les emojis utilisés dans les réponses (🔴🟡🟢⚠️...) ne s'affichent pas
+  // dans les polices standard de jsPDF (glyphes manquants, espace vide
+  // disgracieux) - remplacés par un équivalent texte plutôt que supprimés
+  // en silence, pour garder le sens (urgence, alerte...) dans le PDF.
+  const EMOJI_LABELS: Record<string, string> = {
+    '🔴': '[URGENT] ', '🟡': '[IMPORTANT] ', '🟢': '[A PLANIFIER] ',
+    '⚠️': '[ATTENTION] ', '⚠': '[ATTENTION] ', '✅': '[OK] ',
+    '💶': '[PAIEMENT] ', '✍️': '[SIGNATURE] ', '📧': '[MAIL] ', '📅': '[AGENDA] ',
+  };
+  function stripEmoji(text: string): string {
+    let out = text;
+    for (const [emoji, label] of Object.entries(EMOJI_LABELS)) {
+      out = out.split(emoji).join(label);
+    }
+    // Reste (emoji non mappés) : retiré plutôt que laissé en glyphe vide.
+    return out.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '');
+  }
+
+  // Rend une ligne avec gestion du **gras** inline - découpe en segments
+  // normal/gras, mesure chaque mot pour passer à la ligne suivante au bon
+  // endroit (jsPDF ne gère pas nativement le mélange de styles sur une
+  // même ligne de texte justifié).
+  function renderInlineBold(
+    doc: jsPDF,
+    text: string,
+    x: number,
+    yStart: number,
+    maxWidth: number,
+    lineHeight: number,
+    pageHeight: number,
+    marginX: number
+  ): number {
+    let y = yStart;
+    let cursorX = x;
+    const segments = text.split(/(\*\*[^*]+\*\*)/g).filter(Boolean);
+
+    for (const segment of segments) {
+      const isBold = segment.startsWith('**') && segment.endsWith('**');
+      const words = (isBold ? segment.slice(2, -2) : segment).split(/(\s+)/).filter((w) => w !== '');
+      doc.setFont('helvetica', isBold ? 'bold' : 'normal');
+
+      for (const word of words) {
+        const wordWidth = doc.getTextWidth(word);
+        if (cursorX + wordWidth > marginX + maxWidth && word.trim() !== '') {
+          y += lineHeight;
+          cursorX = x;
+          if (y > pageHeight - 20) {
+            doc.addPage();
+            y = 20;
+          }
+        }
+        doc.text(word, cursorX, y);
+        cursorX += wordWidth;
+      }
+    }
+    doc.setFont('helvetica', 'normal');
+    return y + lineHeight;
+  }
+
   // Génération directement dans le navigateur (jsPDF) - pas besoin de
-  // passer par le backend, la réponse est déjà dans la bulle.
+  // passer par le backend, la réponse est déjà dans la bulle. Interprète
+  // le markdown léger que le modèle produit (titres ###, gras **texte**,
+  // listes à puces) au lieu de l'afficher tel quel avec ses symboles.
   const downloadAsPdf = (content: string) => {
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
     const marginX = 15;
     const pageHeight = doc.internal.pageSize.getHeight();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const maxWidth = pageWidth - marginX * 2;
     let y = 20;
 
     doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
     doc.text("Assistant d'organisation - EFI-Patrimoine", marginX, y);
+    doc.setFont('helvetica', 'normal');
     y += 7;
     doc.setFontSize(9);
     doc.setTextColor(120);
@@ -115,14 +179,59 @@ export function AIChatWidget({ session }: AIChatWidgetProps) {
     y += 10;
 
     doc.setFontSize(11);
-    const lines = doc.splitTextToSize(content, pageWidth - marginX * 2);
-    for (const line of lines) {
+    const rawLines = stripEmoji(content).split('\n');
+
+    for (const rawLine of rawLines) {
+      const line = rawLine.trim();
+
       if (y > pageHeight - 20) {
         doc.addPage();
         y = 20;
       }
-      doc.text(line, marginX, y);
-      y += 6;
+
+      if (line === '') {
+        y += 4;
+        continue;
+      }
+
+      // Ligne horizontale (---, ***) : séparateur visuel plutôt que du
+      // texte brut.
+      if (/^[-*_]{3,}$/.test(line)) {
+        doc.setDrawColor(200);
+        doc.line(marginX, y - 2, marginX + maxWidth, y - 2);
+        y += 4;
+        continue;
+      }
+
+      const headerMatch = line.match(/^#{1,6}\s+(.*)$/);
+      if (headerMatch) {
+        doc.setFontSize(13);
+        doc.setFont('helvetica', 'bold');
+        const wrapped = doc.splitTextToSize(headerMatch[1], maxWidth);
+        for (const w of wrapped) {
+          doc.text(w, marginX, y);
+          y += 6.5;
+        }
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(11);
+        y += 1.5;
+        continue;
+      }
+
+      const bulletMatch = line.match(/^[-*]\s+(.*)$/);
+      const numberedMatch = line.match(/^(\d+[.)])\s+(.*)$/);
+      if (bulletMatch) {
+        doc.text('•', marginX, y);
+        y = renderInlineBold(doc, bulletMatch[1], marginX + 5, y, maxWidth - 5, 6, pageHeight, marginX + 5);
+        continue;
+      }
+      if (numberedMatch) {
+        doc.text(numberedMatch[1], marginX, y);
+        y = renderInlineBold(doc, numberedMatch[2], marginX + 8, y, maxWidth - 8, 6, pageHeight, marginX + 8);
+        continue;
+      }
+
+      y = renderInlineBold(doc, line, marginX, y, maxWidth, 6, pageHeight, marginX);
     }
 
     doc.save(`assistant-reponse-${Date.now()}.pdf`);
