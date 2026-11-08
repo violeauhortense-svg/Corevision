@@ -277,6 +277,18 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
+      // Hortense ne fait jamais avancer le statut pipeline vers "Arbitrage"
+      // elle-même - elle reste en "Suivi CSP" et remplit juste la date de
+      // clôture dès que le CSP est signé (le bloc Arbitrage n'est visible
+      // qu'à partir de là). Sans cette incrémentation automatique, ses
+      // dossiers réellement en arbitrage restaient invisibles dans la
+      // colonne Arbitrage du pipeline/Kanban. Se redéclenche à chaque
+      // sauvegarde (donc aussi après un archivage, où la date de clôture
+      // est reconduite plutôt que vidée) - jamais de rétrogradation si le
+      // statut est déjà plus avancé.
+      const shouldAdvanceToArbitrage =
+        cspSigne && !!arbitrageClosureDate && clientStatus.toLowerCase() !== 'arbitrage';
+
       const response = await fetch(`${apiBaseUrl}/api/clients/${clientId}`, {
         method: 'PATCH',
         headers,
@@ -292,11 +304,16 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
           arbitrageCCADocteur: arbitrageCCADocteur ? parseFloat(arbitrageCCADocteur) : undefined,
           arbitrageDisponibilites: arbitrageDisponibilites ? parseFloat(arbitrageDisponibilites) : undefined,
           arbitrageNoteSynthese,
+          ...(shouldAdvanceToArbitrage ? { statusOuvert: 'Arbitrage' } : {}),
         }),
       });
 
       if (response.ok) {
-        toast.success('Informations arbitrage enregistrées');
+        toast.success(
+          shouldAdvanceToArbitrage
+            ? 'Informations arbitrage enregistrées - dossier passé au statut Arbitrage'
+            : 'Informations arbitrage enregistrées'
+        );
         ClientService.clearCache();
         await loadClient();
       } else {
