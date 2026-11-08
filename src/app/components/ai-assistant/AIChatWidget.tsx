@@ -7,7 +7,8 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
+import { MessageCircle, X, Send, Loader2, FileDown } from 'lucide-react';
+import { jsPDF } from 'jspdf';
 import { apiBaseUrl } from '../../utils/api/info';
 
 const ADMIN_EMAIL = 'violeau.hortense@gmail.com';
@@ -95,6 +96,38 @@ export function AIChatWidget({ session }: AIChatWidgetProps) {
     }
   };
 
+  // Génération directement dans le navigateur (jsPDF) - pas besoin de
+  // passer par le backend, la réponse est déjà dans la bulle.
+  const downloadAsPdf = (content: string) => {
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const marginX = 15;
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let y = 20;
+
+    doc.setFontSize(14);
+    doc.text("Assistant d'organisation - EFI-Patrimoine", marginX, y);
+    y += 7;
+    doc.setFontSize(9);
+    doc.setTextColor(120);
+    doc.text(new Date().toLocaleString('fr-FR'), marginX, y);
+    doc.setTextColor(0);
+    y += 10;
+
+    doc.setFontSize(11);
+    const lines = doc.splitTextToSize(content, pageWidth - marginX * 2);
+    for (const line of lines) {
+      if (y > pageHeight - 20) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.text(line, marginX, y);
+      y += 6;
+    }
+
+    doc.save(`assistant-reponse-${Date.now()}.pdf`);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -131,7 +164,7 @@ export function AIChatWidget({ session }: AIChatWidgetProps) {
           </p>
         )}
         {messages.map((m, idx) => (
-          <div key={m.id || idx} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+          <div key={m.id || idx} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
             <div
               className={`max-w-[85%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap ${
                 m.role === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800'
@@ -139,6 +172,15 @@ export function AIChatWidget({ session }: AIChatWidgetProps) {
             >
               {m.content}
             </div>
+            {m.role === 'assistant' && (
+              <button
+                onClick={() => downloadAsPdf(m.content)}
+                className="mt-1 flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600"
+              >
+                <FileDown className="w-3.5 h-3.5" />
+                Télécharger en PDF
+              </button>
+            )}
           </div>
         ))}
         {sending && (
