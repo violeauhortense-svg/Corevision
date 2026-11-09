@@ -173,6 +173,17 @@ app.get('/kanban', async (c) => {
       });
     }
 
+    // Colonne Arbitrage triée par date de clôture d'exercice (la plus
+    // proche d'abord) - les dossiers sans date renseignée passent en
+    // dernier plutôt qu'en premier (une date vide ne doit pas sembler
+    // "la plus urgente").
+    kanban['Arbitrage']?.clients.sort((a: any, b: any) => {
+      if (!a.arbitrageClosureDate && !b.arbitrageClosureDate) return 0;
+      if (!a.arbitrageClosureDate) return 1;
+      if (!b.arbitrageClosureDate) return -1;
+      return a.arbitrageClosureDate.localeCompare(b.arbitrageClosureDate);
+    });
+
     return c.json(kanban, 200);
   } catch (err: any) {
     console.error('Dashboard kanban error:', err.message);
