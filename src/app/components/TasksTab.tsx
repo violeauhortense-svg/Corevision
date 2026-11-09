@@ -37,7 +37,11 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
   // Structurel (SHP/SGF + golden shares) - propre à la structure du
   // client, pas à un exercice donné, donc conservé d'un cycle à l'autre
   // lors de l'archivage (contrairement aux chiffres ci-dessous).
-  const [arbitrageStructureType, setArbitrageStructureType] = useState<'' | 'SHP' | 'SGF'>('');
+  // Certains clients ont les deux structures à la fois (ex: une SHP et une
+  // SGF distinctes) - stocké en texte CSV ("SHP,SGF") côté PocketBase
+  // plutôt qu'un choix unique, pour rester compatible avec le champ texte
+  // existant sans migration de schéma.
+  const [arbitrageStructureTypes, setArbitrageStructureTypes] = useState<string[]>([]);
   const [arbitrageGoldenShareHolding, setArbitrageGoldenShareHolding] = useState('');
   const [arbitrageGoldenShareDocteur, setArbitrageGoldenShareDocteur] = useState('');
   // Propre à l'exercice en cours - remis à vide lors de l'archivage, comme
@@ -72,7 +76,9 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
       setClient(data);
       setArbitrageClosureDate(data.arbitrageClosureDate || '');
       setArbitrageTreasuryN1(String(data.arbitrageTreasuryN1 || ''));
-      setArbitrageStructureType((data as any).arbitrageStructureType || '');
+      setArbitrageStructureTypes(
+        ((data as any).arbitrageStructureType || '').split(',').map((s: string) => s.trim()).filter(Boolean)
+      );
       setArbitrageGoldenShareHolding((data as any).arbitrageGoldenShareHolding || '');
       setArbitrageGoldenShareDocteur((data as any).arbitrageGoldenShareDocteur || '');
       setArbitrageCreancesRestitution(String((data as any).arbitrageCreancesRestitution || ''));
@@ -295,9 +301,9 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
         body: JSON.stringify({
           arbitrageClosureDate,
           arbitrageTreasuryN1: arbitrageTreasuryN1 ? parseInt(arbitrageTreasuryN1) : undefined,
-          arbitrageStructureType,
-          arbitrageGoldenShareHolding: arbitrageStructureType === 'SHP' ? arbitrageGoldenShareHolding : '',
-          arbitrageGoldenShareDocteur: arbitrageStructureType === 'SHP' ? arbitrageGoldenShareDocteur : '',
+          arbitrageStructureType: arbitrageStructureTypes.join(','),
+          arbitrageGoldenShareHolding: arbitrageStructureTypes.includes('SHP') ? arbitrageGoldenShareHolding : '',
+          arbitrageGoldenShareDocteur: arbitrageStructureTypes.includes('SHP') ? arbitrageGoldenShareDocteur : '',
           arbitrageCreancesRestitution: arbitrageCreancesRestitution ? parseFloat(arbitrageCreancesRestitution) : undefined,
           arbitrageResultatAnnee: arbitrageResultatAnnee ? parseFloat(arbitrageResultatAnnee) : undefined,
           arbitrageCapitalSocialReserves: arbitrageCapitalSocialReserves ? parseFloat(arbitrageCapitalSocialReserves) : undefined,
@@ -350,9 +356,9 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
         closureDate: arbitrageClosureDate,
         treasuryNeed: arbitrageTreasuryN1 ? parseInt(arbitrageTreasuryN1) : 0,
         tasks: currentTasks,
-        structureType: arbitrageStructureType,
-        goldenShareHolding: arbitrageStructureType === 'SHP' ? arbitrageGoldenShareHolding : '',
-        goldenShareDocteur: arbitrageStructureType === 'SHP' ? arbitrageGoldenShareDocteur : '',
+        structureType: arbitrageStructureTypes.join(','),
+        goldenShareHolding: arbitrageStructureTypes.includes('SHP') ? arbitrageGoldenShareHolding : '',
+        goldenShareDocteur: arbitrageStructureTypes.includes('SHP') ? arbitrageGoldenShareDocteur : '',
         creancesRestitution: arbitrageCreancesRestitution ? parseFloat(arbitrageCreancesRestitution) : 0,
         resultatAnnee: arbitrageResultatAnnee ? parseFloat(arbitrageResultatAnnee) : 0,
         capitalSocialReserves: arbitrageCapitalSocialReserves ? parseFloat(arbitrageCapitalSocialReserves) : 0,
@@ -485,26 +491,35 @@ export function TasksTab({ clientId, auditRecommendations = [], onUpdateAuditRec
                 </label>
 
                 <div className="pt-2 border-t">
-                  <span className="text-sm font-medium text-gray-700 block mb-1.5">Structure</span>
+                  <span className="text-sm font-medium text-gray-700 block mb-1.5">
+                    Structure {arbitrageStructureTypes.length > 1 && '(les deux)'}
+                  </span>
                   <div className="flex gap-2">
-                    {(['SHP', 'SGF'] as const).map((opt) => (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => setArbitrageStructureType(opt)}
-                        className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border-2 ${
-                          arbitrageStructureType === opt
-                            ? 'bg-blue-600 border-blue-600 text-white'
-                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    ))}
+                    {(['SHP', 'SGF'] as const).map((opt) => {
+                      const selected = arbitrageStructureTypes.includes(opt);
+                      return (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() =>
+                            setArbitrageStructureTypes((prev) =>
+                              selected ? prev.filter((s) => s !== opt) : [...prev, opt]
+                            )
+                          }
+                          className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border-2 ${
+                            selected
+                              ? 'bg-blue-600 border-blue-600 text-white'
+                              : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                          }`}
+                        >
+                          {opt}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
-                {arbitrageStructureType === 'SHP' && (
+                {arbitrageStructureTypes.includes('SHP') && (
                   <div className="grid grid-cols-2 gap-3">
                     <label className="block">
                       <span className="text-sm font-medium text-gray-700">Golden share (holding)</span>

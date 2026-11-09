@@ -206,7 +206,7 @@ export function HistoriqueTab({ clientId }: HistoriqueTabProps) {
                   {entry.structureType && (
                     <p className="text-xs text-gray-500 mt-0.5">
                       Structure : {entry.structureType}
-                      {entry.structureType === 'SHP' && (
+                      {entry.structureType?.includes('SHP') && (
                         <>
                           {' · '}Golden share holding : {entry.goldenShareHolding || '—'}
                           {' · '}Golden share docteur : {entry.goldenShareDocteur || '—'}
