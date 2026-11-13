@@ -43,6 +43,18 @@ export function MailDetailPanel({ mail, siblings = [], onSelectSibling, onClose,
     setSelectedStatus(mail.traitementStatus);
   }, [mail.id, mail.traitementStatus]);
 
+  // Marquer comme lu dès l'ouverture - rien dans le code ne le faisait
+  // auparavant, donc le compteur "Non lus" du Hub comptait en fait tous
+  // les mails sans exception, même ceux déjà consultés plusieurs fois.
+  useEffect(() => {
+    if (!mail.read) {
+      hubCommunicationAPI.markMailAsRead(mail.id)
+        .then(onUpdate)
+        .catch((error) => console.error('Erreur marquage lu:', error));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mail.id]);
+
   const handleStatusChange = async (newStatus: MailTraitementStatus) => {
     setSelectedStatus(newStatus);
     setLoading(true);

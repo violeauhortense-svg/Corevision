@@ -304,6 +304,7 @@ app.put('/mails/:id', async (c) => {
     if (body.clientId !== undefined) updates.clientId = body.clientId;
     if (body.clientName !== undefined) updates.clientName = body.clientName;
     if (body.clientEmail !== undefined) updates.clientEmail = body.clientEmail;
+    if (body.read !== undefined) updates.read = body.read;
 
     // Associating a client reclassifies the mail into "Conversation
     // Client"; clearing the association sends it back to "Interne/Externe".

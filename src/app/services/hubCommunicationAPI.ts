@@ -89,6 +89,7 @@ export const hubCommunicationAPI = {
       clientId?: string;
       clientName?: string;
       clientEmail?: string;
+      read?: boolean;
     }
   ): Promise<HubMail> {
     const response = await fetch(`${API_URL}/mails/${mailId}`, {
@@ -106,6 +107,13 @@ export const hubCommunicationAPI = {
    */
   async updateMailStatus(mailId: string, status: MailTraitementStatus): Promise<HubMail> {
     return this.updateMail(mailId, { traitementStatus: status });
+  },
+
+  /**
+   * Marquer un mail comme lu (déclenché à l'ouverture du panneau de détail)
+   */
+  async markMailAsRead(mailId: string): Promise<HubMail> {
+    return this.updateMail(mailId, { read: true });
   },
 
   /**
