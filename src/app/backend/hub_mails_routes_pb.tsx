@@ -53,8 +53,24 @@ function toHubMail(m: any) {
   };
 }
 
+async function fetchAllRecords(collection: string, filter?: string): Promise<any[]> {
+  // PocketBase caps perPage at 500 regardless of what's requested - a
+  // single call silently dropped everything past the first 500 records
+  // once the collection grew past that (622 hub_mails at last count),
+  // making every count here wrong without any error ever surfacing.
+  const all: any[] = [];
+  let page = 1;
+  while (true) {
+    const result = await pb.listRecords(collection, { filter, perPage: 500, page });
+    all.push(...result.items);
+    if (all.length >= result.total || result.items.length === 0) break;
+    page++;
+  }
+  return all;
+}
+
 async function computeStats() {
-  const result = await pb.listRecords('hub_mails', { perPage: 500 });
+  const items = await fetchAllRecords('hub_mails');
   const stats = {
     conversation_client: 0,
     interne_externe: 0,
@@ -67,7 +83,7 @@ async function computeStats() {
     unread: 0,
   };
 
-  for (const m of result.items as any[]) {
+  for (const m of items as any[]) {
     const status = m.traitementStatus || 'a_traiter';
     const hubTab = m.hubTab || 'interne_externe';
 
@@ -125,6 +141,27 @@ app.get('/mails', async (c) => {
     return c.json({ mails, total: result.total, stats });
   } catch (err: any) {
     console.error('Error fetching mails:', err.message);
+    return c.json({ mails: [], total: 0, error: err.message }, 500);
+  }
+});
+
+// ─── GET /mails/by-status/:status (les cartes de compteurs du Hub sont
+// cliquables - un clic doit montrer TOUS les mails dans ce statut, tous
+// onglets confondus, pas seulement ceux déjà chargés pour l'onglet
+// actuellement ouvert) ──────────────────────────────────────────────
+app.get('/mails/by-status/:status', async (c) => {
+  try {
+    const status = c.req.param('status');
+    const filter = status === 'unread' ? 'read = false' : `traitementStatus = "${status}"`;
+    const items = await fetchAllRecords('hub_mails', filter);
+
+    const mails = items
+      .map(toHubMail)
+      .sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime());
+
+    return c.json({ mails, total: mails.length });
+  } catch (err: any) {
+    console.error('Error fetching mails by status:', err.message);
     return c.json({ mails: [], total: 0, error: err.message }, 500);
   }
 });

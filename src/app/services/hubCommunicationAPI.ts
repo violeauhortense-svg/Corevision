@@ -41,6 +41,19 @@ export const hubCommunicationAPI = {
   },
 
   /**
+   * Mails dans un statut donné (ou non lus), tous onglets confondus -
+   * utilisé par les cartes de compteurs cliquables du Hub.
+   */
+  async getMailsByStatus(status: string): Promise<{ mails: HubMail[]; total: number }> {
+    const response = await fetch(`${API_URL}/mails/by-status/${status}`, {
+      headers: this._getHeaders(),
+    });
+
+    this._handleError(response, 'Erreur chargement mails par statut');
+    return response.json();
+  },
+
+  /**
    * Charger un mail spécifique
    */
   async getMailById(mailId: string): Promise<HubMail> {

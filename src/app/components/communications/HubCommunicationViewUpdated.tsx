@@ -58,6 +58,32 @@ export function HubCommunicationView() {
   // informatives - cliquer dessus filtre maintenant la liste affichée sur
   // ce statut precis (ou sur "non lu"), un second clic l'enlève.
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<'a_traiter' | 'en_cours' | 'a_valider_gl' | 'unread' | null>(null);
+  // Les mails d'un statut peuvent appartenir à n'importe quel onglet
+  // (hubTab) - filtrer la liste déjà chargée pour l'onglet ouvert
+  // ratait tout mail de ce statut rangé dans l'autre onglet. Chargé à
+  // part via une route dédiée qui ignore hubTab.
+  const [statusFilteredMails, setStatusFilteredMails] = useState<HubMail[] | null>(null);
+  const [loadingStatusFilter, setLoadingStatusFilter] = useState(false);
+
+  const toggleStatusFilter = async (status: 'a_traiter' | 'en_cours' | 'a_valider_gl' | 'unread') => {
+    if (selectedStatusFilter === status) {
+      setSelectedStatusFilter(null);
+      setStatusFilteredMails(null);
+      return;
+    }
+    setSelectedStatusFilter(status);
+    setLoadingStatusFilter(true);
+    try {
+      const result = await hubCommunicationAPI.getMailsByStatus(status);
+      setStatusFilteredMails(result.mails);
+    } catch (error) {
+      console.error('Erreur filtre par statut:', error);
+      toast.error('Impossible de charger les mails pour ce statut');
+      setStatusFilteredMails([]);
+    } finally {
+      setLoadingStatusFilter(false);
+    }
+  };
 
   useEffect(() => {
     loadData();
@@ -302,14 +328,10 @@ export function HubCommunicationView() {
   // ci-dessous) - un Hook comme useMemo doit s'exécuter au même rang à
   // chaque rendu, sinon React perd le fil entre les rendus et plante tout
   // le composant (écran blanc).
-  const filteredMails = (selectedClientFilter
-    ? mails.filter((m) => m.clientId === selectedClientFilter)
-    : mails
-  ).filter((m) => {
-    if (!selectedStatusFilter) return true;
-    if (selectedStatusFilter === 'unread') return !m.read;
-    return m.traitementStatus === selectedStatusFilter;
-  });
+  const baseMails = selectedStatusFilter ? (statusFilteredMails ?? []) : mails;
+  const filteredMails = selectedClientFilter
+    ? baseMails.filter((m) => m.clientId === selectedClientFilter)
+    : baseMails;
 
   const threads = useMemo(() => groupMailsIntoThreads(filteredMails), [filteredMails]);
 
@@ -356,28 +378,28 @@ export function HubCommunicationView() {
               second clic sur la même carte enlève le filtre. */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
             <Card
-              onClick={() => setSelectedStatusFilter((f) => (f === 'a_traiter' ? null : 'a_traiter'))}
+              onClick={() => toggleStatusFilter('a_traiter')}
               className={`p-4 cursor-pointer transition-all hover:shadow-md ${selectedStatusFilter === 'a_traiter' ? 'ring-2 ring-red-500' : ''}`}
             >
               <p className="text-xs text-gray-600 mb-1">À traiter</p>
               <p className="text-2xl font-bold text-red-600">{stats.a_traiter}</p>
             </Card>
             <Card
-              onClick={() => setSelectedStatusFilter((f) => (f === 'en_cours' ? null : 'en_cours'))}
+              onClick={() => toggleStatusFilter('en_cours')}
               className={`p-4 cursor-pointer transition-all hover:shadow-md ${selectedStatusFilter === 'en_cours' ? 'ring-2 ring-blue-500' : ''}`}
             >
               <p className="text-xs text-gray-600 mb-1">En cours</p>
               <p className="text-2xl font-bold text-blue-600">{stats.en_cours}</p>
             </Card>
             <Card
-              onClick={() => setSelectedStatusFilter((f) => (f === 'a_valider_gl' ? null : 'a_valider_gl'))}
+              onClick={() => toggleStatusFilter('a_valider_gl')}
               className={`p-4 cursor-pointer transition-all hover:shadow-md ${selectedStatusFilter === 'a_valider_gl' ? 'ring-2 ring-yellow-500' : ''}`}
             >
               <p className="text-xs text-gray-600 mb-1">À valider GL</p>
               <p className="text-2xl font-bold text-yellow-600">{stats.a_valider_gl}</p>
             </Card>
             <Card
-              onClick={() => setSelectedStatusFilter((f) => (f === 'unread' ? null : 'unread'))}
+              onClick={() => toggleStatusFilter('unread')}
               className={`p-4 cursor-pointer transition-all hover:shadow-md ${selectedStatusFilter === 'unread' ? 'ring-2 ring-purple-500' : ''}`}
             >
               <p className="text-xs text-gray-600 mb-1">Non lus</p>
@@ -386,10 +408,10 @@ export function HubCommunicationView() {
           </div>
           {selectedStatusFilter && (
             <button
-              onClick={() => setSelectedStatusFilter(null)}
+              onClick={() => toggleStatusFilter(selectedStatusFilter)}
               className="mb-4 text-sm text-blue-600 hover:underline"
             >
-              ✕ Retirer le filtre de statut
+              {loadingStatusFilter ? 'Chargement...' : '✕ Retirer le filtre de statut (tous onglets confondus)'}
             </button>
           )}
 
