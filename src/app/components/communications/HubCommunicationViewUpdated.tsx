@@ -54,6 +54,10 @@ export function HubCommunicationView() {
   // confondus, parmi ceux déjà chargés.
   const [untreatedClients, setUntreatedClients] = useState<{ clientId: string; clientName: string; count: number }[]>([]);
   const [selectedClientFilter, setSelectedClientFilter] = useState<string | null>(null);
+  // Les cartes de compteurs (À traiter, En cours...) étaient purement
+  // informatives - cliquer dessus filtre maintenant la liste affichée sur
+  // ce statut precis (ou sur "non lu"), un second clic l'enlève.
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState<'a_traiter' | 'en_cours' | 'a_valider_gl' | 'unread' | null>(null);
 
   useEffect(() => {
     loadData();
@@ -298,9 +302,14 @@ export function HubCommunicationView() {
   // ci-dessous) - un Hook comme useMemo doit s'exécuter au même rang à
   // chaque rendu, sinon React perd le fil entre les rendus et plante tout
   // le composant (écran blanc).
-  const filteredMails = selectedClientFilter
+  const filteredMails = (selectedClientFilter
     ? mails.filter((m) => m.clientId === selectedClientFilter)
-    : mails;
+    : mails
+  ).filter((m) => {
+    if (!selectedStatusFilter) return true;
+    if (selectedStatusFilter === 'unread') return !m.read;
+    return m.traitementStatus === selectedStatusFilter;
+  });
 
   const threads = useMemo(() => groupMailsIntoThreads(filteredMails), [filteredMails]);
 
@@ -343,25 +352,46 @@ export function HubCommunicationView() {
             </div>
           </div>
 
-          {/* Stats */}
+          {/* Stats - cliquables pour filtrer la liste sur ce statut; un
+              second clic sur la même carte enlève le filtre. */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-            <Card className="p-4">
+            <Card
+              onClick={() => setSelectedStatusFilter((f) => (f === 'a_traiter' ? null : 'a_traiter'))}
+              className={`p-4 cursor-pointer transition-all hover:shadow-md ${selectedStatusFilter === 'a_traiter' ? 'ring-2 ring-red-500' : ''}`}
+            >
               <p className="text-xs text-gray-600 mb-1">À traiter</p>
               <p className="text-2xl font-bold text-red-600">{stats.a_traiter}</p>
             </Card>
-            <Card className="p-4">
+            <Card
+              onClick={() => setSelectedStatusFilter((f) => (f === 'en_cours' ? null : 'en_cours'))}
+              className={`p-4 cursor-pointer transition-all hover:shadow-md ${selectedStatusFilter === 'en_cours' ? 'ring-2 ring-blue-500' : ''}`}
+            >
               <p className="text-xs text-gray-600 mb-1">En cours</p>
               <p className="text-2xl font-bold text-blue-600">{stats.en_cours}</p>
             </Card>
-            <Card className="p-4">
+            <Card
+              onClick={() => setSelectedStatusFilter((f) => (f === 'a_valider_gl' ? null : 'a_valider_gl'))}
+              className={`p-4 cursor-pointer transition-all hover:shadow-md ${selectedStatusFilter === 'a_valider_gl' ? 'ring-2 ring-yellow-500' : ''}`}
+            >
               <p className="text-xs text-gray-600 mb-1">À valider GL</p>
               <p className="text-2xl font-bold text-yellow-600">{stats.a_valider_gl}</p>
             </Card>
-            <Card className="p-4">
+            <Card
+              onClick={() => setSelectedStatusFilter((f) => (f === 'unread' ? null : 'unread'))}
+              className={`p-4 cursor-pointer transition-all hover:shadow-md ${selectedStatusFilter === 'unread' ? 'ring-2 ring-purple-500' : ''}`}
+            >
               <p className="text-xs text-gray-600 mb-1">Non lus</p>
               <p className="text-2xl font-bold text-purple-600">{stats.unread}</p>
             </Card>
           </div>
+          {selectedStatusFilter && (
+            <button
+              onClick={() => setSelectedStatusFilter(null)}
+              className="mb-4 text-sm text-blue-600 hover:underline"
+            >
+              ✕ Retirer le filtre de statut
+            </button>
+          )}
 
           {/* Tabs */}
           <Card className="shadow-xl border-gray-200">
