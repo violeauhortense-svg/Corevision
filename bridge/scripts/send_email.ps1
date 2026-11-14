@@ -20,23 +20,52 @@ try {
     # Créer un nouveau mail
     $mail = $outlook.CreateItem(0)  # 0 = olMailItem
 
-    # Envoyer "en tant que" une adresse alias du même compte Exchange
-    # (efipatrimoine.com est une adresse secondaire sur le compte
-    # hortense.violeau@prudentia.fr, pas un compte Outlook séparé) -
-    # CreateRecipient + l'assigner à .Sender est la façon standard de
-    # faire ça sans passer par SendUsingAccount (qui exige un Account
-    # Outlook distinct, inexistant ici pour cet alias).
+    # efipatrimoine.com est l'alias d'un VRAI deuxieme compte Outlook
+    # distinct (h.violeau@fiteco.com), pas juste une adresse secondaire
+    # sur le compte principal (hortense.violeau@prudentia.fr) - CreateRecipient
+    # + .Sender sur le compte principal ne changeait rien a l'envoi reel
+    # (confirme par test : le mail partait quand meme de Prudentia).
+    # SendUsingAccount avec ce vrai compte est le mecanisme concu pour ca.
     if ($fromAddress) {
         try {
-            $fromRecipient = $namespace.CreateRecipient($fromAddress)
-            $fromRecipient.Resolve() | Out-Null
-            if ($fromRecipient.Resolved) {
-                $mail.Sender = $fromRecipient
+            $targetAccount = $null
+            foreach ($acc in $namespace.Session.Accounts) {
+                if ($acc.SmtpAddress -eq $fromAddress) { $targetAccount = $acc; break }
+            }
+            if (-not $targetAccount) {
+                # fromAddress est peut-etre un alias (ex: efipatrimoine.com)
+                # plutot que l'adresse principale du compte (fiteco.com) -
+                # chercher aussi parmi les adresses mandataires (proxy) du
+                # compte Exchange.
+                foreach ($acc in $namespace.Session.Accounts) {
+                    try {
+                        $exchUser = $acc.CurrentUser.AddressEntry.GetExchangeUser()
+                        if ($exchUser.Address -eq $fromAddress -or $acc.SmtpAddress -like "*fiteco*") {
+                            $targetAccount = $acc
+                        }
+                    } catch {}
+                }
+            }
+            if ($targetAccount) {
+                $mail.SendUsingAccount = $targetAccount
+                # SendUsingAccount choisit le compte authentifié utilisé
+                # pour l'envoi (fiteco.com) mais affiche par défaut SA
+                # propre adresse principale, pas forcément l'alias
+                # efipatrimoine.com demandé - forcer .Sender en plus,
+                # maintenant résolu via ce bon compte (pas le principal),
+                # pour que l'adresse visible soit la bonne.
+                if ($fromAddress -ne $targetAccount.SmtpAddress) {
+                    try {
+                        $fromRecipient = $namespace.CreateRecipient($fromAddress)
+                        $fromRecipient.Resolve() | Out-Null
+                        if ($fromRecipient.Resolved) { $mail.Sender = $fromRecipient }
+                    } catch {}
+                }
             } else {
-                [Console]::Error.WriteLine("Adresse expediteur '$fromAddress' non resolue - envoi avec l'adresse par defaut.")
+                [Console]::Error.WriteLine("Aucun compte Outlook correspondant a '$fromAddress' - envoi avec le compte par defaut.")
             }
         } catch {
-            [Console]::Error.WriteLine("Echec reglage expediteur '$fromAddress' : $($_.Exception.Message) - envoi avec l'adresse par defaut.")
+            [Console]::Error.WriteLine("Echec reglage SendUsingAccount pour '$fromAddress' : $($_.Exception.Message) - envoi avec le compte par defaut.")
         }
     }
 
