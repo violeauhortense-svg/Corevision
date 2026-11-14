@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
@@ -16,6 +16,38 @@ import { NotesSystem } from './NotesSystem';
 import { AttachmentsDisplay } from './AttachmentsDisplay';
 import { ReplyModal } from './ReplyModal';
 import type { HubMail, MailNote, MailTraitementStatus } from '../../types/mail';
+
+// Outlook colle l'intégralité du fil précédent sous chaque réponse -
+// repère les marqueurs de citation les plus courants (français/anglais,
+// Outlook/Gmail) et coupe à la première trouvée, pour n'afficher que le
+// nouveau texte par défaut. Rien trouvé -> tout le corps est "nouveau",
+// pas d'historique à replier.
+function splitQuotedHistory(body: string): { newContent: string; quotedHistory: string } {
+  if (!body) return { newContent: '', quotedHistory: '' };
+
+  const patterns = [
+    /-{2,}\s*Message d'origine\s*-{2,}/i,
+    /-{2,}\s*Original Message\s*-{2,}/i,
+    /^De\s*:.{0,200}\n\s*Envoyé\s*:.{0,200}\n\s*À\s*:/im,
+    /^From\s*:.{0,200}\n\s*Sent\s*:.{0,200}\n\s*To\s*:/im,
+    /^Le\s.{3,80},?\s.{1,100}\sa écrit\s?:/im,
+    /^On\s.{3,80}\swrote:/im,
+  ];
+
+  let cutIndex = -1;
+  for (const pattern of patterns) {
+    const match = body.match(pattern);
+    if (match && match.index !== undefined && (cutIndex === -1 || match.index < cutIndex)) {
+      cutIndex = match.index;
+    }
+  }
+
+  if (cutIndex === -1) return { newContent: body, quotedHistory: '' };
+  return {
+    newContent: body.slice(0, cutIndex).trimEnd(),
+    quotedHistory: body.slice(cutIndex).trim(),
+  };
+}
 
 interface MailDetailPanelProps {
   mail: HubMail;
@@ -35,6 +67,16 @@ export function MailDetailPanel({ mail, siblings = [], onSelectSibling, onClose,
   const [loading, setLoading] = useState(false);
   const [replyModalOpen, setReplyModalOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+
+  const { newContent, quotedHistory } = useMemo(() => splitQuotedHistory(mail.body || ''), [mail.id, mail.body]);
+
+  // Replié par défaut à chaque nouveau mail ouvert - sinon l'état "déplié"
+  // d'un mail précédent restait visible en passant à un autre via les
+  // pastilles du fil de discussion.
+  useEffect(() => {
+    setShowHistory(false);
+  }, [mail.id]);
 
   // Le panneau reste monté en passant d'un message du fil à un autre
   // (siblings) - selectedStatus doit suivre le mail réellement affiché au
@@ -306,8 +348,25 @@ export function MailDetailPanel({ mail, siblings = [], onSelectSibling, onClose,
           <div className="space-y-3">
             <h3 className="font-semibold text-gray-900 text-sm">Message</h3>
             <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-900 whitespace-pre-wrap leading-relaxed">
-              {mail.body?.trim() ? mail.body : <span className="text-gray-400 italic">Aucun contenu</span>}
+              {newContent.trim() ? newContent : <span className="text-gray-400 italic">Aucun contenu</span>}
             </div>
+
+            {quotedHistory && (
+              <div>
+                <button
+                  onClick={() => setShowHistory(!showHistory)}
+                  className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
+                >
+                  <ChevronDown className={`w-4 h-4 transition-transform ${showHistory ? 'rotate-180' : ''}`} />
+                  {showHistory ? 'Masquer' : 'Afficher'} l'historique de la conversation
+                </button>
+                {showHistory && (
+                  <div className="mt-2 bg-gray-50 rounded-lg p-4 text-sm text-gray-600 whitespace-pre-wrap leading-relaxed border border-gray-200">
+                    {quotedHistory}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Signature (Collapsible) */}
