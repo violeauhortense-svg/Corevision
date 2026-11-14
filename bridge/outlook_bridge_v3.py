@@ -55,7 +55,7 @@ class Config:
     # tout plutôt que d'être trié après coup dans le CRM. Override
     # possible via la variable d'environnement ALLOWED_MAIL_ADDRESSES
     # (adresses séparées par des virgules) sans toucher au code.
-    _default_allowed = 'h.violeau@efipatrimoine.com'
+    _default_allowed = 'h.violeau@efipatrimoine.com,hortense.violeau@prudentia.fr'
     ALLOWED_MAIL_ADDRESSES = [
         a.strip().lower() for a in os.getenv('ALLOWED_MAIL_ADDRESSES', _default_allowed).split(',') if a.strip()
     ]
@@ -70,6 +70,13 @@ class Config:
     BLOCKED_SENDERS = [
         a.strip().lower() for a in os.getenv('BLOCKED_SENDERS', _default_blocked).split(',') if a.strip()
     ]
+
+    # Adresse utilisée comme expéditeur pour les mails envoyés depuis le
+    # CRM (bouton répondre/envoyer) - Hortense veut qu'ils partent de
+    # l'alias efipatrimoine.com plutôt que de l'adresse principale
+    # (hortense.violeau@prudentia.fr), même si c'est le même compte
+    # Exchange derrière. Override via SEND_FROM_ADDRESS.
+    SEND_FROM_ADDRESS = os.getenv('SEND_FROM_ADDRESS', 'h.violeau@efipatrimoine.com')
 
     # Paths
     BRIDGE_DIR = _APP_DIR
@@ -366,7 +373,8 @@ class OutlookBridgeV3:
                         'body': body,
                         'isHtml': 'true' if is_html else 'false',
                         'cc': ','.join(mail.get('cc', [])),
-                        'bcc': ','.join(mail.get('bcc', []))
+                        'bcc': ','.join(mail.get('bcc', [])),
+                        'fromAddress': Config.SEND_FROM_ADDRESS
                     }
                 )
 
