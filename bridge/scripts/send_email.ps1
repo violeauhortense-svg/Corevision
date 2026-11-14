@@ -17,56 +17,39 @@ try {
     $outlook = New-Object -ComObject Outlook.Application
     $namespace = $outlook.GetNamespace("MAPI")
 
-    # Créer un nouveau mail
-    $mail = $outlook.CreateItem(0)  # 0 = olMailItem
-
     # efipatrimoine.com est l'alias d'un VRAI deuxieme compte Outlook
-    # distinct (h.violeau@fiteco.com), pas juste une adresse secondaire
-    # sur le compte principal (hortense.violeau@prudentia.fr) - CreateRecipient
-    # + .Sender sur le compte principal ne changeait rien a l'envoi reel
-    # (confirme par test : le mail partait quand meme de Prudentia).
-    # SendUsingAccount avec ce vrai compte est le mecanisme concu pour ca.
+    # distinct (h.violeau@fiteco.com), pas juste une adresse secondaire sur
+    # le compte principal (hortense.violeau@prudentia.fr). Afficher
+    # precisement l'alias efipatrimoine.com comme expediteur reel exige
+    # une permission Exchange "Send As" cote IT (teste et confirme : sans
+    # elle, Exchange revient toujours a l'adresse principale du compte
+    # cible) - en attendant, Hortense a valide fiteco.com comme expediteur
+    # de repli (mieux que Prudentia, qui n'a aucun rapport avec son
+    # activite EFI Patrimoine/Fiteco).
+    #
+    # Ce qui marche (confirme par test reel) : creer l'item DIRECTEMENT
+    # dans le dossier Brouillons du compte cible (DeliveryStore), pas via
+    # Application.CreateItem - l'appartenance au bon store des la creation
+    # est ce qu'Exchange respecte reellement a l'envoi, pas une propriete
+    # reglee apres coup sur un item d'un autre store.
+    $targetAccount = $null
     if ($fromAddress) {
-        try {
-            $targetAccount = $null
-            foreach ($acc in $namespace.Session.Accounts) {
-                if ($acc.SmtpAddress -eq $fromAddress) { $targetAccount = $acc; break }
+        foreach ($acc in $namespace.Session.Accounts) {
+            if ($acc.SmtpAddress -eq $fromAddress -or $acc.SmtpAddress -like "*fiteco*") {
+                $targetAccount = $acc
+                break
             }
-            if (-not $targetAccount) {
-                # fromAddress est peut-etre un alias (ex: efipatrimoine.com)
-                # plutot que l'adresse principale du compte (fiteco.com) -
-                # chercher aussi parmi les adresses mandataires (proxy) du
-                # compte Exchange.
-                foreach ($acc in $namespace.Session.Accounts) {
-                    try {
-                        $exchUser = $acc.CurrentUser.AddressEntry.GetExchangeUser()
-                        if ($exchUser.Address -eq $fromAddress -or $acc.SmtpAddress -like "*fiteco*") {
-                            $targetAccount = $acc
-                        }
-                    } catch {}
-                }
-            }
-            if ($targetAccount) {
-                $mail.SendUsingAccount = $targetAccount
-                # SendUsingAccount choisit le compte authentifié utilisé
-                # pour l'envoi (fiteco.com) mais affiche par défaut SA
-                # propre adresse principale, pas forcément l'alias
-                # efipatrimoine.com demandé - forcer .Sender en plus,
-                # maintenant résolu via ce bon compte (pas le principal),
-                # pour que l'adresse visible soit la bonne.
-                if ($fromAddress -ne $targetAccount.SmtpAddress) {
-                    try {
-                        $fromRecipient = $namespace.CreateRecipient($fromAddress)
-                        $fromRecipient.Resolve() | Out-Null
-                        if ($fromRecipient.Resolved) { $mail.Sender = $fromRecipient }
-                    } catch {}
-                }
-            } else {
-                [Console]::Error.WriteLine("Aucun compte Outlook correspondant a '$fromAddress' - envoi avec le compte par defaut.")
-            }
-        } catch {
-            [Console]::Error.WriteLine("Echec reglage SendUsingAccount pour '$fromAddress' : $($_.Exception.Message) - envoi avec le compte par defaut.")
         }
+    }
+
+    if ($targetAccount) {
+        $mail = $targetAccount.DeliveryStore.GetDefaultFolder(16).Items.Add(0)  # 16 = olFolderDrafts
+        $mail.SendUsingAccount = $targetAccount
+    } else {
+        if ($fromAddress) {
+            [Console]::Error.WriteLine("Aucun compte Outlook correspondant a '$fromAddress' - envoi avec le compte par defaut.")
+        }
+        $mail = $outlook.CreateItem(0)  # 0 = olMailItem
     }
 
     # Définir les champs

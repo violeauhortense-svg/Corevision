@@ -71,12 +71,14 @@ class Config:
         a.strip().lower() for a in os.getenv('BLOCKED_SENDERS', _default_blocked).split(',') if a.strip()
     ]
 
-    # Adresse utilisée comme expéditeur pour les mails envoyés depuis le
-    # CRM (bouton répondre/envoyer) - Hortense veut qu'ils partent de
-    # l'alias efipatrimoine.com plutôt que de l'adresse principale
-    # (hortense.violeau@prudentia.fr), même si c'est le même compte
-    # Exchange derrière. Override via SEND_FROM_ADDRESS.
-    SEND_FROM_ADDRESS = os.getenv('SEND_FROM_ADDRESS', 'h.violeau@efipatrimoine.com')
+    # Compte Outlook utilisé comme expéditeur pour les mails envoyés
+    # depuis le CRM. Hortense voulait efipatrimoine.com précisément, mais
+    # Exchange l'impose côté serveur (nécessite une permission "Send As"
+    # IT, pas encore accordée) - fiteco.com (le vrai compte propriétaire
+    # de cet alias) est la valeur de repli validée par Hortense,
+    # nettement mieux que Prudentia qui n'a aucun rapport avec son
+    # activité actuelle. Override via SEND_FROM_ADDRESS.
+    SEND_FROM_ADDRESS = os.getenv('SEND_FROM_ADDRESS', 'h.violeau@fiteco.com')
 
     # Paths
     BRIDGE_DIR = _APP_DIR
