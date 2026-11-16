@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Lightbulb, Loader2, RefreshCw, Filter, RotateCcw, Users, X } from 'lucide-react';
+import { Lightbulb, Loader2, RefreshCw, Filter, RotateCcw, Users, X, FileDown } from 'lucide-react';
+import { jsPDF } from 'jspdf';
 import { clientAPI } from '../services/api';
 import { STATUS_LABELS, STATUS_COLORS, STATUS_SUBLABELS, SERVICE_LABELS, VENDEUR_LABELS, formatEuro } from './client-detail/RecommandationsModule';
 import type { AuditRecommendation, AuditRecommendationStatus, AuditRecommendationService, AuditRecommendationVendeur } from './client-detail/types';
@@ -124,7 +125,17 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
     status,
     items: filteredRecos
       .filter((r) => r.status === status)
-      .sort((a, b) => new Date(b.updatedDate || b.createdDate).getTime() - new Date(a.updatedDate || a.createdDate).getTime()),
+      .sort((a, b) => {
+        // Échéance la plus proche en premier - les statuts "proposée"/
+        // "refusée" n'en ont jamais (pas encore acceptées), donc on garde
+        // pour eux le tri par dernière mise à jour déjà en place.
+        if (a.echeanceDate && b.echeanceDate) {
+          return new Date(a.echeanceDate).getTime() - new Date(b.echeanceDate).getTime();
+        }
+        if (a.echeanceDate) return -1;
+        if (b.echeanceDate) return 1;
+        return new Date(b.updatedDate || b.createdDate).getTime() - new Date(a.updatedDate || a.createdDate).getTime();
+      }),
   })).filter((g) => g.items.length > 0);
 
   const totalCA = recos.filter((r) => countsTowardCA(r.status)).reduce((sum, r) => sum + (r.chiffreAffaires || 0), 0);
@@ -184,6 +195,97 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
     })
     .filter((g): g is NonNullable<typeof g> => g !== null)
     .sort((a, b) => b.totalCA - a.totalCA);
+
+  // Export PDF d'une liste (un statut) - mise en page simple en blocs
+  // (titre/client, détail, service/vendeur, dates, CA), pas le parseur
+  // markdown de AIChatWidget qui ne s'applique pas ici.
+  const exportGroupToPdf = (status: AuditRecommendationStatus, items: RecoWithClient[]) => {
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const marginX = 15;
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const maxWidth = pageWidth - marginX * 2;
+    let y = 20;
+
+    const ensureSpace = (needed: number) => {
+      if (y + needed > pageHeight - 15) {
+        doc.addPage();
+        y = 20;
+      }
+    };
+
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Recommandations - ${STATUS_LABELS[status]}`, marginX, y);
+    doc.setFont('helvetica', 'normal');
+    y += 7;
+    doc.setFontSize(9);
+    doc.setTextColor(120);
+    doc.text(`${items.length} recommandation(s) - généré le ${new Date().toLocaleDateString('fr-FR')}`, marginX, y);
+    doc.setTextColor(0);
+    y += 10;
+
+    for (const r of items) {
+      ensureSpace(20);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text(r.title || '(Sans titre)', marginX, y);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.text(formatEuro(r.chiffreAffaires || 0), pageWidth - marginX, y, { align: 'right' });
+      y += 5.5;
+
+      doc.setFontSize(9);
+      doc.setTextColor(80);
+      doc.text(`Client : ${r.clientName}`, marginX, y);
+      y += 5;
+
+      if (r.detail) {
+        const detailLines = doc.splitTextToSize(r.detail, maxWidth);
+        for (const line of detailLines) {
+          ensureSpace(5);
+          doc.text(line, marginX, y);
+          y += 4.5;
+        }
+      }
+
+      const meta: string[] = [];
+      if (r.service) meta.push(SERVICE_LABELS[r.service]);
+      if (r.venduPar) meta.push(VENDEUR_LABELS[r.venduPar]);
+      if (meta.length) {
+        ensureSpace(5);
+        doc.text(meta.join(' · '), marginX, y);
+        y += 5;
+      }
+
+      const dates: string[] = [];
+      if (r.acceptedDate) dates.push(`Acceptée le ${new Date(r.acceptedDate).toLocaleDateString('fr-FR')}`);
+      if (r.paymentDate) dates.push(`Réglée le ${new Date(r.paymentDate).toLocaleDateString('fr-FR')}`);
+      if (r.signatureDate) dates.push(`Signée le ${new Date(r.signatureDate).toLocaleDateString('fr-FR')}`);
+      if (r.echeanceDate) {
+        const overdue = status !== 'termine' && new Date(r.echeanceDate) < new Date();
+        dates.push(`Échéance : ${new Date(r.echeanceDate).toLocaleDateString('fr-FR')}${overdue ? ' (dépassée)' : ''}`);
+      }
+      if (dates.length) {
+        ensureSpace(5);
+        if (dates.some((d) => d.includes('dépassée'))) {
+          doc.setTextColor(200, 0, 0);
+        }
+        doc.text(dates.join(' · '), marginX, y);
+        doc.setTextColor(80);
+        y += 5;
+      }
+
+      doc.setTextColor(0);
+      y += 3;
+      ensureSpace(1);
+      doc.setDrawColor(230);
+      doc.line(marginX, y, pageWidth - marginX, y);
+      y += 6;
+    }
+
+    doc.save(`recommandations-${status}-${Date.now()}.pdf`);
+  };
 
   if (loading) {
     return (
@@ -335,7 +437,17 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
                       <span className="text-xs font-normal opacity-75">{STATUS_SUBLABELS[status]}</span>
                     )}
                   </span>
-                  {countsTowardCA(status) && <span className="font-bold">{formatEuro(groupCA)}</span>}
+                  <span className="flex items-center gap-3">
+                    {countsTowardCA(status) && <span className="font-bold">{formatEuro(groupCA)}</span>}
+                    <button
+                      onClick={() => exportGroupToPdf(status, items)}
+                      className="flex items-center gap-1 text-xs font-medium hover:underline"
+                      title="Télécharger cette liste en PDF"
+                    >
+                      <FileDown className="w-3.5 h-3.5" />
+                      PDF
+                    </button>
+                  </span>
                 </div>
                 <div className="divide-y divide-gray-100">
                   {items.map((r) => (
