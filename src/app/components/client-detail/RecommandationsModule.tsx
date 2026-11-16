@@ -79,7 +79,18 @@ function emptyForm() {
     acceptedDate: '',
     paymentDate: '',
     signatureDate: '',
+    echeanceDate: '',
   };
+}
+
+// Échéance par défaut : acceptation + 1 mois - même logique que
+// calculateArbitrageDeadline (TasksTab.tsx) / arbitrageDeadline
+// (KanbanBoard.tsx), mais ici stockée (pas recalculée à l'affichage)
+// puisqu'Hortense doit pouvoir la corriger après coup.
+function addOneMonthIso(dateIso: string): string {
+  const date = new Date(dateIso);
+  date.setMonth(date.getMonth() + 1);
+  return date.toISOString();
 }
 
 export function RecommandationsModule({ clientId, recommendations, onUpdate }: RecommandationsModuleProps) {
@@ -216,6 +227,7 @@ export function RecommandationsModule({ clientId, recommendations, onUpdate }: R
       acceptedDate: rec.acceptedDate ? rec.acceptedDate.slice(0, 10) : '',
       paymentDate: rec.paymentDate ? rec.paymentDate.slice(0, 10) : '',
       signatureDate: rec.signatureDate ? rec.signatureDate.slice(0, 10) : '',
+      echeanceDate: rec.echeanceDate ? rec.echeanceDate.slice(0, 10) : '',
     });
     setShowForm(true);
   };
@@ -242,6 +254,7 @@ export function RecommandationsModule({ clientId, recommendations, onUpdate }: R
               acceptedDate: form.acceptedDate ? new Date(form.acceptedDate).toISOString() : undefined,
               paymentDate: form.paymentDate ? new Date(form.paymentDate).toISOString() : undefined,
               signatureDate: form.signatureDate ? new Date(form.signatureDate).toISOString() : undefined,
+              echeanceDate: form.echeanceDate ? new Date(form.echeanceDate).toISOString() : undefined,
               updatedDate: now,
             }
           : r
@@ -301,7 +314,8 @@ export function RecommandationsModule({ clientId, recommendations, onUpdate }: R
   };
 
   const handleChooseService = (id: string, service: AuditRecommendationService) => {
-    updateStatus(id, 'acceptee', service, { acceptedDate: new Date(acceptedDate).toISOString() });
+    const acceptedIso = new Date(acceptedDate).toISOString();
+    updateStatus(id, 'acceptee', service, { acceptedDate: acceptedIso, echeanceDate: addOneMonthIso(acceptedIso) });
   };
 
   const handleStartPassEnCours = (id: string) => {
@@ -445,7 +459,7 @@ export function RecommandationsModule({ clientId, recommendations, onUpdate }: R
               {editingId && (
                 <div className="pt-3 border-t border-gray-100 space-y-3">
                   <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Dates (facultatif)</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Acceptation</label>
                       <input
@@ -470,6 +484,18 @@ export function RecommandationsModule({ clientId, recommendations, onUpdate }: R
                         type="date"
                         value={form.signatureDate}
                         onChange={(e) => setForm({ ...form, signatureDate: e.target.value })}
+                        className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Échéance
+                        <span className="normal-case font-normal text-gray-400"> (auto: +1 mois)</span>
+                      </label>
+                      <input
+                        type="date"
+                        value={form.echeanceDate}
+                        onChange={(e) => setForm({ ...form, echeanceDate: e.target.value })}
                         className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                       />
                     </div>
@@ -579,7 +605,7 @@ export function RecommandationsModule({ clientId, recommendations, onUpdate }: R
                 )}
               </div>
 
-              {(rec.acceptedDate || rec.paymentDate || rec.signatureDate) && (
+              {(rec.acceptedDate || rec.paymentDate || rec.signatureDate || rec.echeanceDate) && (
                 <div className="flex items-center gap-3 flex-wrap mt-2 text-xs text-gray-500">
                   {rec.acceptedDate && (
                     <span>✅ Acceptée le {new Date(rec.acceptedDate).toLocaleDateString('fr-FR')}</span>
@@ -589,6 +615,18 @@ export function RecommandationsModule({ clientId, recommendations, onUpdate }: R
                   )}
                   {rec.signatureDate && (
                     <span>✍️ Signée le {new Date(rec.signatureDate).toLocaleDateString('fr-FR')}</span>
+                  )}
+                  {rec.echeanceDate && (
+                    <span
+                      className={
+                        rec.status !== 'termine' && new Date(rec.echeanceDate) < new Date()
+                          ? 'font-semibold text-red-600'
+                          : undefined
+                      }
+                    >
+                      ⏳ Échéance : {new Date(rec.echeanceDate).toLocaleDateString('fr-FR')}
+                      {rec.status !== 'termine' && new Date(rec.echeanceDate) < new Date() && ' (dépassée)'}
+                    </span>
                   )}
                 </div>
               )}

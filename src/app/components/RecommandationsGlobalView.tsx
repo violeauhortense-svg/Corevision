@@ -361,11 +361,23 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
                           {r.venduPar && <span>{VENDEUR_LABELS[r.venduPar]}</span>}
                         </div>
 
-                        {(r.acceptedDate || r.paymentDate || r.signatureDate) && (
+                        {(r.acceptedDate || r.paymentDate || r.signatureDate || r.echeanceDate) && (
                           <div className="flex items-center gap-3 flex-wrap mt-2 text-xs text-gray-500">
                             {r.acceptedDate && <span>✅ Acceptée le {new Date(r.acceptedDate).toLocaleDateString('fr-FR')}</span>}
                             {r.paymentDate && <span>💶 Réglée le {new Date(r.paymentDate).toLocaleDateString('fr-FR')}</span>}
                             {r.signatureDate && <span>✍️ Signée le {new Date(r.signatureDate).toLocaleDateString('fr-FR')}</span>}
+                            {r.echeanceDate && (
+                              <span
+                                className={
+                                  r.status !== 'termine' && new Date(r.echeanceDate) < new Date()
+                                    ? 'font-semibold text-red-600'
+                                    : undefined
+                                }
+                              >
+                                ⏳ Échéance : {new Date(r.echeanceDate).toLocaleDateString('fr-FR')}
+                                {r.status !== 'termine' && new Date(r.echeanceDate) < new Date() && ' (dépassée)'}
+                              </span>
+                            )}
                           </div>
                         )}
                       </div>

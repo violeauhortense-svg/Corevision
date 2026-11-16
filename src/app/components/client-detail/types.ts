@@ -194,6 +194,7 @@ export interface AuditRecommendation {
   acceptedDate?: string; // Date (saisie manuellement) d'acceptation par le client
   paymentDate?: string; // Date (saisie manuellement) du règlement, au passage "En cours"
   signatureDate?: string; // Date (saisie manuellement, optionnelle) de signature du rapport
+  echeanceDate?: string; // Auto-calculée (acceptedDate + 1 mois) à l'acceptation, modifiable ensuite
 }
 
 export interface RevenuItem {
