@@ -196,92 +196,158 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
     .filter((g): g is NonNullable<typeof g> => g !== null)
     .sort((a, b) => b.totalCA - a.totalCA);
 
-  // Export PDF d'une liste (un statut) - mise en page simple en blocs
-  // (titre/client, détail, service/vendeur, dates, CA), pas le parseur
-  // markdown de AIChatWidget qui ne s'applique pas ici.
+  // jsPDF ne peut pas afficher les emoji des libellés (STATUS_LABELS,
+  // SERVICE_LABELS...) avec les polices standard - sans ce nettoyage, ils
+  // ressortaient en octets corrompus ("Ø<ßÛþ"). Le texte reste lisible
+  // sans eux (l'emoji n'est que décoratif, jamais la seule information).
+  const stripEmoji = (text: string) =>
+    text.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, '').trim();
+
+  // Couleurs RGB alignées sur les badges à l'écran (STATUS_COLORS,
+  // bg-indigo-100/text-indigo-700 pour le service) - jsPDF n'a pas accès
+  // aux classes Tailwind, donc dupliquées ici en RGB.
+  const STATUS_RGB: Record<AuditRecommendationStatus, [number, number, number]> = {
+    proposee: [107, 114, 128],
+    refusee: [220, 38, 38],
+    acceptee: [37, 99, 235],
+    en_cours: [217, 119, 6],
+    acte_finalise: [147, 51, 234],
+    termine: [22, 163, 74],
+  };
+  const HEADER_RGB: [number, number, number] = [5, 150, 105]; // emerald-600, même teinte que le bandeau "Recommandations" à l'écran
+  const SERVICE_BADGE_RGB: [number, number, number] = [67, 56, 202]; // indigo-700
+
+  // Export PDF d'une liste (un statut) - reprend l'esthétique de l'écran
+  // (bandeau coloré, badges arrondis, mise en page en cartes) plutôt
+  // qu'un simple dump de texte.
   const exportGroupToPdf = (status: AuditRecommendationStatus, items: RecoWithClient[]) => {
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
     const marginX = 15;
     const pageHeight = doc.internal.pageSize.getHeight();
     const pageWidth = doc.internal.pageSize.getWidth();
     const maxWidth = pageWidth - marginX * 2;
-    let y = 20;
+    const statusLabel = stripEmoji(STATUS_LABELS[status]);
+    const [sr, sg, sb] = STATUS_RGB[status];
+    let y = 0;
+
+    const drawPageHeader = (continued: boolean) => {
+      doc.setFillColor(...HEADER_RGB);
+      doc.rect(0, 0, pageWidth, 28, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.text(`Recommandations — ${statusLabel}${continued ? ' (suite)' : ''}`, marginX, 13);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      const totalCA = items.reduce((s, r) => s + (r.chiffreAffaires || 0), 0);
+      doc.text(
+        `${items.length} recommandation(s) · ${formatEuro(totalCA)} · généré le ${new Date().toLocaleDateString('fr-FR')}`,
+        marginX,
+        21
+      );
+      doc.setTextColor(0, 0, 0);
+      y = 38;
+    };
 
     const ensureSpace = (needed: number) => {
       if (y + needed > pageHeight - 15) {
         doc.addPage();
-        y = 20;
+        drawPageHeader(true);
       }
     };
 
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Recommandations - ${STATUS_LABELS[status]}`, marginX, y);
-    doc.setFont('helvetica', 'normal');
-    y += 7;
-    doc.setFontSize(9);
-    doc.setTextColor(120);
-    doc.text(`${items.length} recommandation(s) - généré le ${new Date().toLocaleDateString('fr-FR')}`, marginX, y);
-    doc.setTextColor(0);
-    y += 10;
+    // Petit badge arrondi coloré (fond + texte), largeur ajustée au texte -
+    // même esprit que les pastilles de statut/service à l'écran.
+    const drawBadge = (text: string, x: number, yPos: number, rgb: [number, number, number]) => {
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      const w = doc.getTextWidth(text) + 4;
+      doc.setFillColor(rgb[0], rgb[1], rgb[2]);
+      doc.roundedRect(x, yPos - 3.6, w, 4.8, 1.2, 1.2, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.text(text, x + 2, yPos);
+      doc.setTextColor(0, 0, 0);
+      doc.setFont('helvetica', 'normal');
+      return w;
+    };
+
+    drawPageHeader(false);
 
     for (const r of items) {
-      ensureSpace(20);
+      ensureSpace(22);
+
+      // Liseré de couleur à gauche de la carte, comme la bordure colorée
+      // des encarts de statut à l'écran.
+      doc.setFillColor(sr, sg, sb);
+      doc.rect(marginX, y - 4, 1.2, 14, 'F');
+      const textX = marginX + 4;
+      const textWidth = maxWidth - 4;
+
       doc.setFontSize(11);
       doc.setFont('helvetica', 'bold');
-      doc.text(r.title || '(Sans titre)', marginX, y);
+      doc.setTextColor(17, 24, 39);
+      doc.text(r.title || '(Sans titre)', textX, y);
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(10);
+      doc.setTextColor(sr, sg, sb);
       doc.text(formatEuro(r.chiffreAffaires || 0), pageWidth - marginX, y, { align: 'right' });
-      y += 5.5;
-
-      doc.setFontSize(9);
-      doc.setTextColor(80);
-      doc.text(`Client : ${r.clientName}`, marginX, y);
       y += 5;
 
+      doc.setFontSize(9);
+      doc.setTextColor(37, 99, 235);
+      doc.text(`→ ${r.clientName}`, textX, y);
+      doc.setTextColor(0, 0, 0);
+      y += 5.5;
+
       if (r.detail) {
-        const detailLines = doc.splitTextToSize(r.detail, maxWidth);
+        doc.setFontSize(9);
+        doc.setTextColor(75, 85, 99);
+        const detailLines = doc.splitTextToSize(stripEmoji(r.detail), textWidth);
         for (const line of detailLines) {
           ensureSpace(5);
-          doc.text(line, marginX, y);
-          y += 4.5;
+          doc.text(line, textX, y);
+          y += 4.3;
         }
+        doc.setTextColor(0, 0, 0);
+        y += 1;
       }
 
-      const meta: string[] = [];
-      if (r.service) meta.push(SERVICE_LABELS[r.service]);
-      if (r.venduPar) meta.push(VENDEUR_LABELS[r.venduPar]);
-      if (meta.length) {
-        ensureSpace(5);
-        doc.text(meta.join(' · '), marginX, y);
-        y += 5;
+      if (r.service || r.venduPar) {
+        ensureSpace(6);
+        let bx = textX;
+        if (r.service) bx += drawBadge(stripEmoji(SERVICE_LABELS[r.service]), bx, y, SERVICE_BADGE_RGB) + 2;
+        if (r.venduPar) {
+          doc.setFontSize(8.5);
+          doc.setTextColor(107, 114, 128);
+          doc.text(stripEmoji(VENDEUR_LABELS[r.venduPar]), bx, y);
+          doc.setTextColor(0, 0, 0);
+        }
+        y += 6;
       }
 
       const dates: string[] = [];
       if (r.acceptedDate) dates.push(`Acceptée le ${new Date(r.acceptedDate).toLocaleDateString('fr-FR')}`);
       if (r.paymentDate) dates.push(`Réglée le ${new Date(r.paymentDate).toLocaleDateString('fr-FR')}`);
       if (r.signatureDate) dates.push(`Signée le ${new Date(r.signatureDate).toLocaleDateString('fr-FR')}`);
+      const overdue = !!r.echeanceDate && status !== 'termine' && new Date(r.echeanceDate) < new Date();
       if (r.echeanceDate) {
-        const overdue = status !== 'termine' && new Date(r.echeanceDate) < new Date();
         dates.push(`Échéance : ${new Date(r.echeanceDate).toLocaleDateString('fr-FR')}${overdue ? ' (dépassée)' : ''}`);
       }
       if (dates.length) {
         ensureSpace(5);
-        if (dates.some((d) => d.includes('dépassée'))) {
-          doc.setTextColor(200, 0, 0);
-        }
-        doc.text(dates.join(' · '), marginX, y);
-        doc.setTextColor(80);
+        doc.setFontSize(8.5);
+        doc.setTextColor(...(overdue ? ([220, 38, 38] as [number, number, number]) : [107, 114, 128]));
+        if (overdue) doc.setFont('helvetica', 'bold');
+        doc.text(dates.join('   ·   '), textX, y);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(0, 0, 0);
         y += 5;
       }
 
-      doc.setTextColor(0);
-      y += 3;
-      ensureSpace(1);
-      doc.setDrawColor(230);
+      ensureSpace(3);
+      doc.setDrawColor(230, 230, 230);
       doc.line(marginX, y, pageWidth - marginX, y);
-      y += 6;
+      y += 7;
     }
 
     doc.save(`recommandations-${status}-${Date.now()}.pdf`);
