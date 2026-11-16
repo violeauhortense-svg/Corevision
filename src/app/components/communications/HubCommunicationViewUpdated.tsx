@@ -333,6 +333,21 @@ export function HubCommunicationView() {
     ? baseMails.filter((m) => m.clientId === selectedClientFilter)
     : baseMails;
 
+  // Mêmes cartouches de tri par client que l'onglet Conversation Client,
+  // mais calculées sur le filtre de statut actif (ex: "En cours") plutôt
+  // que sur les seuls mails "à traiter" - demandé pour pouvoir isoler un
+  // client précis dans n'importe quelle liste filtrée par statut.
+  const statusFilterClients = selectedStatusFilter
+    ? Object.values(
+        (statusFilteredMails ?? []).reduce((acc, m) => {
+          if (!m.clientId) return acc;
+          if (!acc[m.clientId]) acc[m.clientId] = { clientId: m.clientId, clientName: m.clientName || 'Client', count: 0 };
+          acc[m.clientId].count++;
+          return acc;
+        }, {} as Record<string, { clientId: string; clientName: string; count: number }>)
+      ).sort((a, b) => a.clientName.localeCompare(b.clientName))
+    : [];
+
   const threads = useMemo(() => groupMailsIntoThreads(filteredMails), [filteredMails]);
 
   if (loading) {
@@ -526,9 +541,33 @@ export function HubCommunicationView() {
 
                 {/* Cartouches de tri par client - Conversation Client uniquement,
                     une par client ayant au moins un mail "à traiter" */}
-                {activeTab === 'conversation_client' && untreatedClients.length > 0 && (
+                {activeTab === 'conversation_client' && !selectedStatusFilter && untreatedClients.length > 0 && (
                   <div className="mb-6 flex flex-wrap gap-2">
                     {untreatedClients.map((client) => {
+                      const active = selectedClientFilter === client.clientId;
+                      return (
+                        <button
+                          key={client.clientId}
+                          onClick={() => toggleClientFilter(client.clientId)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                            active
+                              ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                              : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
+                          }`}
+                        >
+                          {client.clientName} ({client.count})
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Même principe, mais pour trier par client à l'intérieur
+                    d'un statut sélectionné (ex: "En cours") - tous onglets
+                    confondus puisque statusFilteredMails l'est déjà. */}
+                {selectedStatusFilter && statusFilterClients.length > 0 && (
+                  <div className="mb-6 flex flex-wrap gap-2">
+                    {statusFilterClients.map((client) => {
                       const active = selectedClientFilter === client.clientId;
                       return (
                         <button
