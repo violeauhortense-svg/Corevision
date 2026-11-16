@@ -203,6 +203,16 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
   const stripEmoji = (text: string) =>
     text.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, '').trim();
 
+  // formatEuro() (Intl.NumberFormat) insère des espaces fines insécables
+  // (U+202F) comme séparateurs de milliers - absentes de la police
+  // standard de jsPDF, elles ressortaient en "/" et faisaient dérailler
+  // l'espacement de tout le reste de la ligne. Version ASCII dédiée au PDF.
+  const formatEuroPdf = (value: number) => {
+    const rounded = Math.round(value || 0);
+    const withSpaces = Math.abs(rounded).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    return `${rounded < 0 ? '-' : ''}${withSpaces} €`;
+  };
+
   // Couleurs RGB alignées sur les badges à l'écran (STATUS_COLORS,
   // bg-indigo-100/text-indigo-700 pour le service) - jsPDF n'a pas accès
   // aux classes Tailwind, donc dupliquées ici en RGB.
@@ -236,12 +246,12 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
       doc.setTextColor(255, 255, 255);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(16);
-      doc.text(`Recommandations — ${statusLabel}${continued ? ' (suite)' : ''}`, marginX, 13);
+      doc.text(`Recommandations - ${statusLabel}${continued ? ' (suite)' : ''}`, marginX, 13);
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
       const totalCA = items.reduce((s, r) => s + (r.chiffreAffaires || 0), 0);
       doc.text(
-        `${items.length} recommandation(s) · ${formatEuro(totalCA)} · généré le ${new Date().toLocaleDateString('fr-FR')}`,
+        `${items.length} recommandation(s)  |  ${formatEuroPdf(totalCA)}  |  généré le ${new Date().toLocaleDateString('fr-FR')}`,
         marginX,
         21
       );
@@ -290,12 +300,12 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(10);
       doc.setTextColor(sr, sg, sb);
-      doc.text(formatEuro(r.chiffreAffaires || 0), pageWidth - marginX, y, { align: 'right' });
+      doc.text(formatEuroPdf(r.chiffreAffaires || 0), pageWidth - marginX, y, { align: 'right' });
       y += 5;
 
       doc.setFontSize(9);
       doc.setTextColor(37, 99, 235);
-      doc.text(`→ ${r.clientName}`, textX, y);
+      doc.text(`- ${r.clientName}`, textX, y);
       doc.setTextColor(0, 0, 0);
       y += 5.5;
 
@@ -338,7 +348,7 @@ export function RecommandationsGlobalView({ onNavigateToClient }: Recommandation
         doc.setFontSize(8.5);
         doc.setTextColor(...(overdue ? ([220, 38, 38] as [number, number, number]) : [107, 114, 128]));
         if (overdue) doc.setFont('helvetica', 'bold');
-        doc.text(dates.join('   ·   '), textX, y);
+        doc.text(dates.join('   |   '), textX, y);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(0, 0, 0);
         y += 5;
